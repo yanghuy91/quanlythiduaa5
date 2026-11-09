@@ -226,7 +226,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <Logo10A5 size="xl" showText={false} animate={true} />
           </div>
           <h2 className="text-lg font-black text-main tracking-tight">
-            Quản Lý Nề Nếp &amp; Thi Đua
+            Quản Lý Thi Đua
           </h2>
           <div className="flex items-center justify-center gap-1.5 text-xs text-muted">
             <span className="font-bold text-accent">Lớp 10A5</span>

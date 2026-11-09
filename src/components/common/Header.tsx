@@ -62,7 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
               <span className="h-3.5 w-px bg-token/80 hidden xs:inline-block" />
               <h1 className="text-xs sm:text-sm font-extrabold text-main tracking-tight select-none">
-                Quản Lý Nề Nếp &amp; Thi Đua
+                Quản Lý Thi Đua
               </h1>
             </div>
 

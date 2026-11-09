@@ -8,7 +8,7 @@ export const Footer: React.FC = () => {
           10A5 - THPT Số 2 Đức Phổ
         </p>
         <p className="text-[11px] text-muted">
-          Hệ thống Quản lý Nề nếp &amp; Thi đua Lớp học
+          Hệ thống Quản lý Thi đua Lớp học
         </p>
       </div>
     </footer>

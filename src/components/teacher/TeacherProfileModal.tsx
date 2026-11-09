@@ -23,7 +23,7 @@ interface TeacherProfileModalProps {
 
 const STATUS_PRESETS = [
   'Giáo viên chủ nhiệm Lớp 10A5 • Năm học 2026-2027',
-  'Đang trực ban nề nếp & thi đua lớp học',
+  'Đang trực ban thi đua lớp học',
   'Quản trị viên hệ thống • THPT Số 2 Đức Phổ',
   '🟢 Trực tuyến • Sẵn sàng hỗ trợ học sinh',
   'Đang tổng kết thi đua tuần',

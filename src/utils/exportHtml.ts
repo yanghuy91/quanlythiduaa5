@@ -22,7 +22,7 @@ export function exportClassroomHtmlReport(
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Báo cáo Nề nếp & Thi đua Lớp 10A5 - Tuần ${currentWeek}</title>
+  <title>Báo cáo Thi đua Lớp 10A5 - Tuần ${currentWeek}</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -160,7 +160,7 @@ export function exportClassroomHtmlReport(
   <div class="container">
     <div class="header">
       <h2>SỞ GD&ĐT QUẢNG NGÃI — THPT SỐ 2 ĐỨC PHỔ</h2>
-      <h1>BÁO CÁO THI ĐUA &amp; NỀ NẾP LỚP 10A5</h1>
+      <h1>BÁO CÁO THI ĐUA LỚP 10A5</h1>
       <p>Năm học 2026 - 2027 · Tuần ${currentWeek} · Tổng số: 42 học sinh</p>
     </div>
 

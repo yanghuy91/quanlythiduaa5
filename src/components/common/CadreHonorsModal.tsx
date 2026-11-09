@@ -59,7 +59,7 @@ export const CadreHonorsModal: React.FC<CadreHonorsModalProps> = ({
                 <span>VINH DANH BAN CÁN SỰ LỚP 10A5</span>
               </div>
               <h3 className="text-base sm:text-lg font-extrabold text-main leading-tight mt-0.5">
-                Đội Ngũ Đầu Tàu Nề Nếp &amp; Thi Đua 👑
+                Đội Ngũ Đầu Tàu Thi Đua 👑
               </h3>
               <p className="text-xs text-muted mt-0.5">
                 THPT Số 2 Đức Phổ · Năm học 2026-2027

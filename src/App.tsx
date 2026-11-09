@@ -1,5 +1,5 @@
 /**
- * Quản lý Nề nếp & Thi đua Lớp học - 10A5 THPT Số 2 Đức Phổ
+ * Quản lý Thi đua Lớp học - 10A5 THPT Số 2 Đức Phổ
  * Giai đoạn 1: Giao diện + Demo
  */
 
@@ -129,7 +129,7 @@ export default function App() {
     setToast({
       id: Date.now().toString(),
       message: `Đã đổi tuần học hiện tại: Tuần ${week} ✨`,
-      subMessage: `Điểm nề nếp và thi đua của lớp 10A5 được cập nhật theo Tuần ${week}`,
+      subMessage: `Điểm thi đua của lớp 10A5 được cập nhật theo Tuần ${week}`,
     });
   }, []);
   
@@ -798,7 +798,7 @@ export default function App() {
               🎓
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-main">
-              Hệ Thống Nề Nếp &amp; Thi Đua Lớp 10A5
+              Hệ Thống Thi Đua Lớp 10A5
             </h2>
             <p className="text-xs sm:text-sm text-muted max-w-md mt-1 mb-6">
               THPT Số 2 Đức Phổ · Vui lòng đăng nhập tài khoản Giáo viên, Ban cán sự hoặc Học sinh để sử dụng.
