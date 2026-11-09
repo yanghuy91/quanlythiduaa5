@@ -129,11 +129,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     return () => unsub();
   }, [rememberLogin]);
 
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(() => {
+    return typeof window !== 'undefined' && sessionStorage.getItem('google_redirect_ongoing') === 'true';
+  });
+
   // Check if returning from Google Redirect
   React.useEffect(() => {
     let isMounted = true;
     checkGoogleRedirectResult().then(async user => {
       if (!isMounted) return;
+      sessionStorage.removeItem('google_redirect_ongoing');
+      setIsRedirecting(false);
       if (user) {
         if (!isAuthorizedTeacherEmail(user.email)) {
           await logoutFirebase();
@@ -148,67 +155,38 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         });
       }
     }).catch(err => {
+      if (!isMounted) return;
+      sessionStorage.removeItem('google_redirect_ongoing');
+      setIsRedirecting(false);
       console.error('[GoogleRedirectCheck] Error:', err);
       if (err.code === 'auth/unauthorized-domain') {
-        setErrorMsg('Tên miền "thiduabc5.vercel.app" chưa được thêm vào Firebase Authorized domains. Thầy/Cô có thể đăng nhập bằng Mật khẩu Giáo viên bên dưới.');
+        setErrorMsg('Tên miền "thiduabc5.vercel.app" chưa được thêm vào Firebase Authorized domains. Thầy có thể vào Firebase Console > Authentication > Settings > Authorized domains > bấm Add domain để thêm.');
+      } else {
+        setErrorMsg(`Lỗi xác thực Google: ${err.message || err.code}`);
       }
     });
     return () => { isMounted = false; };
-  }, []);
+  }, [rememberLogin]);
 
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isPopupBlocked, setIsPopupBlocked] = useState(false);
-
-  // Teacher Google Login (Direct with explicit feedback)
+  // Standard Direct Google Sign-In (Full page redirect - Exactly like YouTube, Spotify, ChatGPT - ZERO POPUPS!)
   const handleTeacherGoogleLogin = async () => {
     try {
       setIsGoogleLoading(true);
       setErrorMsg('');
-      setIsPopupBlocked(false);
-      const googleUser = await loginWithGoogleFirebase();
-      if (googleUser) {
-        // Strict verification: only authorized teacher email allowed!
-        if (!isAuthorizedTeacherEmail(googleUser.email)) {
-          await logoutFirebase();
-          setErrorMsg(`⛔ Tài khoản Google "${googleUser.email}" không phải là tài khoản Giáo viên chủ nhiệm lớp 10A5. Chỉ tài khoản yanghuy91@gmail.com mới có quyền quản trị!`);
-          return;
-        }
-
-        onLoginTeacher(rememberLogin, {
-          hoTen: googleUser.displayName || 'Thầy Huy (GVCN)',
-          email: googleUser.email || undefined,
-          avatarUrl: googleUser.photoURL || undefined,
-        });
-      }
+      sessionStorage.setItem('active_login_tab', 'teacher');
+      sessionStorage.setItem('google_redirect_ongoing', 'true');
+      await loginWithGoogleRedirect();
     } catch (err: any) {
       console.error('[GoogleLogin] Error:', err);
-      if (err.code === 'auth/popup-closed-by-user') {
-        setErrorMsg('Cửa sổ đăng nhập Google đã đóng. Thầy vui lòng bấm lại để chọn tài khoản.');
-      } else if (err.code === 'auth/unauthorized-domain') {
+      sessionStorage.removeItem('google_redirect_ongoing');
+      setIsGoogleLoading(false);
+      if (err.code === 'auth/unauthorized-domain') {
         setErrorMsg('Tên miền "thiduabc5.vercel.app" chưa được thêm vào Firebase. Thầy hãy vào Firebase Console > Authentication > Settings > Authorized domains > bấm "Add domain" và thêm "thiduabc5.vercel.app".');
-      } else if (err.code === 'auth/popup-blocked') {
-        setIsPopupBlocked(true);
-        setErrorMsg('Trình duyệt Chrome đang chặn cửa sổ Popup. Thầy có thể bấm nút "Chuyển trang Google trực tiếp" màu xanh bên dưới để vào ngay mà không lo bị chặn.');
       } else if (err.code === 'auth/operation-not-allowed' || err.code === 'auth/configuration-not-found') {
-        setErrorMsg('Google Sign-in chưa được kích hoạt trên Firebase. Thầy vui lòng bấm nút "Save" (màu xanh ở góc phải) trong màn hình Firebase Console rồi thử lại.');
+        setErrorMsg('Google Sign-in chưa được kích hoạt trên Firebase. Thầy vui lòng bấm nút "Save" trong màn hình Firebase Console rồi thử lại.');
       } else {
         setErrorMsg(`Lỗi kết nối Google (${err.code || 'unknown'}): ${err.message || 'Vui lòng thử lại.'}`);
       }
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
-
-  // Direct Google Redirect flow (100% immune to popup blockers)
-  const handleTeacherGoogleRedirect = async () => {
-    try {
-      setIsGoogleLoading(true);
-      setErrorMsg('');
-      await loginWithGoogleRedirect();
-    } catch (err: any) {
-      console.error('[GoogleRedirect] Error:', err);
-      setErrorMsg(`Lỗi chuyển trang Google: ${err.message || err.code}`);
-      setIsGoogleLoading(false);
     }
   };
 
@@ -299,39 +277,27 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
             {/* Error Message Box */}
             {errorMsg && (
-              <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-500 space-y-2 animate-scale-up">
+              <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-500 space-y-1 animate-scale-up">
                 <div className="font-bold flex items-center gap-1.5">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>Thông báo đăng nhập:</span>
                 </div>
                 <p className="text-main leading-relaxed pl-5 font-medium">{errorMsg}</p>
-                {isPopupBlocked && (
-                  <div className="pl-5 pt-1">
-                    <button
-                      type="button"
-                      onClick={handleTeacherGoogleRedirect}
-                      className="w-full py-2.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all active:scale-[0.99]"
-                    >
-                      <span>🚀 Chuyển trang Google trực tiếp (Không dùng Popup)</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
               </div>
             )}
 
-            {/* Method 1: Google OAuth Instant Login (Standard & Sleek) */}
+            {/* Method 1: Google OAuth Direct Sign-In (Full Redirect - No Popup) */}
             <div className="space-y-2">
               <button
                 type="button"
-                disabled={isGoogleLoading}
+                disabled={isGoogleLoading || isRedirecting}
                 onClick={handleTeacherGoogleLogin}
-                className="w-full py-3 px-4 rounded-xl border border-token bg-surface hover:bg-surface-2 text-main text-xs sm:text-sm font-semibold flex items-center justify-center gap-3 transition-all cursor-pointer shadow-xs hover:shadow active:scale-[0.99] disabled:opacity-60"
+                className="w-full py-3.5 px-4 rounded-xl border border-token bg-surface hover:bg-surface-2 text-main text-xs sm:text-sm font-semibold flex items-center justify-center gap-3 transition-all cursor-pointer shadow-xs hover:shadow active:scale-[0.99] disabled:opacity-60"
               >
-                {isGoogleLoading ? (
+                {isGoogleLoading || isRedirecting ? (
                   <span className="flex items-center gap-2">
                     <span className="animate-spin rounded-full h-4 w-4 border-2 border-accent border-t-transparent" />
-                    <span>Đang kết nối tài khoản Google...</span>
+                    <span>{isRedirecting ? 'Đang xác thực tài khoản Google...' : 'Đang chuyển hướng sang Google...'}</span>
                   </span>
                 ) : (
                   <>
@@ -341,20 +307,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                     </svg>
-                    <span>Tiếp tục với Google (yanghuy91@gmail.com)</span>
+                    <span>Đăng nhập với Google (yanghuy91@gmail.com)</span>
                   </>
                 )}
               </button>
-
-              <div className="text-center pt-0.5">
-                <button
-                  type="button"
-                  onClick={handleTeacherGoogleRedirect}
-                  className="text-[11px] text-muted hover:text-accent underline cursor-pointer"
-                >
-                  Hoặc bấm vào đây để Chuyển trang trực tiếp sang Google (Nếu bị chặn Popup) &rarr;
-                </button>
-              </div>
             </div>
 
             {/* Divider */}

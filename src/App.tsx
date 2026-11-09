@@ -308,7 +308,7 @@ export default function App() {
 
   // Realtime Firebase Auth listener: Automatically log in teacher on Google redirect or session restore
   useEffect(() => {
-    const unsub = onFirebaseAuthStateChanged((firebaseUser) => {
+    const unsub = onFirebaseAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser && firebaseUser.email) {
         if (isAuthorizedTeacherEmail(firebaseUser.email)) {
           const teacherUser = {
@@ -325,6 +325,13 @@ export default function App() {
             id: Date.now().toString(),
             message: `Chào mừng Thầy Chủ nhiệm: ${teacherUser.hoTen} 🎓`,
             subMessage: `Tài khoản ${firebaseUser.email} đã được xác thực thành công!`,
+          });
+        } else {
+          await logoutFirebase().catch(() => {});
+          setToast({
+            id: Date.now().toString(),
+            message: `Truy cập bị từ chối: ${firebaseUser.email} ⛔`,
+            subMessage: 'Chỉ tài khoản Google của Giáo viên chủ nhiệm (yanghuy91@gmail.com) mới có quyền quản trị.',
           });
         }
       }
