@@ -296,38 +296,27 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             )}
 
             {/* Teacher Google Authentication Center */}
-            <div className="space-y-4 pt-1">
-              <div className="flex flex-col items-center justify-center gap-3 py-2">
-                <div 
-                  ref={googleBtnContainerRef} 
-                  className="min-h-[46px] flex items-center justify-center w-full"
-                >
-                  <div className="flex items-center gap-2 text-xs text-muted py-2">
-                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-accent border-t-transparent" />
-                    <span>Đang nạp nút đăng nhập Google chính hãng...</span>
-                  </div>
-                </div>
+            <div className="space-y-4 py-3 flex flex-col items-center justify-center">
+              <p className="text-xs text-muted text-center max-w-sm">
+                Xác thực bằng tài khoản Google để truy cập Bảng điều khiển Quản trị Lớp 10A5
+              </p>
 
-                {isGoogleLoading && (
-                  <div className="flex items-center gap-2 text-xs font-semibold text-accent animate-pulse">
-                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-accent border-t-transparent" />
-                    <span>Đang xác thực tài khoản Google của Thầy...</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Absolute Security Assurance - No shared passwords */}
-              <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-xs text-main flex items-start gap-3">
-                <ShieldCheck className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <div className="font-bold text-accent flex items-center gap-1.5">
-                    <span>Xác thực an toàn cấp cao (Bảo mật 100%)</span>
-                  </div>
-                  <p className="text-muted text-[11px] leading-relaxed">
-                    Hệ thống chỉ cho phép duy nhất tài khoản Google chính chủ <strong>yanghuy91@gmail.com</strong> được cấp quyền Giáo viên chủ nhiệm Lớp 10A5. Không sử dụng mật khẩu công khai để bảo vệ an toàn tuyệt đối cho cơ sở dữ liệu nề nếp và thi đua của lớp.
-                  </p>
+              <div 
+                ref={googleBtnContainerRef} 
+                className="min-h-[46px] flex items-center justify-center w-full"
+              >
+                <div className="flex items-center gap-2 text-xs text-muted py-2">
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-accent border-t-transparent" />
+                  <span>Đang kết nối tài khoản Google...</span>
                 </div>
               </div>
+
+              {isGoogleLoading && (
+                <div className="flex items-center gap-2 text-xs font-semibold text-accent animate-pulse">
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-accent border-t-transparent" />
+                  <span>Đang xác thực thông tin tài khoản...</span>
+                </div>
+              )}
             </div>
 
             {/* Remember Login for Teacher */}
@@ -352,22 +341,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         ) : (
           /* Step 2: Student & Cadre Login */
           <div className="space-y-4">
-            {/* Selected Student Banner (Guaranteed Name Visibility) */}
+            {/* Selected Student Banner (Guaranteed Name Visibility - No avatar before login) */}
             {selectedStudent ? (
-              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-accent/10 to-indigo-500/10 border-2 border-accent/40 flex items-center justify-between gap-3 animate-scale-up">
+              <div className="p-3.5 rounded-2xl bg-surface-2 border-2 border-accent/40 flex items-center justify-between gap-3 animate-scale-up">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-accent shrink-0 shadow-sm bg-surface flex items-center justify-center">
-                    {selectedStudent.avatarUrl ? (
-                      <img 
-                        src={selectedStudent.avatarUrl} 
-                        alt={selectedStudent.hoTen} 
-                        className="w-full h-full object-cover" 
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-accent text-on-accent font-extrabold text-base flex items-center justify-center">
-                        {getStudentAvatarInitial(selectedStudent.hoTen)}
-                      </div>
-                    )}
+                  <div className="w-10 h-10 rounded-xl bg-accent text-on-accent font-extrabold text-sm flex items-center justify-center shrink-0 shadow-xs">
+                    #{selectedStudent.viTriGhe}
                   </div>
                   <div className="min-w-0">
                     <div className="text-[11px] font-semibold text-accent uppercase tracking-wider">
@@ -393,18 +372,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedStudent(null)}
-                  className="px-2.5 py-1.5 rounded-xl border border-token text-xs font-semibold text-muted hover:text-main hover:bg-surface-2 transition-colors cursor-pointer shrink-0"
+                  className="px-2.5 py-1.5 rounded-xl border border-token text-xs font-semibold text-muted hover:text-main hover:bg-surface transition-colors cursor-pointer shrink-0"
                 >
                   Chọn lại
                 </button>
               </div>
             ) : (
               <div className="p-2.5 rounded-xl bg-surface-2 border border-token text-xs text-muted text-center flex items-center justify-center gap-2">
-                <span>👉 Chạm vào ảnh đại diện / chỗ ngồi của bạn bên dưới để đăng nhập:</span>
+                <span>👉 Chọn chỗ ngồi hoặc tên học sinh bên dưới để đăng nhập:</span>
               </div>
             )}
 
-            {/* Student Picker: Note: showStatusColors = FALSE as required by spec */}
+            {/* Student Picker: Compact mode before login (No avatars shown) */}
             <div className="space-y-2">
               <StudentPicker
                 students={students}
@@ -415,7 +394,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   setErrorMsg('');
                 }}
                 showStatusColors={false} // NEVER reveal status colors before login!
-                initialDisplayMode="avatar_badge"
+                initialDisplayMode="compact"
               />
             </div>
 

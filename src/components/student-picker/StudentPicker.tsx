@@ -214,6 +214,10 @@ export const StudentPicker: React.FC<StudentPickerProps> = ({
                       }`}>
                         {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                       </div>
+                    ) : !showStatusColors ? (
+                      <div className="w-8 h-8 rounded-xl border border-token/70 shrink-0 bg-surface-2 flex items-center justify-center font-bold text-xs text-muted shadow-2xs">
+                        #{student.viTriGhe}
+                      </div>
                     ) : (
                       <div className="relative w-9 h-9 rounded-xl overflow-hidden border border-token/70 shrink-0 bg-surface-2 shadow-2xs">
                         {student.avatarUrl ? (

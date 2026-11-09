@@ -20,7 +20,8 @@ import {
   GraduationCap,
   Camera,
   Database,
-  Download
+  Download,
+  LogOut
 } from 'lucide-react';
 import { 
   Student, 
@@ -92,6 +93,7 @@ interface TeacherDashboardProps {
   onOpenTeacherAvatar?: () => void;
   teacherAvatarUrl?: string;
   onVoidRecord?: (recordId: string, reason: string) => void;
+  onLogout?: () => void;
 }
 
 export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
@@ -117,6 +119,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   onOpenTeacherAvatar,
   teacherAvatarUrl,
   onVoidRecord,
+  onLogout,
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'record' | 'explanations' | 'roster' | 'grades' | 'rules' | 'import_export' | 'ai_gemini' | 'settings' | 'apps'>('overview');
 
@@ -605,6 +608,18 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       <Users className="w-3 h-3 text-sky-300" />
                       <span>Ban cán sự</span>
                     </button>
+
+                    {onLogout && (
+                      <button
+                        type="button"
+                        onClick={onLogout}
+                        className="px-2.5 py-1 rounded-xl bg-rose-500/40 hover:bg-rose-600/70 border border-rose-300/40 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 ml-auto sm:ml-0"
+                        title="Đăng xuất khỏi Bảng điều khiển Giáo viên"
+                      >
+                        <LogOut className="w-3 h-3 text-rose-200" />
+                        <span>Đăng xuất</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 

@@ -711,6 +711,7 @@ export default function App() {
             onUpdateAcademicRecords={handleUpdateAcademicRecords}
             onOpenTeacherAvatar={() => setIsTeacherAvatarModalOpen(true)}
             teacherAvatarUrl={teacherAvatar}
+            onLogout={handleLogout}
           />
         )}
 

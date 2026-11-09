@@ -263,12 +263,12 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={onLogout}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/15 text-rose-600 dark:text-rose-400 hover:border-rose-500/40 transition-all cursor-pointer shadow-xs active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-300 hover:border-rose-400 font-bold transition-all cursor-pointer shadow-xs active:scale-95"
                 title="Đăng xuất khỏi hệ thống"
                 aria-label="Đăng xuất"
               >
-                <LogOut className="w-4 h-4" />
-                <span className="text-xs font-bold hidden sm:inline">Đăng xuất</span>
+                <LogOut className="w-4 h-4 text-rose-600 dark:text-rose-300 shrink-0" />
+                <span className="text-xs font-bold whitespace-nowrap">Đăng xuất</span>
               </button>
             </div>
           )}

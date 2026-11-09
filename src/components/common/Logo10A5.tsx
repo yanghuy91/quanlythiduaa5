@@ -45,13 +45,6 @@ export const Logo10A5: React.FC<Logo10A5Props> = ({
             />
             {/* Subtle Glass Glare Sweep */}
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/15 to-transparent pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity" />
-            
-            {/* Modern "10A5" Floating Micro Badge on bottom */}
-            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-2 pb-0.5 flex items-center justify-center">
-              <span className="text-[9px] font-black tracking-wider text-amber-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] scale-90">
-                10A5
-              </span>
-            </div>
           </div>
         </div>
       </div>

@@ -48,7 +48,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
   const [activeDãyTab, setActiveDãyTab] = useState<'all' | 'to-4' | 'to-3' | 'to-2' | 'to-1'>('all');
   
   // Seat Display Mode: 'avatar_badge' (rich visual with photo & honors badge) or 'compact' (name & seat number)
-  const [displayMode, setDisplayMode] = useState<'compact' | 'avatar_badge'>(() => {
+  const [userDisplayMode, setUserDisplayMode] = useState<'compact' | 'avatar_badge'>(() => {
     if (initialDisplayMode) return initialDisplayMode;
     try {
       const saved = localStorage.getItem('seating_display_mode');
@@ -57,8 +57,11 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
     return 'avatar_badge'; // default to avatar & badge mode!
   });
 
+  // Never show avatars before login (!showStatusColors)
+  const displayMode = !showStatusColors ? 'compact' : userDisplayMode;
+
   const handleToggleDisplayMode = (mode: 'compact' | 'avatar_badge') => {
-    setDisplayMode(mode);
+    setUserDisplayMode(mode);
     try {
       localStorage.setItem('seating_display_mode', mode);
     } catch {}
@@ -134,35 +137,37 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
     <div className="w-full flex flex-col gap-2.5">
       {/* View Mode & Quick Controls Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-        {/* View Mode Switcher Toggle */}
-        <div className="inline-flex items-center p-0.5 bg-surface-2 rounded-xl border border-token text-xs shadow-xs">
-          <button
-            type="button"
-            onClick={() => handleToggleDisplayMode('avatar_badge')}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-              displayMode === 'avatar_badge'
-                ? 'bg-accent text-on-accent shadow-xs'
-                : 'text-muted hover:text-main'
-            }`}
-            title="Hiển thị ảnh đại diện và huy hiệu thi đua của học sinh"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>Avatar & Huy hiệu</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleToggleDisplayMode('compact')}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-              displayMode === 'compact'
-                ? 'bg-accent text-on-accent shadow-xs'
-                : 'text-muted hover:text-main'
-            }`}
-            title="Hiển thị chế độ gọn với số thứ tự và tên"
-          >
-            <Tag className="w-3.5 h-3.5" />
-            <span>Gọn (Tên & STT)</span>
-          </button>
-        </div>
+        {/* View Mode Switcher Toggle (Only after login) */}
+        {showStatusColors && (
+          <div className="inline-flex items-center p-0.5 bg-surface-2 rounded-xl border border-token text-xs shadow-xs">
+            <button
+              type="button"
+              onClick={() => handleToggleDisplayMode('avatar_badge')}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                displayMode === 'avatar_badge'
+                  ? 'bg-accent text-on-accent shadow-xs'
+                  : 'text-muted hover:text-main'
+              }`}
+              title="Hiển thị ảnh đại diện và huy hiệu thi đua của học sinh"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>Avatar & Huy hiệu</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleToggleDisplayMode('compact')}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                displayMode === 'compact'
+                  ? 'bg-accent text-on-accent shadow-xs'
+                  : 'text-muted hover:text-main'
+              }`}
+              title="Hiển thị chế độ gọn với số thứ tự và tên"
+            >
+              <Tag className="w-3.5 h-3.5" />
+              <span>Gọn (Tên & STT)</span>
+            </button>
+          </div>
+        )}
 
         {/* Quick Gender and Seat Counter */}
         <div className="flex items-center gap-2 text-[11px] font-semibold text-muted">
