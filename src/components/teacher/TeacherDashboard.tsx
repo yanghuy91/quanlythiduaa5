@@ -890,23 +890,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
             {/* Overview View Mode: Grid (Sơ đồ lớp) vs List (Danh sách bảng điểm) */}
             {overviewViewMode === 'grid' ? (
-              <div className="p-4 bg-surface space-y-3">
-                <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-between flex-wrap gap-2 text-xs text-rose-700 dark:text-rose-300">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 shrink-0 text-rose-500" />
-                    <span>
-                      <strong>Sơ đồ lớp 4 dãy bàn:</strong> Bấm trực tiếp vào học sinh trên sơ đồ để mở bảng ghi vi phạm nề nếp tức thì.
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('record')}
-                    className="font-bold underline hover:text-rose-800 dark:hover:text-rose-200 cursor-pointer flex items-center gap-1 shrink-0"
-                  >
-                    <span>Mở bàn ghi nhận toàn màn hình →</span>
-                  </button>
-                </div>
-
+              <div className="p-3 sm:p-4 bg-surface">
                 <StudentPicker
                   students={students}
                   layout={layout}
@@ -1351,11 +1335,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               </div>
               <div>
                 <h3 className="text-sm font-bold text-main">
-                  Ghi nhận vi phạm &amp; nề nếp (GVCN toàn quyền 42 học sinh)
+                  Ghi nhận vi phạm thi đua
                 </h3>
-                <p className="text-xs text-muted mt-0.5">
-                  Linh hoạt 2 chế độ: <strong>Sơ đồ lớp 4 dãy bàn</strong> hoặc <strong>Danh sách 42 học sinh</strong> · Chạm vào học sinh → Chọn hành vi vi phạm
-                </p>
               </div>
             </div>
 
@@ -1475,29 +1456,24 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         </div>
       )}
 
-      {/* 4. ROSTER & SEATING (42 Students, 6 Desks, Empty spots) */}
+      {/* 4. ROSTER & SEATING */}
       {activeTab === 'roster' && (
-        <div className="space-y-4">
-          <div className="p-4 sm:p-5 rounded-3xl bg-surface border border-token shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div>
-              <h3 className="text-sm font-bold text-main flex items-center gap-1.5">
-                <Move className="w-4 h-4 text-accent" />
-                <span>Sơ đồ chỗ ngồi 4 dãy bàn lớp 10A5 ({students.length} học sinh)</span>
-              </h3>
-              <p className="text-xs text-muted mt-0.5">
-                GVCN có toàn quyền kéo thả đổi chỗ, thêm học sinh mới hoặc xóa học sinh trực tiếp trên sơ đồ lớp
-              </p>
-            </div>
+        <div className="space-y-3">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-surface border border-token shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <h3 className="text-sm font-bold text-main flex items-center gap-2">
+              <Move className="w-4 h-4 text-accent" />
+              <span>Sơ đồ lớp ({students.length} học sinh)</span>
+            </h3>
 
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={() => setIsStudentImportModalOpen(true)}
-                className="px-3.5 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                 title="Nhập danh sách học sinh thật từ file Excel hoặc dán chữ"
               >
-                <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
-                <span>📥 Nhập DS học sinh thật</span>
+                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-200" />
+                <span>📥 Nhập danh sách</span>
               </button>
 
               <button
@@ -1506,41 +1482,15 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   setInitialAddSeat(undefined);
                   setIsLayoutEditorOpen(true);
                 }}
-                className="px-3.5 py-2 rounded-2xl bg-surface border border-token hover:border-accent text-main text-xs font-bold shadow-xs hover:bg-surface-2 transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl bg-primary text-on-primary text-xs font-bold shadow-xs hover:opacity-95 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
               >
-                <UserPlus className="w-4 h-4 text-accent" />
-                <span>+ Thêm học sinh</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setInitialAddSeat(undefined);
-                  setIsLayoutEditorOpen(true);
-                }}
-                className="px-4 py-2 rounded-2xl bg-primary text-on-primary text-xs font-bold shadow-md hover:opacity-95 transition-all flex items-center gap-2 cursor-pointer shrink-0"
-              >
-                <Move className="w-4 h-4 text-amber-300" />
-                <span>Kéo thả &amp; Sắp xếp chỗ ngồi 🪑</span>
+                <Move className="w-3.5 h-3.5 text-amber-300" />
+                <span>Sắp xếp chỗ ngồi</span>
               </button>
             </div>
           </div>
 
-          <div className="p-4 rounded-3xl bg-surface border border-token shadow-xs space-y-2">
-            <div className="flex items-center justify-between px-1 text-xs text-muted">
-              <span className="flex items-center gap-1.5">
-                <Info className="w-3.5 h-3.5 text-accent" />
-                <span>👉 Bấm vào bất kỳ học sinh hoặc chỗ trống trên sơ đồ bên dưới để mở công cụ <strong>Kéo thả, Thêm, Sửa hoặc Xóa</strong>.</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => setIsLayoutEditorOpen(true)}
-                className="text-xs font-bold text-accent hover:underline cursor-pointer"
-              >
-                Mở giao diện kéo thả →
-              </button>
-            </div>
-
+          <div className="p-3 sm:p-4 rounded-2xl bg-surface border border-token shadow-xs">
             <StudentPicker
               students={students}
               layout={layout}
