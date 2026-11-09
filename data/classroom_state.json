@@ -1,0 +1,8839 @@
+{
+  "students": [
+    {
+      "maHS": "HS01",
+      "hoTen": "Nguyễn Khắc Huy",
+      "tenRutGon": "N.K.Huy",
+      "to": 1,
+      "dayBan": 1,
+      "soBan": 1,
+      "viTriGhe": 1,
+      "vaiTro": [
+        "LT"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/student_09.jpg"
+    },
+    {
+      "maHS": "HS02",
+      "hoTen": "Trần Thị Mai Anh",
+      "tenRutGon": "T.T.M.Anh",
+      "to": 1,
+      "dayBan": 1,
+      "soBan": 1,
+      "viTriGhe": 2,
+      "vaiTro": [
+        "BT",
+        "TT"
+      ],
+      "toTruongTo": 1,
+      "gioiTinh": "Nu",
+      "avatarUrl": "/src/assets/avatars/nu_05.jpg"
+    },
+    {
+      "maHS": "HS03",
+      "hoTen": "Lê Hoàng Long",
+      "tenRutGon": "L.H.Long",
+      "to": 1,
+      "dayBan": 1,
+      "soBan": 2,
+      "viTriGhe": 3,
+      "vaiTro": [
+        "LP_HT"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_03.jpg"
+    },
+    {
+      "maHS": "HS04",
+      "hoTen": "Phạm Quốc Bảo",
+      "tenRutGon": "P.Q.Bảo",
+      "to": 1,
+      "dayBan": 1,
+      "soBan": 2,
+      "viTriGhe": 4,
+      "vaiTro": [
+        "LP_LD"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_04.jpg"
+    },
+    {
+      "maHS": "HS05",
+      "hoTen": "Nguyễn Văn Huy",
+      "tenRutGon": "N.V.Huy",
+      "to": 1,
+      "dayBan": 1,
+      "soBan": 3,
+      "viTriGhe": 5,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_05.jpg"
+    },
+    {
+      "maHS": "HS06",
+      "hoTen": "Nguyễn Văn Hùng",
+      "tenRutGon": "N.V.Hùng",
+      "to": 1,
+      "dayBan": 1,
+      "soBan": 3,
+      "viTriGhe": 6,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_06.jpg"
+    },
+    {
+      "maHS": "HS07",
+      "hoTen": "Đinh Thị Thuỳ Trang",
+      "tenRutGon": "Đ.T.T.Trang",
+      "to": 1,
+      "dayBan": 1,
+      "soBan": 4,
+      "viTriGhe": 7,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nu",
+      "avatarUrl": "/src/assets/avatars/nu_07.jpg"
+    },
+    {
+      "maHS": "HS08",
+      "hoTen": "Huỳnh Gia Bảo",
+      "tenRutGon": "H.G.Bảo",
+      "to": 1,
+      "dayBan": 1,
+      "soBan": 4,
+      "viTriGhe": 8,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_08.jpg"
+    },
+    {
+      "maHS": "HS09",
+      "hoTen": "Trần Thị Minh Anh",
+      "tenRutGon": "T.T.Minh Anh",
+      "to": 1,
+      "dayBan": 1,
+      "soBan": 5,
+      "viTriGhe": 9,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nu",
+      "customFrameId": "noble_paragon",
+      "avatarUrl": "/src/assets/avatars/nu_09.jpg"
+    },
+    {
+      "maHS": "HS10",
+      "hoTen": "Lý Quốc Thịnh",
+      "tenRutGon": "L.Q.Thịnh",
+      "to": 1,
+      "dayBan": 1,
+      "soBan": 5,
+      "viTriGhe": 10,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_10.jpg"
+    },
+    {
+      "maHS": "HS11",
+      "hoTen": "Phan Như Quỳnh",
+      "tenRutGon": "P.N.Quỳnh",
+      "to": 1,
+      "dayBan": 1,
+      "soBan": 6,
+      "viTriGhe": 11,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nu",
+      "avatarUrl": "/src/assets/avatars/nu_11.jpg"
+    },
+    {
+      "maHS": "HS12",
+      "hoTen": "Vũ Đình Trọng",
+      "tenRutGon": "V.Đ.Trọng",
+      "to": 2,
+      "dayBan": 2,
+      "soBan": 1,
+      "viTriGhe": 12,
+      "vaiTro": [
+        "TT"
+      ],
+      "toTruongTo": 2,
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_12.jpg"
+    },
+    {
+      "maHS": "HS13",
+      "hoTen": "Võ Minh Quân",
+      "tenRutGon": "V.M.Quân",
+      "to": 2,
+      "dayBan": 2,
+      "soBan": 1,
+      "viTriGhe": 13,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_13.jpg"
+    },
+    {
+      "maHS": "HS14",
+      "hoTen": "Ngô Thanh Hằng",
+      "tenRutGon": "N.T.Hằng",
+      "to": 2,
+      "dayBan": 2,
+      "soBan": 2,
+      "viTriGhe": 14,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nu",
+      "avatarUrl": "/src/assets/avatars/nu_14.jpg"
+    },
+    {
+      "maHS": "HS15",
+      "hoTen": "Đoàn Nhật Nam",
+      "tenRutGon": "Đ.N.Nam",
+      "to": 2,
+      "dayBan": 2,
+      "soBan": 2,
+      "viTriGhe": 15,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_15.jpg"
+    },
+    {
+      "maHS": "HS16",
+      "hoTen": "Dương Khánh Linh",
+      "tenRutGon": "D.K.Linh",
+      "to": 2,
+      "dayBan": 2,
+      "soBan": 3,
+      "viTriGhe": 16,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nu",
+      "avatarUrl": "/src/assets/avatars/nu_16.jpg"
+    },
+    {
+      "maHS": "HS17",
+      "hoTen": "Trịnh Hoài An",
+      "tenRutGon": "T.H.An",
+      "to": 2,
+      "dayBan": 2,
+      "soBan": 3,
+      "viTriGhe": 17,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_17.jpg"
+    },
+    {
+      "maHS": "HS18",
+      "hoTen": "Lê Hải Long",
+      "tenRutGon": "L.Hải Long",
+      "to": 2,
+      "dayBan": 2,
+      "soBan": 4,
+      "viTriGhe": 18,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_16.jpg"
+    },
+    {
+      "maHS": "HS19",
+      "hoTen": "Hồ Tuấn Kiệt",
+      "tenRutGon": "H.T.Kiệt",
+      "to": 2,
+      "dayBan": 2,
+      "soBan": 4,
+      "viTriGhe": 19,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_19.jpg"
+    },
+    {
+      "maHS": "HS20",
+      "hoTen": "Mai Thảo My",
+      "tenRutGon": "M.T.My",
+      "to": 2,
+      "dayBan": 2,
+      "soBan": 5,
+      "viTriGhe": 20,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nu",
+      "avatarUrl": "/src/assets/avatars/nu_20.jpg"
+    },
+    {
+      "maHS": "HS21",
+      "hoTen": "Bùi Gia Khiêm",
+      "tenRutGon": "B.G.Khiêm",
+      "to": 2,
+      "dayBan": 2,
+      "soBan": 5,
+      "viTriGhe": 21,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_21.jpg"
+    },
+    {
+      "maHS": "HS22",
+      "hoTen": "Cao Hoàng Bách",
+      "tenRutGon": "C.H.Bách",
+      "to": 2,
+      "dayBan": 2,
+      "soBan": 6,
+      "viTriGhe": 22,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_22.jpg"
+    },
+    {
+      "maHS": "HS23",
+      "hoTen": "Đặng Thị Thuỷ Tiên",
+      "tenRutGon": "Đ.T.T.Tiên",
+      "to": 3,
+      "dayBan": 3,
+      "soBan": 1,
+      "viTriGhe": 23,
+      "vaiTro": [
+        "TT"
+      ],
+      "toTruongTo": 3,
+      "gioiTinh": "Nu",
+      "avatarUrl": "/src/assets/avatars/nu_23.jpg"
+    },
+    {
+      "maHS": "HS24",
+      "hoTen": "Lương Thế Vinh",
+      "tenRutGon": "L.T.Vinh",
+      "to": 3,
+      "dayBan": 3,
+      "soBan": 1,
+      "viTriGhe": 24,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_24.jpg"
+    },
+    {
+      "maHS": "HS25",
+      "hoTen": "Nguyễn Thị Bích Ngọc",
+      "tenRutGon": "N.T.B.Ngọc",
+      "to": 3,
+      "dayBan": 3,
+      "soBan": 2,
+      "viTriGhe": 25,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nu",
+      "avatarUrl": "/src/assets/avatars/nu_25.jpg"
+    },
+    {
+      "maHS": "HS26",
+      "hoTen": "Trần Đại Quang",
+      "tenRutGon": "T.Đ.Quang",
+      "to": 3,
+      "dayBan": 3,
+      "soBan": 2,
+      "viTriGhe": 26,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_26.jpg"
+    },
+    {
+      "maHS": "HS27",
+      "hoTen": "Đỗ Ngọc Ánh",
+      "tenRutGon": "Đ.N.Ánh",
+      "to": 3,
+      "dayBan": 3,
+      "soBan": 3,
+      "viTriGhe": 27,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nu",
+      "avatarUrl": "/src/assets/avatars/nu_27.jpg"
+    },
+    {
+      "maHS": "HS28",
+      "hoTen": "Hà Văn Dũng",
+      "tenRutGon": "H.V.Dũng",
+      "to": 3,
+      "dayBan": 3,
+      "soBan": 3,
+      "viTriGhe": 28,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_28.jpg"
+    },
+    {
+      "maHS": "HS29",
+      "hoTen": "Tạ Minh Khang",
+      "tenRutGon": "T.M.Khang",
+      "to": 3,
+      "dayBan": 3,
+      "soBan": 4,
+      "viTriGhe": 29,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_29.jpg"
+    },
+    {
+      "maHS": "HS30",
+      "hoTen": "Lâm Mỹ Duyên",
+      "tenRutGon": "L.M.Duyên",
+      "to": 3,
+      "dayBan": 3,
+      "soBan": 4,
+      "viTriGhe": 30,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nu",
+      "avatarUrl": "/src/assets/avatars/nu_04.jpg"
+    },
+    {
+      "maHS": "HS31",
+      "hoTen": "Vương Đình Trí",
+      "tenRutGon": "V.Đ.Trí",
+      "to": 3,
+      "dayBan": 3,
+      "soBan": 5,
+      "viTriGhe": 31,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_31.jpg"
+    },
+    {
+      "maHS": "HS32",
+      "hoTen": "Phan Thảo Uyên",
+      "tenRutGon": "P.T.Uyên",
+      "to": 3,
+      "dayBan": 3,
+      "soBan": 5,
+      "viTriGhe": 32,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nu",
+      "avatarUrl": "/src/assets/avatars/nu_32.jpg"
+    },
+    {
+      "maHS": "HS33",
+      "hoTen": "Hoàng Quốc Việt",
+      "tenRutGon": "H.Q.Việt",
+      "to": 4,
+      "dayBan": 4,
+      "soBan": 1,
+      "viTriGhe": 33,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_33.jpg"
+    },
+    {
+      "maHS": "HS34",
+      "hoTen": "Bùi Minh Triết",
+      "tenRutGon": "B.M.Triết",
+      "to": 4,
+      "dayBan": 4,
+      "soBan": 1,
+      "viTriGhe": 34,
+      "vaiTro": [
+        "TT"
+      ],
+      "toTruongTo": 4,
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_34.jpg"
+    },
+    {
+      "maHS": "HS35",
+      "hoTen": "Nguyễn Thanh Tùng",
+      "tenRutGon": "N.T.Tùng",
+      "to": 4,
+      "dayBan": 4,
+      "soBan": 2,
+      "viTriGhe": 35,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_35.jpg"
+    },
+    {
+      "maHS": "HS36",
+      "hoTen": "Lê Diệu Linh",
+      "tenRutGon": "L.D.Linh",
+      "to": 4,
+      "dayBan": 4,
+      "soBan": 2,
+      "viTriGhe": 36,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nu",
+      "avatarUrl": "/src/assets/avatars/nu_36.jpg"
+    },
+    {
+      "maHS": "HS37",
+      "hoTen": "Đặng Tuấn Anh",
+      "tenRutGon": "Đ.T.Anh",
+      "to": 4,
+      "dayBan": 4,
+      "soBan": 3,
+      "viTriGhe": 37,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_37.jpg"
+    },
+    {
+      "maHS": "HS38",
+      "hoTen": "Phạm Hồng Sơn",
+      "tenRutGon": "P.H.Sơn",
+      "to": 4,
+      "dayBan": 4,
+      "soBan": 3,
+      "viTriGhe": 38,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_38.jpg"
+    },
+    {
+      "maHS": "HS39",
+      "hoTen": "Trương Ngọc Huyền",
+      "tenRutGon": "T.N.Huyền",
+      "to": 4,
+      "dayBan": 4,
+      "soBan": 4,
+      "viTriGhe": 39,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nu",
+      "avatarUrl": "/src/assets/avatars/nu_39.jpg"
+    },
+    {
+      "maHS": "HS40",
+      "hoTen": "Nguyễn Tấn Đạt",
+      "tenRutGon": "N.T.Đạt",
+      "to": 4,
+      "dayBan": 4,
+      "soBan": 4,
+      "viTriGhe": 40,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nam",
+      "avatarUrl": "/src/assets/avatars/nam_40.jpg"
+    },
+    {
+      "maHS": "HS41",
+      "hoTen": "Trần Kim Cương",
+      "tenRutGon": "T.K.Cương",
+      "to": 4,
+      "dayBan": 4,
+      "soBan": 5,
+      "viTriGhe": 41,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nu",
+      "avatarUrl": "/src/assets/avatars/nu_01.jpg"
+    },
+    {
+      "maHS": "HS42",
+      "hoTen": "Hồ Hoàng Phương",
+      "tenRutGon": "H.H.Phương",
+      "to": 4,
+      "dayBan": 4,
+      "soBan": 5,
+      "viTriGhe": 42,
+      "vaiTro": [
+        "HS"
+      ],
+      "gioiTinh": "Nu",
+      "avatarUrl": "/src/assets/avatars/nu_02.jpg"
+    }
+  ],
+  "records": [],
+  "academicRecords": [
+    {
+      "maHS": "HS01",
+      "hoTen": "Nguyễn Khắc Huy",
+      "to": 1,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            9.4,
+            8.9,
+            9.3
+          ],
+          "gk": 9.2,
+          "ck": 9.3,
+          "tb": 9.2,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            10,
+            9.6,
+            10
+          ],
+          "gk": 9.9,
+          "ck": 10,
+          "tb": 9.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            9.3,
+            8.8,
+            9.2
+          ],
+          "gk": 9.1,
+          "ck": 9.2,
+          "tb": 9.1,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            10,
+            9.5,
+            9.9
+          ],
+          "gk": 9.8,
+          "ck": 9.9,
+          "tb": 9.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            9.2,
+            8.7,
+            9.1
+          ],
+          "gk": 9,
+          "ck": 9.1,
+          "tb": 9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            9.9,
+            9.4,
+            9.8
+          ],
+          "gk": 9.7,
+          "ck": 9.8,
+          "tb": 9.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            9.1,
+            8.6,
+            9
+          ],
+          "gk": 8.9,
+          "ck": 9,
+          "tb": 8.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            9.8,
+            9.3,
+            9.7
+          ],
+          "gk": 9.6,
+          "ck": 9.7,
+          "tb": 9.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            9.7,
+            9.2,
+            9.6
+          ],
+          "gk": 9.5,
+          "ck": 9.6,
+          "tb": 9.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            8.9,
+            8.4,
+            8.8
+          ],
+          "gk": 8.7,
+          "ck": 8.8,
+          "tb": 8.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 9.2,
+      "hocLuc": "Xuất sắc",
+      "danhHieu": "Học sinh Xuất sắc",
+      "nhanXetGVCN": "Ý thức học tập xuất sắc, tích cực tham gia phát biểu và rèn luyện gương mẫu.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS02",
+      "hoTen": "Trần Thị Mai Anh",
+      "to": 1,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            9.4,
+            8.9,
+            9.3
+          ],
+          "gk": 9.2,
+          "ck": 9.3,
+          "tb": 9.2,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            9.3,
+            8.8,
+            9.2
+          ],
+          "gk": 9.1,
+          "ck": 9.2,
+          "tb": 9.1,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            9.2,
+            8.7,
+            9.1
+          ],
+          "gk": 9,
+          "ck": 9.1,
+          "tb": 9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            9.1,
+            8.6,
+            9
+          ],
+          "gk": 8.9,
+          "ck": 9,
+          "tb": 8.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8.9,
+            8.4,
+            8.8
+          ],
+          "gk": 8.7,
+          "ck": 8.8,
+          "tb": 8.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.6,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ý thức học tập xuất sắc, tích cực tham gia phát biểu và rèn luyện gương mẫu.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS03",
+      "hoTen": "Lê Hoàng Long",
+      "to": 1,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            9.8,
+            9.3,
+            9.7
+          ],
+          "gk": 9.6,
+          "ck": 9.7,
+          "tb": 9.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            9.7,
+            9.2,
+            9.6
+          ],
+          "gk": 9.5,
+          "ck": 9.6,
+          "tb": 9.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.9,
+            8.4,
+            8.8
+          ],
+          "gk": 8.7,
+          "ck": 8.8,
+          "tb": 8.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            9.6,
+            9.1,
+            9.5
+          ],
+          "gk": 9.4,
+          "ck": 9.5,
+          "tb": 9.4,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            9.5,
+            9,
+            9.4
+          ],
+          "gk": 9.3,
+          "ck": 9.4,
+          "tb": 9.3,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            9.4,
+            8.9,
+            9.3
+          ],
+          "gk": 9.2,
+          "ck": 9.3,
+          "tb": 9.2,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            10,
+            9.6,
+            10
+          ],
+          "gk": 9.9,
+          "ck": 10,
+          "tb": 9.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            9.3,
+            8.8,
+            9.2
+          ],
+          "gk": 9.1,
+          "ck": 9.2,
+          "tb": 9.1,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            10,
+            9.5,
+            9.9
+          ],
+          "gk": 9.8,
+          "ck": 9.9,
+          "tb": 9.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 9.2,
+      "hocLuc": "Xuất sắc",
+      "danhHieu": "Học sinh Xuất sắc",
+      "nhanXetGVCN": "Ý thức học tập xuất sắc, tích cực tham gia phát biểu và rèn luyện gương mẫu.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS04",
+      "hoTen": "Phạm Quốc Bảo",
+      "to": 1,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8.9,
+            8.4,
+            8.8
+          ],
+          "gk": 8.7,
+          "ck": 8.8,
+          "tb": 8.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            9.5,
+            9,
+            9.4
+          ],
+          "gk": 9.3,
+          "ck": 9.4,
+          "tb": 9.3,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            9.4,
+            8.9,
+            9.3
+          ],
+          "gk": 9.2,
+          "ck": 9.3,
+          "tb": 9.2,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            9.3,
+            8.8,
+            9.2
+          ],
+          "gk": 9.1,
+          "ck": 9.2,
+          "tb": 9.1,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            9.2,
+            8.7,
+            9.1
+          ],
+          "gk": 9,
+          "ck": 9.1,
+          "tb": 9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.7,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ý thức học tập xuất sắc, tích cực tham gia phát biểu và rèn luyện gương mẫu.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS05",
+      "hoTen": "Nguyễn Văn Huy",
+      "to": 1,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            9.1,
+            8.6,
+            9
+          ],
+          "gk": 8.9,
+          "ck": 9,
+          "tb": 8.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.9,
+            8.4,
+            8.8
+          ],
+          "gk": 8.7,
+          "ck": 8.8,
+          "tb": 8.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.3,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS06",
+      "hoTen": "Nguyễn Văn Hùng",
+      "to": 1,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            9.5,
+            9,
+            9.4
+          ],
+          "gk": 9.3,
+          "ck": 9.4,
+          "tb": 9.3,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            9.4,
+            8.9,
+            9.3
+          ],
+          "gk": 9.2,
+          "ck": 9.3,
+          "tb": 9.2,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            9.3,
+            8.8,
+            9.2
+          ],
+          "gk": 9.1,
+          "ck": 9.2,
+          "tb": 9.1,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            9.2,
+            8.7,
+            9.1
+          ],
+          "gk": 9,
+          "ck": 9.1,
+          "tb": 9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            9.1,
+            8.6,
+            9
+          ],
+          "gk": 8.9,
+          "ck": 9,
+          "tb": 8.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.7,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ý thức học tập xuất sắc, tích cực tham gia phát biểu và rèn luyện gương mẫu.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS07",
+      "hoTen": "Đinh Thị Thuỳ Trang",
+      "to": 1,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            7.6,
+            7.1,
+            7.5
+          ],
+          "gk": 7.4,
+          "ck": 7.5,
+          "tb": 7.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            7.5,
+            7,
+            7.4
+          ],
+          "gk": 7.3,
+          "ck": 7.4,
+          "tb": 7.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.8,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS08",
+      "hoTen": "Huỳnh Gia Bảo",
+      "to": 1,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            6.7,
+            6.2,
+            6.6
+          ],
+          "gk": 6.5,
+          "ck": 6.6,
+          "tb": 6.5,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            6.6,
+            6.1,
+            6.5
+          ],
+          "gk": 6.4,
+          "ck": 6.5,
+          "tb": 6.4,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            7.2,
+            6.7,
+            7.1
+          ],
+          "gk": 7,
+          "ck": 7.1,
+          "tb": 7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            7.1,
+            6.6,
+            7
+          ],
+          "gk": 6.9,
+          "ck": 7,
+          "tb": 6.9,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            7,
+            6.5,
+            6.9
+          ],
+          "gk": 6.8,
+          "ck": 6.9,
+          "tb": 6.8,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            6.9,
+            6.4,
+            6.8
+          ],
+          "gk": 6.7,
+          "ck": 6.8,
+          "tb": 6.7,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.1,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Cần phân bổ thêm thời gian tự học ở nhà và chú ý các môn tự nhiên.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS09",
+      "hoTen": "Trần Thị Minh Anh",
+      "to": 1,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            9.1,
+            8.6,
+            9
+          ],
+          "gk": 8.9,
+          "ck": 9,
+          "tb": 8.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8.9,
+            8.4,
+            8.8
+          ],
+          "gk": 8.7,
+          "ck": 8.8,
+          "tb": 8.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.3,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS10",
+      "hoTen": "Lý Quốc Thịnh",
+      "to": 1,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            7.6,
+            7.1,
+            7.5
+          ],
+          "gk": 7.4,
+          "ck": 7.5,
+          "tb": 7.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            7.5,
+            7,
+            7.4
+          ],
+          "gk": 7.3,
+          "ck": 7.4,
+          "tb": 7.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.8,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS11",
+      "hoTen": "Phan Như Quỳnh",
+      "to": 1,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            9.3,
+            8.8,
+            9.2
+          ],
+          "gk": 9.1,
+          "ck": 9.2,
+          "tb": 9.1,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            9.2,
+            8.7,
+            9.1
+          ],
+          "gk": 9,
+          "ck": 9.1,
+          "tb": 9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            9.1,
+            8.6,
+            9
+          ],
+          "gk": 8.9,
+          "ck": 9,
+          "tb": 8.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            9.7,
+            9.2,
+            9.6
+          ],
+          "gk": 9.5,
+          "ck": 9.6,
+          "tb": 9.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.9,
+            8.4,
+            8.8
+          ],
+          "gk": 8.7,
+          "ck": 8.8,
+          "tb": 8.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            9.6,
+            9.1,
+            9.5
+          ],
+          "gk": 9.4,
+          "ck": 9.5,
+          "tb": 9.4,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            9.5,
+            9,
+            9.4
+          ],
+          "gk": 9.3,
+          "ck": 9.4,
+          "tb": 9.3,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.8,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ý thức học tập xuất sắc, tích cực tham gia phát biểu và rèn luyện gương mẫu.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS12",
+      "hoTen": "Vũ Đình Trọng",
+      "to": 2,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.9,
+            8.4,
+            8.8
+          ],
+          "gk": 8.7,
+          "ck": 8.8,
+          "tb": 8.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            9.5,
+            9,
+            9.4
+          ],
+          "gk": 9.3,
+          "ck": 9.4,
+          "tb": 9.3,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            9.4,
+            8.9,
+            9.3
+          ],
+          "gk": 9.2,
+          "ck": 9.3,
+          "tb": 9.2,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            9.3,
+            8.8,
+            9.2
+          ],
+          "gk": 9.1,
+          "ck": 9.2,
+          "tb": 9.1,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            9.2,
+            8.7,
+            9.1
+          ],
+          "gk": 9,
+          "ck": 9.1,
+          "tb": 9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            9.1,
+            8.6,
+            9
+          ],
+          "gk": 8.9,
+          "ck": 9,
+          "tb": 8.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.7,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ý thức học tập xuất sắc, tích cực tham gia phát biểu và rèn luyện gương mẫu.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS13",
+      "hoTen": "Võ Minh Quân",
+      "to": 2,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.9,
+            8.4,
+            8.8
+          ],
+          "gk": 8.7,
+          "ck": 8.8,
+          "tb": 8.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.2,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS14",
+      "hoTen": "Ngô Thanh Hằng",
+      "to": 2,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            7,
+            6.5,
+            6.9
+          ],
+          "gk": 6.8,
+          "ck": 6.9,
+          "tb": 6.8,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            6.9,
+            6.4,
+            6.8
+          ],
+          "gk": 6.7,
+          "ck": 6.8,
+          "tb": 6.7,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            7.6,
+            7.1,
+            7.5
+          ],
+          "gk": 7.4,
+          "ck": 7.5,
+          "tb": 7.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            6.8,
+            6.3,
+            6.7
+          ],
+          "gk": 6.6,
+          "ck": 6.7,
+          "tb": 6.6,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            7.5,
+            7,
+            7.4
+          ],
+          "gk": 7.3,
+          "ck": 7.4,
+          "tb": 7.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            6.7,
+            6.2,
+            6.6
+          ],
+          "gk": 6.5,
+          "ck": 6.6,
+          "tb": 6.5,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            6.6,
+            6.1,
+            6.5
+          ],
+          "gk": 6.4,
+          "ck": 6.5,
+          "tb": 6.4,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            7.2,
+            6.7,
+            7.1
+          ],
+          "gk": 7,
+          "ck": 7.1,
+          "tb": 7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Cần phân bổ thêm thời gian tự học ở nhà và chú ý các môn tự nhiên.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS15",
+      "hoTen": "Đoàn Nhật Nam",
+      "to": 2,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            7.1,
+            6.6,
+            7
+          ],
+          "gk": 6.9,
+          "ck": 7,
+          "tb": 6.9,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            7,
+            6.5,
+            6.9
+          ],
+          "gk": 6.8,
+          "ck": 6.9,
+          "tb": 6.8,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            6.9,
+            6.4,
+            6.8
+          ],
+          "gk": 6.7,
+          "ck": 6.8,
+          "tb": 6.7,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            7.6,
+            7.1,
+            7.5
+          ],
+          "gk": 7.4,
+          "ck": 7.5,
+          "tb": 7.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            7.5,
+            7,
+            7.4
+          ],
+          "gk": 7.3,
+          "ck": 7.4,
+          "tb": 7.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.4,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Cần phân bổ thêm thời gian tự học ở nhà và chú ý các môn tự nhiên.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS16",
+      "hoTen": "Dương Khánh Linh",
+      "to": 2,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            9.7,
+            9.2,
+            9.6
+          ],
+          "gk": 9.5,
+          "ck": 9.6,
+          "tb": 9.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.9,
+            8.4,
+            8.8
+          ],
+          "gk": 8.7,
+          "ck": 8.8,
+          "tb": 8.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            9.6,
+            9.1,
+            9.5
+          ],
+          "gk": 9.4,
+          "ck": 9.5,
+          "tb": 9.4,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            9.5,
+            9,
+            9.4
+          ],
+          "gk": 9.3,
+          "ck": 9.4,
+          "tb": 9.3,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            9.4,
+            8.9,
+            9.3
+          ],
+          "gk": 9.2,
+          "ck": 9.3,
+          "tb": 9.2,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            9.3,
+            8.8,
+            9.2
+          ],
+          "gk": 9.1,
+          "ck": 9.2,
+          "tb": 9.1,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.8,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ý thức học tập xuất sắc, tích cực tham gia phát biểu và rèn luyện gương mẫu.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS17",
+      "hoTen": "Trịnh Hoài An",
+      "to": 2,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8.9,
+            8.4,
+            8.8
+          ],
+          "gk": 8.7,
+          "ck": 8.8,
+          "tb": 8.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.2,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS18",
+      "hoTen": "Lê Hải Long",
+      "to": 2,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            6.9,
+            6.4,
+            6.8
+          ],
+          "gk": 6.7,
+          "ck": 6.8,
+          "tb": 6.7,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            7.6,
+            7.1,
+            7.5
+          ],
+          "gk": 7.4,
+          "ck": 7.5,
+          "tb": 7.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            6.8,
+            6.3,
+            6.7
+          ],
+          "gk": 6.6,
+          "ck": 6.7,
+          "tb": 6.6,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            7.5,
+            7,
+            7.4
+          ],
+          "gk": 7.3,
+          "ck": 7.4,
+          "tb": 7.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            6.7,
+            6.2,
+            6.6
+          ],
+          "gk": 6.5,
+          "ck": 6.6,
+          "tb": 6.5,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            6.6,
+            6.1,
+            6.5
+          ],
+          "gk": 6.4,
+          "ck": 6.5,
+          "tb": 6.4,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            7.2,
+            6.7,
+            7.1
+          ],
+          "gk": 7,
+          "ck": 7.1,
+          "tb": 7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.1,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Cần phân bổ thêm thời gian tự học ở nhà và chú ý các môn tự nhiên.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS19",
+      "hoTen": "Hồ Tuấn Kiệt",
+      "to": 2,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.9,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS20",
+      "hoTen": "Mai Thảo My",
+      "to": 2,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            7.2,
+            6.7,
+            7.1
+          ],
+          "gk": 7,
+          "ck": 7.1,
+          "tb": 7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            7.1,
+            6.6,
+            7
+          ],
+          "gk": 6.9,
+          "ck": 7,
+          "tb": 6.9,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            7,
+            6.5,
+            6.9
+          ],
+          "gk": 6.8,
+          "ck": 6.9,
+          "tb": 6.8,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            6.9,
+            6.4,
+            6.8
+          ],
+          "gk": 6.7,
+          "ck": 6.8,
+          "tb": 6.7,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            7.6,
+            7.1,
+            7.5
+          ],
+          "gk": 7.4,
+          "ck": 7.5,
+          "tb": 7.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            6.8,
+            6.3,
+            6.7
+          ],
+          "gk": 6.6,
+          "ck": 6.7,
+          "tb": 6.6,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            7.5,
+            7,
+            7.4
+          ],
+          "gk": 7.3,
+          "ck": 7.4,
+          "tb": 7.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.2,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Cần phân bổ thêm thời gian tự học ở nhà và chú ý các môn tự nhiên.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS21",
+      "hoTen": "Bùi Gia Khiêm",
+      "to": 2,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            9.5,
+            9,
+            9.4
+          ],
+          "gk": 9.3,
+          "ck": 9.4,
+          "tb": 9.3,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            9.4,
+            8.9,
+            9.3
+          ],
+          "gk": 9.2,
+          "ck": 9.3,
+          "tb": 9.2,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            9.3,
+            8.8,
+            9.2
+          ],
+          "gk": 9.1,
+          "ck": 9.2,
+          "tb": 9.1,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            9.2,
+            8.7,
+            9.1
+          ],
+          "gk": 9,
+          "ck": 9.1,
+          "tb": 9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            9.1,
+            8.6,
+            9
+          ],
+          "gk": 8.9,
+          "ck": 9,
+          "tb": 8.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.7,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ý thức học tập xuất sắc, tích cực tham gia phát biểu và rèn luyện gương mẫu.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS22",
+      "hoTen": "Cao Hoàng Bách",
+      "to": 2,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            7.6,
+            7.1,
+            7.5
+          ],
+          "gk": 7.4,
+          "ck": 7.5,
+          "tb": 7.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            7.5,
+            7,
+            7.4
+          ],
+          "gk": 7.3,
+          "ck": 7.4,
+          "tb": 7.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.8,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS23",
+      "hoTen": "Đặng Thị Thuỷ Tiên",
+      "to": 3,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8.9,
+            8.4,
+            8.8
+          ],
+          "gk": 8.7,
+          "ck": 8.8,
+          "tb": 8.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có c�� gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            9.5,
+            9,
+            9.4
+          ],
+          "gk": 9.3,
+          "ck": 9.4,
+          "tb": 9.3,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            9.4,
+            8.9,
+            9.3
+          ],
+          "gk": 9.2,
+          "ck": 9.3,
+          "tb": 9.2,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            9.3,
+            8.8,
+            9.2
+          ],
+          "gk": 9.1,
+          "ck": 9.2,
+          "tb": 9.1,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            9.2,
+            8.7,
+            9.1
+          ],
+          "gk": 9,
+          "ck": 9.1,
+          "tb": 9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.6,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ý thức học tập xuất sắc, tích cực tham gia phát biểu và rèn luyện gương mẫu.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS24",
+      "hoTen": "Lương Thế Vinh",
+      "to": 3,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            7.2,
+            6.7,
+            7.1
+          ],
+          "gk": 7,
+          "ck": 7.1,
+          "tb": 7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            7.1,
+            6.6,
+            7
+          ],
+          "gk": 6.9,
+          "ck": 7,
+          "tb": 6.9,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            7,
+            6.5,
+            6.9
+          ],
+          "gk": 6.8,
+          "ck": 6.9,
+          "tb": 6.8,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            6.9,
+            6.4,
+            6.8
+          ],
+          "gk": 6.7,
+          "ck": 6.8,
+          "tb": 6.7,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            7.6,
+            7.1,
+            7.5
+          ],
+          "gk": 7.4,
+          "ck": 7.5,
+          "tb": 7.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            6.8,
+            6.3,
+            6.7
+          ],
+          "gk": 6.6,
+          "ck": 6.7,
+          "tb": 6.6,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            7.5,
+            7,
+            7.4
+          ],
+          "gk": 7.3,
+          "ck": 7.4,
+          "tb": 7.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            6.7,
+            6.2,
+            6.6
+          ],
+          "gk": 6.5,
+          "ck": 6.6,
+          "tb": 6.5,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.2,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Cần phân bổ thêm thời gian tự học ở nhà và chú ý các môn tự nhiên.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS25",
+      "hoTen": "Nguyễn Thị Bích Ngọc",
+      "to": 3,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.9,
+            8.4,
+            8.8
+          ],
+          "gk": 8.7,
+          "ck": 8.8,
+          "tb": 8.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            9.1,
+            8.6,
+            9
+          ],
+          "gk": 8.9,
+          "ck": 9,
+          "tb": 8.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.2,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS26",
+      "hoTen": "Trần Đại Quang",
+      "to": 3,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            9.3,
+            8.8,
+            9.2
+          ],
+          "gk": 9.1,
+          "ck": 9.2,
+          "tb": 9.1,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            9.2,
+            8.7,
+            9.1
+          ],
+          "gk": 9,
+          "ck": 9.1,
+          "tb": 9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            9.1,
+            8.6,
+            9
+          ],
+          "gk": 8.9,
+          "ck": 9,
+          "tb": 8.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            9.7,
+            9.2,
+            9.6
+          ],
+          "gk": 9.5,
+          "ck": 9.6,
+          "tb": 9.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.9,
+            8.4,
+            8.8
+          ],
+          "gk": 8.7,
+          "ck": 8.8,
+          "tb": 8.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            9.6,
+            9.1,
+            9.5
+          ],
+          "gk": 9.4,
+          "ck": 9.5,
+          "tb": 9.4,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            9.5,
+            9,
+            9.4
+          ],
+          "gk": 9.3,
+          "ck": 9.4,
+          "tb": 9.3,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.8,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ý thức học tập xuất sắc, tích cực tham gia phát biểu và rèn luyện gương mẫu.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS27",
+      "hoTen": "Đỗ Ngọc Ánh",
+      "to": 3,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            6.9,
+            6.4,
+            6.8
+          ],
+          "gk": 6.7,
+          "ck": 6.8,
+          "tb": 6.7,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            7.6,
+            7.1,
+            7.5
+          ],
+          "gk": 7.4,
+          "ck": 7.5,
+          "tb": 7.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            7.5,
+            7,
+            7.4
+          ],
+          "gk": 7.3,
+          "ck": 7.4,
+          "tb": 7.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            7.2,
+            6.7,
+            7.1
+          ],
+          "gk": 7,
+          "ck": 7.1,
+          "tb": 7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.5,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS28",
+      "hoTen": "Hà Văn Dũng",
+      "to": 3,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            7.6,
+            7.1,
+            7.5
+          ],
+          "gk": 7.4,
+          "ck": 7.5,
+          "tb": 7.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            7.5,
+            7,
+            7.4
+          ],
+          "gk": 7.3,
+          "ck": 7.4,
+          "tb": 7.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.8,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS29",
+      "hoTen": "Tạ Minh Khang",
+      "to": 3,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            9.1,
+            8.6,
+            9
+          ],
+          "gk": 8.9,
+          "ck": 9,
+          "tb": 8.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.1,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS30",
+      "hoTen": "Lâm Mỹ Duyên",
+      "to": 3,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            6.8,
+            6.3,
+            6.7
+          ],
+          "gk": 6.6,
+          "ck": 6.7,
+          "tb": 6.6,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            7.5,
+            7,
+            7.4
+          ],
+          "gk": 7.3,
+          "ck": 7.4,
+          "tb": 7.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            6.7,
+            6.2,
+            6.6
+          ],
+          "gk": 6.5,
+          "ck": 6.6,
+          "tb": 6.5,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            6.6,
+            6.1,
+            6.5
+          ],
+          "gk": 6.4,
+          "ck": 6.5,
+          "tb": 6.4,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            7.2,
+            6.7,
+            7.1
+          ],
+          "gk": 7,
+          "ck": 7.1,
+          "tb": 7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            7.1,
+            6.6,
+            7
+          ],
+          "gk": 6.9,
+          "ck": 7,
+          "tb": 6.9,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            7,
+            6.5,
+            6.9
+          ],
+          "gk": 6.8,
+          "ck": 6.9,
+          "tb": 6.8,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.1,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Cần phân bổ thêm thời gian tự học ở nhà và chú ý các môn tự nhiên.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS31",
+      "hoTen": "Vương Đình Trí",
+      "to": 3,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            9.7,
+            9.2,
+            9.6
+          ],
+          "gk": 9.5,
+          "ck": 9.6,
+          "tb": 9.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.9,
+            8.4,
+            8.8
+          ],
+          "gk": 8.7,
+          "ck": 8.8,
+          "tb": 8.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            9.6,
+            9.1,
+            9.5
+          ],
+          "gk": 9.4,
+          "ck": 9.5,
+          "tb": 9.4,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            9.5,
+            9,
+            9.4
+          ],
+          "gk": 9.3,
+          "ck": 9.4,
+          "tb": 9.3,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            9.4,
+            8.9,
+            9.3
+          ],
+          "gk": 9.2,
+          "ck": 9.3,
+          "tb": 9.2,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            9.3,
+            8.8,
+            9.2
+          ],
+          "gk": 9.1,
+          "ck": 9.2,
+          "tb": 9.1,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.8,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ý thức học tập xuất sắc, tích cực tham gia phát biểu và rèn luyện gương mẫu.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS32",
+      "hoTen": "Phan Thảo Uyên",
+      "to": 3,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            7.1,
+            6.6,
+            7
+          ],
+          "gk": 6.9,
+          "ck": 7,
+          "tb": 6.9,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            7,
+            6.5,
+            6.9
+          ],
+          "gk": 6.8,
+          "ck": 6.9,
+          "tb": 6.8,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            6.9,
+            6.4,
+            6.8
+          ],
+          "gk": 6.7,
+          "ck": 6.8,
+          "tb": 6.7,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            7.6,
+            7.1,
+            7.5
+          ],
+          "gk": 7.4,
+          "ck": 7.5,
+          "tb": 7.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            6.8,
+            6.3,
+            6.7
+          ],
+          "gk": 6.6,
+          "ck": 6.7,
+          "tb": 6.6,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            7.5,
+            7,
+            7.4
+          ],
+          "gk": 7.3,
+          "ck": 7.4,
+          "tb": 7.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            6.7,
+            6.2,
+            6.6
+          ],
+          "gk": 6.5,
+          "ck": 6.6,
+          "tb": 6.5,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            6.6,
+            6.1,
+            6.5
+          ],
+          "gk": 6.4,
+          "ck": 6.5,
+          "tb": 6.4,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.1,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Cần phân bổ thêm thời gian tự học ở nhà và chú ý các môn tự nhiên.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS33",
+      "hoTen": "Hoàng Quốc Việt",
+      "to": 4,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            9.1,
+            8.6,
+            9
+          ],
+          "gk": 8.9,
+          "ck": 9,
+          "tb": 8.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.2,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS34",
+      "hoTen": "Bùi Minh Triết",
+      "to": 4,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.9,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS35",
+      "hoTen": "Nguyễn Thanh Tùng",
+      "to": 4,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            7.6,
+            7.1,
+            7.5
+          ],
+          "gk": 7.4,
+          "ck": 7.5,
+          "tb": 7.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            7.5,
+            7,
+            7.4
+          ],
+          "gk": 7.3,
+          "ck": 7.4,
+          "tb": 7.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            7.2,
+            6.7,
+            7.1
+          ],
+          "gk": 7,
+          "ck": 7.1,
+          "tb": 7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            7.1,
+            6.6,
+            7
+          ],
+          "gk": 6.9,
+          "ck": 7,
+          "tb": 6.9,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.5,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS36",
+      "hoTen": "Lê Diệu Linh",
+      "to": 4,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            9.5,
+            9,
+            9.4
+          ],
+          "gk": 9.3,
+          "ck": 9.4,
+          "tb": 9.3,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            9.4,
+            8.9,
+            9.3
+          ],
+          "gk": 9.2,
+          "ck": 9.3,
+          "tb": 9.2,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            9.3,
+            8.8,
+            9.2
+          ],
+          "gk": 9.1,
+          "ck": 9.2,
+          "tb": 9.1,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            9.2,
+            8.7,
+            9.1
+          ],
+          "gk": 9,
+          "ck": 9.1,
+          "tb": 9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            9.1,
+            8.6,
+            9
+          ],
+          "gk": 8.9,
+          "ck": 9,
+          "tb": 8.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.7,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ý thức học tập xuất sắc, tích cực tham gia phát biểu và rèn luyện gương mẫu.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS37",
+      "hoTen": "Đặng Tuấn Anh",
+      "to": 4,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.6,
+            8.1,
+            8.5
+          ],
+          "gk": 8.4,
+          "ck": 8.5,
+          "tb": 8.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            9.1,
+            8.6,
+            9
+          ],
+          "gk": 8.9,
+          "ck": 9,
+          "tb": 8.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.2,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS38",
+      "hoTen": "Phạm Hồng Sơn",
+      "to": 4,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            6.7,
+            6.2,
+            6.6
+          ],
+          "gk": 6.5,
+          "ck": 6.6,
+          "tb": 6.5,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            6.6,
+            6.1,
+            6.5
+          ],
+          "gk": 6.4,
+          "ck": 6.5,
+          "tb": 6.4,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            7.2,
+            6.7,
+            7.1
+          ],
+          "gk": 7,
+          "ck": 7.1,
+          "tb": 7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            7.1,
+            6.6,
+            7
+          ],
+          "gk": 6.9,
+          "ck": 7,
+          "tb": 6.9,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            7,
+            6.5,
+            6.9
+          ],
+          "gk": 6.8,
+          "ck": 6.9,
+          "tb": 6.8,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            6.9,
+            6.4,
+            6.8
+          ],
+          "gk": 6.7,
+          "ck": 6.8,
+          "tb": 6.7,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.1,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Cần phân bổ thêm thời gian tự học ở nhà và chú ý các môn tự nhiên.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS39",
+      "hoTen": "Trương Ngọc Huyền",
+      "to": 4,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            7.5,
+            7,
+            7.4
+          ],
+          "gk": 7.3,
+          "ck": 7.4,
+          "tb": 7.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            7.2,
+            6.7,
+            7.1
+          ],
+          "gk": 7,
+          "ck": 7.1,
+          "tb": 7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            7.1,
+            6.6,
+            7
+          ],
+          "gk": 6.9,
+          "ck": 7,
+          "tb": 6.9,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            7,
+            6.5,
+            6.9
+          ],
+          "gk": 6.8,
+          "ck": 6.9,
+          "tb": 6.8,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.5,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS40",
+      "hoTen": "Nguyễn Tấn Đạt",
+      "to": 4,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            7.6,
+            7.1,
+            7.5
+          ],
+          "gk": 7.4,
+          "ck": 7.5,
+          "tb": 7.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            7.5,
+            7,
+            7.4
+          ],
+          "gk": 7.3,
+          "ck": 7.4,
+          "tb": 7.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            8.2,
+            7.7,
+            8.1
+          ],
+          "gk": 8,
+          "ck": 8.1,
+          "tb": 8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.1,
+            7.6,
+            8
+          ],
+          "gk": 7.9,
+          "ck": 8,
+          "tb": 7.9,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            8.7,
+            8.2,
+            8.6
+          ],
+          "gk": 8.5,
+          "ck": 8.6,
+          "tb": 8.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.8,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS41",
+      "hoTen": "Trần Kim Cương",
+      "to": 4,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            9.3,
+            8.8,
+            9.2
+          ],
+          "gk": 9.1,
+          "ck": 9.2,
+          "tb": 9.1,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            8.5,
+            8,
+            8.4
+          ],
+          "gk": 8.3,
+          "ck": 8.4,
+          "tb": 8.3,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            9.2,
+            8.7,
+            9.1
+          ],
+          "gk": 9,
+          "ck": 9.1,
+          "tb": 9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8.4,
+            7.9,
+            8.3
+          ],
+          "gk": 8.2,
+          "ck": 8.3,
+          "tb": 8.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            9.1,
+            8.6,
+            9
+          ],
+          "gk": 8.9,
+          "ck": 9,
+          "tb": 8.9,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            8.3,
+            7.8,
+            8.2
+          ],
+          "gk": 8.1,
+          "ck": 8.2,
+          "tb": 8.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            9,
+            8.5,
+            8.9
+          ],
+          "gk": 8.8,
+          "ck": 8.9,
+          "tb": 8.8,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            9.7,
+            9.2,
+            9.6
+          ],
+          "gk": 9.5,
+          "ck": 9.6,
+          "tb": 9.5,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            8.9,
+            8.4,
+            8.8
+          ],
+          "gk": 8.7,
+          "ck": 8.8,
+          "tb": 8.7,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            9.6,
+            9.1,
+            9.5
+          ],
+          "gk": 9.4,
+          "ck": 9.5,
+          "tb": 9.4,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            8.8,
+            8.3,
+            8.7
+          ],
+          "gk": 8.6,
+          "ck": 8.7,
+          "tb": 8.6,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            9.5,
+            9,
+            9.4
+          ],
+          "gk": 9.3,
+          "ck": 9.4,
+          "tb": 9.3,
+          "note": "Nắm chắc kiến thức, tư duy tốt"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 8.8,
+      "hocLuc": "Giỏi",
+      "danhHieu": "Học sinh Giỏi",
+      "nhanXetGVCN": "Ý thức học tập xuất sắc, tích cực tham gia phát biểu và rèn luyện gương mẫu.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    },
+    {
+      "maHS": "HS42",
+      "hoTen": "Hồ Hoàng Phương",
+      "to": 4,
+      "hocKi": 1,
+      "namHoc": "2026-2027",
+      "subjects": {
+        "toan": {
+          "subjectId": "toan",
+          "tx": [
+            7.4,
+            6.9,
+            7.3
+          ],
+          "gk": 7.2,
+          "ck": 7.3,
+          "tb": 7.2,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "van": {
+          "subjectId": "van",
+          "tx": [
+            6.6,
+            6.1,
+            6.5
+          ],
+          "gk": 6.4,
+          "ck": 6.5,
+          "tb": 6.4,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "anh": {
+          "subjectId": "anh",
+          "tx": [
+            7.3,
+            6.8,
+            7.2
+          ],
+          "gk": 7.1,
+          "ck": 7.2,
+          "tb": 7.1,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "ly": {
+          "subjectId": "ly",
+          "tx": [
+            8,
+            7.5,
+            7.9
+          ],
+          "gk": 7.8,
+          "ck": 7.9,
+          "tb": 7.8,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "hoa": {
+          "subjectId": "hoa",
+          "tx": [
+            7.2,
+            6.7,
+            7.1
+          ],
+          "gk": 7,
+          "ck": 7.1,
+          "tb": 7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "sinh": {
+          "subjectId": "sinh",
+          "tx": [
+            7.9,
+            7.4,
+            7.8
+          ],
+          "gk": 7.7,
+          "ck": 7.8,
+          "tb": 7.7,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "su": {
+          "subjectId": "su",
+          "tx": [
+            7.1,
+            6.6,
+            7
+          ],
+          "gk": 6.9,
+          "ck": 7,
+          "tb": 6.9,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "dia": {
+          "subjectId": "dia",
+          "tx": [
+            7.8,
+            7.3,
+            7.7
+          ],
+          "gk": 7.6,
+          "ck": 7.7,
+          "tb": 7.6,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "gdcd": {
+          "subjectId": "gdcd",
+          "tx": [
+            7,
+            6.5,
+            6.9
+          ],
+          "gk": 6.8,
+          "ck": 6.9,
+          "tb": 6.8,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "tin": {
+          "subjectId": "tin",
+          "tx": [
+            7.7,
+            7.2,
+            7.6
+          ],
+          "gk": 7.5,
+          "ck": 7.6,
+          "tb": 7.5,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "cn": {
+          "subjectId": "cn",
+          "tx": [
+            6.9,
+            6.4,
+            6.8
+          ],
+          "gk": 6.7,
+          "ck": 6.8,
+          "tb": 6.7,
+          "note": "Cần tích cực ôn tập thêm"
+        },
+        "qp": {
+          "subjectId": "qp",
+          "tx": [
+            7.6,
+            7.1,
+            7.5
+          ],
+          "gk": 7.4,
+          "ck": 7.5,
+          "tb": 7.4,
+          "note": "Có cố gắng, chăm chỉ"
+        },
+        "td": {
+          "subjectId": "td",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        },
+        "hdtn": {
+          "subjectId": "hdtn",
+          "tx": [],
+          "gk": null,
+          "ck": null,
+          "tb": null,
+          "evaluateResult": "Đ",
+          "note": "Hoàn thành tốt các nhiệm vụ môn học"
+        }
+      },
+      "diemTBChung": 7.2,
+      "hocLuc": "Khá",
+      "danhHieu": "Học sinh Tiên tiến",
+      "nhanXetGVCN": "Cần phân bổ thêm thời gian tự học ở nhà và chú ý các môn tự nhiên.",
+      "ngayCapNhat": "2026-11-09T08:00:00Z"
+    }
+  ],
+  "settings": {
+    "diemKhoiDau": 100,
+    "nguongTot": 90,
+    "nguongKha": 75,
+    "nguongDat": 60,
+    "batDiemCong": false,
+    "batDiemThuongGoLoi": false,
+    "tranDiemBu": 50,
+    "thoiHanSuaHuyPhut": 1440,
+    "toTruongTuCham": false,
+    "hocSinhThayMau": "CaLop",
+    "hanGuiGiaiTrinhNgay": 7,
+    "nguoiDuyetGiaiTrinh": "GV",
+    "mocBuoiSang": "06:30-11:30",
+    "mocBuoiChieu": "12:30-17:30",
+    "khoaKhanCap": false,
+    "maLop": "10A5DP",
+    "choPhepXemDiemMon": false,
+    "choPhepTrungAvatar": false
+  },
+  "layout": [
+    {
+      "hang": 0,
+      "cot": 0,
+      "loaiO": "banGV",
+      "ghiChu": "Bàn GV"
+    },
+    {
+      "hang": 0,
+      "cot": 1,
+      "loaiO": "banGV",
+      "ghiChu": "Bàn GV"
+    },
+    {
+      "hang": 0,
+      "cot": 2,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 0,
+      "cot": 3,
+      "loaiO": "buc",
+      "ghiChu": "Bảng"
+    },
+    {
+      "hang": 0,
+      "cot": 4,
+      "loaiO": "buc",
+      "ghiChu": "Bảng"
+    },
+    {
+      "hang": 0,
+      "cot": 5,
+      "loaiO": "buc",
+      "ghiChu": "Bảng 10A5"
+    },
+    {
+      "hang": 0,
+      "cot": 6,
+      "loaiO": "buc",
+      "ghiChu": "Bảng"
+    },
+    {
+      "hang": 0,
+      "cot": 7,
+      "loaiO": "buc",
+      "ghiChu": "Bảng"
+    },
+    {
+      "hang": 0,
+      "cot": 8,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 0,
+      "cot": 9,
+      "loaiO": "cua",
+      "ghiChu": "Cửa chính"
+    },
+    {
+      "hang": 0,
+      "cot": 10,
+      "loaiO": "cua",
+      "ghiChu": "Cửa chính"
+    },
+    {
+      "hang": 1,
+      "cot": 0,
+      "loaiO": "ghe",
+      "maHS": "HS33"
+    },
+    {
+      "hang": 1,
+      "cot": 1,
+      "loaiO": "ghe",
+      "maHS": "HS34"
+    },
+    {
+      "hang": 1,
+      "cot": 2,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 1,
+      "cot": 3,
+      "loaiO": "ghe",
+      "maHS": "HS23"
+    },
+    {
+      "hang": 1,
+      "cot": 4,
+      "loaiO": "ghe",
+      "maHS": "HS24"
+    },
+    {
+      "hang": 1,
+      "cot": 5,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 1,
+      "cot": 6,
+      "loaiO": "ghe",
+      "maHS": "HS12"
+    },
+    {
+      "hang": 1,
+      "cot": 7,
+      "loaiO": "ghe",
+      "maHS": "HS13"
+    },
+    {
+      "hang": 1,
+      "cot": 8,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 1,
+      "cot": 9,
+      "loaiO": "ghe",
+      "maHS": "HS01"
+    },
+    {
+      "hang": 1,
+      "cot": 10,
+      "loaiO": "ghe",
+      "maHS": "HS02"
+    },
+    {
+      "hang": 2,
+      "cot": 0,
+      "loaiO": "ghe",
+      "maHS": "HS35"
+    },
+    {
+      "hang": 2,
+      "cot": 1,
+      "loaiO": "ghe",
+      "maHS": "HS36"
+    },
+    {
+      "hang": 2,
+      "cot": 2,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 2,
+      "cot": 3,
+      "loaiO": "ghe",
+      "maHS": "HS25"
+    },
+    {
+      "hang": 2,
+      "cot": 4,
+      "loaiO": "ghe",
+      "maHS": "HS26"
+    },
+    {
+      "hang": 2,
+      "cot": 5,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 2,
+      "cot": 6,
+      "loaiO": "ghe",
+      "maHS": "HS14"
+    },
+    {
+      "hang": 2,
+      "cot": 7,
+      "loaiO": "ghe",
+      "maHS": "HS15"
+    },
+    {
+      "hang": 2,
+      "cot": 8,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 2,
+      "cot": 9,
+      "loaiO": "ghe",
+      "maHS": "HS03"
+    },
+    {
+      "hang": 2,
+      "cot": 10,
+      "loaiO": "ghe",
+      "maHS": "HS04"
+    },
+    {
+      "hang": 3,
+      "cot": 0,
+      "loaiO": "ghe",
+      "maHS": "HS37"
+    },
+    {
+      "hang": 3,
+      "cot": 1,
+      "loaiO": "ghe",
+      "maHS": "HS38"
+    },
+    {
+      "hang": 3,
+      "cot": 2,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 3,
+      "cot": 3,
+      "loaiO": "ghe",
+      "maHS": "HS27"
+    },
+    {
+      "hang": 3,
+      "cot": 4,
+      "loaiO": "ghe",
+      "maHS": "HS28"
+    },
+    {
+      "hang": 3,
+      "cot": 5,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 3,
+      "cot": 6,
+      "loaiO": "ghe",
+      "maHS": "HS16"
+    },
+    {
+      "hang": 3,
+      "cot": 7,
+      "loaiO": "ghe",
+      "maHS": "HS17"
+    },
+    {
+      "hang": 3,
+      "cot": 8,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 3,
+      "cot": 9,
+      "loaiO": "ghe",
+      "maHS": "HS05"
+    },
+    {
+      "hang": 3,
+      "cot": 10,
+      "loaiO": "ghe",
+      "maHS": "HS06"
+    },
+    {
+      "hang": 4,
+      "cot": 0,
+      "loaiO": "ghe",
+      "maHS": "HS39"
+    },
+    {
+      "hang": 4,
+      "cot": 1,
+      "loaiO": "ghe",
+      "maHS": "HS40"
+    },
+    {
+      "hang": 4,
+      "cot": 2,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 4,
+      "cot": 3,
+      "loaiO": "ghe",
+      "maHS": "HS29"
+    },
+    {
+      "hang": 4,
+      "cot": 4,
+      "loaiO": "ghe",
+      "maHS": "HS30"
+    },
+    {
+      "hang": 4,
+      "cot": 5,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 4,
+      "cot": 6,
+      "loaiO": "ghe",
+      "maHS": "HS18"
+    },
+    {
+      "hang": 4,
+      "cot": 7,
+      "loaiO": "ghe",
+      "maHS": "HS19"
+    },
+    {
+      "hang": 4,
+      "cot": 8,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 4,
+      "cot": 9,
+      "loaiO": "ghe",
+      "maHS": "HS07"
+    },
+    {
+      "hang": 4,
+      "cot": 10,
+      "loaiO": "ghe",
+      "maHS": "HS08"
+    },
+    {
+      "hang": 5,
+      "cot": 0,
+      "loaiO": "ghe",
+      "maHS": "HS41"
+    },
+    {
+      "hang": 5,
+      "cot": 1,
+      "loaiO": "ghe",
+      "maHS": "HS42"
+    },
+    {
+      "hang": 5,
+      "cot": 2,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 5,
+      "cot": 3,
+      "loaiO": "ghe",
+      "maHS": "HS31"
+    },
+    {
+      "hang": 5,
+      "cot": 4,
+      "loaiO": "ghe",
+      "maHS": "HS32"
+    },
+    {
+      "hang": 5,
+      "cot": 5,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 5,
+      "cot": 6,
+      "loaiO": "ghe",
+      "maHS": "HS20"
+    },
+    {
+      "hang": 5,
+      "cot": 7,
+      "loaiO": "ghe",
+      "maHS": "HS21"
+    },
+    {
+      "hang": 5,
+      "cot": 8,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 5,
+      "cot": 9,
+      "loaiO": "ghe",
+      "maHS": "HS09"
+    },
+    {
+      "hang": 5,
+      "cot": 10,
+      "loaiO": "ghe",
+      "maHS": "HS10"
+    },
+    {
+      "hang": 6,
+      "cot": 0,
+      "loaiO": "trong",
+      "ghiChu": "Chỗ trống Bàn 6 - Tổ 4"
+    },
+    {
+      "hang": 6,
+      "cot": 1,
+      "loaiO": "trong",
+      "ghiChu": "Chỗ trống Bàn 6 - Tổ 4"
+    },
+    {
+      "hang": 6,
+      "cot": 2,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 6,
+      "cot": 3,
+      "loaiO": "trong",
+      "ghiChu": "Chỗ trống Bàn 6 - Tổ 3"
+    },
+    {
+      "hang": 6,
+      "cot": 4,
+      "loaiO": "trong",
+      "ghiChu": "Chỗ trống Bàn 6 - Tổ 3"
+    },
+    {
+      "hang": 6,
+      "cot": 5,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 6,
+      "cot": 6,
+      "loaiO": "ghe",
+      "maHS": "HS22"
+    },
+    {
+      "hang": 6,
+      "cot": 7,
+      "loaiO": "trong",
+      "ghiChu": "Chỗ trống Bàn 6 - Tổ 2"
+    },
+    {
+      "hang": 6,
+      "cot": 8,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 6,
+      "cot": 9,
+      "loaiO": "ghe",
+      "maHS": "HS11"
+    },
+    {
+      "hang": 6,
+      "cot": 10,
+      "loaiO": "trong",
+      "ghiChu": "Chỗ trống Bàn 6 - Tổ 1"
+    },
+    {
+      "hang": 7,
+      "cot": 0,
+      "loaiO": "cua",
+      "ghiChu": "Cửa sau"
+    },
+    {
+      "hang": 7,
+      "cot": 1,
+      "loaiO": "trong"
+    },
+    {
+      "hang": 7,
+      "cot": 2,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 7,
+      "cot": 3,
+      "loaiO": "trong"
+    },
+    {
+      "hang": 7,
+      "cot": 4,
+      "loaiO": "trong"
+    },
+    {
+      "hang": 7,
+      "cot": 5,
+      "loaiO": "trong",
+      "ghiChu": "Khoảng trống cuối lớp"
+    },
+    {
+      "hang": 7,
+      "cot": 6,
+      "loaiO": "trong"
+    },
+    {
+      "hang": 7,
+      "cot": 7,
+      "loaiO": "trong"
+    },
+    {
+      "hang": 7,
+      "cot": 8,
+      "loaiO": "loidi"
+    },
+    {
+      "hang": 7,
+      "cot": 9,
+      "loaiO": "trong"
+    },
+    {
+      "hang": 7,
+      "cot": 10,
+      "loaiO": "trong"
+    }
+  ],
+  "rules": [
+    {
+      "maNoiQuy": "NQ01",
+      "nhomHanhVi": "Chuyên cần",
+      "tenHanhVi": "Đi muộn",
+      "loaiDiem": "Tru",
+      "diemSo": 2,
+      "mucDo": "Nhe",
+      "ghim": true,
+      "thuTu": 1
+    },
+    {
+      "maNoiQuy": "NQ02",
+      "nhomHanhVi": "Chuyên cần",
+      "tenHanhVi": "Nghỉ học không phép",
+      "loaiDiem": "Tru",
+      "diemSo": 5,
+      "mucDo": "Vua",
+      "ghim": true,
+      "thuTu": 2
+    },
+    {
+      "maNoiQuy": "NQ03",
+      "nhomHanhVi": "Chuyên cần",
+      "tenHanhVi": "Trốn tiết, bỏ giờ",
+      "loaiDiem": "Tru",
+      "diemSo": 5,
+      "mucDo": "Vua",
+      "ghim": false,
+      "thuTu": 3
+    },
+    {
+      "maNoiQuy": "NQ04",
+      "nhomHanhVi": "Chuyên cần",
+      "tenHanhVi": "Vào lớp trễ sau ra chơi",
+      "loaiDiem": "Tru",
+      "diemSo": 1,
+      "mucDo": "Nhe",
+      "ghim": false,
+      "thuTu": 4
+    },
+    {
+      "maNoiQuy": "NQ05",
+      "nhomHanhVi": "Học tập",
+      "tenHanhVi": "Không làm bài tập",
+      "loaiDiem": "Tru",
+      "diemSo": 3,
+      "mucDo": "Vua",
+      "ghim": true,
+      "thuTu": 5
+    },
+    {
+      "maNoiQuy": "NQ06",
+      "nhomHanhVi": "Học tập",
+      "tenHanhVi": "Quên mang sách vở, dụng cụ",
+      "loaiDiem": "Tru",
+      "diemSo": 2,
+      "mucDo": "Nhe",
+      "ghim": true,
+      "thuTu": 6
+    },
+    {
+      "maNoiQuy": "NQ07",
+      "nhomHanhVi": "Học tập",
+      "tenHanhVi": "Nói chuyện riêng trong giờ học",
+      "loaiDiem": "Tru",
+      "diemSo": 1,
+      "mucDo": "Nhe",
+      "ghim": true,
+      "thuTu": 7
+    },
+    {
+      "maNoiQuy": "NQ08",
+      "nhomHanhVi": "Học tập",
+      "tenHanhVi": "Không ghi chép bài",
+      "loaiDiem": "Tru",
+      "diemSo": 2,
+      "mucDo": "Nhe",
+      "ghim": false,
+      "thuTu": 8
+    },
+    {
+      "maNoiQuy": "NQ09",
+      "nhomHanhVi": "Học tập",
+      "tenHanhVi": "Gian lận trong thi, kiểm tra",
+      "loaiDiem": "Tru",
+      "diemSo": 5,
+      "mucDo": "Nang",
+      "ghim": false,
+      "thuTu": 9
+    },
+    {
+      "maNoiQuy": "NQ10",
+      "nhomHanhVi": "Học tập",
+      "tenHanhVi": "Không chuẩn bị bài mới",
+      "loaiDiem": "Tru",
+      "diemSo": 2,
+      "mucDo": "Nhe",
+      "ghim": false,
+      "thuTu": 10
+    },
+    {
+      "maNoiQuy": "NQ11",
+      "nhomHanhVi": "Nề nếp",
+      "tenHanhVi": "Không đúng đồng phục",
+      "loaiDiem": "Tru",
+      "diemSo": 2,
+      "mucDo": "Nhe",
+      "ghim": true,
+      "thuTu": 11
+    },
+    {
+      "maNoiQuy": "NQ12",
+      "nhomHanhVi": "Nề nếp",
+      "tenHanhVi": "Không đeo phù hiệu / thẻ học sinh",
+      "loaiDiem": "Tru",
+      "diemSo": 1,
+      "mucDo": "Nhe",
+      "ghim": true,
+      "thuTu": 12
+    },
+    {
+      "maNoiQuy": "NQ13",
+      "nhomHanhVi": "Nề nếp",
+      "tenHanhVi": "Dùng điện thoại không phép trong lớp",
+      "loaiDiem": "Tru",
+      "diemSo": 5,
+      "mucDo": "Nang",
+      "ghim": true,
+      "thuTu": 13
+    },
+    {
+      "maNoiQuy": "NQ14",
+      "nhomHanhVi": "Nề nếp",
+      "tenHanhVi": "Nói tục, chửi thề, mất lịch sự",
+      "loaiDiem": "Tru",
+      "diemSo": 3,
+      "mucDo": "Vua",
+      "ghim": false,
+      "thuTu": 14
+    },
+    {
+      "maNoiQuy": "NQ15",
+      "nhomHanhVi": "Nề nếp",
+      "tenHanhVi": "Nhuộm tóc, móng tay, trang điểm đậm",
+      "loaiDiem": "Tru",
+      "diemSo": 3,
+      "mucDo": "Vua",
+      "ghim": false,
+      "thuTu": 15
+    },
+    {
+      "maNoiQuy": "NQ16",
+      "nhomHanhVi": "Nề nếp",
+      "tenHanhVi": "Gây gổ, đánh nhau",
+      "loaiDiem": "Tru",
+      "diemSo": 10,
+      "mucDo": "Nang",
+      "ghim": false,
+      "thuTu": 16
+    },
+    {
+      "maNoiQuy": "NQ17",
+      "nhomHanhVi": "Phong trào",
+      "tenHanhVi": "Không tham gia sinh hoạt chi đoàn / lớp",
+      "loaiDiem": "Tru",
+      "diemSo": 3,
+      "mucDo": "Vua",
+      "ghim": false,
+      "thuTu": 17
+    },
+    {
+      "maNoiQuy": "NQ18",
+      "nhomHanhVi": "Phong trào",
+      "tenHanhVi": "Đến muộn giờ chào cờ / sinh hoạt",
+      "loaiDiem": "Tru",
+      "diemSo": 2,
+      "mucDo": "Nhe",
+      "ghim": false,
+      "thuTu": 18
+    },
+    {
+      "maNoiQuy": "NQ19",
+      "nhomHanhVi": "Phong trào",
+      "tenHanhVi": "Thiếu nghiêm túc khi hát Quốc ca",
+      "loaiDiem": "Tru",
+      "diemSo": 2,
+      "mucDo": "Nhe",
+      "ghim": false,
+      "thuTu": 19
+    },
+    {
+      "maNoiQuy": "NQ20",
+      "nhomHanhVi": "Lao động - Vệ sinh",
+      "tenHanhVi": "Trực nhật bẩn hoặc trễ giờ",
+      "loaiDiem": "Tru",
+      "diemSo": 3,
+      "mucDo": "Vua",
+      "ghim": true,
+      "thuTu": 20
+    },
+    {
+      "maNoiQuy": "NQ21",
+      "nhomHanhVi": "Lao động - Vệ sinh",
+      "tenHanhVi": "Vứt rác bừa bãi trong lớp",
+      "loaiDiem": "Tru",
+      "diemSo": 2,
+      "mucDo": "Nhe",
+      "ghim": true,
+      "thuTu": 21
+    },
+    {
+      "maNoiQuy": "NQ22",
+      "nhomHanhVi": "Lao động - Vệ sinh",
+      "tenHanhVi": "Ăn quà vặt trong phòng học",
+      "loaiDiem": "Tru",
+      "diemSo": 2,
+      "mucDo": "Nhe",
+      "ghim": false,
+      "thuTu": 22
+    },
+    {
+      "maNoiQuy": "NQ23",
+      "nhomHanhVi": "Lao động - Vệ sinh",
+      "tenHanhVi": "Không tắt quạt, đèn khi ra khỏi lớp",
+      "loaiDiem": "Tru",
+      "diemSo": 2,
+      "mucDo": "Nhe",
+      "ghim": false,
+      "thuTu": 23
+    },
+    {
+      "maNoiQuy": "NQ24",
+      "nhomHanhVi": "Lao động - Vệ sinh",
+      "tenHanhVi": "Viết vẽ bậy lên bàn hoặc tường",
+      "loaiDiem": "Tru",
+      "diemSo": 3,
+      "mucDo": "Vua",
+      "ghim": false,
+      "thuTu": 24
+    },
+    {
+      "maNoiQuy": "NQ25",
+      "nhomHanhVi": "Điểm cộng",
+      "tenHanhVi": "Đạt điểm 9-10 bài kiểm tra",
+      "loaiDiem": "Cong",
+      "diemSo": 2,
+      "mucDo": "Nhe",
+      "ghim": false,
+      "thuTu": 25
+    },
+    {
+      "maNoiQuy": "NQ26",
+      "nhomHanhVi": "Điểm cộng",
+      "tenHanhVi": "Phát biểu xây dựng bài tích cực",
+      "loaiDiem": "Cong",
+      "diemSo": 1,
+      "mucDo": "Nhe",
+      "ghim": false,
+      "thuTu": 26
+    },
+    {
+      "maNoiQuy": "NQ27",
+      "nhomHanhVi": "Điểm cộng",
+      "tenHanhVi": "Nhặt được của rơi trả lại",
+      "loaiDiem": "Cong",
+      "diemSo": 3,
+      "mucDo": "Nhe",
+      "ghim": false,
+      "thuTu": 27
+    },
+    {
+      "maNoiQuy": "NQ28",
+      "nhomHanhVi": "Điểm cộng",
+      "tenHanhVi": "Đạt giải cuộc thi / phong trào trường",
+      "loaiDiem": "Cong",
+      "diemSo": 5,
+      "mucDo": "Nhe",
+      "ghim": false,
+      "thuTu": 28
+    }
+  ],
+  "teacherAvatar": "/src/assets/avatars/gv_10.jpg",
+  "studentBadgesMap": {
+    "HS01": [
+      "b_all_rounder",
+      "b_cadre_leader",
+      "b_star_10a5"
+    ],
+    "HS02": [
+      "b_union_torch",
+      "b_march_youth",
+      "b_positive_energy"
+    ],
+    "HS03": [
+      "b_diligent_quill",
+      "b_study_buddies",
+      "b_perfect_ten"
+    ],
+    "HS04": [
+      "b_green_classroom",
+      "b_golden_hands",
+      "b_orderly_desk"
+    ],
+    "HS05": [
+      "b_iron_discipline",
+      "b_neat_attire",
+      "b_perfect_attendance"
+    ],
+    "HS12": [
+      "b_cadre_leader",
+      "b_punctuality_hero"
+    ],
+    "HS23": [
+      "b_cadre_leader",
+      "b_creative_genius"
+    ],
+    "HS34": [
+      "b_cadre_leader",
+      "b_loving_guide"
+    ]
+  },
+  "studentActiveBadges": {},
+  "updatedAt": "2026-11-09T09:55:20.984Z",
+  "version": 1
+}

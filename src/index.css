@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+:root {
+  font-family: 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light;
+
+  /* Light mode defaults */
+  --bg: #F6F6F3;
+  --surface: #FFFFFF;
+  --surface-2: #EFEFEA;
+  --border: #DEDDD6;
+  --text: #15191E;
+  --text-muted: #565D66;
+  --accent: #2457D6;
+  --on-accent: #FFFFFF;
+  --primary: #15191E;
+  --on-primary: #FFFFFF;
+  
+  --st-ok: #1B7F4B;
+  --st-none: #9AA1AB;
+  --st-warn: #C98A0B;
+  --st-bad: #C62828;
+
+  /* Roles Light */
+  --role-lt-fg: #C2410C;
+  --role-lt-bg: rgba(194, 65, 12, 0.14);
+  --role-tt-fg: #0F766E;
+  --role-tt-bg: rgba(15, 118, 110, 0.14);
+  --role-ht-fg: #6D28D9;
+  --role-ht-bg: rgba(109, 40, 217, 0.14);
+  --role-ld-fg: #7C4A1D;
+  --role-ld-bg: rgba(124, 74, 29, 0.14);
+  --role-bt-fg: #BE185D;
+  --role-bt-bg: rgba(190, 24, 93, 0.14);
+  --role-gv-fg: #1E3A8A;
+  --role-gv-bg: rgba(30, 58, 138, 0.14);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Dark mode defaults */
+  --bg: #0E1114;
+  --surface: #161A1F;
+  --surface-2: #1E242B;
+  --border: #2B323A;
+  --text: #ECEFF3;
+  --text-muted: #A2ABB6;
+  --accent: #7AA2F7;
+  --on-accent: #0B1220;
+  --primary: #ECEFF3;
+  --on-primary: #0E1114;
+  
+  --st-ok: #4ADE80;
+  --st-none: #6B7480;
+  --st-warn: #F2C14E;
+  --st-bad: #FF6B6B;
+
+  /* Roles Dark */
+  --role-lt-fg: #FB923C;
+  --role-lt-bg: rgba(251, 146, 60, 0.22);
+  --role-tt-fg: #2DD4BF;
+  --role-tt-bg: rgba(45, 212, 191, 0.22);
+  --role-ht-fg: #A78BFA;
+  --role-ht-bg: rgba(167, 139, 250, 0.22);
+  --role-ld-fg: #D6A66B;
+  --role-ld-bg: rgba(214, 166, 107, 0.22);
+  --role-bt-fg: #F472B6;
+  --role-bt-bg: rgba(244, 114, 182, 0.22);
+  --role-gv-fg: #93B4F5;
+  --role-gv-bg: rgba(147, 180, 245, 0.22);
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* Number alignment */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Base custom utility helpers using design tokens */
+.bg-app { background-color: var(--bg); }
+.bg-surface { background-color: var(--surface); }
+.bg-surface-2 { background-color: var(--surface-2); }
+.border-token { border-color: var(--border); }
+.text-main { color: var(--text); }
+.text-muted { color: var(--text-muted); }
+.text-accent { color: var(--accent); }
+.bg-accent { background-color: var(--accent); }
+.text-on-accent { color: var(--on-accent); }
+.bg-primary { background-color: var(--primary); }
+.text-on-primary { color: var(--on-primary); }
+
+/* Ripple keyframe for seat selection */
+@keyframes seat-ripple {
+  0% { transform: scale(0.98); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1.03); opacity: 1; }
+}
+
+.seat-selected {
+  animation: seat-ripple 280ms ease-out forwards;
+}
+
+/* Hide scrollbar for clean horizontal scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

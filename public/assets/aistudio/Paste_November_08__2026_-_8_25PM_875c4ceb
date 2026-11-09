@@ -1,0 +1,428 @@
+ĐẶC TẢ & HƯỚNG DẪN XÂY DỰNG
+Web App Quản lý Nề nếp & Thi đua Lớp học
+Tài liệu đưa cho Google AI Studio thực hiện  ·  Phiên bản 2.0
+Giao diện tiếng Việt, ưu tiên điện thoại   ·   Dữ liệu: Google Sheets qua Google Apps Script
+0. Cách sử dụng tài liệu này
+Đây là bản đặc tả đầy đủ để giao cho Google AI Studio (chế độ Build). Tài liệu dài nên không yêu cầu làm một lần toàn bộ. Hãy gửi tài liệu, dán “Prompt khởi động” bên dưới, rồi cho AI Studio làm lần lượt từng giai đoạn ở Mục 15. Mỗi giai đoạn xong thì kiểm tra rồi mới sang giai đoạn kế.
+Prompt khởi động (dán vào AI Studio cùng với tài liệu):
+Bạn là kỹ sư full-stack cấp cao kiêm thiết kế sản phẩm. Hãy đọc toàn bộ tài liệu
+đặc tả đính kèm về web app quản lý nề nếp - thi đua lớp học.
+ 
+Bước 1 (chưa viết code): tóm tắt những gì bạn hiểu trong tối đa 15 gạch đầu dòng,
+liệt kê các điểm mâu thuẫn hoặc thiếu thông tin nếu có, rồi dừng lại chờ tôi xác nhận.
+Bước 2: sau khi tôi xác nhận, chỉ thực hiện Giai đoạn 1 ở Mục 15.
+ 
+Ràng buộc bắt buộc: toàn bộ giao diện bằng tiếng Việt có dấu; thiết kế ưu tiên điện
+thoại; có giao diện Sáng/Tối với mọi màu khai báo bằng token (cấm hard-code màu);
+không tự thêm tính năng ngoài đặc tả; không dùng emoji làm biểu tượng.
+
+Lưu ý quan trọng về cách làm việc: AI Studio tạo được phần giao diện và mã Google Apps Script, nhưng việc triển khai (tạo Google Sheet, dán mã Apps Script, tạo OAuth Client ID, đưa web app lên mạng) do chủ dự án thực hiện theo file README mà AI Studio phải viết ở Giai đoạn 2.
+1. Tổng quan và nguyên tắc cốt lõi
+Ứng dụng giúp một lớp học (khoảng 44 học sinh, 4 tổ, 6 dãy bàn) ghi nhận vi phạm nề nếp, tính điểm thi đua theo tuần, xếp hạng giữa các tổ và có thể dùng báo cáo cho phụ huynh. Thiết bị sử dụng chủ yếu là điện thoại; giáo viên có thể dùng cả máy tính.
+Tám nguyên tắc không được vi phạm khi thiết kế và lập trình:
+•	Học sinh và Ban cán sự: đơn giản, nhanh. Sau khi chọn học sinh, ghi một vi phạm chỉ cần 2 chạm (chọn hành vi, bấm Lưu). Không có màn hình thừa, không có cài đặt rườm rà.
+•	Giáo viên: nhiều tuỳ chọn. Mọi quy tắc (điểm, ngưỡng màu, quyền, mốc buổi, thời gian sửa…) đều chỉnh được trong khu vực của giáo viên mà không phải sửa code.
+•	Chỉ giáo viên được nhập và xuất dữ liệu. Nút nhập, xuất, tải về, sao chép báo cáo hàng loạt không tồn tại trong giao diện của học sinh và Ban cán sự; đồng thời máy chủ từ chối mọi lệnh nhập/xuất nếu không phải giáo viên.
+•	Mặc định chỉ có điểm trừ. Điểm cộng và điểm thưởng gỡ lỗi là tuỳ chọn do giáo viên bật, mặc định TẮT.
+•	Không có giáo viên bộ môn trong hệ thống. Chỉ có một giáo viên chủ nhiệm (có thể khai báo nhiều email giáo viên quản trị nếu cần).
+•	Bảo mật ở phía máy chủ. Mọi kiểm tra vai trò và phạm vi đều thực hiện trong Apps Script; giao diện chỉ là lớp hiển thị.
+•	Giao diện thương mại, chuyên nghiệp, có Sáng/Tối, đọc rõ ở cả hai chế độ (Mục 10).
+•	Tiếng Việt là ngôn ngữ chính: tìm kiếm không dấu, sắp xếp theo bảng chữ cái tiếng Việt, font hỗ trợ đầy đủ dấu.
+2. Công nghệ và kiến trúc
+2.1. Công nghệ đề xuất
+Lớp	Lựa chọn	Ghi chú
+Giao diện	React 18 + TypeScript + Vite	Ứng dụng một trang (SPA), cài được lên màn hình chính (PWA).
+Kiểu dáng	Tailwind CSS + biến CSS (design tokens)	Mọi màu lấy từ token, không viết mã màu trực tiếp trong component.
+Thành phần	Radix UI (headless) + vaul (bottom sheet) + lucide-react	Không dùng bộ UI mặc định có diện mạo dễ nhận ra.
+Lưu tạm	idb (IndexedDB)	Hàng đợi ngoại tuyến, bộ nhớ đệm danh sách lớp.
+Tệp	SheetJS (xlsx), mammoth (docx), html-to-image, jszip	Chỉ dùng trong khu vực giáo viên.
+Biểu đồ	SVG tự vẽ hoặc Recharts	Chỉ cần cột ngang so sánh 4 tổ và đường xu hướng tuần.
+Máy chủ	Google Apps Script (Web App, chạy dưới quyền chủ file)	API JSON; POST dùng Content-Type: text/plain để tránh lỗi CORS preflight.
+Cơ sở dữ liệu	Google Sheets (riêng tư)	KHÔNG đặt chế độ “bất kỳ ai có liên kết”. Chỉ tài khoản giáo viên mở được.
+Nhận dạng văn bản/ảnh	Quy tắc cục bộ + Gemini API (gọi từ Apps Script)	Khoá API nằm trong Script Properties, không bao giờ đưa xuống trình duyệt.
+
+2.2. Sản phẩm AI Studio phải bàn giao
+•	Mã nguồn giao diện hoàn chỉnh, chạy được ở chế độ Demo (dữ liệu mẫu nội bộ) khi chưa cấu hình địa chỉ API.
+•	Một file Code.gs duy nhất, có chú thích tiếng Việt, gồm toàn bộ API (Mục 12) và hàm setupSheets() tự tạo mọi trang tính với tiêu đề cột và cấu hình mẫu.
+•	File README_TrienKhai.md bằng tiếng Việt: từng bước tạo Google Sheet, dán mã, tạo OAuth Client ID, triển khai Web App, đặt biến môi trường, đưa giao diện lên hosting miễn phí.
+•	Bộ dữ liệu mẫu (Mục 14) và danh sách kiểm thử nghiệm thu (Mục 16).
+2.3. Biến cấu hình
+Biến	Nơi đặt	Ý nghĩa
+VITE_API_URL	Giao diện (.env)	Địa chỉ Web App của Apps Script. Để trống = chế độ Demo.
+VITE_GOOGLE_CLIENT_ID	Giao diện (.env)	OAuth Client ID cho nút “Đăng nhập bằng Google” của giáo viên.
+PEPPER	Script Properties	Chuỗi bí mật trộn vào khi băm mật khẩu.
+GOOGLE_CLIENT_ID	Script Properties	Dùng để kiểm tra ID token Google có đúng của ứng dụng này.
+GEMINI_API_KEY	Script Properties	Tuỳ chọn. Chỉ dùng cho nhận dạng nâng cao (Mục 9).
+
+3. Vai trò và phân quyền
+3.1. Danh sách vai trò
+Một học sinh có thể giữ nhiều vai trò cùng lúc (ví dụ Tổ trưởng kiêm Bí thư). Quyền hạn là phép hợp của các vai trò; trên giao diện hiển thị huy hiệu của vai trò có độ ưu tiên cao nhất kèm các huy hiệu còn lại. Thứ tự ưu tiên: GV > Lớp trưởng > Bí thư > Lớp phó học tập > Lớp phó lao động > Tổ trưởng > Học sinh.
+Vai trò	Mã	Học sinh được chấm	Nhóm nội quy được chấm (mặc định)
+Học sinh (và phụ huynh dùng chung tài khoản của con)	HS	Không được chấm	Không
+Tổ trưởng	TT	Chỉ thành viên tổ mình (ép ở máy chủ). Không tự chấm cho chính mình (có công tắc để GV đổi)	Chuyên cần, Nề nếp (GV chỉnh được)
+Lớp trưởng	LT	Cả lớp	Mọi nhóm
+Bí thư	BT	Cả lớp	Mọi nhóm
+Lớp phó học tập	LP_HT	Cả lớp	Mọi nhóm
+Lớp phó lao động	LP_LD	Cả lớp và cả tổ trực nhật	Lao động – Vệ sinh (GV chỉnh được)
+Giáo viên chủ nhiệm	GV	Cả lớp	Mọi nhóm, kể cả sửa/hủy sau thời hạn khoá sổ
+
+Bí thư, Lớp phó học tập và Lớp trưởng đều đánh giá được mọi khía cạnh vi phạm của học sinh (theo yêu cầu của chủ dự án). Ma trận quyền được lưu ở trang tính 8_PhanQuyen và chỉnh được trong khu vực giáo viên.
+3.2. Quyền chung của Ban cán sự (LT, BT, LP_HT, LP_LD, TT)
+•	Ghi nhận vi phạm trong phạm vi và nhóm nội quy được giao.
+•	Sửa hoặc hủy bản ghi do chính mình tạo trong thời hạn cho phép (mặc định 24 giờ). Quá hạn thì khoá, chỉ GV can thiệp. Hủy là “đánh dấu hủy”, không xoá khỏi sổ.
+•	Xem “Sổ của tôi” (các lượt mình đã ghi), xem tổng hợp lớp trên màn hình.
+•	Xử lý giải trình nếu được GV giao quyền duyệt (tuỳ chọn).
+•	Không có quyền xuất, tải, nhập, sao chép báo cáo hàng loạt, đổi cấu hình hay đổi vai trò.
+3.3. Quyền của học sinh
+•	Xem điểm tuần, tổng trừ, xếp loại dự kiến và nhật ký của riêng mình.
+•	Gửi giải trình cho từng lỗi của mình; xem trạng thái xử lý.
+•	Xem sơ đồ lớp có viền màu trạng thái của cả lớp (xem Mục 6.6) và bảng xếp hạng giữa các tổ.
+•	Đổi mật khẩu của mình. Không xem được lý do, điểm hay lịch sử chi tiết của bạn khác.
+3.4. Màu nhận diện vai trò
+Mỗi vai trò có một màu riêng để nhận ra ngay người ghi nhận hoặc người giữ chức vụ. Màu vai trò hiển thị ở huy hiệu chữ viết tắt (góc ô ghế), chip vai trò trên thẻ học sinh và dải bên trái từng dòng nhật ký. Màu vai trò tuyệt đối không dùng xanh lá, vàng hay đỏ để khỏi lẫn với màu trạng thái vi phạm. Luôn kèm chữ viết tắt để người khó phân biệt màu vẫn nhận ra.
+Vai trò	Huy hiệu	Màu (Sáng)	Màu (Tối)
+Lớp trưởng	LT	#C2410C (cam)	#FB923C
+Tổ trưởng	T1, T2, T3, T4	#0F766E (xanh ngọc)	#2DD4BF
+Lớp phó học tập	HT	#6D28D9 (tím)	#A78BFA
+Lớp phó lao động	LĐ	#7C4A1D (nâu)	#D6A66B
+Bí thư	BT	#BE185D (hồng sẫm)	#F472B6
+Giáo viên	GV	#1E3A8A (xanh navy)	#93B4F5
+
+Cách dùng: chữ và biểu tượng dùng đúng màu trong bảng; nền chip là chính màu đó ở độ đậm 14% (Sáng) hoặc 22% (Tối) trên nền bề mặt. Phải kiểm tra tỉ lệ tương phản chữ/nền tối thiểu 4.5:1 ở cả hai giao diện, nếu thiếu thì tăng độ đậm chữ.
+4. Đăng nhập và bảo mật
+4.1. Cổng vào lớp
+•	Lần đầu mở ứng dụng trên một thiết bị, nhập Mã lớp (6 ký tự do GV đặt và đổi được). Sau đó thiết bị nhớ mã lớp. Mục đích: người ngoài có đường link cũng không xem được danh sách tên học sinh.
+•	Màn hình đăng nhập chỉ hiển thị tên và vị trí ghế. Tuyệt đối không hiển thị màu trạng thái, điểm hay huy hiệu vi phạm trước khi đăng nhập.
+4.2. Đăng nhập học sinh và Ban cán sự
+•	Chọn tên (bằng ô tìm kiếm hoặc chạm đúng ghế trên sơ đồ) rồi nhập duy nhất một ô mật khẩu. Không cần nhớ mã học sinh.
+•	Mật khẩu ban đầu do hệ thống tạo ngẫu nhiên (mặc định 6 chữ số), GV in phiếu phát cho từng em. Lần đăng nhập đầu bắt buộc đổi mật khẩu. Cho phép mật khẩu tối thiểu 6 ký tự.
+•	“Ghi nhớ thiết bị” mặc định bật, phiên kéo dài 30 ngày (GV chỉnh được). Có nút “Đăng xuất”.
+•	Sai 5 lần liên tiếp thì khoá 15 phút (đếm theo từng học sinh). Mọi lần đăng nhập thành công, thất bại và khoá đều ghi vào nhật ký hệ thống.
+•	Phụ huynh dùng chung tài khoản của con. Hệ thống không có tài khoản phụ huynh riêng.
+4.3. Đăng nhập giáo viên (cổng riêng)
+Màn hình đăng nhập có một nút riêng “Dành cho Giáo viên”. Phương án chọn: Đăng nhập bằng Google, đối chiếu danh sách email được phép. Đây là cách đơn giản nhất mà vẫn bảo mật tốt, không cần nhớ mật khẩu riêng và không thể bị giả mạo bằng cách đoán.
+•	Giao diện dùng Google Identity Services, gửi ID token lên máy chủ.
+•	Apps Script kiểm tra token với Google (điểm cuối tokeninfo), xác nhận aud trùng GOOGLE_CLIENT_ID, email_verified = true, và email nằm trong trang tính 9_TaiKhoanGV. Nếu đạt thì cấp token phiên.
+•	Phiên giáo viên không hết hạn theo thời gian (đăng nhập một lần, ghi nhớ trên thiết bị). Để vẫn an toàn khi mất máy: có mục “Thiết bị đã đăng nhập” cho phép thu hồi từng thiết bị hoặc tất cả; có thông báo email khi có thiết bị mới đăng nhập.
+•	Phương án dự phòng khi không dùng được Google: mã OTP 6 số gửi về email giáo viên, hiệu lực 10 phút.
+•	Không yêu cầu xác thực lại khi xuất dữ liệu (theo yêu cầu chủ dự án).
+4.4. Quy tắc bảo mật ở máy chủ (bắt buộc)
+•	Mật khẩu lưu dạng băm SHA-256 có muối riêng từng người cộng PEPPER (dùng Utilities.computeDigest). Không bao giờ trả cột mật khẩu hay muối về giao diện. Không bao giờ xuất mật khẩu.
+•	Token phiên là chuỗi ngẫu nhiên 32 byte; chỉ lưu bản băm trong 11_PhienDangNhap. Mỗi lệnh API đều kiểm tra token, lấy vai trò, kiểm tra phạm vi từ dữ liệu trên máy chủ, không tin bất kỳ vai trò nào do giao diện gửi lên.
+•	Tổ trưởng chỉ ghi được cho thành viên tổ mình: máy chủ tự đối chiếu MaHS với tổ của người ghi, giao diện chỉ làm mờ cho tiện nhìn.
+•	Học sinh chỉ nhận về: dữ liệu chi tiết của riêng mình và mức trạng thái màu của từng bạn (không kèm lý do, không kèm điểm).
+•	Mọi lệnh ghi dùng LockService để tránh ghi đè khi nhiều người chấm cùng lúc; mỗi bản ghi có MaGhiNhan (UUID sinh từ thiết bị) để chống ghi trùng khi đồng bộ lại.
+•	Thời gian chuẩn là thời gian máy chủ. Thời điểm ghi trên máy (nếu ngoại tuyến) được lưu thêm ở cột riêng để đối chiếu.
+5. Bộ chọn học sinh (dùng chung cho đăng nhập và ghi nhận)
+Một thành phần duy nhất, có thanh gạt hai chế độ ngay đầu màn hình: [Danh sách] và [Sơ đồ lớp]. Thành phần này dùng cho 3 việc: chọn tên để đăng nhập, chọn học sinh để xem, chọn học sinh để ghi nhận.
+5.1. Chế độ Danh sách + Tìm kiếm nhanh
+•	Gõ 1–2 ký tự là danh sách thu gọn ngay. Tìm không phân biệt hoa thường, có dấu hoặc không dấu, theo họ, tên đệm, tên chính hoặc chữ cái đầu (ví dụ huy, nkh).
+•	Mỗi dòng: thứ tự, họ và tên đầy đủ, tổ, vị trí bàn. Trong chế độ ghi nhận có thêm chấm trạng thái tuần. Trước khi đăng nhập thì không có chấm trạng thái.
+•	Với Tổ trưởng ở chế độ ghi nhận: chỉ trả về học sinh cùng tổ (lọc cứng cả ở máy chủ).
+•	Sắp xếp mặc định theo tên chính theo bảng chữ cái tiếng Việt; có thể đổi sang sắp xếp theo thứ tự danh sách hoặc theo tổ.
+5.2. Chế độ Sơ đồ lớp tương tác
+•	Dựng từ cấu hình ô lưới (Mục 11, trang 2_CauHinhSoDo): mỗi ô có loại *ghế / trống / lối đi / bàn giáo viên / cửa ra vào / bục giảng*. Hỗ trợ sơ đồ không đều (bàn thiếu, bàn 3 người, lối đi).
+•	Rút gọn tên: chữ cái đầu của họ và tên đệm, viết đủ tên chính. Ví dụ Nguyễn Khắc Huy thành N.K.Huy; Trần Thị Mai Anh thành T.T.M.Anh. Hệ thống tự phát hiện trùng tên rút gọn và cho GV ghi đè ở cột TenRutGon. Chạm vào ô thì tên đầy đủ hiện ở tiêu đề bảng thao tác.
+•	Điện thoại dọc: có công tắc “Toàn lớp thu gọn” (vừa khít chiều ngang) hoặc các tab “Dãy 1, Dãy 2, Dãy 3, Dãy 4” với ô lớn. Máy tính bảng và máy tính: hiển thị đủ cả lớp. Vùng chạm tối thiểu 44×44 px, cỡ chữ tên tối thiểu 12 px.
+•	Ô ghế gồm: tên rút gọn; viền ngoài thể hiện trạng thái vi phạm; huy hiệu vai trò ở góc; nền thể hiện tổ bằng sắc rất nhạt hoặc nhãn số tổ nhỏ (không dùng màu trùng màu vai trò).
+•	Chạm chọn: ô phát sáng viền (màu nhấn), phóng 105%, hiệu ứng gợn sóng 300 ms. Ở chế độ chọn nhiều thì các ô đã chọn cùng sáng và có dấu tích.
+•	Làm sáng vùng tổ cho Tổ trưởng: chỉ các ô thuộc tổ mình hiển thị rõ và chạm được; các ô tổ khác giảm độ trong suốt còn 30%, chuyển xám, khoá sự kiện chạm, kể cả khi các tổ ngồi xen kẽ.
+6. Quy trình ghi nhận vi phạm (phần quan trọng nhất)
+Mục tiêu: một Ban cán sự ghi xong một lỗi trong dưới 5 giây bằng một ngón tay cái. Mọi quyết định thiết kế ở mục này đều ưu tiên tốc độ và giảm nhầm.
+6.1. Luồng A: chọn người trước (mặc định)
+•	Chạm 1: chọn học sinh trên sơ đồ hoặc danh sách. Bảng thao tác trượt từ đáy màn hình lên (không che hết sơ đồ), hiện họ tên đầy đủ, tổ, buổi hiện tại.
+•	Chạm 2: chọn hành vi. Hàng đầu tiên là “Hay dùng”: 6–8 hành vi người ghi dùng nhiều nhất (tự học theo lịch sử của chính người đó, khởi đầu bằng danh sách GV ghim). Bên dưới là các tab nhóm nội quy và ô tìm hành vi.
+•	Lưu: nút “Lưu” to, cố định ở đáy bảng. Chạm vào hành vi chỉ chọn, bấm Lưu mới ghi, nên hai bước sau khi chọn người.
+•	Ghi chú, đổi ngày, đính kèm minh chứng đều ẩn sau nút “Thêm chi tiết”; không bắt buộc.
+•	Sau khi lưu: thông báo nhỏ “Đã ghi: N.K.Huy – Đi muộn (−2)” kèm nút Hoàn tác trong 8 giây. Viền ô ghế đổi màu ngay lập tức (cập nhật lạc quan), đồng bộ ngầm sau đó.
+6.2. Luồng B: chọn lỗi trước, nhiều người
+•	Nút nổi “Ghi nhiều người”. Chọn một hành vi trước, sau đó chạm liên tiếp nhiều ghế (hoặc tích nhiều tên trong danh sách), bấm Lưu một lần.
+•	Từ Luồng A cũng có nút “Thêm người” để mở rộng thành ghi nhiều người cho cùng một hành vi.
+6.3. Chế độ lưu nhanh một chạm (tuỳ chọn cá nhân)
+Trong cài đặt cá nhân của Ban cán sự có công tắc “Lưu ngay khi chạm hành vi”, mặc định tắt. Khi bật, chạm vào hành vi là lưu luôn và vẫn có Hoàn tác 8 giây. Dành cho người thao tác thành thạo.
+6.4. Cảnh báo ghi trùng
+Điều kiện: từ lần vi phạm thứ 2 của cùng một học sinh trong cùng một buổi (mốc giờ buổi sáng/chiều khai báo trong cấu hình), trước khi gửi phải hiện hộp xác nhận.
+•	Hộp liệt kê các lỗi đã ghi cho em đó trong buổi này (giờ, hành vi, người ghi) và hai nút: [Ghi thêm] và [Hủy].
+•	Nếu hành vi mới giống hệt hành vi đã ghi: đổi sang cảnh báo mạnh với tiêu đề “Có thể bị ghi trùng”, nút mặc định (được focus) là [Hủy], nút [Ghi thêm] ở dạng phụ.
+•	Nếu hành vi khác hành vi đã ghi: cảnh báo nhẹ, nút mặc định là [Ghi thêm].
+•	Khi ghi nhiều người: hộp chỉ liệt kê những em đã có lỗi trong buổi; mỗi em có công tắc “Vẫn ghi cho em này” (mặc định TẮT nếu trùng hành vi, BẬT nếu khác hành vi). Các em còn lại vẫn được lưu bình thường.
+•	Máy chủ cũng kiểm tra lại vì hai người có thể ghi cùng lúc. Nếu phát hiện trùng chưa xác nhận, máy chủ trả mã NEED_CONFIRM_DUPLICATE; bản ghi đã xác nhận lưu cờ DaXacNhanTrung = TRUE và LanThuTrongBuoi.
+•	Khi ngoại tuyến: máy kiểm tra cục bộ trước. Nếu lúc đồng bộ vẫn phát hiện trùng chưa xác nhận thì bản ghi vào mục “Chờ xác nhận” cho người ghi và GV, chưa tính điểm.
+•	Mặc định chỉ áp dụng cho điểm trừ; có công tắc cho GV áp dụng thêm cho điểm cộng (khi điểm cộng được bật).
+6.5. Quy tắc tính điểm
+•	Mỗi tuần mỗi học sinh bắt đầu 100 điểm (GV chỉnh). Điểm tuần = điểm khởi đầu − tổng điểm trừ của các bản ghi còn hiệu lực. Xếp loại dự kiến theo ngưỡng mặc định: Tốt ≥ 90; Khá 75–89; Đạt 60–74; Chưa đạt < 60 (GV chỉnh).
+•	Điểm tổ = điểm trung bình trên mỗi thành viên (tránh bất công khi sĩ số các tổ lệch nhau). Có công tắc đổi sang tổng điểm.
+•	Bản ghi đang chờ giải trình vẫn tính điểm cho đến khi được chấp nhận; có công tắc đổi thành “tạm không tính”.
+•	Có thể ghi cho cả một tổ (đối tượng = Tổ), ví dụ tổ trực nhật không làm vệ sinh; điểm này tính vào điểm tổ, không trừ vào từng học sinh.
+•	Ghi bù cho ngày trước: chọn ngày trong tuần hiện tại (Ban cán sự). Tuần đã chốt chỉ GV được can thiệp.
+•	Điểm cộng (tuỳ chọn, mặc định tắt): khi GV bật, xuất hiện nhóm “Điểm cộng” trong danh mục nội quy, viền xanh lá, và các màn hình “tuyên dương”. Điểm thưởng gỡ lỗi (bù trừ) là tuỳ chọn riêng, mặc định tắt, có trần bù (ví dụ tối đa 50% điểm trừ) và danh sách lỗi nặng không được bù.
+6.6. Màu trạng thái trên sơ đồ lớp
+Sau khi đăng nhập, mọi học sinh đều thấy viền màu trạng thái của cả lớp (theo yêu cầu chủ dự án). Chỉ thấy mức màu, không thấy lý do hay điểm của bạn khác. GV có công tắc “Học sinh thấy màu của: Cả lớp / Chỉ bản thân”; mặc định “Cả lớp”.
+Mức	Viền	Điều kiện mặc định (GV chỉnh)	Ghi chú
+Bình thường	Xám	Chưa có điểm trừ trong tuần	Mặc định của tuần mới
+Nhắc nhở	Vàng	Có điểm trừ từ 1 đến dưới 10 điểm	Kèm biểu tượng dấu chấm than nhỏ
+Cần lưu ý	Đỏ	Từ 10 điểm trừ trở lên, hoặc có một lỗi mức “Nặng”	Kèm biểu tượng cảnh báo
+Tích cực	Xanh lá	Chỉ xuất hiện khi bật điểm cộng và có điểm cộng ròng	Kèm biểu tượng dấu tích
+
+Mỗi nội quy có cột MucDo (Nhẹ / Vừa / Nặng) để một lỗi nặng có thể chuyển đỏ ngay mà không cần tích luỹ. Không chỉ dùng màu để phân biệt: thêm biểu tượng nhỏ hoặc kiểu viền (nét đứt cho Nhắc nhở) để người khó phân biệt màu vẫn hiểu.
+6.7. Giải trình và xử lý
+•	Tại mỗi dòng lỗi của mình, học sinh có nút “Giải trình” (tối đa 300 ký tự, hạn gửi mặc định 7 ngày sau ngày ghi, GV chỉnh được).
+•	Trạng thái: Hiệu lực → Chờ duyệt → Chấp nhận (điểm bị hủy) hoặc Từ chối (bắt buộc ghi lý do). Người duyệt mặc định là GV; GV có thể giao quyền duyệt cho một số Ban cán sự.
+•	Thông báo trong ứng dụng bằng chấm đỏ trên tab và mục “Việc cần xử lý” (không cần thông báo đẩy). GV có tuỳ chọn nhận email tóm tắt hằng ngày.
+•	Mọi thay đổi đều ghi nhật ký; không xoá dữ liệu, chỉ chuyển trạng thái.
+7. Màn hình và điều hướng theo vai trò
+7.1. Học sinh (đơn giản tối đa)
+Thanh tab dưới cùng gồm 3 mục. Đầu trang: tên lớp, tuần học, menu tài khoản (Đổi mật khẩu, Giao diện Sáng/Tối/Theo hệ thống, Đăng xuất).
+Tab	Nội dung
+Của tôi	Thẻ điểm tuần (điểm, tổng trừ, xếp loại dự kiến); danh sách lỗi theo tuần với nút “Giải trình” và trạng thái; không có gì khác.
+Sơ đồ	Sơ đồ lớp có viền màu trạng thái (Mục 6.6), chạm vào ô chỉ hiện tên đầy đủ và tổ. Không có dữ liệu chi tiết của bạn khác.
+Thi đua	Biểu đồ cột so sánh điểm trung bình 4 tổ trong tuần, hạng của tổ mình; (khi bật điểm cộng) danh sách tuyên dương.
+
+7.2. Ban cán sự
+•	Có tất cả những gì học sinh có, cộng thêm thanh gạt trên cùng [Cá nhân | Ghi nhận].
+•	Ghi nhận: Bộ chọn học sinh (Mục 5) + luồng ghi nhận (Mục 6) + nút nổi “Ghi nhiều người”.
+•	Sổ của tôi: các lượt mình đã ghi trong tuần, có nút Sửa/Hủy còn hạn và đồng hồ đếm ngược thời hạn.
+•	Tổng hợp lớp: bảng xếp hạng và thống kê xem trên màn hình. Không có nút tải hay sao chép hàng loạt.
+•	Giải trình: chỉ hiện khi được GV giao quyền duyệt.
+•	Tuỳ chọn cá nhân: Lưu nhanh một chạm; sắp xếp mặc định của danh sách.
+7.3. Giáo viên
+Khu vực riêng, đăng nhập bằng Google. Máy tính: thanh bên trái cố định. Điện thoại: thanh tab dưới cùng với mục “Thêm”. Các trang:
+Trang	Chức năng chính
+Tổng quan	Điểm tuần từng tổ, số bản ghi hôm nay, việc cần xử lý (giải trình chờ duyệt, bản ghi chờ xác nhận trùng), cảnh báo bất thường.
+Ghi nhận	Giống Ban cán sự nhưng không bị giới hạn phạm vi và nhóm nội quy.
+Giải trình	Hàng đợi duyệt, duyệt hàng loạt, lọc theo trạng thái.
+Lớp và Sơ đồ	Danh sách học sinh, tổ, vai trò; trình sửa sơ đồ (kéo thả); lịch trực nhật.
+Nội quy	Danh mục nhóm, hành vi, điểm, mức độ; ghim hành vi “Hay dùng”; bật/tắt nhóm Điểm cộng.
+Nhập dữ liệu	Trình nhập thông minh (Mục 9).
+Xuất dữ liệu	Trình xuất tuỳ chọn (Mục 8.3) và Báo cáo phụ huynh.
+Nhật ký	Nhật ký ghi nhận và nhật ký hệ thống, lọc theo người, vai trò, thời gian, hành động, nguồn.
+Tài khoản và Quyền	Mật khẩu, bổ nhiệm vai trò, ma trận quyền, thiết bị đăng nhập.
+Cài đặt	Toàn bộ tuỳ chọn ở Mục 8.1, sao lưu, chuyển năm học.
+
+7.4. Trạng thái hệ thống
+•	Có sẵn khung chờ (skeleton), trạng thái trống có hướng dẫn một dòng, thông báo lỗi bằng tiếng Việt dễ hiểu (“Mất kết nối. Dữ liệu sẽ được gửi khi có mạng.”).
+•	Thanh nhỏ báo “Chưa đồng bộ (n)” khi còn bản ghi trong hàng đợi ngoại tuyến.
+8. Khu vực dành cho Giáo viên
+Nguyên tắc: giáo viên có nhiều tuỳ chọn để điều chỉnh theo ý muốn; mọi thay đổi được ghi vào nhật ký hệ thống. Mọi tuỳ chọn lưu ở trang 7_CauHinh và có giá trị mặc định hợp lý để lớp chạy ngay mà không cần chỉnh.
+8.1. Bảng tuỳ chọn
+Nhóm	Tuỳ chọn	Mặc định
+Tính điểm	Điểm khởi đầu mỗi tuần; trần/sàn điểm; ngưỡng xếp loại; cách xếp hạng tổ (trung bình/tổng); bản ghi chờ giải trình có tính điểm không	100; không trần; Tốt ≥90, Khá ≥75, Đạt ≥60; trung bình; có tính
+Điểm cộng	Bật điểm cộng; bật điểm thưởng gỡ lỗi; trần bù; danh sách lỗi không được bù; bật màn hình tuyên dương	TẮT
+Cảnh báo trùng	Bật/tắt; từ lần thứ mấy trong buổi; áp dụng cho điểm cộng; mốc giờ buổi sáng/chiều	Bật; từ lần 2; không; Sáng 06:30–11:30, Chiều 12:30–17:30
+Quyền ghi	Thời hạn sửa/hủy của người ghi; Tổ trưởng được tự chấm mình; ma trận vai trò × nhóm nội quy × phạm vi; kill switch tạm khoá ghi nhận toàn lớp	24 giờ; không; theo Mục 3.1; tắt
+Hiển thị cho học sinh	Học sinh thấy màu của cả lớp hay chỉ bản thân; có hiện hạng của từng tổ không; hiện tên đầy đủ hay rút gọn trên sơ đồ	Cả lớp; có; rút gọn
+Màu trạng thái	Ngưỡng điểm trừ cho Vàng và Đỏ; lỗi mức Nặng chuyển đỏ ngay	≥1 vàng; ≥10 hoặc lỗi Nặng đỏ
+Giải trình	Hạn gửi (ngày); người duyệt (GV hoặc BCS được giao); bắt buộc lý do khi từ chối	7 ngày; GV; có
+Phiên đăng nhập	Thời hạn phiên học sinh/BCS; số lần sai trước khi khoá; thời gian khoá; tự khoá màn hình Ban cán sự sau N phút không thao tác	30 ngày; 5; 15 phút; tắt
+Tuần học	Ngày bắt đầu năm học; tuần nghỉ; chốt tuần thủ công hay tự động	Thủ công
+Báo cáo phụ huynh	Mẫu tin nhắn (có biến {HoTen}, {Tuan}, {Diem}, {XepLoai}, {DanhSachLoi}); logo, tên trường, tên lớp; cỡ và bố cục thẻ ảnh	Mẫu sẵn có
+Nhận dạng nâng cao	Bật nhận dạng bằng Gemini cho văn bản/ảnh khó (Mục 9)	TẮT (kèm cảnh báo quyền riêng tư)
+Giao diện	Tên ứng dụng, logo, màu nhấn (chọn trong bảng màu đã kiểm tra tương phản), giao diện mặc định Sáng/Tối/Theo hệ thống	Theo hệ thống
+
+8.2. Nhập dữ liệu (chỉ giáo viên)
+•	Nhập danh sách lớp, thành viên tổ, vai trò, sơ đồ lớp, danh mục nội quy, lịch trực nhật, bản ghi thi đua cũ, bản sao lưu.
+•	Nguồn: dán văn bản, tệp .xlsx, .csv, .docx, .txt, .json, ảnh .jpg/.png. Chi tiết cách nhận dạng ở Mục 9.
+•	Mỗi lần nhập là một lô có mã (MaLoNhap): xem trước, sửa, xác nhận, và hoàn tác nguyên lô nếu nhầm.
+8.3. Xuất dữ liệu (chỉ giáo viên)
+Trình xuất dạng từng bước, cho phép chọn gần như mọi thứ:
+•	Loại dữ liệu: danh sách lớp; nhật ký thi đua; báo cáo tuần/tháng/kỳ; giải trình; nhật ký hệ thống; danh mục nội quy; sơ đồ lớp; phân quyền.
+•	Kỳ thời gian: tuần, tháng, học kỳ, cả năm, hoặc khoảng ngày tuỳ chọn.
+•	Phạm vi: cả lớp, một tổ, một hoặc nhiều học sinh, theo người ghi, theo nhóm nội quy, theo trạng thái.
+•	Cột cần xuất: tích chọn từng cột và kéo để đổi thứ tự. Có nhóm cột “Nguồn gốc dữ liệu”: người nhập, vai trò người nhập, thời gian ghi (máy chủ và máy), nguồn (trực tiếp / ngoại tuyến / nhập tệp / nhập văn bản), loại thiết bị, mã lô nhập, người duyệt, lý do hủy. Nhờ đó xuất được “lịch sử nhập dữ liệu, ai là người nhập”.
+•	Định dạng: .xlsx, .csv, .json, .pdf (bảng in), ảnh thẻ báo cáo (xuất cả lớp thành một tệp .zip).
+•	Xem trước 20 dòng trước khi xuất; lưu thành “Mẫu xuất” để dùng lại bằng một chạm.
+•	Báo cáo phụ huynh: tạo thẻ ảnh cho từng em (họ tên, tổ, điểm tuần, xếp loại, lỗi cần khắc phục), tin nhắn mẫu có nút “Sao chép”, nút mở zalo.me/SĐT hoặc chia sẻ hệ thống. Mỗi thẻ chỉ chứa dữ liệu của đúng em đó.
+•	Mật khẩu và muối không bao giờ nằm trong bất kỳ tệp xuất nào.
+•	Mỗi lần xuất được ghi vào nhật ký hệ thống: ai xuất, lúc nào, loại dữ liệu, bộ lọc, số dòng.
+Khoá chức năng xuất: nút xuất, nhập, tải về chỉ được dựng khi vai trò là GV; đồng thời các lệnh export*, import* ở máy chủ từ chối với mã FORBIDDEN nếu token không thuộc GV.
+8.4. Tính năng quản trị đặc biệt
+•	Quản lý tài khoản: đặt lại mật khẩu một em hoặc cả lớp, in phiếu mật khẩu; khoá/mở khoá tài khoản; buộc đăng xuất; xem và thu hồi thiết bị đăng nhập.
+•	Bổ nhiệm vai trò có ngày hiệu lực (khi bầu lại ban cán sự), lịch sử thay đổi vai trò.
+•	Chốt kỳ: chốt tuần/tháng/kỳ thì khoá sổ; mở lại phải nhập lý do.
+•	Sửa/hủy mọi bản ghi (bắt buộc ghi lý do). Thùng rác chứa bản ghi đã hủy, cho khôi phục.
+•	Sửa hàng loạt: đổi tổ, đổi chỗ ngồi, đổi vai trò cho nhiều em.
+•	Duyệt giải trình hàng loạt.
+•	Xem thử như vai trò khác (chỉ xem, không sửa) để kiểm tra từng vai trò thấy gì.
+•	Cảnh báo bất thường: người ghi quá nhiều trong ngày; chỉ cộng/trừ cho vài bạn cố định; ghi ngoài giờ học; bản ghi bị hủy nhiều.
+•	Sao lưu tự động hằng ngày vào Google Drive, khôi phục từ bản sao lưu; chuyển năm học (lưu trữ năm cũ, giữ danh sách lớp).
+•	Bảng tin lớp: thông báo có ghim, hiển thị ở màn hình chính của học sinh.
+•	Khoá khẩn cấp: tạm dừng ghi nhận toàn lớp bằng một công tắc.
+9. Trình nhập thông minh (nhận dạng văn bản gửi vào)
+Giáo viên có thể dán văn bản hoặc tải tệp vào, hệ thống nhận dạng và biến thành dữ liệu để hiển thị trong ứng dụng hoặc xuất ra tệp. Chỉ giáo viên được dùng. Không bao giờ tự ghi vào sổ: mọi kết quả đều đi qua bước xem trước và xác nhận.
+9.1. Các loại văn bản cần nhận dạng
+Loại	Ví dụ đầu vào	Kết quả
+Danh sách lớp	Bảng có cột Họ tên, Tổ, SĐT phụ huynh; hoặc mỗi dòng một tên	Cập nhật 1_DanhSachLop
+Thành viên tổ	Tổ 1: Nguyễn Văn A, Trần Thị B, … hoặc bảng cột Tổ	Gán tổ cho học sinh
+Sơ đồ lớp	Bảng Word dạng lưới, mỗi ô là một tên; có dòng “Dãy 1…Dãy 4”, “Bàn giáo viên”, “Cửa”	Cập nhật 2_CauHinhSoDo và tọa độ ghế
+Nội quy	Đi muộn: -2, Không làm bài tập (-3), Mất trật tự -1 (Nề nếp)	Cập nhật 3_DanhMucNoiQuy
+Sổ vi phạm dạng văn bản	10/11 – Sáng: Huy đi muộn; Mai không đồng phục	Tạo các bản ghi nháp để GV duyệt (nguồn = nhập văn bản)
+Lịch trực nhật	Bảng thứ × tổ	Cập nhật 10_LichTrucNhat
+
+9.2. Quy trình xử lý
+•	Bước 1 – Thu nhận: dán văn bản; dán từ Word (đọc HTML từ clipboard để giữ bảng); tải .docx (mammoth), .xlsx/.csv (SheetJS), .txt, .json, hoặc ảnh chụp.
+•	Bước 2 – Chuẩn hoá: bỏ dấu, hạ chữ thường, gộp khoảng trắng để so khớp; giữ bản gốc để hiển thị.
+•	Bước 3 – Nhận dạng bằng quy tắc cục bộ: đoán loại dữ liệu theo từ khoá và cấu trúc; tách dòng, tách bảng, tách “tên – hành vi – điểm – ngày – buổi”.
+•	Bước 4 – Nhận dạng nâng cao (tuỳ chọn, mặc định tắt): khi quy tắc cục bộ không đủ tin cậy hoặc đầu vào là ảnh, giao diện gửi lên Apps Script, Apps Script gọi Gemini và yêu cầu trả về JSON theo lược đồ cố định. Khoá API chỉ nằm ở máy chủ. Khi GV bật lần đầu phải hiện cảnh báo: tên học sinh sẽ được gửi tới dịch vụ AI của Google để xử lý. Ảnh và văn bản gốc không được lưu lại sau khi xử lý.
+•	Bước 5 – Ghép tên học sinh: khớp chính xác không dấu; nếu không thì khớp theo tên chính + chữ cái đầu họ/đệm; nếu vẫn không thì khoảng cách chỉnh sửa ≤ 2. Có nhiều ứng viên thì hiện danh sách để chọn. Không khớp thì đánh dấu “Chưa khớp”.
+•	Bước 6 – Xem trước: bảng kết quả có nhãn độ tin cậy (Cao/Trung bình/Thấp), ô nào chưa chắc thì tô nổi và cho sửa tại chỗ, có cột “Bỏ qua”.
+•	Bước 7 – Xác nhận: tạo một lô nhập có mã; ghi nhật ký; cho phép hoàn tác nguyên lô.
+9.3. Yêu cầu bổ sung
+•	Có chế độ “Chỉ phân tích, không lưu” để GV dán văn bản và chỉ xem bảng kết quả hoặc xuất ra tệp.
+•	Báo lỗi cụ thể theo dòng (“Dòng 7: không tìm thấy học sinh ‘Hùy’. Có phải ‘Huy’?”).
+•	Có bộ thử nghiệm với ít nhất 10 mẫu đầu vào (gồm lỗi chính tả, viết tắt, tên trùng) và kết quả mong đợi.
+10. Giao diện và thiết kế hình ảnh
+Yêu cầu chung: giao diện phải có chất lượng của một sản phẩm thương mại, tiết chế và tinh tế, ít để lộ dấu hiệu do AI tạo ra, đẹp ở cả giao diện Sáng và Tối, và không bao giờ bị chìm chữ khi đổi giao diện.
+10.1. Phong cách
+•	Hướng đến công cụ quản lý chuyên nghiệp: nhiều khoảng trắng, nhịp lưới 8 px, viền mảnh 1 px, bóng đổ rất nhẹ hoặc không dùng; phân cấp bằng cỡ chữ, độ đậm và khoảng cách thay vì màu mè.
+•	Một màu nhấn duy nhất (xanh lam đậm) cho trạng thái chọn và liên kết; nút chính dùng màu mực (gần đen ở Sáng, gần trắng ở Tối).
+•	Bo góc vừa phải, đồng nhất: 8 px cho nút và ô nhập, 12 px cho thẻ và bảng thao tác, 6 px cho ô ghế.
+10.2. Những dấu hiệu “giao diện AI” phải tránh
+•	Gradient tím–xanh, nền hào quang, hiệu ứng kính mờ (glassmorphism) lạm dụng, chữ chuyển màu.
+•	Emoji làm biểu tượng, biểu tượng lấp lánh, mọi từ ngữ kiểu “✨ Thông minh”.
+•	Mọi thứ đều là thẻ bo tròn có bóng đổ đồng loạt; ba thẻ giống hệt nhau xếp hàng làm “tính năng nổi bật”; tiêu đề căn giữa to quá cỡ.
+•	Câu chữ sáo rỗng (“Chào mừng bạn đến với trải nghiệm…”). Dùng câu ngắn, tự nhiên, đúng việc (“Chọn tên của bạn”, “Đã ghi”, “Hoàn tác”).
+•	Biểu tượng nét không đồng nhất. Chỉ dùng một bộ (lucide, nét 1.75 px) và đặt đúng kích cỡ lưới (16/20/24 px).
+10.3. Chữ
+•	Font: Be Vietnam Pro (thiết kế cho tiếng Việt) cho toàn bộ giao diện, các độ đậm 400, 500, 600, 700; có phương án dự phòng system-ui. Nhúng font vào ứng dụng để thẻ ảnh báo cáo hiển thị đúng dấu.
+•	Cỡ chữ: nội dung 15–16 px; chú thích 12–13 px; tên trên ô ghế tối thiểu 12 px; tiêu đề màn hình 20–24 px. Số liệu dùng font-variant-numeric: tabular-nums để cột số thẳng hàng.
+•	Chiều cao dòng 1.45–1.6 cho đoạn văn; không bao giờ để chữ nhỏ hơn 12 px.
+10.4. Hệ thống màu bằng token (Sáng / Tối)
+Mọi màu phải đi qua token dạng biến CSS và được định nghĩa cho cả hai giao diện. Cấm viết mã màu trực tiếp trong component. Các giá trị dưới đây là điểm khởi đầu, đã chọn để đạt tương phản; AI Studio phải tự kiểm tra lại.
+Token	Sáng	Tối	Dùng cho
+--bg	#F6F6F3	#0E1114	Nền trang
+--surface	#FFFFFF	#161A1F	Thẻ, bảng thao tác, ô nhập
+--surface-2	#EFEFEA	#1E242B	Ô ghế, vùng phụ, hàng so le
+--border	#DEDDD6	#2B323A	Viền mảnh
+--text	#15191E	#ECEFF3	Chữ chính
+--text-muted	#565D66	#A2ABB6	Chữ phụ, chú thích
+--accent	#2457D6	#7AA2F7	Trạng thái chọn, liên kết, vòng focus
+--on-accent	#FFFFFF	#0B1220	Chữ trên nền màu nhấn
+--primary	#15191E	#ECEFF3	Nền nút chính
+--on-primary	#FFFFFF	#0E1114	Chữ trên nút chính
+--st-ok	#1B7F4B	#4ADE80	Viền Tích cực
+--st-none	#9AA1AB	#6B7480	Viền Bình thường
+--st-warn	#C98A0B	#F2C14E	Viền Nhắc nhở
+--st-bad	#C62828	#FF6B6B	Viền Cần lưu ý, nút nguy hiểm
+
+Màu vai trò ở Mục 3.4 cũng là token (--role-lt, --role-tt, --role-ht, --role-ld, --role-bt, --role-gv, mỗi màu có cặp -fg và -bg).
+10.5. Quy tắc chống chìm chữ khi đổi giao diện
+•	Mỗi nền có chữ đi kèm theo cặp token (--surface đi với --text; --accent đi với --on-accent). Không viết chữ trắng hay đen cố định.
+•	Tỉ lệ tương phản tối thiểu (WCAG AA): chữ thường 4.5:1, chữ lớn từ 18 px đậm 3:1, viền trạng thái và biểu tượng 3:1 so với nền ngay sau chúng. Phải kiểm tra bằng công cụ cho cả hai giao diện, đặc biệt: chữ trên ô ghế, chip vai trò, chữ phụ, ô nhập đang tắt, nút bị vô hiệu hoá.
+•	Không dùng độ trong suốt (opacity) để tạo chữ phụ; dùng --text-muted. Ô ghế bị khoá phạm vi tổ: nền và chữ đều chuyển xám nhưng chữ vẫn đạt 3:1 (độ mờ 30% chỉ áp cho viền và nền, không áp cho chữ nếu làm chữ tụt dưới ngưỡng).
+•	Giao diện Tối: không dùng đen thuần hay trắng thuần; thay bóng đổ bằng viền mảnh; viền trạng thái dùng bản sáng hơn đã khai báo.
+•	Biểu tượng và hình SVG dùng currentColor. Không đặt chữ lên ảnh nền. Không có phần tử nào chỉ đọc được ở một giao diện.
+•	Công tắc 3 trạng thái Sáng / Tối / Theo hệ thống (mặc định Theo hệ thống), lưu lại lựa chọn. Áp dụng thuộc tính data-theme bằng một đoạn script nhỏ trong <head> trước khi vẽ giao diện để không nháy sai màu; khai báo color-scheme và meta theme-color theo giao diện.
+•	Thẻ ảnh báo cáo gửi phụ huynh luôn dựng ở giao diện Sáng cố định, không phụ thuộc giao diện đang dùng.
+10.6. Thành phần giao diện
+Thành phần	Yêu cầu
+Nút	Chính (nền mực), phụ (viền), nguy hiểm (chữ đỏ, viền đỏ); chiều cao tối thiểu 44 px; có trạng thái nhấn, focus rõ (vòng 2 px màu nhấn), vô hiệu hoá, đang tải.
+Ô ghế	Kích thước ≥ 44 px; 5 trạng thái: thường, chọn (viền nhấn 2 px + phóng 105% + gợn sóng), bị khoá phạm vi, đã chọn trong chế độ nhiều người (có dấu tích), có thông báo chờ đồng bộ (chấm nhỏ).
+Bảng thao tác (bottom sheet)	Trượt từ đáy, kéo xuống để đóng, có tay nắm, vùng nút chính nằm trong tầm ngón cái, tôn trọng vùng an toàn (safe area).
+Hộp xác nhận	Dùng cho cảnh báo trùng và hành động nguy hiểm; nút nguy hiểm không được là nút mặc định.
+Bảng dữ liệu (GV)	Tiêu đề cố định, cột có thể ẩn/hiện, lọc, sắp xếp, phân trang; trên điện thoại chuyển thành danh sách thẻ gọn.
+Biểu đồ	Cột ngang cho 4 tổ, có nhãn số liệu trực tiếp; màu lấy từ token; không chỉ dựa vào màu để phân biệt (có nhãn tên tổ).
+Thông báo nhỏ (toast)	Tự tắt sau 8 giây khi có nút Hoàn tác; có thể đọc bằng trình đọc màn hình.
+
+10.7. Chuyển động và khả năng tiếp cận
+•	Chuyển động 150–250 ms, đường cong ease-out, không nảy, không xoay. Tôn trọng prefers-reduced-motion (tắt hiệu ứng phóng to và gợn sóng).
+•	Có nhãn cho biểu tượng, điều hướng bàn phím trên máy tính, thứ tự focus hợp lý, vùng chạm ≥ 44 px, không dùng màu làm cách duy nhất truyền đạt thông tin.
+•	Bố cục ưu tiên điện thoại; các mốc 360 / 768 / 1024 px; hỗ trợ vùng an toàn của iPhone (env(safe-area-inset-*)).
+11. Cấu trúc Google Sheets
+setupSheets() phải tạo đủ các trang tính dưới đây với dòng tiêu đề, đóng băng dòng đầu, và dữ liệu mẫu tối thiểu. Tên cột viết không dấu để dễ dùng trong mã.
+Trang tính	Cột chính	Ghi chú
+1_DanhSachLop	MaHS, HoTen, TenRutGon, To, DayBan, SoBan, ViTriGhe, VaiTro (nhiều giá trị, ngăn cách bằng dấu phẩy), MatKhauHash, Muoi, DoiMatKhauLanDau, SDT_PhuHuynh, TrangThai	Cột mật khẩu chỉ máy chủ đọc.
+2_CauHinhSoDo	MaDot, Hang, Cot, LoaiO (ghe/trong/loidi/banGV/cua/buc), MaHS, GhiChu, HieuLucTu, HieuLucDen	Mô tả lưới ô; có “đợt hiệu lực” để giữ lịch sử đổi chỗ.
+3_DanhMucNoiQuy	MaNoiQuy, NhomHanhVi, TenHanhVi, LoaiDiem (Tru/Cong), DiemSo, MucDo (Nhe/Vua/Nang), Ghim, ThuTu, TrangThai	Nhóm gồm Chuyên cần, Học tập, Nề nếp, Phong trào, Lao động – Vệ sinh; nhóm Điểm cộng chỉ khi bật.
+4_NhatKyThiDua	MaGhiNhan (UUID), ThoiGianMayChu, ThoiGianMay, NgayHoc, Buoi, TuanHoc, DoiTuong (HocSinh/To), MaHS, HoTen, To (chụp tại thời điểm ghi), MaNoiQuy, NhomHanhVi, TenHanhVi, MucDo, DiemSo, GhiChu, NguoiGhi, VaiTroNguoiGhi, NguonGhi, LoaiThietBi, MaLoNhap, LanThuTrongBuoi, DaXacNhanTrung, TrangThai, NoiDungGiaiTrinh, NguoiDuyet, KetQuaDuyet, LyDoDuyet, LyDoHuy, ThoiGianHuy	Chỉ thêm dòng, không xoá. Hủy là chuyển TrangThai = DaHuy. Trạng thái: HieuLuc, ChoDuyet, DaChapNhan, BiTuChoi, DaHuy, ChoXacNhanTrung.
+5_BaoCaoTuan	TuanHoc, MaHS, HoTen, To, DiemKhoiDau, TongDiemCong, TongDiemTru, DiemCuoiTuan, XepLoai, NhanXetTuDong, DaChot	Do Apps Script tính và ghi (bộ nhớ đệm cho nhanh), không dựa công thức nặng.
+6_NhatKyHeThong	ThoiGian, NguoiThucHien, VaiTro, HanhDong, DoiTuong, ChiTiet, LoaiThietBi, KetQua	Đăng nhập, ghi, sửa, hủy, duyệt, nhập, xuất, đổi cấu hình, đổi quyền, thu hồi thiết bị.
+7_CauHinh	Khoa, GiaTri, MoTa, CapNhatBoi, CapNhatLuc	Mọi tuỳ chọn ở Mục 8.1 (dạng khoá–giá trị).
+8_PhanQuyen	VaiTro, NhomNoiQuy, PhamViHocSinh (Lop/To/KhongCo), ChoPhepSuaHuy, ChoPhepDuyetGiaiTrinh	Ma trận quyền chỉnh bởi GV.
+9_TaiKhoanGV	Email, HoTen, CapDo, TrangThai, ThemLuc	Danh sách email được phép vào khu vực giáo viên.
+10_LichTrucNhat	Thu, MaTo, GhiChu	Tổ trực nhật theo thứ.
+11_PhienDangNhap	TokenHash, MaHS/Email, VaiTro, LoaiThietBi, TaoLuc, LanCuoi, HetHan (trống nếu GV), ThuHoi	Phục vụ thu hồi thiết bị.
+12_LoNhap	MaLoNhap, Loai, Nguon, TenTep, SoDong, NguoiNhap, ThoiGian, TrangThai (ChoXacNhan/DaGhi/DaHoanTac)	Cho hoàn tác theo lô.
+13_MauXuat	MaMau, TenMau, LoaiDuLieu, BoLoc (JSON), Cot (JSON), DinhDang, TaoBoi	Mẫu xuất lưu sẵn.
+
+12. Giao diện lập trình (API) của Apps Script
+Một điểm vào duy nhất doPost(e). Yêu cầu: { "action": "...", "token": "...", "payload": { ... } }. Phản hồi: { "ok": true, "data": { ... } } hoặc { "ok": false, "error": { "code": "...", "message": "..." } }. Mã lỗi gồm: UNAUTHENTICATED, FORBIDDEN, LOCKED, INVALID, NEED_CONFIRM_DUPLICATE, PERIOD_CLOSED, EDIT_WINDOW_PASSED, NOT_FOUND, RATE_LIMITED.
+Nhóm	Hành động (action)	Quyền
+Đăng nhập	classPublic, loginStudent, loginTeacherGoogle, requestTeacherOtp, verifyTeacherOtp, logout, changePassword, listDevices, revokeSession	Công khai (có mã lớp) / theo phiên
+Đọc	getMe, getBoard (màu trạng thái lớp + xếp hạng tổ), getMyLog, getRoster (theo phạm vi), getInbox (việc cần xử lý), getSheetOfMine	Mọi vai trò (đúng phạm vi)
+Ghi nhận	checkDuplicates, addRecords (mảng, mỗi bản ghi có clientId), updateRecord, voidRecord, submitExplanation	BCS, GV (submitExplanation: HS)
+Duyệt	resolveExplanation, bulkResolve, confirmPending	GV, BCS được giao
+Quản trị	getSettings, saveSettings, getPermissions, savePermissions, assignRole, resetPasswords, closePeriod, reopenPeriod, viewAs, anomalies, getAuditLog, backupNow, restoreBackup, rolloverYear, trash, restoreRecord	Chỉ GV
+Nhập	importPreview, importCommit, importUndo, listBatches, parseWithAI	Chỉ GV
+Xuất	exportQuery, saveExportTemplate, listExportTemplates, buildParentReports	Chỉ GV
+
+•	addRecords phải idempotent theo clientId: gửi lại cùng clientId không tạo bản ghi thứ hai.
+•	Các lệnh ghi dùng LockService.getScriptLock(); bộ nhớ đệm CacheService cho danh sách lớp, nội quy, cấu hình (làm mới khi có thay đổi).
+•	Mỗi lệnh trả về dữ liệu tối thiểu cần thiết cho vai trò gọi lệnh đó.
+13. Hoạt động ngoại tuyến và cài lên màn hình chính (PWA)
+•	Khi mạng yếu, bản ghi của Ban cán sự lưu vào IndexedDB (không dùng localStorage vì iPhone có thể tự xoá), hiển thị ngay với dấu “chưa đồng bộ”, tự gửi lại khi có mạng (thử lại có độ trễ tăng dần).
+•	Mỗi bản ghi có clientId (UUID) để máy chủ loại trùng; thời hạn sửa/hủy 24 giờ tính theo thời điểm ghi, không theo lúc đồng bộ.
+•	Lưu đệm danh sách lớp, sơ đồ và nội quy để mở nhanh và xem được khi mất mạng (chỉ đọc).
+•	PWA đầy đủ: manifest, biểu tượng nhiều cỡ, màn hình khởi động, service worker lưu đệm tài nguyên tĩnh, nhắc “Thêm vào màn hình chính” một lần.
+•	Mục tiêu tốc độ: lần mở đầu dưới 3 giây trên 4G; thao tác ghi nhận phản hồi trên giao diện dưới 100 ms (cập nhật lạc quan).
+14. Dữ liệu mẫu để chạy thử
+AI Studio phải tự tạo bộ dữ liệu Demo để chạy ngay khi chưa nối Google Sheets:
+•	40 học sinh tên tiếng Việt đa dạng, chia 4 tổ × 10 em, sơ đồ 4 dãy × 5 bàn × 2 chỗ, có bàn giáo viên và cửa ra vào; trong đó cố ý có ít nhất 3 cặp tên rút gọn dễ trùng (ví dụ hai bạn “Nguyễn Văn Huy”, “Nguyễn Văn Hùng”), tên 4 từ và có tên đệm “Thị”.
+•	Gán vai trò: 1 Lớp trưởng, 1 Bí thư, 1 Lớp phó học tập, 1 Lớp phó lao động, 4 Tổ trưởng (có một em kiêm hai vai trò), 1 tài khoản GV.
+•	Khoảng 60 bản ghi mẫu rải trong 3 tuần, đủ cả các mức màu Bình thường, Nhắc nhở, Cần lưu ý; có vài lỗi đang chờ giải trình; có một học sinh đã có 1 lỗi trong buổi sáng nay để thử cảnh báo trùng.
+•	Danh mục nội quy mẫu khoảng 25 hành vi thuộc 5 nhóm, điểm trừ từ 1 đến 5, có 3 lỗi mức Nặng.
+•	Chế độ Demo có thanh nhỏ báo “Dữ liệu mẫu” và nút chuyển nhanh giữa các vai trò để thử giao diện.
+15. Lộ trình giao việc cho AI Studio
+Sau mỗi giai đoạn, AI Studio phải dừng lại, báo cáo đã làm gì, đã kiểm thử gì, chưa làm gì, rồi chờ xác nhận.
+Giai đoạn	Phạm vi	Kết quả cần có
+1. Giao diện + Demo	Hệ thống thiết kế và token Sáng/Tối; màn hình đăng nhập (học sinh, GV); Bộ chọn học sinh (danh sách + sơ đồ + phạm vi tổ); luồng ghi nhận 2 chạm; ghi nhiều người; cảnh báo ghi trùng; màn hình Học sinh và Ban cán sự; khung các trang Giáo viên; trình nhập/xuất ở mức giao diện với dữ liệu mẫu	Chạy được hoàn toàn ở chế độ Demo trên điện thoại và máy tính; qua bảng kiểm Mục 16 phần A, B, C
+2. Máy chủ + Bảo mật	Code.gs, setupSheets(), đăng nhập học sinh và Google cho GV, phiên, phân quyền ở máy chủ, ghi/đọc dữ liệu, chống ghi trùng, nhật ký hệ thống, README triển khai	Nối được Google Sheet thật; qua bảng kiểm phần D
+3. Giải trình, Nhập/Xuất, Báo cáo	Giải trình và duyệt; chốt kỳ; trình xuất tuỳ chọn và mẫu xuất; thẻ ảnh báo cáo, tin nhắn mẫu; trình nhập thông minh (quy tắc cục bộ trước, Gemini sau); sao lưu	Nhập được sơ đồ từ bảng Word dán vào; xuất được file có cột nguồn gốc; qua phần E
+4. Ngoại tuyến + Hoàn thiện	Hàng đợi ngoại tuyến, PWA, cảnh báo bất thường, hiệu năng, trợ năng, sửa lỗi hiển thị Sáng/Tối	Qua toàn bộ Mục 16
+
+16. Bảng kiểm nghiệm thu
+A. Giao diện và Sáng/Tối
+•	Đổi giữa Sáng, Tối, Theo hệ thống: không có chữ nào chìm hoặc khó đọc ở bất kỳ màn hình, hộp thoại, chip, ô ghế, ô nhập, nút bị vô hiệu hoá nào.
+•	Không có mã màu hard-code trong component (kiểm bằng tìm kiếm mã nguồn).
+•	Không có emoji làm biểu tượng, không gradient tím–xanh, không hiệu ứng kính mờ lạm dụng.
+•	Không có cuộn ngang ở màn hình 360 px; mọi vùng chạm ≥ 44 px.
+B. Quy trình ghi nhận
+•	Từ lúc chọn học sinh đến lúc lưu: tối đa 2 chạm với hành vi nằm ở hàng “Hay dùng”.
+•	Ghi lỗi thứ 2 của cùng một em trong cùng buổi luôn hiện hộp xác nhận; ghi lỗi giống hệt thì nút mặc định là Hủy.
+•	Hoàn tác trong 8 giây hoạt động; viền ô ghế đổi màu ngay.
+•	Tổ trưởng Tổ 2 không thể chọn, tìm thấy hoặc ghi cho học sinh Tổ 1/3/4 (kể cả khi gửi trực tiếp yêu cầu API).
+C. Phân quyền và hiển thị
+•	Trước khi đăng nhập: không có màu trạng thái hay điểm trên sơ đồ và danh sách.
+•	Sau khi đăng nhập: học sinh thấy viền màu cả lớp nhưng không thấy lý do hay điểm của bạn khác; công tắc “chỉ bản thân” hoạt động.
+•	Màu và huy hiệu vai trò xuất hiện đúng ở ô ghế, thẻ học sinh và dòng nhật ký.
+•	Học sinh và Ban cán sự không có nút nhập/xuất/tải; gọi thẳng API export*, import* bằng token của họ trả FORBIDDEN.
+D. Bảo mật
+•	Không có API nào trả về mật khẩu, muối hay băm.
+•	Sai mật khẩu 5 lần thì khoá 15 phút. Token giả hoặc đã thu hồi bị từ chối.
+•	Email lạ đăng nhập Google vào khu vực giáo viên bị từ chối.
+•	Hai người ghi cùng lúc không làm mất dữ liệu; gửi lại cùng clientId không tạo bản ghi thứ hai.
+E. Nhập, xuất, nhận dạng
+•	Dán bảng sơ đồ từ Word: tự dựng được sơ đồ, các tên không khớp được đánh dấu và sửa được trước khi xác nhận.
+•	Dán đoạn “Tổ 1: …, Tổ 2: …” gán đúng tổ; tên sai chính tả được gợi ý đúng.
+•	Một lô nhập hoàn tác được nguyên lô.
+•	Xuất .xlsx có chọn cột, có nhóm “Nguồn gốc dữ liệu” (người nhập, vai trò, thời gian, nguồn, lô nhập); lưu và dùng lại được mẫu xuất; mỗi lần xuất xuất hiện trong nhật ký hệ thống.
+•	Thẻ ảnh báo cáo hiển thị đúng dấu tiếng Việt, mỗi thẻ chỉ có dữ liệu của một em.
+F. Ngoại tuyến
+•	Tắt mạng, ghi 5 bản ghi, bật mạng: cả 5 được gửi đúng một lần, không trùng.
+•	Bản ghi ngoại tuyến phát hiện trùng buổi vào mục “Chờ xác nhận” và chưa tính điểm.
+Phụ lục. Các giả định mặc định (chủ dự án có thể sửa)
+Các điểm dưới đây chưa được chốt rõ trong quá trình thảo luận nên tạm dùng mặc định sau. Mọi mục đều đã được thiết kế thành tuỳ chọn trong khu vực giáo viên, nên đổi lại không cần viết lại mã.
+Nội dung	Giả định tạm dùng
+Thang điểm	100 điểm khởi đầu mỗi tuần; Tốt ≥ 90, Khá 75–89, Đạt 60–74, Chưa đạt < 60
+Xếp hạng tổ	Theo điểm trung bình mỗi thành viên
+Tổ trưởng tự chấm mình	Không cho phép
+Người duyệt giải trình	Giáo viên (có thể giao thêm cho Ban cán sự)
+Phạm vi của Lớp phó lao động và Tổ trưởng	Lớp phó lao động: nhóm Lao động – Vệ sinh. Tổ trưởng: Chuyên cần và Nề nếp, trong tổ mình
+Mốc buổi	Sáng 06:30–11:30, Chiều 12:30–17:30
+Cảnh báo trùng cho điểm cộng	Không áp dụng (điểm cộng đang tắt)
+Màu viền khi chưa bật điểm cộng	Xám (bình thường), Vàng (nhắc nhở), Đỏ (cần lưu ý); màu Xanh lá chỉ xuất hiện khi bật điểm cộng
+Phụ huynh	Dùng chung tài khoản của con
+Phiên học sinh/BCS	30 ngày; phiên giáo viên không hết hạn nhưng thu hồi được
+Nhận dạng bằng Gemini	Tắt mặc định, giáo viên tự bật sau khi đọc cảnh báo quyền riêng tư
+Quyền riêng tư	Nên có thông báo và xin đồng ý của phụ huynh đầu năm (dữ liệu của trẻ vị thành niên, theo Nghị định 13/2023/NĐ-CP); điểm trong ứng dụng chỉ mang tính tham khảo, không thay thế đánh giá chính thức
+Nơi đặt Google Sheet	Riêng tư, thuộc tài khoản giáo viên (hoặc tài khoản của trường để không phụ thuộc cá nhân)
+
