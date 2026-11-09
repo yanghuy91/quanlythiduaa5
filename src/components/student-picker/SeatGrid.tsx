@@ -303,7 +303,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                   key={rowKey}
                   className="w-full flex items-center justify-center py-2 text-[11px] font-extrabold text-muted opacity-60 tracking-widest border-t border-dashed border-token/60 mt-1 uppercase select-none"
                 >
-                  — CUỐI LỚP (BÀN 6) —
+                  — CUỐI LỚP —
                 </div>
               );
             }
@@ -625,16 +625,13 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1 font-semibold text-sky-600 dark:text-sky-400">
             <span className="w-2.5 h-2.5 rounded-full bg-sky-400" />
-            <span>Nam (Xanh)</span>
+            <span>Nam</span>
           </span>
           <span className="flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400">
             <span className="w-2.5 h-2.5 rounded-full bg-rose-400" />
-            <span>Nữ (Hồng)</span>
+            <span>Nữ</span>
           </span>
         </div>
-        <span className="font-medium text-[10px] text-muted">
-          Rê chuột hoặc chạm vào ô để xem họ tên đầy đủ
-        </span>
       </div>
     </div>
   );

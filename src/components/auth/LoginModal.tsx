@@ -106,7 +106,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         setIsLocked(true);
         setErrorMsg('Sai mật khẩu 5 lần! Tài khoản bị tạm khoá 15 phút.');
       } else {
-        setErrorMsg(`Mật khẩu không đúng (Mặc định ban đầu: 123456). Còn ${5 - newAttempts} lần thử.`);
+        setErrorMsg(`Mật khẩu không đúng. Còn ${5 - newAttempts} lần thử.`);
       }
     }
   };
@@ -326,21 +326,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </div>
 
             {/* Remember Login for Teacher */}
-            <div className="flex items-start gap-2 pt-1 border-t border-token">
+            <div className="flex items-center gap-2 pt-1 border-t border-token">
               <input
                 type="checkbox"
                 id="remember-login-teacher"
                 checked={rememberLogin}
                 onChange={e => setRememberLogin(e.target.checked)}
-                className="mt-0.5 rounded border-token text-accent focus:ring-accent cursor-pointer"
+                className="rounded border-token text-accent focus:ring-accent cursor-pointer"
               />
-              <label htmlFor="remember-login-teacher" className="text-xs text-main cursor-pointer select-none">
-                <span className="font-bold">Ghi nhớ đăng nhập trên thiết bị này</span>
-                <span className="block text-[11px] text-muted">
-                  {rememberLogin 
-                    ? 'Lưu phiên đăng nhập cho lần sau trên trình duyệt này.' 
-                    : 'Không lưu: Sẽ tự động đăng xuất khi bạn đóng tab.'}
-                </span>
+              <label htmlFor="remember-login-teacher" className="text-xs text-main cursor-pointer select-none font-bold">
+                Ghi nhớ đăng nhập trên thiết bị này
               </label>
             </div>
           </div>
@@ -408,7 +403,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <form onSubmit={handleStudentSubmit} className="space-y-3 pt-1 border-t border-token">
               <div>
                 <label className="block text-xs font-semibold text-main mb-1">
-                  {selectedStudent ? `Nhập mật khẩu cho [${selectedStudent.hoTen}] (Mặc định: 123456):` : 'Nhập mật khẩu (Mặc định: 123456):'}
+                  {selectedStudent ? `Nhập mật khẩu cho [${selectedStudent.hoTen}]:` : 'Nhập mật khẩu:'}
                 </label>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
@@ -432,21 +427,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               </div>
 
               {/* Remember Login Checkbox */}
-              <div className="flex items-start gap-2 pt-0.5">
+              <div className="flex items-center gap-2 pt-0.5">
                 <input
                   type="checkbox"
                   id="remember-login-student"
                   checked={rememberLogin}
                   onChange={e => setRememberLogin(e.target.checked)}
-                  className="mt-0.5 rounded border-token text-accent focus:ring-accent cursor-pointer"
+                  className="rounded border-token text-accent focus:ring-accent cursor-pointer"
                 />
-                <label htmlFor="remember-login-student" className="text-xs text-main cursor-pointer select-none">
-                  <span className="font-bold">Ghi nhớ đăng nhập trên thiết bị này</span>
-                  <span className="block text-[11px] text-muted">
-                    {rememberLogin 
-                      ? 'Lưu đăng nhập cho lần sau (không cần đăng nhập lại khi mở trang).' 
-                      : 'Không lưu: Phiên đăng nhập sẽ tự xóa khi bạn đóng trình duyệt.'}
-                  </span>
+                <label htmlFor="remember-login-student" className="text-xs text-main cursor-pointer select-none font-bold">
+                  Ghi nhớ đăng nhập trên thiết bị này
                 </label>
               </div>
 

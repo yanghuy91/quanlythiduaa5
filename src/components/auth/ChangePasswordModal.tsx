@@ -115,9 +115,6 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                 <label className="text-xs font-bold text-main">
                   Mật khẩu hiện tại:
                 </label>
-                <span className="text-[10px] text-muted italic">
-                  (Mặc định ban đầu: 123456)
-                </span>
               </div>
               <div className="relative">
                 <Lock className="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />

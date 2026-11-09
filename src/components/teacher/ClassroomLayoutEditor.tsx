@@ -683,7 +683,7 @@ export const ClassroomLayoutEditor: React.FC<ClassroomLayoutEditorProps> = ({
                     key={rowKey}
                     className="w-full flex items-center justify-center py-2 text-[11px] font-extrabold text-muted opacity-60 tracking-widest border-t border-dashed border-token/60 mt-1 uppercase select-none"
                   >
-                    — CUỐI LỚP (BÀN 6) —
+                    — CUỐI LỚP —
                   </div>
                 );
               }
