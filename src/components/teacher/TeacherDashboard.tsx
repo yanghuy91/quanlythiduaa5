@@ -668,18 +668,18 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     </h2>
                     <button
                       type="button"
-                      onClick={() => setIsTeacherProfileModalOpen(true)}
+                      onClick={() => onOpenTeacherProfile ? onOpenTeacherProfile() : setIsTeacherProfileModalOpen(true)}
                       className="px-2 py-0.5 rounded-lg bg-white/15 hover:bg-white/25 text-amber-300 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
                       title="Bấm để đổi tên hiển thị của Thầy và dòng trạng thái bên dưới"
                     >
                       <Edit3 className="w-3 h-3" />
-                      <span>Đổi tên & Trạng thái</span>
+                      <span>Đổi tên &amp; Trạng thái</span>
                     </button>
                   </div>
                   <p className="text-[11px] text-slate-200 mt-0.5 font-medium flex items-center gap-2 flex-wrap">
                     <span>{internalTeacherProfile.statusText}</span>
                     <span className="opacity-40">•</span>
-                    <span>{students.length} Học sinh • 4 Dãy bàn • Năm học {CURRENT_SCHOOL_YEAR}</span>
+                    <span>{students.length} Học sinh • Năm học {CURRENT_SCHOOL_YEAR}</span>
                   </p>
                 </div>
               </div>
@@ -2506,6 +2506,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         currentAvatarUrl={teacherAvatarUrl || ''}
         onOpenAvatarPicker={onOpenTeacherAvatar || (() => {})}
         onSaveSuccess={handleProfileSaveSuccess}
+        onSaveProfile={handleProfileSaveSuccess}
       />
     </div>
   );

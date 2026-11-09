@@ -179,7 +179,9 @@ export default function App() {
     setTeacherAvatar(newAvatarUrl);
     setCurrentUser(prev => {
       if (prev && prev.vaiTro.includes('GV')) {
-        return { ...prev, avatarUrl: newAvatarUrl };
+        const updated = { ...prev, avatarUrl: newAvatarUrl };
+        saveAuthSession(updated, 'GV', true);
+        return updated;
       }
       return prev;
     });
@@ -196,11 +198,13 @@ export default function App() {
     saveTeacherProfile(profile);
     setCurrentUser(prev => {
       if (prev && prev.vaiTro.includes('GV')) {
-        return {
+        const updated = {
           ...prev,
           hoTen: profile.hoTen,
           statusText: profile.statusText
         };
+        saveAuthSession(updated, 'GV', true);
+        return updated;
       }
       return prev;
     });
@@ -605,11 +609,16 @@ export default function App() {
 
   // Teacher login from modal (supports Google Profile)
   const handleLoginTeacher = (remember = true, teacherInfo?: { hoTen?: string; email?: string; avatarUrl?: string }) => {
+    const prof = getTeacherProfile();
+    const effectiveName = prof.hoTen || teacherInfo?.hoTen || 'Thầy Dương Văn Huy';
+    const effectiveAvatar = teacherAvatar || teacherInfo?.avatarUrl;
+
     const teacherUser = {
-      hoTen: teacherInfo?.hoTen || 'Thầy/Cô Chủ nhiệm (GVCN)',
-      email: teacherInfo?.email,
+      hoTen: effectiveName,
+      statusText: prof.statusText,
+      email: teacherInfo?.email || prof.email,
       vaiTro: ['GV'] as RoleCode[],
-      avatarUrl: teacherInfo?.avatarUrl || teacherAvatar,
+      avatarUrl: effectiveAvatar,
     };
     saveAuthSession(teacherUser, 'GV', remember);
     setCurrentUser(teacherUser);
@@ -863,6 +872,7 @@ export default function App() {
         isOpen={isTeacherAvatarModalOpen}
         onClose={() => setIsTeacherAvatarModalOpen(false)}
         currentAvatarUrl={teacherAvatar}
+        teacherName={teacherProfile.hoTen}
         onSelectAvatar={handleUpdateTeacherAvatar}
       />
 
@@ -871,7 +881,9 @@ export default function App() {
         isOpen={isTeacherProfileModalOpen}
         onClose={() => setIsTeacherProfileModalOpen(false)}
         currentProfile={teacherProfile}
+        currentAvatarUrl={teacherAvatar}
         onSaveProfile={handleSaveTeacherProfile}
+        onSaveSuccess={handleSaveTeacherProfile}
         onOpenAvatarPicker={() => {
           setIsTeacherProfileModalOpen(false);
           setIsTeacherAvatarModalOpen(true);

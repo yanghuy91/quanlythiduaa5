@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   UserCheck, 
   Sparkles, 
@@ -11,14 +11,16 @@ import {
   Edit3
 } from 'lucide-react';
 import { TeacherProfile, saveTeacherProfile } from '../../data/teacherProfile';
+import { getTeacherAvatar } from '../../data/teacherAvatars';
 
 interface TeacherProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentProfile: TeacherProfile;
-  currentAvatarUrl: string;
-  onOpenAvatarPicker: () => void;
-  onSaveSuccess: (updatedProfile: TeacherProfile) => void;
+  currentAvatarUrl?: string;
+  onOpenAvatarPicker?: () => void;
+  onSaveSuccess?: (updatedProfile: TeacherProfile) => void;
+  onSaveProfile?: (updatedProfile: TeacherProfile) => void;
 }
 
 const STATUS_PRESETS = [
@@ -36,12 +38,24 @@ export const TeacherProfileModal: React.FC<TeacherProfileModalProps> = ({
   currentAvatarUrl,
   onOpenAvatarPicker,
   onSaveSuccess,
+  onSaveProfile,
 }) => {
-  const [hoTen, setHoTen] = useState(currentProfile.hoTen || 'Thầy Dương Văn Huy');
-  const [statusText, setStatusText] = useState(currentProfile.statusText || 'Giáo viên chủ nhiệm Lớp 10A5');
-  const [school, setSchool] = useState(currentProfile.school || 'THPT Số 2 Đức Phổ');
+  const [hoTen, setHoTen] = useState(currentProfile?.hoTen || 'Thầy Dương Văn Huy');
+  const [statusText, setStatusText] = useState(currentProfile?.statusText || 'Giáo viên chủ nhiệm Lớp 10A5');
+  const [school, setSchool] = useState(currentProfile?.school || 'THPT Số 2 Đức Phổ');
+
+  // Always sync internal state when modal opens or currentProfile changes
+  useEffect(() => {
+    if (isOpen && currentProfile) {
+      setHoTen(currentProfile.hoTen || 'Thầy Dương Văn Huy');
+      setStatusText(currentProfile.statusText || 'Giáo viên chủ nhiệm Lớp 10A5');
+      setSchool(currentProfile.school || 'THPT Số 2 Đức Phổ');
+    }
+  }, [isOpen, currentProfile]);
 
   if (!isOpen) return null;
+
+  const effectiveAvatarUrl = currentAvatarUrl || getTeacherAvatar();
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +67,8 @@ export const TeacherProfileModal: React.FC<TeacherProfileModalProps> = ({
       school: school.trim(),
     });
 
-    onSaveSuccess(updated);
+    onSaveSuccess?.(updated);
+    onSaveProfile?.(updated);
     onClose();
   };
 
@@ -93,7 +108,7 @@ export const TeacherProfileModal: React.FC<TeacherProfileModalProps> = ({
           <div className="p-4 rounded-2xl bg-surface-2 border border-token flex items-center gap-4">
             <div className="relative group">
               <img
-                src={currentAvatarUrl}
+                src={effectiveAvatarUrl}
                 alt={hoTen}
                 className="w-16 h-16 rounded-2xl object-cover border-2 border-token shadow-sm ring-2 ring-accent/30"
               />
@@ -101,7 +116,7 @@ export const TeacherProfileModal: React.FC<TeacherProfileModalProps> = ({
                 type="button"
                 onClick={() => {
                   onClose();
-                  onOpenAvatarPicker();
+                  onOpenAvatarPicker?.();
                 }}
                 className="absolute inset-0 rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity cursor-pointer text-xs"
                 title="Đổi ảnh đại diện"
@@ -117,7 +132,7 @@ export const TeacherProfileModal: React.FC<TeacherProfileModalProps> = ({
                   type="button"
                   onClick={() => {
                     onClose();
-                    onOpenAvatarPicker();
+                    onOpenAvatarPicker?.();
                   }}
                   className="text-xs font-bold text-accent hover:underline flex items-center gap-1 cursor-pointer"
                 >
@@ -188,7 +203,7 @@ export const TeacherProfileModal: React.FC<TeacherProfileModalProps> = ({
             </span>
             <div className="flex items-center gap-2.5 pt-1">
               <img
-                src={currentAvatarUrl}
+                src={effectiveAvatarUrl}
                 alt={hoTen}
                 className="w-10 h-10 rounded-full object-cover border border-token shrink-0 shadow-xs"
               />

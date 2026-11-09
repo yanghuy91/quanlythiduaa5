@@ -19,6 +19,7 @@ interface TeacherAvatarModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentAvatarUrl: string;
+  teacherName?: string;
   onSelectAvatar: (avatarUrl: string) => void;
 }
 
@@ -26,6 +27,7 @@ export const TeacherAvatarModal: React.FC<TeacherAvatarModalProps> = ({
   isOpen,
   onClose,
   currentAvatarUrl,
+  teacherName,
   onSelectAvatar,
 }) => {
   const [activeTab, setActiveTab] = useState<'presets' | 'upload'>('presets');
@@ -42,6 +44,13 @@ export const TeacherAvatarModal: React.FC<TeacherAvatarModalProps> = ({
       setUploadError(null);
     }
   }, [isOpen, currentAvatarUrl]);
+
+  const handleApplyDirect = (avatarUrl: string) => {
+    setSelectedAvatarUrl(avatarUrl);
+    setTeacherAvatar(avatarUrl);
+    onSelectAvatar(avatarUrl);
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -162,10 +171,10 @@ export const TeacherAvatarModal: React.FC<TeacherAvatarModalProps> = ({
 
             <div>
               <span className="text-sm font-black text-main block">
-                Trần Văn Bình (GVCN)
+                {teacherName || 'Giáo viên Chủ nhiệm'}
               </span>
               <span className="text-xs text-muted block mt-0.5">
-                Giáo viên Chủ nhiệm Lớp 10A5
+                Lớp 10A5 · THPT Số 2 Đức Phổ
               </span>
               <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-1">
                 <Check className="w-3 h-3" />
@@ -215,8 +224,8 @@ export const TeacherAvatarModal: React.FC<TeacherAvatarModalProps> = ({
         {/* Tab 1: Presets */}
         {activeTab === 'presets' && (
           <div className="flex flex-col gap-2.5">
-            <span className="text-xs font-bold text-muted uppercase tracking-wider">
-              Chọn phong cách phù hợp với Thầy/Cô:
+            <span className="text-xs font-bold text-accent uppercase tracking-wider flex items-center gap-1.5">
+              <span>👉 Bấm trực tiếp vào ảnh đại diện bất kỳ để áp dụng ngay:</span>
             </span>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -227,11 +236,11 @@ export const TeacherAvatarModal: React.FC<TeacherAvatarModalProps> = ({
                   <button
                     key={preset.id}
                     type="button"
-                    onClick={() => setSelectedAvatarUrl(preset.src)}
-                    className={`p-3 rounded-2xl border text-left flex items-start gap-3 transition-all cursor-pointer ${
+                    onClick={() => handleApplyDirect(preset.src)}
+                    className={`p-3 rounded-2xl border text-left flex items-start gap-3 transition-all cursor-pointer group hover:scale-[1.01] ${
                       isSelected
-                        ? 'border-accent bg-accent/5 shadow-md ring-2 ring-accent/30'
-                        : 'border-token bg-surface hover:bg-surface-2/60 hover:border-token/80'
+                        ? 'border-accent bg-accent/10 shadow-md ring-2 ring-accent/30'
+                        : 'border-token bg-surface hover:bg-surface-2 hover:border-accent/40'
                     }`}
                   >
                     <div className="relative shrink-0">
@@ -250,8 +259,8 @@ export const TeacherAvatarModal: React.FC<TeacherAvatarModalProps> = ({
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-xs font-black text-main">
+                      <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                        <span className="text-xs font-black text-main group-hover:text-accent transition-colors">
                           {preset.name}
                         </span>
                         <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-surface-2 border border-token text-muted">
@@ -261,6 +270,9 @@ export const TeacherAvatarModal: React.FC<TeacherAvatarModalProps> = ({
                       <p className="text-[11px] text-muted line-clamp-2 mt-1 leading-snug">
                         {preset.description}
                       </p>
+                      <div className="mt-1.5 flex items-center gap-1 text-[11px] font-bold text-accent">
+                        <span>{isSelected ? '✓ Đang sử dụng' : '👉 Bấm để chọn ngay'}</span>
+                      </div>
                     </div>
                   </button>
                 );
