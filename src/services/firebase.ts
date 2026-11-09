@@ -69,20 +69,11 @@ export function isAuthorizedTeacherEmail(email?: string | null): boolean {
 }
 
 /**
- * Real Google Sign-in with Popup (falls back to Redirect if popup is blocked)
+ * Real Google Sign-in with Popup
  */
-export async function loginWithGoogleFirebase(): Promise<User | null> {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    return result.user;
-  } catch (err: any) {
-    if (err.code === 'auth/popup-blocked') {
-      console.warn('[GoogleAuth] Popup blocked by browser, redirecting seamlessly...');
-      await signInWithRedirect(auth, googleProvider);
-      return null;
-    }
-    throw err;
-  }
+export async function loginWithGoogleFirebase(): Promise<User> {
+  const result = await signInWithPopup(auth, googleProvider);
+  return result.user;
 }
 
 /**

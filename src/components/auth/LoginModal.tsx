@@ -181,13 +181,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     } catch (err: any) {
       console.error('[GoogleLogin] Error:', err);
       if (err.code === 'auth/popup-closed-by-user') {
-        setErrorMsg('Cửa sổ đăng nhập Google đã đóng. Thầy có thể bấm lại hoặc dùng nút [Vào nhanh] bên dưới.');
+        setErrorMsg('Cửa sổ đăng nhập Google đã đóng. Thầy vui lòng bấm lại để chọn tài khoản.');
       } else if (err.code === 'auth/unauthorized-domain') {
-        setErrorMsg('Tên miền "thiduabc5.vercel.app" chưa được ủy quyền trong Firebase. Thầy hãy vào Firebase Console > Authentication > Settings > Authorized domains > thêm "thiduabc5.vercel.app". (Hoặc bấm "Vào nhanh quyền GV" bên dưới: gvcn10a5)');
+        setErrorMsg('Tên miền "thiduabc5.vercel.app" chưa được thêm vào Firebase. Thầy hãy vào Firebase Console > Authentication > Settings > Authorized domains > thêm "thiduabc5.vercel.app".');
       } else if (err.code === 'auth/popup-blocked') {
-        setErrorMsg('Trình duyệt đang chặn cửa sổ Popup. Thầy có thể bấm nút "⚡ Vào nhanh quyền GV (Bỏ qua Google)" bên dưới để vào ngay lập tức!');
+        setErrorMsg('Trình duyệt đang chặn cửa sổ Popup Google. Thầy vui lòng bấm vào biểu tượng Popup trên thanh địa chỉ để Chọn "Luôn cho phép hiển thị cửa sổ bật lên".');
       } else {
-        setErrorMsg(`Thông báo đăng nhập Google: ${err.message || err.code || 'Chưa hoàn tất'}. Thầy có thể bấm nút "⚡ Vào nhanh quyền GV" bên dưới.`);
+        setErrorMsg(`Lỗi kết nối Google (${err.code || 'unknown'}): ${err.message || 'Vui lòng thử lại.'}`);
       }
     } finally {
       setIsGoogleLoading(false);
@@ -208,7 +208,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         email: 'yanghuy91@gmail.com',
       });
     } else {
-      setErrorMsg('Mật khẩu Giáo viên chưa đúng. (Mật khẩu mặc định: gvcn10a5 hoặc 123456)');
+      setErrorMsg('Mật khẩu Giáo viên không chính xác. Vui lòng thử lại.');
     }
   };
 
@@ -321,7 +321,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <div className="relative flex py-1 items-center">
               <div className="flex-grow border-t border-token"></div>
               <span className="flex-shrink mx-3 text-[10px] text-muted uppercase font-bold tracking-wider">
-                Hoặc mật khẩu Giáo viên
+                Hoặc mật khẩu riêng của Giáo viên
               </span>
               <div className="flex-grow border-t border-token"></div>
             </div>
@@ -333,7 +333,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   type={showTeacherPassword ? 'text' : 'password'}
                   value={teacherPassword}
                   onChange={e => setTeacherPasswordInput(e.target.value)}
-                  placeholder="Nhập mật khẩu GV (Mặc định: gvcn10a5)..."
+                  placeholder="Nhập mật khẩu riêng của Giáo viên..."
                   className="w-full px-3 py-2.5 pr-10 bg-surface-2 border border-token rounded-xl text-xs text-main placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
                 />
                 <button
@@ -346,28 +346,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <button
-                  type="submit"
-                  className="w-full py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold hover:opacity-95 transition-opacity cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
-                >
-                  <KeyRound className="w-3.5 h-3.5" />
-                  <span>Đăng nhập mật khẩu</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    onLoginTeacher(rememberLogin, {
-                      hoTen: 'Thầy Huy (GVCN)',
-                      email: 'yanghuy91@gmail.com',
-                    });
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-accent text-on-accent text-xs font-bold hover:opacity-95 transition-opacity cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
-                >
-                  <span>⚡ Vào thẳng quản trị lớp</span>
-                </button>
-              </div>
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold hover:opacity-95 transition-opacity cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Đăng nhập bằng Mật khẩu Giáo viên</span>
+              </button>
             </form>
 
             {/* Remember Login for Teacher */}
