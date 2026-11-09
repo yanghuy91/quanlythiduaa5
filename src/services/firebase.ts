@@ -114,6 +114,49 @@ export async function logoutFirebase(): Promise<void> {
 }
 
 /**
+ * Save Gemini Keys Pool to Cloud Firestore
+ */
+export async function saveCloudGeminiKeys(keys: any[], autoRotate: boolean = true, activeModel?: string): Promise<boolean> {
+  try {
+    const docRef = doc(db, 'classes', '10a5');
+    await setDoc(docRef, {
+      geminiKeys: keys,
+      geminiAutoRotate: autoRotate,
+      geminiModel: activeModel || 'gemini-2.5-flash',
+      geminiUpdatedAt: new Date().toISOString(),
+    }, { merge: true });
+    return true;
+  } catch (err) {
+    console.warn('[Firebase] Lỗi lưu Gemini Keys vào Firestore:', err);
+    return false;
+  }
+}
+
+/**
+ * Fetch Gemini Keys Pool from Cloud Firestore
+ */
+export async function fetchCloudGeminiKeys(): Promise<{ keys: any[]; autoRotate: boolean; activeModel?: string } | null> {
+  try {
+    const docRef = doc(db, 'classes', '10a5');
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      if (data && Array.isArray(data.geminiKeys)) {
+        return {
+          keys: data.geminiKeys,
+          autoRotate: data.geminiAutoRotate !== false,
+          activeModel: data.geminiModel,
+        };
+      }
+    }
+    return null;
+  } catch (err) {
+    console.warn('[Firebase] Lỗi đọc Gemini Keys từ Firestore:', err);
+    return null;
+  }
+}
+
+/**
  * Listen to auth state changes
  */
 export function onFirebaseAuthStateChanged(callback: (user: User | null) => void): () => void {

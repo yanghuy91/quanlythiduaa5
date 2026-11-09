@@ -68,11 +68,18 @@ import {
   testGeminiConnection, 
   generateEmulationReportAI, 
   generateCallingGameQuestionsAI,
-  CallingGameQuestion 
+  CallingGameQuestion,
+  GeminiApiKeyItem,
+  getGeminiKeysPool,
+  saveGeminiKeysPool,
+  getGeminiAutoRotate,
+  setGeminiAutoRotate,
+  testSpecificGeminiKey
 } from '../../services/geminiService';
+import { saveCloudGeminiKeys, fetchCloudGeminiKeys } from '../../services/firebase';
 import { downloadStateAsJson, parseImportedJsonState, saveServerState } from '../../services/storageSync';
 import { getAllStudentBadgesState } from '../../data/badgeCatalog';
-import { Eye, EyeOff, Bot, Key, Copy, Check, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Bot, Key, Copy, Check, ArrowLeft, Trash2, Plus, RefreshCw } from 'lucide-react';
 
 interface TeacherDashboardProps {
   students: Student[];
@@ -181,6 +188,37 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [showApiKey, setShowApiKey] = useState(false);
   const [apiConnectionStatus, setApiConnectionStatus] = useState<{ tested: boolean; success: boolean; message: string } | null>(null);
   const [isTestingApi, setIsTestingApi] = useState(false);
+  
+  // Gemini Multi-Key Pool State
+  const [keysPool, setKeysPool] = useState<GeminiApiKeyItem[]>(() => getGeminiKeysPool());
+  const [autoRotateKeys, setAutoRotateKeys] = useState<boolean>(() => getGeminiAutoRotate());
+  const [newKeyInput, setNewKeyInput] = useState('');
+  const [newKeyLabel, setNewKeyLabel] = useState('');
+  const [isSyncingCloud, setIsSyncingCloud] = useState(false);
+  const [cloudSyncMsg, setCloudSyncMsg] = useState<string | null>(null);
+  const [testingKeyId, setTestingKeyId] = useState<string | null>(null);
+
+  // Sync keys from Firebase Cloud Firestore on tab open
+  React.useEffect(() => {
+    if (activeTab === 'ai_gemini') {
+      fetchCloudGeminiKeys().then(cloudData => {
+        if (cloudData && Array.isArray(cloudData.keys) && cloudData.keys.length > 0) {
+          setKeysPool(cloudData.keys);
+          saveGeminiKeysPool(cloudData.keys);
+          setAutoRotateKeys(cloudData.autoRotate);
+          setGeminiAutoRotate(cloudData.autoRotate);
+          if (cloudData.activeModel) {
+            setLocalGeminiModel(cloudData.activeModel);
+            setGeminiModel(cloudData.activeModel);
+          }
+          const activeKey = cloudData.keys.find((k: GeminiApiKeyItem) => k.isActive) || cloudData.keys[0];
+          if (activeKey) {
+            setLocalGeminiApiKey(activeKey.key);
+          }
+        }
+      });
+    }
+  }, [activeTab]);
   
   // AI Tool 1 state
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -1797,26 +1835,27 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </div>
           </div>
 
-          {/* Card Lưu Trữ Lâu Dài & Đồng Bộ Máy Chủ */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-transparent border border-emerald-500/30 space-y-3 shadow-2xs max-w-xl mx-auto">
+          {/* Card Sao lưu dự phòng ngoại tuyến (Tùy chọn) */}
+          <div className="p-4 rounded-2xl bg-surface border border-token shadow-2xs space-y-3 max-w-xl mx-auto">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-primary/10 text-accent flex items-center justify-center">
                   <Database className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-main uppercase tracking-wider">
-                    Lưu trữ dữ liệu lâu dài &amp; Đồng bộ máy chủ
+                  <h4 className="text-xs font-bold text-main uppercase tracking-wider">
+                    Sao lưu dữ liệu ngoại tuyến (Tùy chọn)
                   </h4>
-                  <p className="text-[11px] text-emerald-700 dark:text-emerald-300 font-medium">
-                    🟢 Tự động lưu trên máy chủ disk (data/classroom_state.json)
+                  <p className="text-[11px] text-emerald-600 font-medium flex items-center gap-1">
+                    <span>☁️</span>
+                    <span>Tự động đồng bộ thời gian thực trên Firebase Cloud</span>
                   </p>
                 </div>
               </div>
             </div>
 
             <p className="text-[11px] text-muted leading-relaxed">
-              Mọi chỉnh sửa của Giáo viên và tùy chọn cá nhân hóa của Học sinh (ảnh đại diện, huy hiệu, khung danh dự, nề nếp, điểm số) đều được tự động lưu vĩnh viễn trên máy chủ, xem đồng bộ trên mọi thiết bị (máy tính, điện thoại, máy tính bảng).
+              Mọi thay đổi của lớp học (học sinh, nề nếp, điểm số, ảnh đại diện) đều được lưu vĩnh viễn trên máy chủ đám mây của Google Firebase. Thầy có thể tải thêm 1 file JSON về máy tính bất cứ lúc nào để làm bản lưu dự phòng ngoại tuyến.
             </p>
 
             <div className="flex items-center gap-2 flex-wrap pt-1">
@@ -1839,13 +1878,13 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   };
                   downloadStateAsJson(fullState, `Lop10A5_DuLieuSaoLuu_${new Date().toISOString().slice(0, 10)}.json`);
                 }}
-                className="px-3 py-1.5 rounded-xl bg-surface hover:bg-surface-2 border border-token text-xs font-bold text-main cursor-pointer flex items-center gap-1.5 shadow-xs transition-colors"
+                className="px-3.5 py-1.5 rounded-xl bg-surface hover:bg-surface-2 border border-token text-xs font-bold text-main cursor-pointer flex items-center gap-1.5 shadow-xs transition-colors"
               >
                 <Download className="w-3.5 h-3.5 text-accent" />
                 <span>Tải bản sao lưu JSON (.json)</span>
               </button>
 
-              <label className="px-3 py-1.5 rounded-xl bg-surface hover:bg-surface-2 border border-token text-xs font-bold text-main cursor-pointer flex items-center gap-1.5 shadow-xs transition-colors">
+              <label className="px-3.5 py-1.5 rounded-xl bg-surface hover:bg-surface-2 border border-token text-xs font-bold text-main cursor-pointer flex items-center gap-1.5 shadow-xs transition-colors">
                 <Upload className="w-3.5 h-3.5 text-accent" />
                 <span>Khôi phục từ file JSON</span>
                 <input
@@ -1872,36 +1911,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   }}
                 />
               </label>
-
-              <button
-                type="button"
-                onClick={async () => {
-                  const badges = getAllStudentBadgesState();
-                  const fullState = {
-                    students,
-                    records,
-                    academicRecords,
-                    settings,
-                    layout,
-                    rules,
-                    teacherAvatar: teacherAvatarUrl || '',
-                    studentBadgesMap: badges.studentBadgesMap,
-                    studentActiveBadges: badges.studentActiveBadges,
-                    updatedAt: new Date().toISOString(),
-                    version: 1,
-                  };
-                  const ok = await saveServerState(fullState);
-                  if (ok) {
-                    alert('Đã đồng bộ toàn bộ dữ liệu lên máy chủ thành công! ✨');
-                  } else {
-                    alert('Không thể lưu lên máy chủ. Vui lòng kiểm tra lại kết nối!');
-                  }
-                }}
-                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer flex items-center gap-1.5 shadow-xs transition-colors"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Đồng bộ máy chủ ngay</span>
-              </button>
             </div>
           </div>
         </div>
@@ -1941,108 +1950,304 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </button>
           </div>
 
-          {/* Section 1: API Key Configuration */}
-          <div className="p-4 sm:p-5 rounded-3xl bg-surface border border-token shadow-xs space-y-3">
+          {/* Section 1: API Key Pool Configuration */}
+          <div className="p-4 sm:p-5 rounded-3xl bg-surface border border-token shadow-xs space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <Key className="w-4 h-4 text-purple-500" />
                 <h4 className="text-sm font-extrabold text-main">
-                  1. Cấu hình Gemini API Key (Dành cho Giáo viên)
+                  1. Danh sách Gemini API Key (Luân phiên &amp; Đồng bộ Firebase)
                 </h4>
               </div>
-              <a
-                href="https://aistudio.google.com/app/apikey"
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs font-bold text-accent hover:underline flex items-center gap-1"
-              >
-                <span>Lấy API Key miễn phí tại Google AI Studio</span>
-                <span>↗</span>
-              </a>
-            </div>
-
-            <p className="text-xs text-muted">
-              API Key được lưu trữ riêng tư và an toàn trong trình duyệt của bạn (localStorage), dùng cho các tính năng AI của lớp 10A5.
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-              <div className="sm:col-span-2 relative">
-                <input
-                  type={showApiKey ? 'text' : 'password'}
-                  value={geminiApiKey}
-                  onChange={e => {
-                    setLocalGeminiApiKey(e.target.value);
-                    setGeminiApiKey(e.target.value);
-                    setApiConnectionStatus(null);
-                  }}
-                  placeholder="Dán mã Gemini API Key vào đây (AIzaSy...)"
-                  className="w-full pl-3 pr-10 py-2.5 bg-surface-2 border border-token rounded-xl text-xs text-main placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-purple-400 font-mono"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowApiKey(!showApiKey)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-main cursor-pointer"
-                  title={showApiKey ? 'Ẩn API Key' : 'Hiện API Key'}
-                >
-                  {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-
-              <div>
-                <select
-                  value={geminiModel}
-                  onChange={e => {
-                    setLocalGeminiModel(e.target.value);
-                    setGeminiModel(e.target.value);
-                  }}
-                  className="w-full px-3 py-2.5 bg-surface-2 border border-token rounded-xl text-xs font-semibold text-main cursor-pointer"
-                >
-                  <option value="gemini-2.5-flash">gemini-2.5-flash (Khuyên dùng: Siêu nhanh)</option>
-                  <option value="gemini-2.5-pro">gemini-2.5-pro (Suy luận sâu)</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 pt-1 flex-wrap">
-              <button
-                type="button"
-                disabled={!geminiApiKey.trim() || isTestingApi}
-                onClick={async () => {
-                  setIsTestingApi(true);
-                  setApiConnectionStatus(null);
-                  const res = await testGeminiConnection();
-                  setApiConnectionStatus({
-                    tested: true,
-                    success: res.success,
-                    message: res.message,
-                  });
-                  setIsTestingApi(false);
-                }}
-                className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95"
-              >
-                {isTestingApi ? (
-                  <>
-                    <Sparkles className="w-3.5 h-3.5 animate-spin" />
-                    <span>Đang kiểm tra kết nối...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Kiểm tra kết nối API Key</span>
-                  </>
+              <div className="flex items-center gap-2">
+                {isSyncingCloud && (
+                  <span className="text-[11px] text-purple-600 font-semibold flex items-center gap-1 animate-pulse">
+                    <RefreshCw className="w-3 h-3 animate-spin" />
+                    Đang đồng bộ đám mây...
+                  </span>
                 )}
-              </button>
+                {cloudSyncMsg && (
+                  <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    {cloudSyncMsg}
+                  </span>
+                )}
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-bold text-accent hover:underline flex items-center gap-1"
+                >
+                  <span>Lấy API Key tại Google AI Studio</span>
+                  <span>↗</span>
+                </a>
+              </div>
+            </div>
 
-              {apiConnectionStatus && (
-                <div className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 ${
-                  apiConnectionStatus.success
-                    ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-rose-500/15 border border-rose-500/30 text-rose-700 dark:text-rose-300'
-                }`}>
-                  {apiConnectionStatus.success ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />}
-                  <span>{apiConnectionStatus.message}</span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-xs">
+              <div className="space-y-0.5">
+                <span className="font-bold text-purple-900 dark:text-purple-200">
+                  Tự động luân phiên khi chạm hạn ngạch (Auto-rotate on 429)
+                </span>
+                <p className="text-[11px] text-muted">
+                  Khi một key hết lượt gọi trong ngày, hệ thống sẽ tự động dùng key tiếp theo mà không làm gián đoạn việc tạo bài hay phân tích.
+                </p>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer font-bold text-main shrink-0">
+                <input
+                  type="checkbox"
+                  checked={autoRotateKeys}
+                  onChange={async (e) => {
+                    const val = e.target.checked;
+                    setAutoRotateKeys(val);
+                    setGeminiAutoRotate(val);
+                    setIsSyncingCloud(true);
+                    await saveCloudGeminiKeys(keysPool, val, geminiModel);
+                    setIsSyncingCloud(false);
+                    setCloudSyncMsg('Đã lưu cài đặt');
+                    setTimeout(() => setCloudSyncMsg(null), 2500);
+                  }}
+                  className="w-4 h-4 accent-purple-600 rounded cursor-pointer"
+                />
+                <span>Bật luân phiên</span>
+              </label>
+            </div>
+
+            {/* Existing Keys List */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-muted px-1">
+                <span>Các API Key đang có ({keysPool.length})</span>
+                <span className="text-[11px] font-normal">☁️ Tự động đồng bộ lên Firebase cho mọi thiết bị</span>
+              </div>
+
+              {keysPool.length === 0 ? (
+                <div className="p-4 rounded-2xl bg-surface-2 border border-dashed border-token text-center text-xs text-muted">
+                  Chưa có API Key nào. Thầy vui lòng nhập ít nhất 1 Key bên dưới để kích hoạt trợ lý AI.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {keysPool.map((item, idx) => {
+                    const isMasked = !showApiKey;
+                    const maskedVal = item.key.length > 10 
+                      ? `${item.key.slice(0, 7)}...${item.key.slice(-4)}` 
+                      : '••••••••••••';
+
+                    return (
+                      <div
+                        key={item.id}
+                        className={`p-3 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                          item.isActive 
+                            ? 'bg-purple-500/5 border-purple-500/40 ring-1 ring-purple-500/30' 
+                            : 'bg-surface-2 border-token'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const updated = keysPool.map(k => ({ ...k, isActive: k.id === item.id }));
+                              setKeysPool(updated);
+                              saveGeminiKeysPool(updated);
+                              setLocalGeminiApiKey(item.key);
+                              setIsSyncingCloud(true);
+                              await saveCloudGeminiKeys(updated, autoRotateKeys, geminiModel);
+                              setIsSyncingCloud(false);
+                            }}
+                            className={`w-5 h-5 rounded-full border flex items-center justify-center cursor-pointer shrink-0 transition-colors ${
+                              item.isActive 
+                                ? 'border-purple-600 bg-purple-600 text-white' 
+                                : 'border-token bg-surface hover:border-purple-400'
+                            }`}
+                            title={item.isActive ? 'Key đang hoạt động chính' : 'Bấm để chọn làm Key chính'}
+                          >
+                            {item.isActive && <Check className="w-3 h-3 stroke-[3]" />}
+                          </button>
+
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-bold text-main truncate">
+                                {item.label || `API Key #${idx + 1}`}
+                              </span>
+                              {item.isActive && (
+                                <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-purple-600 text-white">
+                                  Đang dùng chính
+                                </span>
+                              )}
+                              {item.status === 'valid' && (
+                                <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-md bg-emerald-500/15 text-emerald-600">
+                                  🟢 Hoạt động tốt
+                                </span>
+                              )}
+                              {item.status === 'rate_limited' && (
+                                <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-md bg-amber-500/15 text-amber-600">
+                                  🟡 Chạm hạn ngạch (429)
+                                </span>
+                              )}
+                              {item.status === 'error' && (
+                                <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-md bg-rose-500/15 text-rose-600">
+                                  🔴 Lỗi kết nối
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[11px] font-mono text-muted mt-0.5">
+                              {isMasked ? maskedVal : item.key}
+                            </div>
+                            {item.statusMessage && (
+                              <div className="text-[10px] text-muted italic mt-0.5 truncate">
+                                {item.statusMessage}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
+                          <button
+                            type="button"
+                            disabled={testingKeyId === item.id}
+                            onClick={async () => {
+                              setTestingKeyId(item.id);
+                              const res = await testSpecificGeminiKey(item.key, geminiModel);
+                              const updated = keysPool.map(k => {
+                                if (k.id === item.id) {
+                                  return {
+                                    ...k,
+                                    status: res.success ? ('valid' as const) : ('error' as const),
+                                    statusMessage: res.message,
+                                  };
+                                }
+                                return k;
+                              });
+                              setKeysPool(updated);
+                              saveGeminiKeysPool(updated);
+                              setTestingKeyId(null);
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-surface border border-token hover:border-purple-400 text-main text-xs font-semibold cursor-pointer shadow-xs transition-colors flex items-center gap-1"
+                          >
+                            {testingKeyId === item.id ? (
+                              <Sparkles className="w-3 h-3 animate-spin text-purple-600" />
+                            ) : (
+                              <Sparkles className="w-3 h-3 text-purple-600" />
+                            )}
+                            <span>Kiểm tra</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (confirm(`Thầy có chắc muốn xóa "${item.label}"?`)) {
+                                const updated = keysPool.filter(k => k.id !== item.id);
+                                if (updated.length > 0 && !updated.some(k => k.isActive)) {
+                                  updated[0].isActive = true;
+                                  setLocalGeminiApiKey(updated[0].key);
+                                }
+                                setKeysPool(updated);
+                                saveGeminiKeysPool(updated);
+                                setIsSyncingCloud(true);
+                                await saveCloudGeminiKeys(updated, autoRotateKeys, geminiModel);
+                                setIsSyncingCloud(false);
+                              }
+                            }}
+                            className="p-1.5 rounded-lg text-muted hover:text-rose-600 hover:bg-rose-500/10 cursor-pointer transition-colors"
+                            title="Xóa Key này"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
+            </div>
+
+            {/* Form to Add New Key */}
+            <div className="p-3.5 rounded-2xl bg-surface-2 border border-token space-y-2.5">
+              <span className="text-xs font-bold text-main flex items-center gap-1.5">
+                <Plus className="w-3.5 h-3.5 text-accent" />
+                <span>Thêm API Key mới vào danh sách luân phiên</span>
+              </span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="sm:col-span-1">
+                  <input
+                    type="text"
+                    value={newKeyLabel}
+                    onChange={e => setNewKeyLabel(e.target.value)}
+                    placeholder="Tên ghi nhớ (VD: Key phụ 1, Key dự phòng...)"
+                    className="w-full px-3 py-2 bg-surface border border-token rounded-xl text-xs text-main placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  />
+                </div>
+                <div className="sm:col-span-2 relative">
+                  <input
+                    type={showApiKey ? 'text' : 'password'}
+                    value={newKeyInput}
+                    onChange={e => setNewKeyInput(e.target.value)}
+                    placeholder="Dán mã Gemini API Key vào đây (AIzaSy...)"
+                    className="w-full pl-3 pr-10 py-2 bg-surface border border-token rounded-xl text-xs text-main placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-purple-400 font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowApiKey(!showApiKey)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-main cursor-pointer"
+                    title={showApiKey ? 'Ẩn ký tự' : 'Hiện ký tự'}
+                  >
+                    {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted">Mô hình AI:</span>
+                  <select
+                    value={geminiModel}
+                    onChange={async (e) => {
+                      const val = e.target.value;
+                      setLocalGeminiModel(val);
+                      setGeminiModel(val);
+                      await saveCloudGeminiKeys(keysPool, autoRotateKeys, val);
+                    }}
+                    className="px-2.5 py-1 bg-surface border border-token rounded-lg text-xs font-semibold text-main cursor-pointer"
+                  >
+                    <option value="gemini-2.5-flash">gemini-2.5-flash (Khuyên dùng: Siêu nhanh)</option>
+                    <option value="gemini-2.5-pro">gemini-2.5-pro (Suy luận sâu)</option>
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={!newKeyInput.trim() || isSyncingCloud}
+                  onClick={async () => {
+                    const trimmed = newKeyInput.trim();
+                    if (!trimmed) return;
+                    const isFirst = keysPool.length === 0;
+                    const newItem: GeminiApiKeyItem = {
+                      id: `key_${Date.now()}`,
+                      key: trimmed,
+                      label: newKeyLabel.trim() || `API Key #${keysPool.length + 1}`,
+                      isActive: isFirst,
+                      status: 'untested',
+                    };
+                    const updated = [...keysPool, newItem];
+                    setKeysPool(updated);
+                    saveGeminiKeysPool(updated);
+                    if (isFirst) {
+                      setLocalGeminiApiKey(trimmed);
+                    }
+                    setNewKeyInput('');
+                    setNewKeyLabel('');
+                    setIsSyncingCloud(true);
+                    await saveCloudGeminiKeys(updated, autoRotateKeys, geminiModel);
+                    setIsSyncingCloud(false);
+                    setCloudSyncMsg('Đã thêm & đồng bộ Firebase thành công!');
+                    setTimeout(() => setCloudSyncMsg(null), 3000);
+                  }}
+                  className="px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Thêm &amp; Lưu lên Firebase</span>
+                </button>
+              </div>
             </div>
           </div>
 

@@ -1,6 +1,17 @@
 /**
  * Google Gemini API Service for 10A5 Classroom Emulation & Games
+ * Supports Multi-Key Pool with Automatic Failover & Cloud Firestore Sync
  */
+
+export interface GeminiApiKeyItem {
+  id: string;
+  key: string;
+  label: string;
+  isActive: boolean;
+  status?: 'valid' | 'rate_limited' | 'error' | 'untested';
+  statusMessage?: string;
+  lastUsedAt?: string;
+}
 
 export interface GeminiConfig {
   apiKey: string;
@@ -9,13 +20,117 @@ export interface GeminiConfig {
 
 const STORAGE_KEY_API_KEY = 'app_gemini_api_key';
 const STORAGE_KEY_MODEL = 'app_gemini_model';
+const STORAGE_KEY_KEYS_POOL = 'app_gemini_keys_pool';
+const STORAGE_KEY_AUTO_ROTATE = 'app_gemini_auto_rotate';
 
-export const getGeminiApiKey = (): string => {
-  return localStorage.getItem(STORAGE_KEY_API_KEY) || '';
+/**
+ * Get all configured Gemini API keys
+ */
+export const getGeminiKeysPool = (): GeminiApiKeyItem[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_KEYS_POOL);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.warn('[Gemini] Lỗi đọc danh sách API keys:', err);
+  }
+
+  // Backwards compatibility with single key
+  const legacyKey = localStorage.getItem(STORAGE_KEY_API_KEY)?.trim() || '';
+  if (legacyKey) {
+    const initialPool: GeminiApiKeyItem[] = [
+      {
+        id: 'key_default',
+        key: legacyKey,
+        label: 'Key chính (Mặc định)',
+        isActive: true,
+        status: 'untested',
+      },
+    ];
+    saveGeminiKeysPool(initialPool);
+    return initialPool;
+  }
+
+  return [];
 };
 
+/**
+ * Save Gemini Keys Pool to localStorage & keep active key in legacy slot
+ */
+export const saveGeminiKeysPool = (keys: GeminiApiKeyItem[]): void => {
+  try {
+    localStorage.setItem(STORAGE_KEY_KEYS_POOL, JSON.stringify(keys));
+    const active = keys.find(k => k.isActive) || keys[0];
+    if (active) {
+      localStorage.setItem(STORAGE_KEY_API_KEY, active.key.trim());
+    } else {
+      localStorage.removeItem(STORAGE_KEY_API_KEY);
+    }
+  } catch (err) {
+    console.warn('[Gemini] Lỗi lưu danh sách API keys:', err);
+  }
+};
+
+/**
+ * Get active API key
+ */
+export const getGeminiApiKey = (): string => {
+  const pool = getGeminiKeysPool();
+  const active = pool.find(k => k.isActive) || pool[0];
+  return active ? active.key.trim() : (localStorage.getItem(STORAGE_KEY_API_KEY) || '');
+};
+
+/**
+ * Set single API key (adds or updates active key in pool)
+ */
 export const setGeminiApiKey = (key: string): void => {
-  localStorage.setItem(STORAGE_KEY_API_KEY, key.trim());
+  const cleanKey = key.trim();
+  localStorage.setItem(STORAGE_KEY_API_KEY, cleanKey);
+  const pool = getGeminiKeysPool();
+  if (pool.length === 0 && cleanKey) {
+    saveGeminiKeysPool([
+      {
+        id: `key_${Date.now()}`,
+        key: cleanKey,
+        label: 'Key 1 (Mặc định)',
+        isActive: true,
+        status: 'untested',
+      },
+    ]);
+  } else if (pool.length > 0) {
+    let hasActive = false;
+    const updated = pool.map(item => {
+      if (item.isActive) {
+        hasActive = true;
+        return { ...item, key: cleanKey };
+      }
+      return item;
+    });
+    if (!hasActive && updated.length > 0) {
+      updated[0].isActive = true;
+      updated[0].key = cleanKey;
+    }
+    saveGeminiKeysPool(updated);
+  }
+};
+
+/**
+ * Get Auto-rotate setting (default: true)
+ */
+export const getGeminiAutoRotate = (): boolean => {
+  const val = localStorage.getItem(STORAGE_KEY_AUTO_ROTATE);
+  return val === null ? true : val === 'true';
+};
+
+/**
+ * Set Auto-rotate setting
+ */
+export const setGeminiAutoRotate = (enabled: boolean): void => {
+  localStorage.setItem(STORAGE_KEY_AUTO_ROTATE, String(enabled));
 };
 
 export const getGeminiModel = (): string => {
@@ -27,15 +142,9 @@ export const setGeminiModel = (model: string): void => {
 };
 
 /**
- * Direct call to Gemini REST API (Client-side safe for Teacher local configuration)
+ * Call a single key directly
  */
-async function callGeminiApi(prompt: string, systemInstruction?: string): Promise<string> {
-  const apiKey = getGeminiApiKey();
-  if (!apiKey) {
-    throw new Error('Chưa cấu hình Gemini API Key. Vui lòng nhập API Key trong bảng Cài đặt Giáo viên.');
-  }
-
-  const model = getGeminiModel();
+async function executeGeminiRequest(apiKey: string, model: string, prompt: string, systemInstruction?: string): Promise<string> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const payload: any = {
@@ -74,8 +183,11 @@ async function callGeminiApi(prompt: string, systemInstruction?: string): Promis
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    const message = errorData?.error?.message || `Lỗi kết nối Gemini API (HTTP ${response.status})`;
-    throw new Error(message);
+    const message = errorData?.error?.message || `HTTP ${response.status}`;
+    const err: any = new Error(message);
+    err.status = response.status;
+    err.isRateLimit = response.status === 429 || /quota|exhausted|rate\s*limit/i.test(message);
+    throw err;
   }
 
   const data = await response.json();
@@ -90,11 +202,81 @@ async function callGeminiApi(prompt: string, systemInstruction?: string): Promis
 }
 
 /**
- * Test Gemini API connection
+ * Direct call to Gemini REST API with automatic multi-key rotation and failover
  */
-export async function testGeminiConnection(): Promise<{ success: boolean; message: string }> {
+export async function callGeminiApi(prompt: string, systemInstruction?: string): Promise<string> {
+  const pool = getGeminiKeysPool();
+  if (pool.length === 0) {
+    const legacyKey = localStorage.getItem(STORAGE_KEY_API_KEY);
+    if (!legacyKey) {
+      throw new Error('Chưa cấu hình Gemini API Key. Vui lòng thêm ít nhất 1 API Key trong bảng Cài đặt AI.');
+    }
+  }
+
+  const model = getGeminiModel();
+  const autoRotate = getGeminiAutoRotate();
+
+  // Sort candidate keys: active key first, then other available keys
+  const candidateKeys = [...pool].sort((a, b) => {
+    if (a.isActive) return -1;
+    if (b.isActive) return 1;
+    return 0;
+  });
+
+  if (candidateKeys.length === 0) {
+    throw new Error('Chưa có API Key nào được cài đặt.');
+  }
+
+  let lastError: any = null;
+
+  for (let i = 0; i < candidateKeys.length; i++) {
+    const currentItem = candidateKeys[i];
+    try {
+      const text = await executeGeminiRequest(currentItem.key, model, prompt, systemInstruction);
+
+      // Success! Update status of this key
+      currentItem.status = 'valid';
+      currentItem.statusMessage = 'Hoạt động tốt';
+      currentItem.lastUsedAt = new Date().toISOString();
+      
+      // If we rotated away from the active key, make this newly working key active
+      if (!currentItem.isActive && autoRotate) {
+        candidateKeys.forEach(k => { k.isActive = (k.id === currentItem.id); });
+      }
+      saveGeminiKeysPool(candidateKeys);
+
+      return text;
+    } catch (err: any) {
+      lastError = err;
+      if (err.isRateLimit) {
+        currentItem.status = 'rate_limited';
+        currentItem.statusMessage = 'Quá hạn ngạch (429) - Đã tự động chuyển key khác';
+      } else {
+        currentItem.status = 'error';
+        currentItem.statusMessage = err.message || 'Lỗi kết nối';
+      }
+      saveGeminiKeysPool(candidateKeys);
+
+      // If autoRotate is disabled or no more keys to try, break
+      if (!autoRotate || i === candidateKeys.length - 1) {
+        break;
+      }
+      console.warn(`[Gemini] Key "${currentItem.label}" bị lỗi (${err.message}). Đang tự động chuyển sang Key tiếp theo...`);
+    }
+  }
+
+  throw lastError || new Error('Không thể kết nối với bất kỳ Gemini API Key nào trong danh sách.');
+}
+
+/**
+ * Test a specific Gemini API Key
+ */
+export async function testSpecificGeminiKey(key: string, modelOverride?: string): Promise<{ success: boolean; message: string }> {
   try {
-    const text = await callGeminiApi(
+    const model = modelOverride || getGeminiModel();
+    const text = await executeGeminiRequest(
+      key.trim(),
+      model,
       'Xin chào! Hãy phản hồi ngắn gọn: "Kết nối Gemini API thành công!" bằng tiếng Việt.'
     );
     return {
@@ -107,6 +289,20 @@ export async function testGeminiConnection(): Promise<{ success: boolean; messag
       message: err.message || 'Lỗi không xác định khi kết nối Gemini API.',
     };
   }
+}
+
+/**
+ * Test Gemini API connection using active key
+ */
+export async function testGeminiConnection(): Promise<{ success: boolean; message: string }> {
+  const activeKey = getGeminiApiKey();
+  if (!activeKey) {
+    return {
+      success: false,
+      message: 'Chưa cấu hình API Key nào!',
+    };
+  }
+  return testSpecificGeminiKey(activeKey);
 }
 
 /**
@@ -186,7 +382,6 @@ Tạo ${count} câu hỏi khởi động / kiểm tra bài cũ nhanh cho học s
   const rawText = await callGeminiApi(prompt, systemInstruction);
   
   try {
-    // Clean code fences if present
     const cleaned = rawText
       .replace(/^```json\s*/i, '')
       .replace(/^```\s*/i, '')
@@ -196,7 +391,6 @@ Tạo ${count} câu hỏi khởi động / kiểm tra bài cũ nhanh cho học s
     const parsed: CallingGameQuestion[] = JSON.parse(cleaned);
     return parsed;
   } catch {
-    // Fallback if not pure JSON
     return [
       {
         id: 'q1',
