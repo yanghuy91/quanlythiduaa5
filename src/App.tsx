@@ -537,6 +537,11 @@ export default function App() {
   const handleLogout = () => {
     clearAuthSession();
     logoutFirebase().catch(() => {});
+    if (typeof (window as any).google?.accounts?.id !== 'undefined') {
+      try {
+        (window as any).google.accounts.id.disableAutoSelect();
+      } catch (e) {}
+    }
     setCurrentUser(null);
     setIsLoginModalOpen(true);
     setToast({
