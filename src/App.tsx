@@ -60,27 +60,12 @@ import {
 } from './services/firebase';
 
 export default function App() {
-  // Theme state
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() => {
-    const saved = localStorage.getItem('app_theme');
-    return (saved as 'light' | 'dark' | 'system') || 'system';
-  });
-
-  // Apply theme to document
+  // Enforce Light mode permanently (Default light, removed dark mode)
   useEffect(() => {
-    localStorage.setItem('app_theme', theme);
-    const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-
-    const listener = (e: MediaQueryListEvent) => {
-      if (theme === 'system') {
-        document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
-      }
-    };
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    mediaQuery.addEventListener('change', listener);
-    return () => mediaQuery.removeEventListener('change', listener);
-  }, [theme]);
+    localStorage.setItem('app_theme', 'light');
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.documentElement.classList.remove('dark');
+  }, []);
 
   // App dataset
   const [students, setStudents] = useState<Student[]>(() => {
@@ -731,8 +716,6 @@ export default function App() {
         onLogout={handleLogout}
         currentWeek={currentWeek}
         onChangeCurrentWeek={handleSetCurrentWeek}
-        theme={theme}
-        onThemeChange={setTheme}
         onOpenCallingGames={currentRole === 'GV' ? () => setShowCallingGamesModal(true) : undefined}
         onOpenTeacherAvatar={() => setIsTeacherAvatarModalOpen(true)}
         onOpenTeacherProfile={() => setIsTeacherProfileModalOpen(true)}

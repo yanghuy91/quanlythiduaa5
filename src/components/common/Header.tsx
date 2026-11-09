@@ -1,8 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
-  Sun, 
-  Moon, 
-  Monitor, 
   LogOut, 
   UserCheck, 
   ShieldCheck, 
@@ -10,7 +7,6 @@ import {
   ChevronDown, 
   Calendar, 
   GraduationCap, 
-  Check, 
   Camera,
   Activity,
   Layers,
@@ -27,8 +23,6 @@ interface HeaderProps {
   onLogout: () => void;
   currentWeek: number;
   onChangeCurrentWeek?: (week: number) => void;
-  theme: 'light' | 'dark' | 'system';
-  onThemeChange: (theme: 'light' | 'dark' | 'system') => void;
   onOpenCallingGames?: () => void;
   onOpenTeacherAvatar?: () => void;
   onOpenStudentAvatar?: () => void;
@@ -41,15 +35,11 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   currentWeek,
   onChangeCurrentWeek,
-  theme,
-  onThemeChange,
   onOpenCallingGames,
   onOpenTeacherAvatar,
   onOpenStudentAvatar,
   onOpenTeacherProfile,
 }) => {
-  const [showThemeMenu, setShowThemeMenu] = useState(false);
-
   const roleInfo = ROLE_CONFIG[currentRole] || ROLE_CONFIG.HS;
 
   return (
@@ -138,75 +128,6 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </button>
           )}
-
-          {/* Theme Switcher Button */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowThemeMenu(!showThemeMenu)}
-              className="p-2 rounded-xl border border-token text-muted hover:text-main hover:bg-surface-2 transition-all cursor-pointer shadow-xs active:scale-95"
-              title="Đổi giao diện Sáng / Tối / Hệ thống"
-              aria-label="Đổi giao diện Sáng / Tối / Hệ thống"
-            >
-              {theme === 'dark' ? (
-                <Moon className="w-4 h-4 text-amber-400" />
-              ) : theme === 'light' ? (
-                <Sun className="w-4 h-4 text-amber-500" />
-              ) : (
-                <Monitor className="w-4 h-4 text-accent" />
-              )}
-            </button>
-
-            {showThemeMenu && (
-              <div 
-                className="absolute right-0 top-full mt-2 w-40 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl py-1 z-50 text-xs animate-scale-up"
-                onClick={() => setShowThemeMenu(false)}
-              >
-                <div className="px-3 py-1 text-[10px] font-bold text-muted uppercase tracking-wider border-b border-token/60 bg-slate-50 dark:bg-slate-800 rounded-t-xl">
-                  Giao diện
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onThemeChange('light')}
-                  className={`w-full text-left px-3 py-2 hover:bg-surface-2 flex items-center justify-between transition-colors ${
-                    theme === 'light' ? 'font-bold text-accent bg-accent/5' : 'text-main'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Sun className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Sáng</span>
-                  </div>
-                  {theme === 'light' && <Check className="w-3.5 h-3.5 text-accent" />}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onThemeChange('dark')}
-                  className={`w-full text-left px-3 py-2 hover:bg-surface-2 flex items-center justify-between transition-colors ${
-                    theme === 'dark' ? 'font-bold text-accent bg-accent/5' : 'text-main'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Moon className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Tối</span>
-                  </div>
-                  {theme === 'dark' && <Check className="w-3.5 h-3.5 text-accent" />}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onThemeChange('system')}
-                  className={`w-full text-left px-3 py-2 hover:bg-surface-2 flex items-center justify-between transition-colors ${
-                    theme === 'system' ? 'font-bold text-accent bg-accent/5' : 'text-main'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Monitor className="w-3.5 h-3.5 text-accent" />
-                    <span>Hệ thống</span>
-                  </div>
-                  {theme === 'system' && <Check className="w-3.5 h-3.5 text-accent" />}
-                </button>
-              </div>
-            )}
-          </div>
 
           {/* Current User Badge & Logout */}
           {currentUser && (
