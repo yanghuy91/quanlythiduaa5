@@ -13,7 +13,8 @@ import {
   Check, 
   Camera,
   Activity,
-  Layers
+  Layers,
+  Edit3
 } from 'lucide-react';
 import { Student, RoleCode } from '../../types';
 import { ROLE_CONFIG } from '../../data/mockData';
@@ -21,7 +22,7 @@ import { getStudentAvatarInitial } from '../../utils/vietnamese';
 import { Logo10A5 } from './Logo10A5';
 
 interface HeaderProps {
-  currentUser: Student | { hoTen: string; vaiTro: RoleCode[]; avatarUrl?: string } | null;
+  currentUser: Student | { hoTen: string; vaiTro: RoleCode[]; avatarUrl?: string; statusText?: string } | null;
   currentRole: RoleCode;
   onLogout: () => void;
   currentWeek: number;
@@ -31,6 +32,7 @@ interface HeaderProps {
   onOpenCallingGames?: () => void;
   onOpenTeacherAvatar?: () => void;
   onOpenStudentAvatar?: () => void;
+  onOpenTeacherProfile?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -44,6 +46,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCallingGames,
   onOpenTeacherAvatar,
   onOpenStudentAvatar,
+  onOpenTeacherProfile,
 }) => {
   const [showThemeMenu, setShowThemeMenu] = useState(false);
 
@@ -241,23 +244,30 @@ export const Header: React.FC<HeaderProps> = ({
                 className="hidden md:flex flex-col items-start leading-tight cursor-pointer group"
                 onClick={() => {
                   if (currentRole === 'GV') {
-                    onOpenTeacherAvatar?.();
+                    onOpenTeacherProfile ? onOpenTeacherProfile() : onOpenTeacherAvatar?.();
                   } else {
                     onOpenStudentAvatar?.();
                   }
                 }}
-                title={`Bấm để đổi ảnh đại diện ${currentRole === 'GV' ? 'Giáo viên' : 'Học sinh'}`}
+                title={currentRole === 'GV' ? 'Bấm để đổi tên, trạng thái và ảnh đại diện Thầy' : 'Bấm để đổi ảnh đại diện'}
               >
-                <span className="text-xs font-bold text-main truncate max-w-[120px] group-hover:text-accent transition-colors flex items-center gap-1">
+                <span className="text-xs font-bold text-main truncate max-w-[140px] group-hover:text-accent transition-colors flex items-center gap-1">
                   <span>{currentUser.hoTen}</span>
-                  <Camera className="w-3 h-3 opacity-0 group-hover:opacity-100 text-accent transition-opacity" />
+                  <Edit3 className="w-3 h-3 opacity-0 group-hover:opacity-100 text-accent transition-opacity" />
                 </span>
-                <span 
-                  className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md leading-tight mt-0.5 shadow-2xs"
-                  style={{ color: roleInfo.fg, backgroundColor: roleInfo.bg }}
-                >
-                  {roleInfo.label}
-                </span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span 
+                    className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md leading-tight shadow-2xs"
+                    style={{ color: roleInfo.fg, backgroundColor: roleInfo.bg }}
+                  >
+                    {roleInfo.label}
+                  </span>
+                  {currentRole === 'GV' && 'statusText' in currentUser && currentUser.statusText && (
+                    <span className="text-[10px] text-muted truncate max-w-[130px] font-medium hidden lg:inline" title={currentUser.statusText}>
+                      • {currentUser.statusText}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <button

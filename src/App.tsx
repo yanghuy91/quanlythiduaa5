@@ -39,6 +39,8 @@ import {
 import { getAcademicRecords, saveAcademicRecords } from './data/academicCatalog';
 import { getTeacherAvatar, setTeacherAvatar } from './data/teacherAvatars';
 import { TeacherAvatarModal } from './components/teacher/TeacherAvatarModal';
+import { TeacherProfileModal } from './components/teacher/TeacherProfileModal';
+import { getTeacherProfile, saveTeacherProfile, TeacherProfile } from './data/teacherProfile';
 import { AvatarUploadModal } from './components/common/AvatarUploadModal';
 import { 
   fetchServerState, 
@@ -153,10 +155,26 @@ export default function App() {
   const [isTeacherAvatarModalOpen, setIsTeacherAvatarModalOpen] = useState(false);
   const [isStudentAvatarModalOpen, setIsStudentAvatarModalOpen] = useState(false);
 
+  // Teacher Profile state (Name, Status text, etc.)
+  const [teacherProfile, setTeacherProfileState] = useState<TeacherProfile>(() => {
+    return getTeacherProfile();
+  });
+  const [isTeacherProfileModalOpen, setIsTeacherProfileModalOpen] = useState(false);
+
   // Auth state: check saved session (persisted via localStorage or sessionStorage)
-  const [currentUser, setCurrentUser] = useState<Student | { hoTen: string; vaiTro: RoleCode[]; avatarUrl?: string } | null>(() => {
+  const [currentUser, setCurrentUser] = useState<Student | { hoTen: string; vaiTro: RoleCode[]; avatarUrl?: string; statusText?: string } | null>(() => {
     const session = getSavedAuthSession();
-    if (session && session.user) return session.user;
+    if (session && session.user) {
+      if (session.user.vaiTro && session.user.vaiTro.includes('GV')) {
+        const prof = getTeacherProfile();
+        return {
+          ...session.user,
+          hoTen: prof.hoTen,
+          statusText: prof.statusText
+        };
+      }
+      return session.user;
+    }
     return null;
   });
   const [currentRole, setCurrentRole] = useState<RoleCode>(() => {
@@ -184,6 +202,40 @@ export default function App() {
       id: Date.now().toString(),
       message: 'Đã cập nhật ảnh đại diện Thầy ✨',
       subMessage: 'Ảnh đại diện Giáo viên chủ nhiệm đã được lưu thành công.',
+    });
+  }, []);
+
+  // Teacher updates profile (custom name & status text)
+  const handleSaveTeacherProfile = useCallback((profile: TeacherProfile) => {
+    setTeacherProfileState(profile);
+    saveTeacherProfile(profile);
+    setCurrentUser(prev => {
+      if (prev && prev.vaiTro.includes('GV')) {
+        return {
+          ...prev,
+          hoTen: profile.hoTen,
+          statusText: profile.statusText
+        };
+      }
+      return prev;
+    });
+    setToast({
+      id: Date.now().toString(),
+      message: 'Đã lưu thông tin Giáo viên chủ nhiệm ✨',
+      subMessage: `Họ tên: ${profile.hoTen} • ${profile.statusText}`,
+    });
+  }, []);
+
+  // Teacher imports real student list from Excel or Text
+  const handleImportStudents = useCallback((newStudents: Student[], newLayout: SeatLayoutNode[]) => {
+    setStudents(newStudents);
+    setLayout(newLayout);
+    localStorage.setItem('app_students_10a5_v4', JSON.stringify(newStudents));
+    localStorage.setItem('app_layout_10a5_v4', JSON.stringify(newLayout));
+    setToast({
+      id: Date.now().toString(),
+      message: `Đã cập nhật danh sách lớp: ${newStudents.length} học sinh 🎓`,
+      subMessage: 'Sơ đồ chỗ ngồi và dữ liệu lớp học đã được cập nhật thành công.',
     });
   }, []);
 
@@ -683,6 +735,7 @@ export default function App() {
         onThemeChange={setTheme}
         onOpenCallingGames={currentRole === 'GV' ? () => setShowCallingGamesModal(true) : undefined}
         onOpenTeacherAvatar={() => setIsTeacherAvatarModalOpen(true)}
+        onOpenTeacherProfile={() => setIsTeacherProfileModalOpen(true)}
         onOpenStudentAvatar={() => setIsStudentAvatarModalOpen(true)}
       />
 
@@ -709,6 +762,10 @@ export default function App() {
             onBatchAutoAssignByRank={handleBatchAutoAssignByRank}
             academicRecords={academicRecords}
             onUpdateAcademicRecords={handleUpdateAcademicRecords}
+            teacherProfile={teacherProfile}
+            onUpdateTeacherProfile={handleSaveTeacherProfile}
+            onImportStudents={handleImportStudents}
+            onOpenTeacherProfile={() => setIsTeacherProfileModalOpen(true)}
             onOpenTeacherAvatar={() => setIsTeacherAvatarModalOpen(true)}
             teacherAvatarUrl={teacherAvatar}
             onLogout={handleLogout}
@@ -824,6 +881,18 @@ export default function App() {
         onClose={() => setIsTeacherAvatarModalOpen(false)}
         currentAvatarUrl={teacherAvatar}
         onSelectAvatar={handleUpdateTeacherAvatar}
+      />
+
+      {/* Teacher Profile Modal (Name & Status Edit) */}
+      <TeacherProfileModal
+        isOpen={isTeacherProfileModalOpen}
+        onClose={() => setIsTeacherProfileModalOpen(false)}
+        currentProfile={teacherProfile}
+        onSaveProfile={handleSaveTeacherProfile}
+        onOpenAvatarPicker={() => {
+          setIsTeacherProfileModalOpen(false);
+          setIsTeacherAvatarModalOpen(true);
+        }}
       />
 
       {/* Student / Cadre Avatar Modal (accessible from Header or anywhere for current demo student) */}

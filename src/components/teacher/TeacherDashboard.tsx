@@ -21,8 +21,12 @@ import {
   Camera,
   Database,
   Download,
-  LogOut
+  LogOut,
+  Edit3
 } from 'lucide-react';
+import { StudentImportModal } from './StudentImportModal';
+import { TeacherProfileModal } from './TeacherProfileModal';
+import { TeacherProfile, getTeacherProfile, saveTeacherProfile } from '../../data/teacherProfile';
 import { 
   Student, 
   SeatLayoutNode, 
@@ -94,6 +98,10 @@ interface TeacherDashboardProps {
   teacherAvatarUrl?: string;
   onVoidRecord?: (recordId: string, reason: string) => void;
   onLogout?: () => void;
+  teacherProfile?: TeacherProfile;
+  onUpdateTeacherProfile?: (profile: TeacherProfile) => void;
+  onImportStudents?: (newStudents: Student[], newLayout: SeatLayoutNode[], isReplace: boolean) => void;
+  onOpenTeacherProfile?: () => void;
 }
 
 export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
@@ -120,7 +128,27 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   teacherAvatarUrl,
   onVoidRecord,
   onLogout,
+  teacherProfile,
+  onUpdateTeacherProfile,
+  onImportStudents,
+  onOpenTeacherProfile,
 }) => {
+  const [internalTeacherProfile, setInternalTeacherProfile] = useState<TeacherProfile>(() => {
+    return teacherProfile || getTeacherProfile();
+  });
+  const [isStudentImportModalOpen, setIsStudentImportModalOpen] = useState(false);
+  const [isTeacherProfileModalOpen, setIsTeacherProfileModalOpen] = useState(false);
+
+  React.useEffect(() => {
+    if (teacherProfile) {
+      setInternalTeacherProfile(teacherProfile);
+    }
+  }, [teacherProfile]);
+
+  const handleProfileSaveSuccess = (updated: TeacherProfile) => {
+    setInternalTeacherProfile(updated);
+    onUpdateTeacherProfile?.(updated);
+  };
   const [activeTab, setActiveTab] = useState<'overview' | 'record' | 'explanations' | 'roster' | 'grades' | 'rules' | 'import_export' | 'ai_gemini' | 'settings' | 'apps'>('overview');
 
   const [internalAcademicRecords, setInternalAcademicRecords] = useState<StudentAcademicRecord[]>(() => {
@@ -609,6 +637,16 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       <span>Ban cán sự</span>
                     </button>
 
+                    <button
+                      type="button"
+                      onClick={() => setIsStudentImportModalOpen(true)}
+                      className="px-2.5 py-1 rounded-xl bg-emerald-600/70 hover:bg-emerald-600/90 border border-emerald-400/50 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                      title="Nhập danh sách học sinh thật từ file Excel hoặc dán chữ"
+                    >
+                      <FileSpreadsheet className="w-3 h-3 text-emerald-200" />
+                      <span>Nhập DS học sinh</span>
+                    </button>
+
                     {onLogout && (
                       <button
                         type="button"
@@ -624,11 +662,24 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 </div>
 
                 <div>
-                  <h2 className="text-base sm:text-lg font-extrabold tracking-tight">
-                    Hệ Thống Nề Nếp &amp; Thi Đua Lớp Học 🎯
-                  </h2>
-                  <p className="text-[11px] text-slate-200 mt-0.5 font-medium">
-                    42 Học sinh · 4 Dãy bàn (= 4 Tổ) · 6 Bàn/Dãy · Năm học {CURRENT_SCHOOL_YEAR}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-base sm:text-lg font-extrabold tracking-tight">
+                      {internalTeacherProfile.hoTen}
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setIsTeacherProfileModalOpen(true)}
+                      className="px-2 py-0.5 rounded-lg bg-white/15 hover:bg-white/25 text-amber-300 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                      title="Bấm để đổi tên hiển thị của Thầy và dòng trạng thái bên dưới"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                      <span>Đổi tên & Trạng thái</span>
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-slate-200 mt-0.5 font-medium flex items-center gap-2 flex-wrap">
+                    <span>{internalTeacherProfile.statusText}</span>
+                    <span className="opacity-40">•</span>
+                    <span>{students.length} Học sinh • 4 Dãy bàn • Năm học {CURRENT_SCHOOL_YEAR}</span>
                   </p>
                 </div>
               </div>
@@ -1443,6 +1494,16 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setIsStudentImportModalOpen(true)}
+                className="px-3.5 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                title="Nhập danh sách học sinh thật từ file Excel hoặc dán chữ"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
+                <span>📥 Nhập DS học sinh thật</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
@@ -2479,6 +2540,27 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           }}
         />
       )}
+
+      {/* Student Import Modal (Real Students List) */}
+      <StudentImportModal
+        isOpen={isStudentImportModalOpen}
+        onClose={() => setIsStudentImportModalOpen(false)}
+        currentStudents={students}
+        onImportSuccess={(newStudents, newLayout, isReplace) => {
+          onImportStudents?.(newStudents, newLayout, isReplace);
+          setIsStudentImportModalOpen(false);
+        }}
+      />
+
+      {/* Teacher Profile & Custom Name/Status Modal */}
+      <TeacherProfileModal
+        isOpen={isTeacherProfileModalOpen}
+        onClose={() => setIsTeacherProfileModalOpen(false)}
+        currentProfile={internalTeacherProfile}
+        currentAvatarUrl={teacherAvatarUrl || ''}
+        onOpenAvatarPicker={onOpenTeacherAvatar || (() => {})}
+        onSaveSuccess={handleProfileSaveSuccess}
+      />
     </div>
   );
 };
