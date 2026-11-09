@@ -40,6 +40,35 @@ export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 /**
+ * Authorized Teacher Emails Whitelist (Only GVCN email has access to manage Class 10A5)
+ */
+export const DEFAULT_AUTHORIZED_TEACHER_EMAILS = [
+  'yanghuy91@gmail.com',
+];
+
+export function isAuthorizedTeacherEmail(email?: string | null): boolean {
+  if (!email) return false;
+  const normalized = email.trim().toLowerCase();
+  
+  if (DEFAULT_AUTHORIZED_TEACHER_EMAILS.some(e => e.toLowerCase() === normalized)) {
+    return true;
+  }
+  
+  // Also check dynamic settings in localStorage
+  try {
+    const rawSettings = localStorage.getItem('app_teacher_settings');
+    if (rawSettings) {
+      const parsed = JSON.parse(rawSettings);
+      if (parsed?.emailGiaoVien && parsed.emailGiaoVien.trim().toLowerCase() === normalized) {
+        return true;
+      }
+    }
+  } catch (e) {}
+
+  return false;
+}
+
+/**
  * Real Google Sign-in with Popup (falls back to Redirect if popup is blocked)
  */
 export async function loginWithGoogleFirebase(): Promise<User | null> {

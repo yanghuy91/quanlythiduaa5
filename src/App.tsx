@@ -50,7 +50,7 @@ import {
   getAllStudentBadgesState, 
   setAllStudentBadgesState 
 } from './data/badgeCatalog';
-import { subscribeToCloudClassState } from './services/firebase';
+import { subscribeToCloudClassState, logoutFirebase } from './services/firebase';
 
 export default function App() {
   // Theme state
@@ -498,6 +498,7 @@ export default function App() {
   // Logout
   const handleLogout = () => {
     clearAuthSession();
+    logoutFirebase().catch(() => {});
     setCurrentUser(null);
     setIsLoginModalOpen(true);
     setToast({

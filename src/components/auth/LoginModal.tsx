@@ -21,7 +21,9 @@ import { Logo10A5 } from '../common/Logo10A5';
 import { 
   loginWithGoogleFirebase, 
   loginWithGoogleRedirect, 
-  checkGoogleRedirectResult 
+  checkGoogleRedirectResult,
+  isAuthorizedTeacherEmail,
+  logoutFirebase
 } from '../../services/firebase';
 
 interface LoginModalProps {
@@ -97,11 +99,17 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   // Check if returning from Google Redirect
   React.useEffect(() => {
     let isMounted = true;
-    checkGoogleRedirectResult().then(user => {
+    checkGoogleRedirectResult().then(async user => {
       if (!isMounted) return;
       if (user) {
+        if (!isAuthorizedTeacherEmail(user.email)) {
+          await logoutFirebase();
+          setErrorMsg(`⛔ Tài khoản Google "${user.email}" không phải là tài khoản Giáo viên chủ nhiệm lớp 10A5. Chỉ tài khoản yanghuy91@gmail.com mới có quyền quản trị!`);
+          return;
+        }
+
         onLoginTeacher(rememberLogin, {
-          hoTen: user.displayName || 'Thầy/Cô Chủ nhiệm (GVCN)',
+          hoTen: user.displayName || 'Thầy Huy (GVCN)',
           email: user.email || undefined,
           avatarUrl: user.photoURL || undefined,
         });
@@ -124,8 +132,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       setErrorMsg('');
       const googleUser = await loginWithGoogleFirebase();
       if (googleUser) {
+        // Strict verification: only authorized teacher email allowed!
+        if (!isAuthorizedTeacherEmail(googleUser.email)) {
+          await logoutFirebase();
+          setErrorMsg(`⛔ Tài khoản Google "${googleUser.email}" không phải là tài khoản Giáo viên chủ nhiệm lớp 10A5. Chỉ tài khoản yanghuy91@gmail.com mới có quyền quản trị!`);
+          return;
+        }
+
         onLoginTeacher(rememberLogin, {
-          hoTen: googleUser.displayName || 'Thầy/Cô Chủ nhiệm (GVCN)',
+          hoTen: googleUser.displayName || 'Thầy Huy (GVCN)',
           email: googleUser.email || undefined,
           avatarUrl: googleUser.photoURL || undefined,
         });
@@ -159,7 +174,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     if (verifyTeacherPassword(teacherPassword)) {
       setErrorMsg('');
       onLoginTeacher(rememberLogin, {
-        hoTen: 'Trần Văn Bình (GVCN)',
+        hoTen: 'Thầy Huy (GVCN)',
         email: 'yanghuy91@gmail.com',
       });
     } else {
