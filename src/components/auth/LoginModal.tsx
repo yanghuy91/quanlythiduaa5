@@ -18,7 +18,11 @@ import { StudentPicker } from '../student-picker/StudentPicker';
 import { getStudentAvatarInitial } from '../../utils/vietnamese';
 import { verifyStudentPassword, verifyTeacherPassword } from '../../utils/authService';
 import { Logo10A5 } from '../common/Logo10A5';
-import { loginWithGoogleFirebase } from '../../services/firebase';
+import { 
+  loginWithGoogleFirebase, 
+  loginWithGoogleRedirect, 
+  checkGoogleRedirectResult 
+} from '../../services/firebase';
 
 interface LoginModalProps {
   students: Student[];
@@ -90,9 +94,30 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     }
   };
 
+  // Check if returning from Google Redirect
+  React.useEffect(() => {
+    let isMounted = true;
+    checkGoogleRedirectResult().then(user => {
+      if (!isMounted) return;
+      if (user) {
+        onLoginTeacher(rememberLogin, {
+          hoTen: user.displayName || 'Thầy/Cô Chủ nhiệm (GVCN)',
+          email: user.email || undefined,
+          avatarUrl: user.photoURL || undefined,
+        });
+      }
+    }).catch(err => {
+      console.error('[GoogleRedirectCheck] Error:', err);
+      if (err.code === 'auth/unauthorized-domain') {
+        setErrorMsg('Tên miền "thiduabc5.vercel.app" chưa được thêm vào Firebase Authorized domains. Thầy/Cô có thể đăng nhập bằng Mật khẩu Giáo viên bên dưới.');
+      }
+    });
+    return () => { isMounted = false; };
+  }, []);
+
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  // Real Teacher Google Login via Firebase
+  // Teacher Google Login (Popup or Seamless Redirect)
   const handleTeacherGoogleLogin = async () => {
     try {
       setIsGoogleLoading(true);
@@ -108,15 +133,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     } catch (err: any) {
       console.error('[GoogleLogin] Error:', err);
       if (err.code === 'auth/popup-closed-by-user') {
-        setErrorMsg('Cửa sổ chọn tài khoản Google đã đóng. Thầy/Cô có thể bấm đăng nhập lại hoặc dùng Mật khẩu GVCN bên dưới.');
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        // Ignored
+        // User voluntarily dismissed popup
       } else if (err.code === 'auth/unauthorized-domain') {
-        setErrorMsg('Tên miền "thiduabc5.vercel.app" chưa được ủy quyền trên Firebase. Thầy/Cô hãy vào Firebase Console > Authentication > Settings > Authorized domains > bấm Add domain nhập "thiduabc5.vercel.app". (Thầy/Cô có thể đăng nhập ngay bằng Mật khẩu Giáo viên bên dưới: gvcn10a5)');
-      } else if (err.code === 'auth/popup-blocked') {
-        setErrorMsg('Trình duyệt đang chặn cửa sổ Popup Google. Thầy/Cô hãy chọn "Cho phép hiển thị cửa sổ bật lên" trên trình duyệt, hoặc đăng nhập bằng Mật khẩu Giáo viên bên dưới.');
+        setErrorMsg('Tên miền "thiduabc5.vercel.app" cần được thêm vào mục Authorized domains trong Firebase Console. Thầy/Cô có thể đăng nhập ngay bằng Mật khẩu Giáo viên bên dưới.');
       } else {
-        setErrorMsg('Đăng nhập Google: ' + (err.message || 'Chưa hoàn tất. Thầy/Cô có thể dùng Mật khẩu Giáo viên bên dưới.'));
+        // Seamless fallback to direct redirect
+        try {
+          await loginWithGoogleRedirect();
+        } catch (rErr) {
+          setErrorMsg('Chưa thể kết nối Google: Thầy/Cô có thể đăng nhập ngay bằng Mật khẩu Giáo viên bên dưới.');
+        }
       }
     } finally {
       setIsGoogleLoading(false);
@@ -208,17 +234,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               </button>
             </div>
 
-            {/* Clarification info */}
-            <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-main space-y-1">
-              <div className="font-bold text-accent flex items-center gap-1">
-                <span>ℹ️</span> Cơ chế xác thực tài khoản Giáo viên
-              </div>
-              <p className="text-muted leading-relaxed">
-                Đăng nhập Google hoạt động qua cửa sổ xác thực trực tiếp (OAuth 2.0) — <strong>hệ thống không gửi thư xác nhận hay mã OTP về hòm thư Gmail</strong>. Thầy/Cô chỉ cần chọn tài khoản Google trong cửa sổ bật lên là vào được ngay.
-              </p>
-            </div>
-
-            {/* Error Message Box (prominently displayed) */}
+            {/* Error Message Box */}
             {errorMsg && (
               <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-500 space-y-1 animate-scale-up">
                 <div className="font-bold flex items-center gap-1.5">
@@ -229,18 +245,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               </div>
             )}
 
-            {/* Method 1: Google OAuth Instant Login */}
+            {/* Method 1: Google OAuth Instant Login (Standard & Sleek) */}
             <div className="space-y-2">
               <button
                 type="button"
                 disabled={isGoogleLoading}
                 onClick={handleTeacherGoogleLogin}
-                className="w-full py-3 px-4 rounded-xl border border-token bg-surface hover:bg-surface-2 text-main text-xs font-bold flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-sm hover:shadow active:scale-[0.99] disabled:opacity-60"
+                className="w-full py-3 px-4 rounded-xl border border-token bg-surface hover:bg-surface-2 text-main text-xs sm:text-sm font-semibold flex items-center justify-center gap-3 transition-all cursor-pointer shadow-xs hover:shadow active:scale-[0.99] disabled:opacity-60"
               >
                 {isGoogleLoading ? (
                   <span className="flex items-center gap-2">
                     <span className="animate-spin rounded-full h-4 w-4 border-2 border-accent border-t-transparent" />
-                    <span>Đang mở cửa sổ đăng nhập Google...</span>
+                    <span>Đang kết nối tài khoản Google...</span>
                   </span>
                 ) : (
                   <>
@@ -250,7 +266,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                     </svg>
-                    <span>Tiếp tục bằng tài khoản Google (Tức thì)</span>
+                    <span>Tiếp tục với Google</span>
                   </>
                 )}
               </button>
@@ -259,8 +275,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             {/* Divider */}
             <div className="relative flex py-1 items-center">
               <div className="flex-grow border-t border-token"></div>
-              <span className="flex-shrink mx-2 text-[10px] text-muted uppercase font-bold tracking-wider">
-                Hoặc vào nhanh bằng Mật khẩu Giáo viên
+              <span className="flex-shrink mx-3 text-[10px] text-muted uppercase font-bold tracking-wider">
+                Hoặc mật khẩu Giáo viên
               </span>
               <div className="flex-grow border-t border-token"></div>
             </div>
@@ -272,7 +288,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   type={showTeacherPassword ? 'text' : 'password'}
                   value={teacherPassword}
                   onChange={e => setTeacherPasswordInput(e.target.value)}
-                  placeholder="Nhập mật khẩu GV (Mặc định: gvcn10a5 hoặc 123456)..."
+                  placeholder="Nhập mật khẩu GV (Mặc định: gvcn10a5)..."
                   className="w-full px-3 py-2.5 pr-10 bg-surface-2 border border-token rounded-xl text-xs text-main placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
                 />
                 <button

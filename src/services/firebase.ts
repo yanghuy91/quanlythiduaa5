@@ -3,6 +3,8 @@ import {
   getAuth, 
   GoogleAuthProvider, 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   onAuthStateChanged,
   User 
@@ -38,11 +40,40 @@ export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 /**
- * Real Google Sign-in with Popup
+ * Real Google Sign-in with Popup (falls back to Redirect if popup is blocked)
  */
-export async function loginWithGoogleFirebase(): Promise<User> {
-  const result = await signInWithPopup(auth, googleProvider);
-  return result.user;
+export async function loginWithGoogleFirebase(): Promise<User | null> {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    return result.user;
+  } catch (err: any) {
+    if (err.code === 'auth/popup-blocked') {
+      console.warn('[GoogleAuth] Popup blocked by browser, redirecting seamlessly...');
+      await signInWithRedirect(auth, googleProvider);
+      return null;
+    }
+    throw err;
+  }
+}
+
+/**
+ * Direct Google Redirect sign-in (100% immune to popup blockers)
+ */
+export async function loginWithGoogleRedirect(): Promise<void> {
+  await signInWithRedirect(auth, googleProvider);
+}
+
+/**
+ * Check if the user just returned from a Google redirect
+ */
+export async function checkGoogleRedirectResult(): Promise<User | null> {
+  try {
+    const result = await getRedirectResult(auth);
+    return result ? result.user : null;
+  } catch (err) {
+    console.error('[GoogleRedirect] Error:', err);
+    throw err;
+  }
 }
 
 /**
