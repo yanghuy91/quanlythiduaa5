@@ -193,13 +193,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           if (googleBtnContainerRef.current) {
             googleBtnContainerRef.current.innerHTML = '';
             google.accounts.id.renderButton(googleBtnContainerRef.current, {
-              theme: 'filled_blue',
+              theme: 'outline',
               size: 'large',
               type: 'standard',
-              shape: 'pill',
-              text: 'continue_with',
+              shape: 'rectangular',
+              text: 'signin_with',
               logo_alignment: 'left',
-              width: 340,
+              width: 320,
+              locale: 'vi',
             });
           }
 
@@ -297,9 +298,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
             {/* Teacher Google Authentication Center */}
             <div className="space-y-4 py-3 flex flex-col items-center justify-center">
-              <p className="text-xs text-muted text-center max-w-sm">
-                Xác thực bằng tài khoản Google để truy cập Bảng điều khiển Quản trị Lớp 10A5
-              </p>
+              <div className="text-center space-y-1">
+                <div className="text-xs font-bold text-main">
+                  Xác thực Giáo viên chủ nhiệm
+                </div>
+                <p className="text-xs text-muted max-w-sm">
+                  Nhấn vào nút bên dưới để đăng nhập bằng tài khoản Google:
+                </p>
+              </div>
 
               <div 
                 ref={googleBtnContainerRef} 
