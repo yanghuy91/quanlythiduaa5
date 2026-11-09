@@ -21,7 +21,9 @@ import { ClassroomFullState } from './storageSync';
 // Firebase configuration for Class 10A5
 export const firebaseConfig = {
   apiKey: "AIzaSyA8MSKGCotV9hnGtf9sDrawu0JZh5frTO0",
-  authDomain: "thiduaa5.firebaseapp.com",
+  authDomain: typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
+    ? window.location.host
+    : "thiduaa5.firebaseapp.com",
   databaseURL: "https://thiduaa5-default-rtdb.firebaseio.com",
   projectId: "thiduaa5",
   storageBucket: "thiduaa5.firebasestorage.app",

@@ -157,12 +157,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   }, []);
 
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isPopupBlocked, setIsPopupBlocked] = useState(false);
 
   // Teacher Google Login (Direct with explicit feedback)
   const handleTeacherGoogleLogin = async () => {
     try {
       setIsGoogleLoading(true);
       setErrorMsg('');
+      setIsPopupBlocked(false);
       const googleUser = await loginWithGoogleFirebase();
       if (googleUser) {
         // Strict verification: only authorized teacher email allowed!
@@ -183,9 +185,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       if (err.code === 'auth/popup-closed-by-user') {
         setErrorMsg('Cửa sổ đăng nhập Google đã đóng. Thầy vui lòng bấm lại để chọn tài khoản.');
       } else if (err.code === 'auth/unauthorized-domain') {
-        setErrorMsg('Tên miền "thiduabc5.vercel.app" chưa được thêm vào Firebase. Thầy hãy vào Firebase Console > Authentication > Settings > Authorized domains > thêm "thiduabc5.vercel.app".');
+        setErrorMsg('Tên miền "thiduabc5.vercel.app" chưa được thêm vào Firebase. Thầy hãy vào Firebase Console > Authentication > Settings > Authorized domains > bấm "Add domain" và thêm "thiduabc5.vercel.app".');
       } else if (err.code === 'auth/popup-blocked') {
-        setErrorMsg('Trình duyệt Chrome đang chặn cửa sổ Popup Google. Thầy hãy bấm biểu tượng [x] trên góc phải thanh địa chỉ để Chọn "Luôn cho phép hiển thị cửa sổ bật lên", HOẶC bấm dòng chữ "Chuyển trang trực tiếp" ngay dưới nút Google.');
+        setIsPopupBlocked(true);
+        setErrorMsg('Trình duyệt Chrome đang chặn cửa sổ Popup. Thầy có thể bấm nút "Chuyển trang Google trực tiếp" màu xanh bên dưới để vào ngay mà không lo bị chặn.');
+      } else if (err.code === 'auth/operation-not-allowed' || err.code === 'auth/configuration-not-found') {
+        setErrorMsg('Google Sign-in chưa được kích hoạt trên Firebase. Thầy vui lòng bấm nút "Save" (màu xanh ở góc phải) trong màn hình Firebase Console rồi thử lại.');
       } else {
         setErrorMsg(`Lỗi kết nối Google (${err.code || 'unknown'}): ${err.message || 'Vui lòng thử lại.'}`);
       }
@@ -294,12 +299,24 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
             {/* Error Message Box */}
             {errorMsg && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-500 space-y-1 animate-scale-up">
+              <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-500 space-y-2 animate-scale-up">
                 <div className="font-bold flex items-center gap-1.5">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>Thông báo đăng nhập:</span>
                 </div>
                 <p className="text-main leading-relaxed pl-5 font-medium">{errorMsg}</p>
+                {isPopupBlocked && (
+                  <div className="pl-5 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleTeacherGoogleRedirect}
+                      className="w-full py-2.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all active:scale-[0.99]"
+                    >
+                      <span>🚀 Chuyển trang Google trực tiếp (Không dùng Popup)</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
