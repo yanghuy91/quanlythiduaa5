@@ -22,7 +22,8 @@ import {
   Database,
   Download,
   LogOut,
-  Edit3
+  Edit3,
+  FileText
 } from 'lucide-react';
 import { StudentImportModal } from './StudentImportModal';
 import { TeacherProfileModal } from './TeacherProfileModal';
@@ -79,6 +80,7 @@ import {
 import { saveCloudGeminiKeys, fetchCloudGeminiKeys } from '../../services/firebase';
 import { downloadStateAsJson, parseImportedJsonState, saveServerState } from '../../services/storageSync';
 import { getAllStudentBadgesState } from '../../data/badgeCatalog';
+import { exportDataSpecsWordDocument } from '../../utils/exportDataSpecsDoc';
 import { Eye, EyeOff, Bot, Key, Copy, Check, ArrowLeft, Trash2, Plus, RefreshCw } from 'lucide-react';
 
 interface TeacherDashboardProps {
@@ -1641,6 +1643,38 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       {/* 6. IMPORT / EXPORT (Teacher Only) */}
       {activeTab === 'import_export' && (
         <div className="space-y-4">
+          {/* Card: Xuất file Word Nguyên tắc nhập/xuất dữ liệu cho AI */}
+          <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-white/15 border border-white/20 backdrop-blur-md flex items-center justify-center text-amber-300 shadow-md shrink-0">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-400 text-gray-900 tracking-wider uppercase">
+                    Tài liệu kỹ thuật (.doc)
+                  </span>
+                  <span className="text-xs text-white/80">Dành cho Giáo viên &amp; AI</span>
+                </div>
+                <h3 className="text-base sm:text-lg font-black tracking-tight mt-0.5">
+                  Nguyên Tắc Chuẩn Hóa Dữ Liệu Nhập &amp; Xuất
+                </h3>
+                <p className="text-xs text-white/85 mt-0.5 max-w-2xl leading-relaxed">
+                  Xuất file Word chứa toàn bộ đặc tả chuẩn hóa (danh sách học sinh, nề nếp vi phạm, bảng điểm) kèm <strong>Mẫu Prompt chuyên biệt cho AI</strong> (ChatGPT / Claude / Gemini) để chuyển dữ liệu thô về dạng chuẩn.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={exportDataSpecsWordDocument}
+              className="px-4 py-2.5 rounded-2xl bg-white hover:bg-slate-100 text-blue-900 text-xs sm:text-sm font-black transition-all flex items-center gap-2 shrink-0 cursor-pointer shadow-lg active:scale-95"
+            >
+              <Download className="w-4 h-4 text-blue-600" />
+              <span>Xuất file Word (.doc) cho AI</span>
+            </button>
+          </div>
+
           {/* Time & Schedule Data Import Card (CSV/Excel) */}
           <TimeDataImportCard
             students={students}
@@ -1941,13 +1975,25 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setActiveTab('overview')}
-              className="px-3.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition-all cursor-pointer self-start sm:self-auto active:scale-95"
-            >
-              ← Quay lại Tổng quan
-            </button>
+            <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+              <button
+                type="button"
+                onClick={exportDataSpecsWordDocument}
+                className="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+                title="Tải tài liệu Word (.doc) chứa thông số kỹ thuật và mẫu prompt cho AI"
+              >
+                <FileText className="w-3.5 h-3.5 text-amber-300" />
+                <span>📄 Xuất quy tắc cho AI (.doc)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('overview')}
+                className="px-3.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition-all cursor-pointer active:scale-95"
+              >
+                ← Quay lại Tổng quan
+              </button>
+            </div>
           </div>
 
           {/* Section 1: API Key Pool Configuration */}

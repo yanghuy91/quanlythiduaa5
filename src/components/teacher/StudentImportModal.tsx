@@ -14,11 +14,13 @@ import {
   ArrowRight,
   Info,
   RefreshCw,
-  UserCheck
+  UserCheck,
+  Download
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Student, SeatLayoutNode, RoleCode } from '../../types';
 import { getDefaultStudentAvatar } from '../../data/mockData';
+import { exportDataSpecsWordDocument } from '../../utils/exportDataSpecsDoc';
 
 interface StudentImportModalProps {
   isOpen: boolean;
@@ -470,6 +472,24 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
 
         {/* Modal Content */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1">
+          {/* AI Specification Helper Banner */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-xs">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-indigo-600 shrink-0" />
+              <span className="text-muted">
+                Dữ liệu thô từ VnEdu/SMAS chưa đúng mẫu? Tải file quy tắc để AI (ChatGPT/Claude) chuẩn hóa tự động:
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={exportDataSpecsWordDocument}
+              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold cursor-pointer transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-xs active:scale-95"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Xuất file Word cho AI (.doc)</span>
+            </button>
+          </div>
+
           {/* Method Tabs */}
           <div className="flex items-center gap-2 p-1 bg-surface-2 rounded-2xl border border-token text-xs font-bold">
             <button
