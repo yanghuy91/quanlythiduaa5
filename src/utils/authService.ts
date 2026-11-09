@@ -150,3 +150,27 @@ export function clearAuthSession(): void {
     console.error('Error clearing session:', e);
   }
 }
+
+const STORAGE_KEY_TEACHER_PASSWORD = 'app_teacher_password_10a5';
+const DEFAULT_TEACHER_PASSWORD = 'gvcn10a5';
+
+export function getTeacherPassword(): string {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_TEACHER_PASSWORD);
+    if (saved) return saved;
+  } catch (e) {}
+  return DEFAULT_TEACHER_PASSWORD;
+}
+
+export function setTeacherPassword(newPass: string): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_TEACHER_PASSWORD, newPass);
+  } catch (e) {}
+}
+
+export function verifyTeacherPassword(inputPass: string): boolean {
+  const current = getTeacherPassword();
+  const trimmed = inputPass.trim();
+  // Valid if matches stored, or default passwords (gvcn10a5, 10a5gvcn, 123456)
+  return trimmed === current || trimmed.toLowerCase() === 'gvcn10a5' || trimmed.toLowerCase() === '10a5gvcn' || trimmed === '123456';
+}

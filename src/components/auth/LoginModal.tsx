@@ -16,7 +16,7 @@ import {
 import { Student, SeatLayoutNode, RoleCode } from '../../types';
 import { StudentPicker } from '../student-picker/StudentPicker';
 import { getStudentAvatarInitial } from '../../utils/vietnamese';
-import { verifyStudentPassword } from '../../utils/authService';
+import { verifyStudentPassword, verifyTeacherPassword } from '../../utils/authService';
 import { Logo10A5 } from '../common/Logo10A5';
 import { loginWithGoogleFirebase } from '../../services/firebase';
 
@@ -45,9 +45,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [attempts, setAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [teacherLoginMode, setTeacherLoginMode] = useState(false);
-  const [teacherEmail, setTeacherEmail] = useState('gvcn.10a5@thptso2ducpho.edu.vn');
-  const [teacherOtp, setTeacherOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
+  const [teacherPassword, setTeacherPasswordInput] = useState('');
+  const [showTeacherPassword, setShowTeacherPassword] = useState(false);
 
   // Verify class code
   const handleVerifyClassCode = (e: React.FormEvent) => {
@@ -109,16 +108,36 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     } catch (err: any) {
       console.error('[GoogleLogin] Error:', err);
       if (err.code === 'auth/popup-closed-by-user') {
-        setErrorMsg('Bạn đã đóng cửa sổ đăng nhập Google. Vui lòng bấm đăng nhập lại.');
+        setErrorMsg('Cửa sổ chọn tài khoản Google đã đóng. Thầy/Cô có thể bấm đăng nhập lại hoặc dùng Mật khẩu GVCN bên dưới.');
       } else if (err.code === 'auth/cancelled-popup-request') {
         // Ignored
       } else if (err.code === 'auth/unauthorized-domain') {
-        setErrorMsg('Tên miền này cần được thêm vào mục Authorized domains trong Firebase Console (Authentication > Settings > Authorized domains).');
+        setErrorMsg('Tên miền "thiduabc5.vercel.app" chưa được ủy quyền trên Firebase. Thầy/Cô hãy vào Firebase Console > Authentication > Settings > Authorized domains > bấm Add domain nhập "thiduabc5.vercel.app". (Thầy/Cô có thể đăng nhập ngay bằng Mật khẩu Giáo viên bên dưới: gvcn10a5)');
+      } else if (err.code === 'auth/popup-blocked') {
+        setErrorMsg('Trình duyệt đang chặn cửa sổ Popup Google. Thầy/Cô hãy chọn "Cho phép hiển thị cửa sổ bật lên" trên trình duyệt, hoặc đăng nhập bằng Mật khẩu Giáo viên bên dưới.');
       } else {
-        setErrorMsg('Đăng nhập Google thất bại: ' + (err.message || 'Vui lòng kiểm tra lại.'));
+        setErrorMsg('Đăng nhập Google: ' + (err.message || 'Chưa hoàn tất. Thầy/Cô có thể dùng Mật khẩu Giáo viên bên dưới.'));
       }
     } finally {
       setIsGoogleLoading(false);
+    }
+  };
+
+  // Direct Teacher Password Login
+  const handleTeacherPasswordLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!teacherPassword.trim()) {
+      setErrorMsg('Vui lòng nhập mật khẩu Giáo viên.');
+      return;
+    }
+    if (verifyTeacherPassword(teacherPassword)) {
+      setErrorMsg('');
+      onLoginTeacher(rememberLogin, {
+        hoTen: 'Trần Văn Bình (GVCN)',
+        email: 'yanghuy91@gmail.com',
+      });
+    } else {
+      setErrorMsg('Mật khẩu Giáo viên chưa đúng. (Mật khẩu mặc định: gvcn10a5 hoặc 123456)');
     }
   };
 
@@ -176,101 +195,122 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           /* Step 2: Teacher Portal */
           <div className="space-y-4 pt-2">
             <div className="p-3 rounded-xl bg-[var(--role-gv-bg)] text-[var(--role-gv-fg)] border border-[var(--role-gv-fg)]/20 text-xs flex items-center justify-between">
-              <span className="font-semibold">Cổng đăng nhập Giáo viên chủ nhiệm</span>
+              <span className="font-semibold flex items-center gap-1.5">
+                <GraduationCap className="w-4 h-4" />
+                <span>Cổng đăng nhập Giáo viên chủ nhiệm</span>
+              </span>
               <button
                 type="button"
-                onClick={() => setTeacherLoginMode(false)}
-                className="text-xs underline font-bold cursor-pointer"
+                onClick={() => { setTeacherLoginMode(false); setErrorMsg(''); }}
+                className="text-xs underline font-bold cursor-pointer hover:opacity-80"
               >
                 Về học sinh
               </button>
             </div>
 
-            <div className="space-y-3">
+            {/* Clarification info */}
+            <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-main space-y-1">
+              <div className="font-bold text-accent flex items-center gap-1">
+                <span>ℹ️</span> Cơ chế xác thực tài khoản Giáo viên
+              </div>
+              <p className="text-muted leading-relaxed">
+                Đăng nhập Google hoạt động qua cửa sổ xác thực trực tiếp (OAuth 2.0) — <strong>hệ thống không gửi thư xác nhận hay mã OTP về hòm thư Gmail</strong>. Thầy/Cô chỉ cần chọn tài khoản Google trong cửa sổ bật lên là vào được ngay.
+              </p>
+            </div>
+
+            {/* Error Message Box (prominently displayed) */}
+            {errorMsg && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-500 space-y-1 animate-scale-up">
+                <div className="font-bold flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>Thông báo đăng nhập:</span>
+                </div>
+                <p className="text-main leading-relaxed pl-5 font-medium">{errorMsg}</p>
+              </div>
+            )}
+
+            {/* Method 1: Google OAuth Instant Login */}
+            <div className="space-y-2">
               <button
                 type="button"
                 disabled={isGoogleLoading}
                 onClick={handleTeacherGoogleLogin}
-                className="w-full py-2.5 rounded-xl border border-token bg-surface hover:bg-surface-2 text-main text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs disabled:opacity-60"
+                className="w-full py-3 px-4 rounded-xl border border-token bg-surface hover:bg-surface-2 text-main text-xs font-bold flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-sm hover:shadow active:scale-[0.99] disabled:opacity-60"
               >
                 {isGoogleLoading ? (
                   <span className="flex items-center gap-2">
-                    <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-accent border-t-transparent" />
-                    <span>Đang kết nối tài khoản Google...</span>
+                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-accent border-t-transparent" />
+                    <span>Đang mở cửa sổ đăng nhập Google...</span>
                   </span>
                 ) : (
                   <>
-                    <svg className="w-4 h-4" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                     </svg>
-                    <span>Đăng nhập bằng Google ({teacherEmail || 'Email giáo viên'})</span>
+                    <span>Tiếp tục bằng tài khoản Google (Tức thì)</span>
                   </>
                 )}
               </button>
+            </div>
 
-              <div className="relative flex py-1 items-center">
-                <div className="flex-grow border-t border-token"></div>
-                <span className="flex-shrink mx-2 text-[10px] text-muted uppercase">Hoặc mã OTP dự phòng</span>
-                <div className="flex-grow border-t border-token"></div>
-              </div>
+            {/* Divider */}
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-token"></div>
+              <span className="flex-shrink mx-2 text-[10px] text-muted uppercase font-bold tracking-wider">
+                Hoặc vào nhanh bằng Mật khẩu Giáo viên
+              </span>
+              <div className="flex-grow border-t border-token"></div>
+            </div>
 
-              <div className="space-y-2">
+            {/* Method 2: Teacher Direct Password */}
+            <form onSubmit={handleTeacherPasswordLogin} className="space-y-3">
+              <div className="relative">
                 <input
-                  type="email"
-                  value={teacherEmail}
-                  onChange={e => setTeacherEmail(e.target.value)}
-                  placeholder="Email giáo viên..."
-                  className="w-full px-3 py-2 bg-surface-2 border border-token rounded-xl text-xs text-main"
+                  type={showTeacherPassword ? 'text' : 'password'}
+                  value={teacherPassword}
+                  onChange={e => setTeacherPasswordInput(e.target.value)}
+                  placeholder="Nhập mật khẩu GV (Mặc định: gvcn10a5 hoặc 123456)..."
+                  className="w-full px-3 py-2.5 pr-10 bg-surface-2 border border-token rounded-xl text-xs text-main placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
                 />
-                {!otpSent ? (
-                  <button
-                    type="button"
-                    onClick={() => setOtpSent(true)}
-                    className="w-full py-2 rounded-xl border border-token text-xs font-semibold text-main hover:bg-surface-2 cursor-pointer"
-                  >
-                    Gửi mã OTP qua Email
-                  </button>
-                ) : (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={teacherOtp}
-                      onChange={e => setTeacherOtp(e.target.value)}
-                      placeholder="Mã 6 chữ số..."
-                      className="flex-1 px-3 py-2 bg-surface border border-token rounded-xl text-center text-xs font-bold text-main"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleTeacherGoogleLogin}
-                      className="px-4 py-2 rounded-xl bg-primary text-on-primary text-xs font-bold cursor-pointer"
-                    >
-                      Xác nhận
-                    </button>
-                  </div>
-                )}
-
-                {/* Remember Login for Teacher */}
-                <div className="flex items-start gap-2 pt-2">
-                  <input
-                    type="checkbox"
-                    id="remember-login-teacher"
-                    checked={rememberLogin}
-                    onChange={e => setRememberLogin(e.target.checked)}
-                    className="mt-0.5 rounded border-token text-accent focus:ring-accent cursor-pointer"
-                  />
-                  <label htmlFor="remember-login-teacher" className="text-xs text-main cursor-pointer select-none">
-                    <span className="font-bold">Ghi nhớ đăng nhập trên thiết bị này</span>
-                    <span className="block text-[11px] text-muted">
-                      {rememberLogin 
-                        ? 'Lưu phiên đăng nhập cho lần sau.' 
-                        : 'Không lưu: Sẽ tự động đăng xuất khi bạn đóng tab trình duyệt.'}
-                    </span>
-                  </label>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowTeacherPassword(!showTeacherPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-main cursor-pointer"
+                  tabIndex={-1}
+                >
+                  {showTeacherPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold hover:opacity-95 transition-opacity cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Đăng nhập quyền Giáo viên</span>
+              </button>
+            </form>
+
+            {/* Remember Login for Teacher */}
+            <div className="flex items-start gap-2 pt-1 border-t border-token">
+              <input
+                type="checkbox"
+                id="remember-login-teacher"
+                checked={rememberLogin}
+                onChange={e => setRememberLogin(e.target.checked)}
+                className="mt-0.5 rounded border-token text-accent focus:ring-accent cursor-pointer"
+              />
+              <label htmlFor="remember-login-teacher" className="text-xs text-main cursor-pointer select-none">
+                <span className="font-bold">Ghi nhớ đăng nhập trên thiết bị này</span>
+                <span className="block text-[11px] text-muted">
+                  {rememberLogin 
+                    ? 'Lưu phiên đăng nhập cho lần sau trên trình duyệt này.' 
+                    : 'Không lưu: Sẽ tự động đăng xuất khi bạn đóng tab.'}
+                </span>
+              </label>
             </div>
           </div>
         ) : (
