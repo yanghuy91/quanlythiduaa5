@@ -352,21 +352,20 @@ export default function App() {
     const unsub = onFirebaseAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser && firebaseUser.email) {
         if (isAuthorizedTeacherEmail(firebaseUser.email)) {
+          const prof = getTeacherProfile();
+          const effectiveName = prof.hoTen || firebaseUser.displayName || 'Thầy Dương Văn Huy';
           const teacherUser = {
-            hoTen: firebaseUser.displayName || 'Thầy Huy (GVCN)',
+            hoTen: effectiveName,
+            statusText: prof.statusText,
             email: firebaseUser.email,
             vaiTro: ['GV'] as RoleCode[],
-            avatarUrl: firebaseUser.photoURL || teacherAvatar,
+            avatarUrl: teacherAvatar || firebaseUser.photoURL,
           };
           saveAuthSession(teacherUser, 'GV', true);
           setCurrentUser(teacherUser);
           setCurrentRole('GV');
           setIsLoginModalOpen(false);
-          setToast({
-            id: Date.now().toString(),
-            message: `Chào mừng Thầy Chủ nhiệm: ${teacherUser.hoTen} 🎓`,
-            subMessage: `Tài khoản ${firebaseUser.email} đã được xác thực thành công!`,
-          });
+          // Removed welcome toast as requested for clean experience
         } else {
           await logoutFirebase().catch(() => {});
           setToast({
@@ -624,13 +623,6 @@ export default function App() {
     setCurrentUser(teacherUser);
     setCurrentRole('GV');
     setIsLoginModalOpen(false);
-    setToast({
-      id: Date.now().toString(),
-      message: `Đăng nhập thành công: ${teacherUser.hoTen} 🎓`,
-      subMessage: teacherUser.email 
-        ? `Đã liên kết Google: ${teacherUser.email} (Dữ liệu đám mây)`
-        : (remember ? 'Đã ghi nhớ đăng nhập trên thiết bị này.' : 'Phiên đăng nhập tạm thời.'),
-    });
   };
 
   // Teacher updates classroom seating and layout
