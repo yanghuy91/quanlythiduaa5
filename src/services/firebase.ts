@@ -4,6 +4,7 @@ import {
   GoogleAuthProvider, 
   signInWithPopup, 
   signInWithRedirect,
+  signInWithCredential,
   getRedirectResult,
   signOut,
   onAuthStateChanged,
@@ -73,6 +74,15 @@ export function isAuthorizedTeacherEmail(email?: string | null): boolean {
  */
 export async function loginWithGoogleFirebase(): Promise<User> {
   const result = await signInWithPopup(auth, googleProvider);
+  return result.user;
+}
+
+/**
+ * Sign in using Google Identity Services (GIS) ID Token Credential
+ */
+export async function loginWithGoogleCredentialToken(idToken: string): Promise<User> {
+  const credential = GoogleAuthProvider.credential(idToken);
+  const result = await signInWithCredential(auth, credential);
   return result.user;
 }
 
