@@ -146,6 +146,8 @@ export function clearAuthSession(): void {
   try {
     localStorage.removeItem(STORAGE_KEY_SESSION_LOCAL);
     sessionStorage.removeItem(STORAGE_KEY_SESSION_SESSION);
+    sessionStorage.removeItem('active_login_tab');
+    sessionStorage.removeItem('google_redirect_ongoing');
   } catch (e) {
     console.error('Error clearing session:', e);
   }
