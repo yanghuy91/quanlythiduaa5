@@ -523,13 +523,13 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         </button>
 
         <button
-          onClick={() => setActiveTab('record')}
+          onClick={() => setActiveTab('roster')}
           className={`flex items-center gap-1.5 px-3 py-2 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === 'record' ? 'bg-surface text-rose-600 dark:text-rose-400 font-extrabold shadow-xs ring-1 ring-rose-500/30' : 'text-muted hover:text-main hover:bg-surface/50'
+            activeTab === 'roster' ? 'bg-surface text-main font-bold shadow-xs' : 'text-muted hover:text-main hover:bg-surface/50'
           }`}
         >
-          <ClipboardList className="w-3.5 h-3.5 text-rose-500" />
-          <span>Ghi vi phạm</span>
+          <Users className="w-3.5 h-3.5 text-accent" />
+          <span>Sơ đồ lớp</span>
         </button>
 
         <button
@@ -545,16 +545,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               {pendingExplanations.length}
             </span>
           )}
-        </button>
-
-        <button
-          onClick={() => setActiveTab('roster')}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === 'roster' ? 'bg-surface text-main font-bold shadow-xs' : 'text-muted hover:text-main hover:bg-surface/50'
-          }`}
-        >
-          <Users className="w-3.5 h-3.5 text-accent" />
-          <span>Sơ đồ &amp; Lớp</span>
         </button>
 
         <button
@@ -619,7 +609,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             <span>← Quay lại Tổng quan</span>
           </button>
           <span className="text-xs font-bold text-muted">
-            {activeTab === 'apps' ? '10 Trò chơi gọi học sinh lên bảng' : activeTab === 'record' ? 'Ghi nhận vi phạm nề nếp (2 chế độ: Sơ đồ lớp & Danh sách)' : activeTab === 'roster' ? 'Danh sách & Sơ đồ' : activeTab === 'grades' ? 'Bảng điểm môn học (Excel)' : activeTab === 'rules' ? 'Nội quy lớp' : activeTab === 'import_export' ? 'Nhập & Xuất dữ liệu' : activeTab === 'ai_gemini' ? 'Trợ lý AI Gemini (Cấu hình & Phân tích)' : activeTab === 'explanations' ? 'Duyệt giải trình' : 'Cài đặt hệ thống'}
+            {activeTab === 'apps' ? '10 Trò chơi gọi học sinh lên bảng' : activeTab === 'roster' ? 'Sơ đồ lớp (Chạm vào học sinh để ghi vi phạm)' : activeTab === 'grades' ? 'Bảng điểm môn học (Excel)' : activeTab === 'rules' ? 'Nội quy lớp' : activeTab === 'import_export' ? 'Nhập & Xuất dữ liệu' : activeTab === 'ai_gemini' ? 'Trợ lý AI Gemini (Cấu hình & Phân tích)' : activeTab === 'explanations' ? 'Duyệt giải trình' : 'Cài đặt hệ thống'}
           </span>
         </div>
       )}
@@ -751,9 +741,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </div>
 
             <div 
-              onClick={() => setActiveTab('record')}
+              onClick={() => setActiveTab('roster')}
               className="p-3 sm:p-3.5 rounded-2xl bg-surface border border-token hover:border-accent/40 cursor-pointer transition-all shadow-2xs group"
-              title="Bấm để mở bàn ghi nhận vi phạm"
+              title="Bấm để mở Sơ đồ lớp ghi nhận vi phạm"
             >
               <div className="text-[11px] text-muted font-medium flex items-center justify-between">
                 <span>Vi phạm trong kỳ</span>
@@ -1364,68 +1354,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     </div>
   )}
 
-      {/* 2. RECORD (Full Authority for Teacher - 2 Modes: Seating Map & List) */}
-      {activeTab === 'record' && (
-        <div className="space-y-3">
-          {/* Quick Notice Banner with Fast Save Toggle like Cadre */}
-          <div className="p-4 rounded-3xl bg-surface border border-token shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 shadow-2xs">
-                <ClipboardList className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-main">
-                  Ghi nhận vi phạm thi đua
-                </h3>
-              </div>
-            </div>
-
-            {/* Fast Save Toggle */}
-            <label className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-2 border border-token cursor-pointer text-xs font-semibold text-main select-none self-start sm:self-auto shadow-2xs hover:border-accent transition-colors">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Chế độ lưu nhanh 1 chạm:</span>
-              <input
-                type="checkbox"
-                checked={fastSaveEnabled}
-                onChange={e => setFastSaveEnabled(e.target.checked)}
-                className="w-4 h-4 accent-accent rounded cursor-pointer"
-              />
-            </label>
-          </div>
-
-          <StudentPicker
-            students={students}
-            layout={layout}
-            studentSummaries={studentSummaries}
-            selectedStudentIds={selectedStudentIds}
-            onSelectStudent={handleSelectStudent}
-            viewerRole="GV"
-            showStatusColors={true}
-            isMultiSelect={isMultiSelect}
-            onToggleMultiSelect={() => {
-              setIsMultiSelect(!isMultiSelect);
-              if (isMultiSelect) setSelectedStudentIds([]);
-            }}
-            onInspectStudent={(st) => setInspectingStudent(st)}
-          />
-
-          {isMultiSelect && selectedStudentIds.length > 0 && (
-            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 w-11/12 max-w-md bg-primary text-on-primary rounded-2xl shadow-2xl p-3 border border-token flex items-center justify-between animate-slide-up">
-              <div className="text-xs font-semibold">
-                Đã chọn <strong className="text-accent underline">{selectedStudentIds.length}</strong> học sinh
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsBottomSheetOpen(true)}
-                className="px-4 py-2 rounded-xl bg-accent text-on-accent text-xs font-bold shadow-xs hover:opacity-95 transition-opacity cursor-pointer flex items-center gap-1.5"
-              >
-                <span>Chọn hành vi để ghi vi phạm</span>
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* 3. EXPLANATIONS QUEUE */}
       {activeTab === 'explanations' && (
         <div className="bg-surface rounded-2xl border border-token overflow-hidden shadow-xs">
@@ -1496,16 +1424,36 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         </div>
       )}
 
-      {/* 4. ROSTER & SEATING */}
+      {/* 4. ROSTER & SEATING (TÍCH HỢP GHI NHẬN VI PHẠM TRỰC TIẾP TRÊN SƠ ĐỒ LỚP) */}
       {activeTab === 'roster' && (
         <div className="space-y-3">
           <div className="p-3.5 sm:p-4 rounded-2xl bg-surface border border-token shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <h3 className="text-sm font-bold text-main flex items-center gap-2">
-              <Move className="w-4 h-4 text-accent" />
-              <span>Sơ đồ lớp ({students.length} học sinh)</span>
-            </h3>
+            <div>
+              <h3 className="text-sm font-bold text-main flex items-center gap-2">
+                <Move className="w-4 h-4 text-accent" />
+                <span>Sơ đồ lớp ({students.length} học sinh)</span>
+              </h3>
+              <p className="text-[11px] text-muted mt-0.5">
+                Bấm trực tiếp vào học sinh trên sơ đồ để mở bảng ghi vi phạm nề nếp thi đua
+              </p>
+            </div>
 
             <div className="flex items-center gap-2 flex-wrap">
+              {/* Fast Save Toggle */}
+              <label 
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-2 border border-token cursor-pointer text-xs font-semibold text-main select-none shadow-2xs hover:border-accent transition-colors"
+                title="Bật để tự động lưu vi phạm ngay sau khi bấm chọn lỗi mà không cần bấm xác nhận thêm"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span>Lưu nhanh 1 chạm:</span>
+                <input
+                  type="checkbox"
+                  checked={fastSaveEnabled}
+                  onChange={e => setFastSaveEnabled(e.target.checked)}
+                  className="w-4 h-4 accent-accent rounded cursor-pointer"
+                />
+              </label>
+
               <button
                 type="button"
                 onClick={() => setIsStudentImportModalOpen(true)}
@@ -1523,6 +1471,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   setIsLayoutEditorOpen(true);
                 }}
                 className="px-3.5 py-1.5 rounded-xl bg-primary text-on-primary text-xs font-bold shadow-xs hover:opacity-95 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                title="Kéo thả đổi chỗ, thêm hoặc chỉnh sửa vị trí bàn ghế"
               >
                 <Move className="w-3.5 h-3.5 text-amber-300" />
                 <span>Sắp xếp chỗ ngồi</span>
@@ -1535,12 +1484,33 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               students={students}
               layout={layout}
               studentSummaries={studentSummaries}
-              selectedStudentIds={[]}
-              onSelectStudent={() => setIsLayoutEditorOpen(true)}
+              selectedStudentIds={selectedStudentIds}
+              onSelectStudent={handleSelectStudent}
               viewerRole="GV"
               showStatusColors={true}
+              isMultiSelect={isMultiSelect}
+              onToggleMultiSelect={() => {
+                setIsMultiSelect(!isMultiSelect);
+                if (isMultiSelect) setSelectedStudentIds([]);
+              }}
+              onInspectStudent={(st) => setInspectingStudent(st)}
             />
           </div>
+
+          {isMultiSelect && selectedStudentIds.length > 0 && (
+            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 w-11/12 max-w-md bg-primary text-on-primary rounded-2xl shadow-2xl p-3 border border-token flex items-center justify-between animate-slide-up">
+              <div className="text-xs font-semibold">
+                Đã chọn <strong className="text-accent underline">{selectedStudentIds.length}</strong> học sinh
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsBottomSheetOpen(true)}
+                className="px-4 py-2 rounded-xl bg-accent text-on-accent text-xs font-bold shadow-xs hover:opacity-95 transition-opacity cursor-pointer flex items-center gap-1.5"
+              >
+                <span>Chọn hành vi để ghi vi phạm</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
 
