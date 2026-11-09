@@ -400,3 +400,137 @@ Tạo ${count} câu hỏi khởi động / kiểm tra bài cũ nhanh cho học s
     ];
   }
 }
+
+/**
+ * AI Tool 3: Smart Universal Data Recognizer & Parser
+ * Analyzes arbitrary raw text/file contents (seating chart, roster, infractions)
+ * and returns normalized structured JSON ready to import.
+ */
+export interface SmartDataAnalysisResult {
+  detectedType: 'seating' | 'roster' | 'records' | 'grades' | 'unknown';
+  confidence: number;
+  summary: string;
+  payload: any;
+  suggestions?: string[];
+}
+
+export async function analyzeAndExtractClassDataAI(rawContent: string): Promise<SmartDataAnalysisResult> {
+  const systemInstruction = 
+    'Bạn là chuyên gia phân tích dữ liệu giáo dục cho hệ thống quản lý lớp học THPT. ' +
+    'Nhiệm vụ của bạn là đọc dữ liệu thô (có thể là danh sách học sinh, sơ đồ lớp, biên bản vi phạm, hoặc bảng điểm) ' +
+    'và tự động nhận diện loại dữ liệu, trích xuất chuẩn hóa thành JSON.';
+
+  const prompt = `
+Hãy phân tích nội dung dữ liệu thô dưới đây:
+---
+${rawContent.slice(0, 4000)}
+---
+
+YÊU CẦU:
+Trả về DUY NHẤT một chuỗi JSON hợp lệ theo cấu trúc sau (không kèm lời dẫn Markdown bên ngoài):
+{
+  "detectedType": "seating" | "roster" | "records" | "grades" | "unknown",
+  "confidence": 0.95,
+  "summary": "Tóm tắt ngắn 1-2 câu về nội dung và số lượng phát hiện được",
+  "payload": {
+    // Nếu là "roster": mảng [ { "stt": 1, "hoTen": "...", "gioiTinh": "Nam"|"Nu", "to": 1|2|3|4, "chucVu": "..." } ]
+    // Nếu là "seating": mảng [ { "deskId": "d_1_1", "seatNumber": 1, "studentName": "...", "row": 1, "col": 1 } ]
+    // Nếu là "records": mảng [ { "hoTen": "...", "tenHanhVi": "...", "diemTru": 2, "thoiGian": "...", "tuan": 1, "ghiChu": "..." } ]
+    // Nếu là "grades": mảng [ { "hoTen": "...", "monHoc": "...", "diem": 9.0 } ]
+  },
+  "suggestions": [
+    "Gợi ý 1 cho giáo viên...",
+    "Gợi ý 2..."
+  ]
+}
+`;
+
+  const rawText = await callGeminiApi(prompt, systemInstruction);
+
+  try {
+    const cleaned = rawText
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim();
+
+    const parsed: SmartDataAnalysisResult = JSON.parse(cleaned);
+    return parsed;
+  } catch (err: any) {
+    console.error('Lỗi parse JSON kết quả phân tích AI:', err, rawText);
+    return {
+      detectedType: 'unknown',
+      confidence: 0.3,
+      summary: 'Không thể tự động phân tích cấu trúc JSON chuẩn: ' + (err.message || 'Lỗi định dạng'),
+      payload: null,
+      suggestions: ['Thầy vui lòng kiểm tra lại nội dung dán hoặc chọn loại nhập thủ công.'],
+    };
+  }
+}
+
+/**
+ * AI Tool 4: Intelligent Seating Arrangement Optimization
+ * Analyzes current student list + seat positions + violations to suggest optimal seat swaps.
+ */
+export interface SeatingOptimizationResult {
+  reasoning: string;
+  swaps: {
+    studentA: string;
+    studentB: string;
+    reason: string;
+  }[];
+  newLayoutSuggestions: string;
+}
+
+export async function optimizeSeatingWithAI(params: {
+  students: { maHS: string; hoTen: string; to: number; gioiTinh: string }[];
+  currentSeats: { deskId: string; seatNumber: number; studentId?: string; studentName?: string; row: number; col: number }[];
+  recentViolations: { hoTen: string; tenHanhVi: string; soLan: number }[];
+}): Promise<SeatingOptimizationResult> {
+  const systemInstruction = 
+    'Bạn là chuyên gia tâm lý sư phạm và quản lý lớp học THPT. ' +
+    'Nhiệm vụ của bạn là phân tích sơ đồ chỗ ngồi hiện tại kết hợp với lịch sử vi phạm nề nếp ' +
+    'để đưa ra phương án đổi chỗ ngồi thông minh nhất (tách các bạn hay nói chuyện, bố trí học sinh kèm cặp nhau, cân bằng nam nữ).';
+
+  const prompt = `
+Dữ liệu lớp 10A5 hiện tại:
+- Sơ đồ chỗ ngồi hiện tại (${params.currentSeats.length} vị trí):
+${params.currentSeats.slice(0, 30).map(s => `  Bàn ${s.row}-${s.col} (Ghế ${s.seatNumber}): ${s.studentName || 'Trống'}`).join('\n')}
+
+- Các học sinh có vi phạm nề nếp gần đây:
+${params.recentViolations.length > 0 ? params.recentViolations.map(v => `  - ${v.hoTen}: ${v.tenHanhVi} (${v.soLan} lần)`).join('\n') : '  - Không có vi phạm đáng kể'}
+
+YÊU CẦU:
+Trả về DUY NHẤT một chuỗi JSON hợp lệ (không kèm markdown thừa):
+{
+  "reasoning": "Nhận xét tổng thể về sơ đồ hiện tại và nguyên tắc sắp xếp đề xuất (2-3 câu)...",
+  "swaps": [
+    {
+      "studentA": "Tên học sinh 1",
+      "studentB": "Tên học sinh 2",
+      "reason": "Lý do hoán đổi (ví dụ: tách khỏi bạn cùng bàn hay nói chuyện, hỗ trợ học tập...)"
+    }
+  ],
+  "newLayoutSuggestions": "Lời khuyên thêm cho Thầy chủ nhiệm khi quản lý trật tự lớp."
+}
+`;
+
+  const rawText = await callGeminiApi(prompt, systemInstruction);
+
+  try {
+    const cleaned = rawText
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim();
+
+    return JSON.parse(cleaned);
+  } catch (err) {
+    return {
+      reasoning: 'AI đã phân tích sơ đồ lớp và lịch sử vi phạm: Đề xuất luân chuyển vị trí giữa các tổ để tạo động lực mới.',
+      swaps: [],
+      newLayoutSuggestions: rawText.slice(0, 300),
+    };
+  }
+}
+

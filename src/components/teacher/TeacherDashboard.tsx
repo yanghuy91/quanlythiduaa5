@@ -26,6 +26,8 @@ import {
   FileText
 } from 'lucide-react';
 import { StudentImportModal } from './StudentImportModal';
+import { UniversalSmartImportSection } from './UniversalSmartImportSection';
+import { AiDataBridgeSection } from './AiDataBridgeSection';
 import { TeacherProfileModal } from './TeacherProfileModal';
 import { TeacherProfile, getTeacherProfile, saveTeacherProfile } from '../../data/teacherProfile';
 import { 
@@ -522,21 +524,22 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
 
           {/* Top Row: Utility buttons on the right (Left descriptions completely removed as requested) */}
-          <div className="relative z-10 flex items-center justify-end gap-1.5 flex-wrap">
+          <div className="relative z-10 flex items-center justify-end gap-1 sm:gap-1.5 flex-nowrap overflow-x-auto scrollbar-none py-0.5">
             <button
               type="button"
               onClick={() => setShowFrameModal(true)}
-              className="px-2.5 py-1 rounded-xl bg-black/40 hover:bg-black/60 border border-white/20 hover:border-amber-400 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-xs"
+              className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-black/40 hover:bg-black/60 border border-white/20 hover:border-amber-400 text-white text-[10px] sm:text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-xs shrink-0"
               title="Quản lý khung vinh danh & hào quang học sinh"
             >
               <Crown className="w-3 h-3 text-amber-300" />
-              <span>Vinh danh &amp; Khung</span>
+              <span className="hidden xs:inline">Khung</span>
+              <span className="hidden sm:inline">vinh danh</span>
             </button>
 
             <button
               type="button"
               onClick={() => setShowBadgeModal(true)}
-              className="px-2.5 py-1 rounded-xl bg-black/40 hover:bg-black/60 border border-white/20 hover:border-amber-400 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-xs"
+              className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-black/40 hover:bg-black/60 border border-white/20 hover:border-amber-400 text-white text-[10px] sm:text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-xs shrink-0"
               title="Kho 30 huy hiệu thi đua cá nhân"
             >
               <Award className="w-3 h-3 text-amber-300" />
@@ -546,32 +549,22 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             <button
               type="button"
               onClick={() => setShowCadreModal(true)}
-              className="px-2.5 py-1 rounded-xl bg-black/40 hover:bg-black/60 border border-white/20 hover:border-white/50 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-xs"
+              className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-black/40 hover:bg-black/60 border border-white/20 hover:border-white/50 text-white text-[10px] sm:text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-xs shrink-0"
               title="Danh sách Ban cán sự lớp"
             >
               <Users className="w-3 h-3 text-sky-300" />
-              <span>Ban cán sự</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsStudentImportModalOpen(true)}
-              className="px-2.5 py-1 rounded-xl bg-emerald-600/70 hover:bg-emerald-600/90 border border-emerald-400/50 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-xs"
-              title="Nhập danh sách học sinh thật từ file Excel hoặc dán chữ"
-            >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-200" />
-              <span>Nhập DS học sinh</span>
+              <span>Cán sự</span>
             </button>
 
             {onLogout && (
               <button
                 type="button"
                 onClick={onLogout}
-                className="px-2.5 py-1 rounded-xl bg-rose-500/40 hover:bg-rose-600/70 border border-rose-300/40 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-xs ml-auto sm:ml-0"
+                className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-rose-500/40 hover:bg-rose-600/70 border border-rose-300/40 text-white text-[10px] sm:text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-xs shrink-0"
                 title="Đăng xuất khỏi Bảng điều khiển Giáo viên"
               >
                 <LogOut className="w-3 h-3 text-rose-200" />
-                <span>Đăng xuất</span>
+                <span>Thoát</span>
               </button>
             )}
           </div>
@@ -703,7 +696,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             <span>← Quay lại Tổng quan</span>
           </button>
           <span className="text-xs font-bold text-muted">
-            {activeTab === 'apps' ? '10 Trò chơi gọi học sinh lên bảng' : activeTab === 'roster' ? 'Sơ đồ lớp (Chạm vào học sinh để ghi vi phạm)' : activeTab === 'grades' ? 'Bảng điểm môn học (Excel)' : activeTab === 'rules' ? 'Nội quy lớp' : activeTab === 'import_export' ? 'Nhập & Xuất dữ liệu' : activeTab === 'ai_gemini' ? 'Trợ lý AI Gemini (Cấu hình & Phân tích)' : activeTab === 'explanations' ? 'Duyệt giải trình' : 'Cài đặt hệ thống'}
+            {activeTab === 'apps' ? '10 Trò chơi gọi học sinh lên bảng' : activeTab === 'roster' ? 'Sơ đồ lớp (Ghi nhận vi phạm)' : activeTab === 'grades' ? 'Bảng điểm môn học (Excel)' : activeTab === 'rules' ? 'Nội quy lớp' : activeTab === 'import_export' ? 'Nhập & Xuất dữ liệu' : activeTab === 'ai_gemini' ? 'Trợ lý AI Gemini (Cấu hình & Phân tích)' : activeTab === 'explanations' ? 'Duyệt giải trình' : 'Cài đặt hệ thống'}
           </span>
         </div>
       )}
@@ -724,33 +717,33 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div 
               onClick={() => setOverviewViewMode(overviewViewMode === 'list' ? 'grid' : 'list')}
-              className="p-3 sm:p-3.5 rounded-2xl bg-surface border border-token hover:border-accent/40 cursor-pointer transition-all shadow-2xs group"
+              className="p-2 sm:p-3 rounded-2xl bg-surface border border-token hover:border-accent/40 cursor-pointer transition-all shadow-2xs group"
               title="Bấm để chuyển đổi giữa Danh sách và Sơ đồ lớp"
             >
               <div className="text-[11px] text-muted font-medium flex items-center justify-between">
                 <span>Học sinh lớp</span>
                 <Move className="w-3 h-3 text-muted group-hover:text-accent transition-colors" />
               </div>
-              <div className="text-xl font-black text-main mt-0.5">42 em</div>
+              <div className="text-base sm:text-xl font-black text-main mt-0.5">42 em</div>
               <div className="text-[10px] text-muted mt-1">4 dãy bàn (= 4 tổ) · 6 bàn/dãy</div>
             </div>
 
             <div 
               onClick={() => setActiveTab('roster')}
-              className="p-3 sm:p-3.5 rounded-2xl bg-surface border border-token hover:border-accent/40 cursor-pointer transition-all shadow-2xs group"
-              title="Bấm để mở Sơ đồ lớp để Phê bình vi phạm"
+              className="p-2 sm:p-3 rounded-2xl bg-surface border border-token hover:border-accent/40 cursor-pointer transition-all shadow-2xs group"
+              title="Bấm để mở Sơ đồ lớp để Ghi nhận vi phạm"
             >
               <div className="text-[11px] text-muted font-medium flex items-center justify-between">
                 <span>Vi phạm trong kỳ</span>
                 <ClipboardList className="w-3 h-3 text-muted group-hover:text-accent transition-colors" />
               </div>
-              <div className="text-xl font-black text-main mt-0.5">{records.filter(r => r.trangThai !== 'DaHuy').length} lượt</div>
+              <div className="text-base sm:text-xl font-black text-main mt-0.5">{records.filter(r => r.trangThai !== 'DaHuy').length} lượt</div>
               <div className="text-[10px] text-muted mt-1">Phân cấp tuần/ngày/buổi</div>
             </div>
 
             <div 
               onClick={() => setActiveTab('explanations')}
-              className="p-3 sm:p-3.5 rounded-2xl bg-surface border border-token hover:border-accent/40 cursor-pointer transition-all shadow-2xs group"
+              className="p-2 sm:p-3 rounded-2xl bg-surface border border-token hover:border-accent/40 cursor-pointer transition-all shadow-2xs group"
               title="Bấm để mở duyệt giải trình"
             >
               <div className="text-[11px] text-muted font-medium flex items-center justify-between">
@@ -1152,7 +1145,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                               type="button"
                               onClick={() => setInspectingStudent(item.student)}
                               className="text-xs font-bold text-main hover:text-accent truncate transition-colors text-left flex items-center gap-1 cursor-pointer"
-                              title="Bấm để xem lịch sử vi phạm & người phê bình"
+                              title="Bấm để xem lịch sử vi phạm & người ghi nhận"
                             >
                               <span>{item.student.hoTen}</span>
                               <Eye className="w-3 h-3 text-muted hover:text-accent shrink-0" />
@@ -1209,7 +1202,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                             type="button"
                             onClick={() => setInspectingStudent(item.student)}
                             className="text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1 rounded-xl border border-rose-500/25 flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-2xs"
-                            title="Bấm để xem chi tiết các lỗi vi phạm & cán sự phê bình"
+                            title="Bấm để xem chi tiết các lỗi vi phạm & cán sự ghi nhận"
                           >
                             <ShieldAlert className="w-3.5 h-3.5 text-rose-500" />
                             <span>-{item.deductions}đ</span>
@@ -1222,7 +1215,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                           </span>
                         )}
 
-                        <span className="text-xs font-black tabular-nums text-main">
+                        <span className="text-[11px] sm:text-xs font-black tabular-nums text-main">
                           {item.score} đ
                         </span>
 
@@ -1237,12 +1230,12 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                            item.xepLoai === 'Dat' ? 'Đạt' : 'Cần cố gắng'}
                         </span>
 
-                        {/* Nút Xem lỗi & Người phê bình */}
+                        {/* Nút Xem lỗi & Người ghi nhận */}
                         <button
                           type="button"
                           onClick={() => setInspectingStudent(item.student)}
                           className="px-2 py-1 rounded-lg bg-surface-2 hover:bg-surface-3 text-muted hover:text-main text-[11px] font-semibold transition-all cursor-pointer border border-token flex items-center gap-1 shadow-2xs"
-                          title="Xem chi tiết các lỗi vi phạm và ai đã phê bình"
+                          title="Xem chi tiết các lỗi vi phạm và ai đã ghi nhận"
                         >
                           <Eye className="w-3.5 h-3.5 text-accent" />
                           <span className="hidden md:inline">Xem lỗi</span>
@@ -1252,9 +1245,10 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                           type="button"
                           onClick={() => handleSelectStudent(item.student)}
                           className="px-2 py-1 rounded-lg bg-accent/15 hover:bg-accent text-accent hover:text-on-accent text-[11px] font-bold transition-all cursor-pointer shadow-xs"
-                          title="Phê bình nề nếp cho học sinh này"
+                          title="Ghi nhận vi phạm cho học sinh này"
+                        className="px-2 py-1 rounded-lg bg-accent/15 hover:bg-accent text-accent hover:text-on-accent text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer shadow-xs whitespace-nowrap"
                         >
-                          + Phê bình
+                          + Ghi nhận
                         </button>
                       </div>
                     </div>
@@ -1338,7 +1332,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         </div>
       )}
 
-      {/* 4. ROSTER & SEATING (TÍCH HỢP PHÊ BÌNH VI PHẠM TRỰC TIẾP TRÊN SƠ ĐỒ LỚP) */}
+      {/* 4. ROSTER & SEATING (TÍCH HỢP GHI NHẬN VI PHẠM TRỰC TIẾP TRÊN SƠ ĐỒ LỚP) */}
       {activeTab === 'roster' && (
         <div className="space-y-3">
           <div className="p-3.5 sm:p-4 rounded-2xl bg-surface border border-token shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -1348,7 +1342,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 <span>Sơ đồ lớp ({students.length} học sinh)</span>
               </h3>
               <p className="text-[11px] text-muted mt-0.5">
-                Bấm trực tiếp vào học sinh trên sơ đồ để Phê bình vi phạm nề nếp thi đua
+                Bấm trực tiếp vào học sinh trên sơ đồ để Ghi nhận vi phạm nề nếp thi đua
               </p>
             </div>
 
@@ -1368,15 +1362,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 />
               </label>
 
-              <button
-                type="button"
-                onClick={() => setIsStudentImportModalOpen(true)}
-                className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
-                title="Nhập danh sách học sinh thật từ file Excel hoặc dán chữ"
-              >
-                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-200" />
-                <span>📥 Nhập danh sách</span>
-              </button>
+
 
               <button
                 type="button"
@@ -1421,7 +1407,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 onClick={() => setIsBottomSheetOpen(true)}
                 className="px-4 py-2 rounded-xl bg-accent text-on-accent text-xs font-bold shadow-xs hover:opacity-95 transition-opacity cursor-pointer flex items-center gap-1.5"
               >
-                <span>Chọn hành vi để Phê bình vi phạm</span>
+                <span>Chọn hành vi để Ghi nhận vi phạm</span>
               </button>
             </div>
           )}
@@ -1526,135 +1512,25 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
       {/* 6. IMPORT / EXPORT (Teacher Only) */}
       {activeTab === 'import_export' && (
-        <div className="space-y-4">
-          {/* Card: Xuất file Word Nguyên tắc nhập/xuất dữ liệu cho AI */}
-          <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-white/15 border border-white/20 backdrop-blur-md flex items-center justify-center text-amber-300 shadow-md shrink-0">
-                <FileText className="w-6 h-6" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-400 text-gray-900 tracking-wider uppercase">
-                    Tài liệu kỹ thuật (.doc)
-                  </span>
-                  <span className="text-xs text-white/80">Dành cho Giáo viên &amp; AI</span>
-                </div>
-                <h3 className="text-base sm:text-lg font-black tracking-tight mt-0.5">
-                  Nguyên Tắc Chuẩn Hóa Dữ Liệu Nhập &amp; Xuất
-                </h3>
-                <p className="text-xs text-white/85 mt-0.5 max-w-2xl leading-relaxed">
-                  Xuất file Word chứa toàn bộ đặc tả chuẩn hóa (danh sách học sinh, nề nếp vi phạm, bảng điểm) kèm <strong>Mẫu Prompt chuyên biệt cho AI</strong> (ChatGPT / Claude / Gemini) để chuyển dữ liệu thô về dạng chuẩn.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={exportDataSpecsWordDocument}
-              className="px-4 py-2.5 rounded-2xl bg-white hover:bg-slate-100 text-blue-900 text-xs sm:text-sm font-black transition-all flex items-center gap-2 shrink-0 cursor-pointer shadow-lg active:scale-95"
-            >
-              <Download className="w-4 h-4 text-blue-600" />
-              <span>Xuất file Word (.doc) cho AI</span>
-            </button>
-          </div>
-
-          {/* Time & Schedule Data Import Card (CSV/Excel) */}
-          <TimeDataImportCard
-            students={students}
-            rules={rules}
-            onImportRecords={onImportRecords || (() => {})}
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Import Smart Preview */}
-            <div className="p-4 rounded-2xl bg-surface border border-token space-y-3 shadow-xs">
-              <div className="flex items-center gap-2">
-                <Upload className="w-4 h-4 text-accent" />
-                <h3 className="text-xs font-bold text-main uppercase tracking-wider">
-                  Trình nhập thông minh (Dán văn bản / File)
-                </h3>
-              </div>
-              <p className="text-xs text-muted">
-                Dán danh sách lớp, sơ đồ lớp từ Word/Excel hoặc biên bản vi phạm viết tay. Hệ thống tự động phân tách và khớp tên mờ.
-              </p>
-
-              <textarea
-                rows={4}
-                placeholder="VD: 10/11 - Sáng: Huy đi muộn, Quân dùng điện thoại..."
-                className="w-full p-2.5 bg-surface-2 border border-token rounded-xl text-xs text-main placeholder:text-muted"
-              />
-
-              <div className="flex items-center justify-between pt-2">
-                <span className="text-[11px] text-muted">Mã lô nhập: LÔ-202611-01</span>
-                <button
-                  type="button"
-                  onClick={() => alert('Đã phân tích tệp dữ liệu thành công! Cấu trúc nề nếp đã sẵn sàng.')}
-                  className="px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-bold cursor-pointer"
-                >
-                  Phân tích &amp; Xem trước
-                </button>
-              </div>
-            </div>
-
-            {/* Export Customizer */}
-            <div className="p-4 rounded-2xl bg-surface border border-token space-y-3 shadow-xs">
-              <div className="flex items-center gap-2">
-                <FileDown className="w-4 h-4 text-accent" />
-                <h3 className="text-xs font-bold text-main uppercase tracking-wider">
-                  Xuất báo cáo &amp; Thẻ ảnh Phụ huynh
-                </h3>
-              </div>
-            <p className="text-xs text-muted">
-              Xuất tệp Excel/CSV đầy đủ lịch sử nguồn gốc (người nhập, vai trò, thời gian máy chủ, thiết bị) hoặc tạo thẻ ảnh gửi phụ huynh.
-            </p>
-
-            <div className="space-y-2 text-xs">
-              <div className="p-2.5 rounded-xl bg-surface-2 border border-token flex items-center justify-between">
-                <div>
-                  <span className="font-semibold block">Xuất Báo cáo Thi đua (.html)</span>
-                  <span className="text-[10px] text-muted">Tệp HTML độc lập chuẩn A4, mở xem và in ấn offline</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => exportClassroomHtmlReport(students, studentSummaries, currentWeek, records)}
-                  className="px-3 py-1 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors cursor-pointer shadow-xs"
-                >
-                  Tải .html 📄
-                </button>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-surface-2 border border-token flex items-center justify-between">
-                <span>Xuất bảng điểm tuần {currentWeek} (.xlsx)</span>
-                <button
-                  type="button"
-                  onClick={() => alert('Đã tạo tệp Excel kèm cột nguồn gốc dữ liệu!')}
-                  className="px-3 py-1 rounded-lg border border-token bg-surface text-main font-semibold hover:bg-surface-2 cursor-pointer"
-                >
-                  Tải .xlsx
-                </button>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-surface-2 border border-token flex items-center justify-between">
-                <div>
-                  <span className="font-semibold block">Thẻ ảnh gửi Phụ huynh</span>
-                  <span className="text-[10px] text-muted">Có chân trang: 10A5 - THPT Số 2 Đức Phổ</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => alert('Thẻ ảnh học sinh đã được tạo với font Be Vietnam Pro chuẩn dấu!')}
-                  className="px-3 py-1 rounded-lg bg-accent text-on-accent font-semibold hover:opacity-90 cursor-pointer"
-                >
-                  Tạo thẻ ảnh
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        <UniversalSmartImportSection
+          students={students}
+          layout={layout}
+          rules={rules}
+          records={records}
+          currentWeek={currentWeek}
+          studentSummaries={studentSummaries}
+          onOpenStudentImportModal={() => setIsStudentImportModalOpen(true)}
+          onOpenLayoutEditor={() => {
+            setInitialAddSeat(undefined);
+            setIsLayoutEditorOpen(true);
+          }}
+          onSwitchToGradesTab={() => setActiveTab('grades')}
+          onImportRecords={onImportRecords}
+          onUpdateLayout={onUpdateLayout}
+          onImportStudents={onImportStudents}
+        />
       )}
 
-      {/* 7. SETTINGS */}
       {activeTab === 'settings' && (
         <div className="p-4 rounded-2xl bg-surface border border-token space-y-4 shadow-xs max-w-xl mx-auto">
           <h3 className="text-xs font-bold text-main uppercase tracking-wider border-b border-token pb-2">
@@ -1678,7 +1554,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <span className="font-semibold text-main block">Thời hạn sửa / hủy của Ban cán sự:</span>
-                <span className="text-[11px] text-muted">Tính từ thời điểm phê bình</span>
+                <span className="text-[11px] text-muted">Tính từ thời điểm ghi nhận</span>
               </div>
               <span className="font-bold text-main px-2 py-1 rounded bg-surface-2 border border-token">
                 {settings.thoiHanSuaHuyPhut / 60} giờ
@@ -1742,7 +1618,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             <div className="flex items-center justify-between pt-2 border-t border-token">
               <div>
                 <span className="font-semibold text-[var(--st-bad)] block">Khoá khẩn cấp (Kill Switch):</span>
-                <span className="text-[11px] text-muted">Tạm ngưng mọi lệnh phê bình từ Ban cán sự</span>
+                <span className="text-[11px] text-muted">Tạm ngưng mọi lệnh ghi nhận từ Ban cán sự</span>
               </div>
               <input
                 type="checkbox"
@@ -1831,7 +1707,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       const text = await file.text();
                       const parsed = parseImportedJsonState(text);
                       if (parsed) {
-                        if (confirm(`Bạn có chắc muốn khôi phục dữ liệu từ file sao lưu (${parsed.students?.length || 0} học sinh, ${parsed.records?.length || 0} phê bình vi phạm)?`)) {
+                        if (confirm(`Bạn có chắc muốn khôi phục dữ liệu từ file sao lưu (${parsed.students?.length || 0} học sinh, ${parsed.records?.length || 0} ghi nhận vi phạm)?`)) {
                           await saveServerState(parsed);
                           window.location.reload();
                         }
@@ -2222,6 +2098,16 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Section: AI Data Bridge & Seating Optimizer (2-way link) */}
+          <AiDataBridgeSection
+            students={students}
+            layout={layout}
+            records={records}
+            currentWeek={currentWeek}
+            onUpdateLayout={onUpdateLayout}
+            onOpenLayoutTab={() => setActiveTab('roster')}
+          />
 
           {/* Section 2: AI Tool 1 - Phân tích thi đua & Soạn nhận xét tuần */}
           <div className="p-4 sm:p-5 rounded-3xl bg-surface border border-token shadow-xs space-y-3">

@@ -933,7 +933,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                           <div className="py-4 px-3 rounded-2xl bg-surface border border-token text-center">
                             <p className="text-xs text-[var(--st-ok)] font-semibold flex items-center justify-center gap-1.5">
                               <CheckCircle2 className="w-4 h-4 text-[var(--st-ok)]" />
-                              <span>Tuần {weekData.week} em chấp hành nề nếp xuất sắc, không có phê bình vi phạm nào!</span>
+                              <span>Tuần {weekData.week} em chấp hành nề nếp xuất sắc, không có ghi nhận vi phạm nào!</span>
                             </p>
                             <p className="text-[11px] text-muted mt-0.5">Điểm thi đua đạt mức tối đa 100/100 ⭐</p>
                           </div>
