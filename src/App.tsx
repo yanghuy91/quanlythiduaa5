@@ -50,6 +50,7 @@ import {
   getAllStudentBadgesState, 
   setAllStudentBadgesState 
 } from './data/badgeCatalog';
+import { subscribeToCloudClassState } from './services/firebase';
 
 export default function App() {
   // Theme state
@@ -259,6 +260,45 @@ export default function App() {
       }
     })();
     return () => { isMounted = false; };
+  }, []);
+
+  // Realtime Cloud Firestore sync listener across all devices
+  useEffect(() => {
+    const unsubscribe = subscribeToCloudClassState((cloudState) => {
+      if (!cloudState) return;
+      if (Array.isArray(cloudState.students) && cloudState.students.length > 0) {
+        setStudents(cloudState.students);
+        localStorage.setItem('app_students_10a5_v4', JSON.stringify(cloudState.students));
+      }
+      if (Array.isArray(cloudState.records)) {
+        setRecords(cloudState.records);
+        localStorage.setItem('app_records_10a5', JSON.stringify(cloudState.records));
+      }
+      if (Array.isArray(cloudState.academicRecords)) {
+        setAcademicRecords(cloudState.academicRecords);
+        localStorage.setItem('app_academic_records_10a5', JSON.stringify(cloudState.academicRecords));
+      }
+      if (cloudState.settings) {
+        setSettings(prev => ({ ...prev, ...cloudState.settings }));
+        localStorage.setItem('app_teacher_settings', JSON.stringify(cloudState.settings));
+      }
+      if (Array.isArray(cloudState.layout)) {
+        setLayout(cloudState.layout);
+        localStorage.setItem('app_layout_10a5_v4', JSON.stringify(cloudState.layout));
+      }
+      if (Array.isArray(cloudState.rules)) {
+        setRules(cloudState.rules);
+        localStorage.setItem('app_rules_10a5', JSON.stringify(cloudState.rules));
+      }
+      if (cloudState.teacherAvatar) {
+        setTeacherAvatarState(cloudState.teacherAvatar);
+        setTeacherAvatar(cloudState.teacherAvatar);
+      }
+      if (cloudState.studentBadgesMap || cloudState.studentActiveBadges) {
+        setAllStudentBadgesState(cloudState.studentBadgesMap, cloudState.studentActiveBadges);
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
   // Debounced auto-save to server on any modification
@@ -482,12 +522,13 @@ export default function App() {
     });
   };
 
-  // Teacher login from modal
-  const handleLoginTeacher = (remember = true) => {
+  // Teacher login from modal (supports Google Profile)
+  const handleLoginTeacher = (remember = true, teacherInfo?: { hoTen?: string; email?: string; avatarUrl?: string }) => {
     const teacherUser = {
-      hoTen: 'Trần Văn Bình (GVCN)',
+      hoTen: teacherInfo?.hoTen || 'Thầy/Cô Chủ nhiệm (GVCN)',
+      email: teacherInfo?.email,
       vaiTro: ['GV'] as RoleCode[],
-      avatarUrl: teacherAvatar,
+      avatarUrl: teacherInfo?.avatarUrl || teacherAvatar,
     };
     saveAuthSession(teacherUser, 'GV', remember);
     setCurrentUser(teacherUser);
@@ -495,10 +536,10 @@ export default function App() {
     setIsLoginModalOpen(false);
     setToast({
       id: Date.now().toString(),
-      message: 'Đăng nhập thành công: Giáo viên chủ nhiệm 🎓',
-      subMessage: remember 
-        ? 'Đã ghi nhớ đăng nhập trên thiết bị này cho lần sau.' 
-        : 'Phiên đăng nhập tạm thời (tự động xóa khi đóng tab).',
+      message: `Đăng nhập thành công: ${teacherUser.hoTen} 🎓`,
+      subMessage: teacherUser.email 
+        ? `Đã liên kết Google: ${teacherUser.email} (Dữ liệu đám mây)`
+        : (remember ? 'Đã ghi nhớ đăng nhập trên thiết bị này.' : 'Phiên đăng nhập tạm thời.'),
     });
   };
 

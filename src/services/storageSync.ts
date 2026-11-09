@@ -6,6 +6,7 @@ import {
   SeatLayoutNode, 
   ViolationRule 
 } from '../types';
+import { fetchCloudClassState, saveCloudClassState } from './firebase';
 
 export interface ClassroomFullState {
   students: Student[];
@@ -25,10 +26,21 @@ let syncTimeout: any = null;
 let lastSyncTimestamp = 0;
 
 /**
- * Fetch state from the server endpoint /api/state
- * Returns null if server has not initialized a state or if network fails.
+ * Fetch state: Prioritizes Cloud Firestore, falls back to /api/state or null
  */
 export async function fetchServerState(): Promise<ClassroomFullState | null> {
+  // 1. Try Cloud Firestore first
+  try {
+    const cloudState = await fetchCloudClassState();
+    if (cloudState && Array.isArray(cloudState.students) && cloudState.students.length > 0) {
+      lastSyncTimestamp = Date.now();
+      return cloudState;
+    }
+  } catch (err) {
+    console.warn('[StorageSync] Không thể kết nối Cloud Firestore, kiểm tra máy chủ nội bộ:', err);
+  }
+
+  // 2. Fall back to local endpoint /api/state
   try {
     const res = await fetch('/api/state', {
       headers: { 'Accept': 'application/json' },
@@ -38,36 +50,45 @@ export async function fetchServerState(): Promise<ClassroomFullState | null> {
     if (!data || data.initialized === false) return null;
     return data as ClassroomFullState;
   } catch (err) {
-    console.warn('[StorageSync] Không thể kết nối máy chủ, chuyển sang bộ nhớ cục bộ:', err);
+    console.warn('[StorageSync] Không thể kết nối máy chủ nội bộ:', err);
     return null;
   }
 }
 
 /**
- * Direct POST state to the server endpoint /api/state
+ * Save state: Saves to Cloud Firestore AND local /api/state
  */
 export async function saveServerState(state: ClassroomFullState): Promise<boolean> {
+  let cloudSuccess = false;
+
+  // 1. Save to Cloud Firestore
   try {
-    const res = await fetch('/api/state', {
+    cloudSuccess = await saveCloudClassState(state);
+    if (cloudSuccess) {
+      lastSyncTimestamp = Date.now();
+    }
+  } catch (err) {
+    console.warn('[StorageSync] Lưu Cloud Firestore thất bại:', err);
+  }
+
+  // 2. Save to local /api/state if available
+  try {
+    await fetch('/api/state', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(state),
     });
-    if (res.ok) {
-      lastSyncTimestamp = Date.now();
-      return true;
-    }
-    return false;
   } catch (err) {
-    console.warn('[StorageSync] Lưu máy chủ thất bại:', err);
-    return false;
+    // Ignore local api errors when running in production
   }
+
+  return cloudSuccess;
 }
 
 /**
- * Debounced sync to server (waits 600ms of inactivity before firing POST)
+ * Debounced sync to Cloud & local server
  */
 export function scheduleServerSync(state: ClassroomFullState): void {
   if (syncTimeout) {
@@ -98,7 +119,6 @@ export function downloadStateAsJson(state: ClassroomFullState, filename = 'lop10
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  URL.revokeObjectURL(url);
 }
 
 /**
