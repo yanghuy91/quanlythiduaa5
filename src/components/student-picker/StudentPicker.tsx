@@ -255,9 +255,7 @@ export const StudentPicker: React.FC<StudentPickerProps> = ({
                         )}
                       </div>
                       <div className="text-[11px] text-muted flex items-center gap-2 mt-0.5">
-                        <span>Tổ {student.to}</span>
-                        <span>·</span>
-                        <span>Dãy {student.dayBan} - Bàn {student.soBan}</span>
+                        <span className="font-semibold text-token">Tổ {student.to}</span>
                       </div>
                     </div>
                   </div>

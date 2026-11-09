@@ -342,11 +342,6 @@ export const CadreView: React.FC<CadreViewProps> = ({
               )}
             </AvatarFrame>
 
-            {/* Seat badge */}
-            <span className="absolute -bottom-1 -left-1 text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-surface text-main border border-token shadow-xs z-20">
-              #{currentCadre.viTriGhe}
-            </span>
-
             {/* Camera upload button */}
             <button
               type="button"

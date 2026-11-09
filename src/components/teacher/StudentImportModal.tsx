@@ -636,7 +636,7 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
                       <th className="py-2.5 px-3 w-12 text-center">STT</th>
                       <th className="py-2.5 px-3">Họ và tên</th>
                       <th className="py-2.5 px-3 w-24 text-center">Giới tính</th>
-                      <th className="py-2.5 px-3 w-28 text-center">Tổ / Dãy</th>
+                      <th className="py-2.5 px-3 w-24 text-center">Tổ</th>
                       <th className="py-2.5 px-3 w-24">Ngày sinh</th>
                       <th className="py-2.5 px-3 w-12 text-center">Xóa</th>
                     </tr>
@@ -670,10 +670,10 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
                             onChange={e => handleChangeGroup(idx, Number(e.target.value) as 1 | 2 | 3 | 4)}
                             className="px-2 py-1 rounded-lg bg-surface border border-token text-xs font-bold text-main cursor-pointer"
                           >
-                            <option value={1}>Tổ 1 (Dãy 1)</option>
-                            <option value={2}>Tổ 2 (Dãy 2)</option>
-                            <option value={3}>Tổ 3 (Dãy 3)</option>
-                            <option value={4}>Tổ 4 (Dãy 4)</option>
+                            <option value={1}>Tổ 1</option>
+                            <option value={2}>Tổ 2</option>
+                            <option value={3}>Tổ 3</option>
+                            <option value={4}>Tổ 4</option>
                           </select>
                         </td>
                         <td className="py-2 px-3 text-muted text-[11px]">

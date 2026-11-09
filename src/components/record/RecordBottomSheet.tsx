@@ -236,7 +236,7 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
             </div>
             <p className="text-[11px] text-muted truncate mt-0.5">
               {students.length === 1 ? (
-                `Tổ ${students[0].to} · Dãy ${students[0].dayBan} - Bàn ${students[0].soBan}`
+                `Tổ ${students[0].to}`
               ) : (
                 students.map(s => s.tenRutGon).join(', ')
               )}

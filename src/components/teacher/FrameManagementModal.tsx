@@ -166,7 +166,7 @@ export const FrameManagementModal: React.FC<FrameManagementModalProps> = ({
               <div className="relative flex-1 min-w-[180px]">
                 <input
                   type="text"
-                  placeholder="Tìm theo họ tên, mã HS, số bàn..."
+                  placeholder="Tìm theo họ tên, mã HS, tổ..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full px-3 py-1.5 pl-8 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -275,7 +275,7 @@ export const FrameManagementModal: React.FC<FrameManagementModalProps> = ({
                                 {s.gioiTinh === 'Nu' ? 'Nữ' : 'Nam'}
                               </span>
                               <span className="text-[10px] text-slate-400">
-                                Ghế #{s.viTriGhe} · Tổ {s.to}
+                                Tổ {s.to}
                               </span>
                             </div>
                             <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-500">

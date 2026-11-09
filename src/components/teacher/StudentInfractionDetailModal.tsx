@@ -113,7 +113,7 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
                   {student.hoTen}
                 </h3>
                 <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-surface text-main border border-token shadow-2xs">
-                  Ghế #{student.viTriGhe} · Tổ {student.to}
+                  Tổ {student.to}
                 </span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                   currentScore >= 90 ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)]' :

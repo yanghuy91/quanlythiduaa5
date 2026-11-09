@@ -85,9 +85,9 @@ export const WinnerModal: React.FC<WinnerModalProps> = ({
               )}
             </div>
 
-            {/* Seat Badge */}
-            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-xs font-extrabold px-2 py-0.5 rounded-full bg-surface text-main border-2 border-amber-500 shadow-md">
-              Ghế #{student.viTriGhe}
+            {/* Group Badge */}
+            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-surface text-main border-2 border-amber-500 shadow-md">
+              Tổ {student.to}
             </span>
           </div>
 
@@ -96,11 +96,8 @@ export const WinnerModal: React.FC<WinnerModalProps> = ({
             {student.hoTen}
           </h2>
 
-          {/* Sub details: Group & Role */}
+          {/* Sub details: Role */}
           <div className="flex items-center gap-2 mt-1.5 flex-wrap justify-center">
-            <span className="text-xs font-bold px-2 py-0.5 rounded-lg bg-surface-2 text-muted border border-token">
-              Tổ {student.to}
-            </span>
 
             {topRole !== 'HS' && (
               <span

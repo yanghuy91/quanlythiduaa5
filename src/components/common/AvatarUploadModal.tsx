@@ -166,7 +166,7 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
                 Chọn Ảnh Đại Diện Học Sinh
               </h3>
               <p className="text-xs text-muted">
-                {student.hoTen} · Tổ {student.to} · Ghế #{student.viTriGhe}
+                {student.hoTen} · Tổ {student.to}
               </p>
             </div>
           </div>

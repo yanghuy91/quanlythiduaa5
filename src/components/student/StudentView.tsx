@@ -668,11 +668,6 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   )}
                 </AvatarFrame>
 
-                {/* Seat badge */}
-                <span className="absolute -bottom-1 -left-1 text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-surface text-main border border-token shadow-xs z-20">
-                  #{currentStudent.viTriGhe}
-                </span>
-
                 {/* Camera upload button */}
                 <button
                   type="button"
@@ -1315,7 +1310,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 >
                   <option value="score_desc">🏆 Điểm thi đua cao nhất (Hạng 1 → 42)</option>
                   <option value="score_asc">📉 Điểm thi đua thấp nhất (Cần cố gắng)</option>
-                  <option value="stt">🔢 Theo Số thứ tự ghế (#01 → #42)</option>
+                  <option value="stt">🔢 Theo Số thứ tự danh sách (STT)</option>
                   <option value="name_asc">🔤 Theo Tên học sinh (A → Z)</option>
                   <option value="name_desc">🔤 Theo Tên học sinh (Z → A)</option>
                   <option value="to">👥 Gom theo Tổ (Tổ 1 → 4)</option>
@@ -1378,7 +1373,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                     : 'bg-surface-2 hover:bg-surface border border-token text-muted hover:text-main'
                 }`}
               >
-                🔢 STT / Ghế #01-#42
+                🔢 STT danh sách
               </button>
               <button
                 type="button"
@@ -1594,11 +1589,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                         </div>
 
                         <div className="text-[10px] font-medium text-muted flex items-center gap-1.5 mt-0.5">
-                          <span>Ghế #{item.student.viTriGhe < 10 ? `0${item.student.viTriGhe}` : item.student.viTriGhe}</span>
-                          <span>·</span>
-                          <span>Tổ {item.student.to}</span>
-                          <span>·</span>
-                          <span>Dãy {item.student.dayBan}</span>
+                          <span className="font-semibold text-token">Tổ {item.student.to}</span>
                           {item.student.vaiTro.some(r => r !== 'HS') && (
                             <>
                               <span>·</span>

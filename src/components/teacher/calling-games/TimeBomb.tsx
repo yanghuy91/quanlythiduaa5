@@ -140,7 +140,7 @@ export const TimeBomb: React.FC<TimeBombProps> = ({
                 {currentCandidate.hoTen}
               </h3>
               <p className="text-xs font-bold text-muted mt-0.5">
-                Tổ {currentCandidate.to} · Ghế #{currentCandidate.viTriGhe}
+                Tổ {currentCandidate.to}
               </p>
             </div>
           ) : (

@@ -129,7 +129,7 @@ export const VinylDJ: React.FC<VinylDJProps> = ({
         <div className="mt-4 min-h-[36px]">
           {currentDJStudent ? (
             <span className="text-lg font-black text-violet-300 tracking-tight">
-              {currentDJStudent.hoTen} · Ghế #{currentDJStudent.viTriGhe}
+              {currentDJStudent.hoTen} · Tổ {currentDJStudent.to}
             </span>
           ) : (
             <span className="text-xs text-muted">

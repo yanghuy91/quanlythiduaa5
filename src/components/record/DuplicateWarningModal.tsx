@@ -120,7 +120,7 @@ export const DuplicateWarningModal: React.FC<DuplicateWarningModalProps> = ({
                       {student.hoTen}
                     </span>
                     <span className="text-[10px] text-muted ml-2">
-                      (Tổ {student.to} · Ghế {student.viTriGhe})
+                      (Tổ {student.to})
                     </span>
                   </div>
 

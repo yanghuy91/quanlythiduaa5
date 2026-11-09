@@ -131,7 +131,7 @@ export const MysteryCards: React.FC<MysteryCardsProps> = ({
                     {st?.tenRutGon}
                   </div>
                   <span className="text-[9px] text-muted">
-                    Ghế #{st?.viTriGhe}
+                    Tổ {st?.to}
                   </span>
                 </div>
               </div>

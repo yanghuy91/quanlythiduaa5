@@ -139,7 +139,7 @@ export const CadreHonorsModal: React.FC<CadreHonorsModalProps> = ({
                         <div className="text-[11px] text-muted flex items-center gap-2 mt-0.5">
                           <span className="flex items-center gap-0.5">
                             <MapPin className="w-3 h-3 text-accent" />
-                            <span>Tổ {student.to} · Ghế #{student.viTriGhe < 10 ? `0${student.viTriGhe}` : student.viTriGhe}</span>
+                            <span>Tổ {student.to}</span>
                           </span>
                         </div>
                       </div>
