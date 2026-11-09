@@ -486,20 +486,10 @@ export const CadreView: React.FC<CadreViewProps> = ({
       {/* MODE 1: PHÊ BÌNH (Student Picker & Bottom Sheet) */}
       {activeMode === 'record' && (
         <div className="space-y-3">
-          {/* Quick Notice Banner */}
-          <div className="p-3 rounded-2xl bg-surface border border-token flex items-center justify-between gap-3 shadow-xs">
-            <div className="text-xs text-muted flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-accent shrink-0" />
-              <span>
-                {cadreRole === 'TT' 
-                  ? `Chỉ có quyền phê bình cho thành viên Tổ ${viewerTo}. Các tổ khác bị khóa.`
-                  : 'Chạm vào học sinh để ghi lỗi vi phạm nhanh 2 bước.'}
-              </span>
-            </div>
-
-            {/* Fast Save Toggle */}
-            <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-muted select-none shrink-0">
-              <span>Lưu nhanh:</span>
+          {/* Fast Save Toggle */}
+          <div className="flex items-center justify-end px-1">
+            <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-muted hover:text-main select-none">
+              <span>Lưu nhanh 1 chạm:</span>
               <input
                 type="checkbox"
                 checked={fastSaveEnabled}

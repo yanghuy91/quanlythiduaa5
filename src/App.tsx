@@ -591,11 +591,6 @@ export default function App() {
     }
     setCurrentUser(null);
     setIsLoginModalOpen(true);
-    setToast({
-      id: Date.now().toString(),
-      message: 'Đã đăng xuất thành công 👋',
-      subMessage: 'Phiên đăng nhập đã kết thúc. Chọn học sinh hoặc giáo viên để đăng nhập lại.',
-    });
   };
 
   // Student login from modal
@@ -604,13 +599,6 @@ export default function App() {
     setCurrentUser(student);
     setCurrentRole(role);
     setIsLoginModalOpen(false);
-    setToast({
-      id: Date.now().toString(),
-      message: `Đăng nhập thành công: ${student.hoTen} 🎉`,
-      subMessage: remember 
-        ? 'Đã ghi nhớ đăng nhập trên thiết bị này cho lần sau.' 
-        : 'Phiên đăng nhập tạm thời (tự động xóa khi đóng tab).',
-    });
   };
 
   // Teacher login from modal (supports Google Profile)
