@@ -743,7 +743,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             <div 
               onClick={() => setActiveTab('roster')}
               className="p-3 sm:p-3.5 rounded-2xl bg-surface border border-token hover:border-accent/40 cursor-pointer transition-all shadow-2xs group"
-              title="Bấm để mở Sơ đồ lớp ghi nhận vi phạm"
+              title="Bấm để mở Sơ đồ lớp để Phê bình vi phạm"
             >
               <div className="text-[11px] text-muted font-medium flex items-center justify-between">
                 <span>Vi phạm trong kỳ</span>
@@ -1238,7 +1238,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                               type="button"
                               onClick={() => setInspectingStudent(item.student)}
                               className="text-xs font-bold text-main hover:text-accent truncate transition-colors text-left flex items-center gap-1 cursor-pointer"
-                              title="Bấm để xem lịch sử vi phạm & người ghi nhận"
+                              title="Bấm để xem lịch sử vi phạm & người phê bình"
                             >
                               <span>{item.student.hoTen}</span>
                               <Eye className="w-3 h-3 text-muted hover:text-accent shrink-0" />
@@ -1295,7 +1295,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                             type="button"
                             onClick={() => setInspectingStudent(item.student)}
                             className="text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1 rounded-xl border border-rose-500/25 flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-2xs"
-                            title="Bấm để xem chi tiết các lỗi vi phạm & cán sự ghi nhận"
+                            title="Bấm để xem chi tiết các lỗi vi phạm & cán sự phê bình"
                           >
                             <ShieldAlert className="w-3.5 h-3.5 text-rose-500" />
                             <span>-{item.deductions}đ</span>
@@ -1323,12 +1323,12 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                            item.xepLoai === 'Dat' ? 'Đạt' : 'Cần cố gắng'}
                         </span>
 
-                        {/* Nút Xem lỗi & Người ghi nhận */}
+                        {/* Nút Xem lỗi & Người phê bình */}
                         <button
                           type="button"
                           onClick={() => setInspectingStudent(item.student)}
                           className="px-2 py-1 rounded-lg bg-surface-2 hover:bg-surface-3 text-muted hover:text-main text-[11px] font-semibold transition-all cursor-pointer border border-token flex items-center gap-1 shadow-2xs"
-                          title="Xem chi tiết các lỗi vi phạm và ai đã ghi nhận"
+                          title="Xem chi tiết các lỗi vi phạm và ai đã phê bình"
                         >
                           <Eye className="w-3.5 h-3.5 text-accent" />
                           <span className="hidden md:inline">Xem lỗi</span>
@@ -1338,9 +1338,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                           type="button"
                           onClick={() => handleSelectStudent(item.student)}
                           className="px-2 py-1 rounded-lg bg-accent/15 hover:bg-accent text-accent hover:text-on-accent text-[11px] font-bold transition-all cursor-pointer shadow-xs"
-                          title="Ghi nhận nề nếp cho học sinh này"
+                          title="Phê bình nề nếp cho học sinh này"
                         >
-                          + Ghi nhận
+                          + Phê bình
                         </button>
                       </div>
                     </div>
@@ -1424,7 +1424,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         </div>
       )}
 
-      {/* 4. ROSTER & SEATING (TÍCH HỢP GHI NHẬN VI PHẠM TRỰC TIẾP TRÊN SƠ ĐỒ LỚP) */}
+      {/* 4. ROSTER & SEATING (TÍCH HỢP PHÊ BÌNH VI PHẠM TRỰC TIẾP TRÊN SƠ ĐỒ LỚP) */}
       {activeTab === 'roster' && (
         <div className="space-y-3">
           <div className="p-3.5 sm:p-4 rounded-2xl bg-surface border border-token shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -1434,7 +1434,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 <span>Sơ đồ lớp ({students.length} học sinh)</span>
               </h3>
               <p className="text-[11px] text-muted mt-0.5">
-                Bấm trực tiếp vào học sinh trên sơ đồ để mở bảng ghi vi phạm nề nếp thi đua
+                Bấm trực tiếp vào học sinh trên sơ đồ để Phê bình vi phạm nề nếp thi đua
               </p>
             </div>
 
@@ -1507,7 +1507,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 onClick={() => setIsBottomSheetOpen(true)}
                 className="px-4 py-2 rounded-xl bg-accent text-on-accent text-xs font-bold shadow-xs hover:opacity-95 transition-opacity cursor-pointer flex items-center gap-1.5"
               >
-                <span>Chọn hành vi để ghi vi phạm</span>
+                <span>Chọn hành vi để Phê bình vi phạm</span>
               </button>
             </div>
           )}
@@ -1764,7 +1764,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <span className="font-semibold text-main block">Thời hạn sửa / hủy của Ban cán sự:</span>
-                <span className="text-[11px] text-muted">Tính từ thời điểm ghi nhận</span>
+                <span className="text-[11px] text-muted">Tính từ thời điểm phê bình</span>
               </div>
               <span className="font-bold text-main px-2 py-1 rounded bg-surface-2 border border-token">
                 {settings.thoiHanSuaHuyPhut / 60} giờ
@@ -1828,7 +1828,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             <div className="flex items-center justify-between pt-2 border-t border-token">
               <div>
                 <span className="font-semibold text-[var(--st-bad)] block">Khoá khẩn cấp (Kill Switch):</span>
-                <span className="text-[11px] text-muted">Tạm ngưng mọi lệnh ghi nhận từ Ban cán sự</span>
+                <span className="text-[11px] text-muted">Tạm ngưng mọi lệnh phê bình từ Ban cán sự</span>
               </div>
               <input
                 type="checkbox"
@@ -1902,7 +1902,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       const text = await file.text();
                       const parsed = parseImportedJsonState(text);
                       if (parsed) {
-                        if (confirm(`Bạn có chắc muốn khôi phục dữ liệu từ file sao lưu (${parsed.students?.length || 0} học sinh, ${parsed.records?.length || 0} ghi nhận vi phạm)?`)) {
+                        if (confirm(`Bạn có chắc muốn khôi phục dữ liệu từ file sao lưu (${parsed.students?.length || 0} học sinh, ${parsed.records?.length || 0} phê bình vi phạm)?`)) {
                           await saveServerState(parsed);
                           window.location.reload();
                         }
@@ -1932,7 +1932,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-400 text-gray-900 tracking-wider uppercase">
-                    Google Gemini 2.5 Flash / Pro
+                    Google Gemini 3.0 / 3.8 Flash & Pro
                   </span>
                   <span className="text-xs text-white/80">Trợ Lý Thông Minh 10A5</span>
                 </div>
@@ -2213,21 +2213,48 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               </div>
 
               <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs text-muted">Mô hình AI:</span>
-                  <select
-                    value={geminiModel}
-                    onChange={async (e) => {
-                      const val = e.target.value;
-                      setLocalGeminiModel(val);
-                      setGeminiModel(val);
-                      await saveCloudGeminiKeys(keysPool, autoRotateKeys, val);
-                    }}
-                    className="px-2.5 py-1 bg-surface border border-token rounded-lg text-xs font-semibold text-main cursor-pointer"
-                  >
-                    <option value="gemini-2.5-flash">gemini-2.5-flash (Khuyên dùng: Siêu nhanh)</option>
-                    <option value="gemini-2.5-pro">gemini-2.5-pro (Suy luận sâu)</option>
-                  </select>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <select
+                      value={['gemini-3.0-flash', 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.0-pro', 'gemini-2.5-flash', 'gemini-2.5-pro'].includes(geminiModel) ? geminiModel : 'custom'}
+                      onChange={async (e) => {
+                        const val = e.target.value;
+                        if (val !== 'custom') {
+                          setLocalGeminiModel(val);
+                          setGeminiModel(val);
+                          await saveCloudGeminiKeys(keysPool, autoRotateKeys, val);
+                        } else {
+                          setLocalGeminiModel('gemini-3.0-flash');
+                          setGeminiModel('gemini-3.0-flash');
+                        }
+                      }}
+                      className="px-2.5 py-1 bg-surface border border-token rounded-lg text-xs font-semibold text-main cursor-pointer"
+                    >
+                      <option value="gemini-3.0-flash">gemini-3.0-flash (Khuyên dùng: Chuẩn 3.0 Siêu nhanh)</option>
+                      <option value="gemini-3.8-flash">gemini-3.8-flash (Mới nhất 3.8)</option>
+                      <option value="gemini-3.5-flash">gemini-3.5-flash (Bản 3.5)</option>
+                      <option value="gemini-3.0-pro">gemini-3.0-pro (Suy luận chuyên sâu 3.0)</option>
+                      <option value="gemini-2.5-flash">gemini-2.5-flash (Dự phòng)</option>
+                      <option value="gemini-2.5-pro">gemini-2.5-pro (Dự phòng)</option>
+                      <option value="custom">Nhập tên model khác...</option>
+                    </select>
+
+                    {!['gemini-3.0-flash', 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.0-pro', 'gemini-2.5-flash', 'gemini-2.5-pro'].includes(geminiModel) && (
+                      <input
+                        type="text"
+                        value={geminiModel}
+                        onChange={async (e) => {
+                          const val = e.target.value.trim();
+                          setLocalGeminiModel(val);
+                          setGeminiModel(val);
+                          await saveCloudGeminiKeys(keysPool, autoRotateKeys, val);
+                        }}
+                        placeholder="Ví dụ: gemini-3.0-flash"
+                        className="px-2 py-1 bg-surface border border-purple-400 rounded-lg text-xs text-main font-mono w-40"
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <button

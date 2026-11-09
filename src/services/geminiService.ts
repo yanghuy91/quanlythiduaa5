@@ -134,7 +134,7 @@ export const setGeminiAutoRotate = (enabled: boolean): void => {
 };
 
 export const getGeminiModel = (): string => {
-  return localStorage.getItem(STORAGE_KEY_MODEL) || 'gemini-2.5-flash';
+  return localStorage.getItem(STORAGE_KEY_MODEL) || 'gemini-3.0-flash';
 };
 
 export const setGeminiModel = (model: string): void => {

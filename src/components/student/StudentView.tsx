@@ -486,22 +486,6 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
   return (
     <div className="w-full flex flex-col gap-4 animate-fadeIn">
-      {/* Top Class Info Bar without cheesy slogans */}
-      <div className="px-4 py-2.5 rounded-2xl bg-surface border border-token flex items-center justify-between gap-2 shadow-xs">
-        <div className="flex items-center gap-2 text-xs font-bold text-main">
-          <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-          <span>Lớp 10A5 · THPT Số 2 Đức Phổ · Năm học {CURRENT_SCHOOL_YEAR}</span>
-        </div>
-        {isCadre && (
-          <button
-            onClick={() => setShowCadreModal(true)}
-            className="shrink-0 px-2.5 py-1 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-[11px] font-bold flex items-center gap-1 hover:bg-amber-500/25 transition-all cursor-pointer shadow-xs"
-          >
-            <span>👑 Ban cán sự</span>
-          </button>
-        )}
-      </div>
-
       {/* Role & Student Illustrated Banner */}
       <div className="relative overflow-hidden rounded-3xl border border-token shadow-xs bg-surface">
         <div className="relative h-28 sm:h-36 w-full overflow-hidden">
@@ -949,7 +933,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                           <div className="py-4 px-3 rounded-2xl bg-surface border border-token text-center">
                             <p className="text-xs text-[var(--st-ok)] font-semibold flex items-center justify-center gap-1.5">
                               <CheckCircle2 className="w-4 h-4 text-[var(--st-ok)]" />
-                              <span>Tuần {weekData.week} em chấp hành nề nếp xuất sắc, không có ghi nhận vi phạm nào!</span>
+                              <span>Tuần {weekData.week} em chấp hành nề nếp xuất sắc, không có phê bình vi phạm nào!</span>
                             </p>
                             <p className="text-[11px] text-muted mt-0.5">Điểm thi đua đạt mức tối đa 100/100 ⭐</p>
                           </div>

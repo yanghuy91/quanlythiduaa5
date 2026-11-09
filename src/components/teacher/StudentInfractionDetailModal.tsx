@@ -43,7 +43,7 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
   const [filterPeriod, setFilterPeriod] = useState<'all' | 'this_week' | 'hk1' | 'hk2'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'pending' | 'voided'>('all');
   const [voidConfirmId, setVoidConfirmId] = useState<string | null>(null);
-  const [voidReason, setVoidReason] = useState<string>('Giáo viên chủ nhiệm xem xét hủy ghi nhận');
+  const [voidReason, setVoidReason] = useState<string>('Giáo viên chủ nhiệm xem xét hủy phê bình');
 
   // Filter records belonging to this student
   const studentRecords = useMemo(() => {
@@ -125,7 +125,7 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
                 </span>
               </div>
               <p className="text-xs text-muted mt-0.5">
-                Sổ chi tiết vi phạm nề nếp · Tổng điểm bị trừ: <strong className="text-[var(--st-bad)] font-bold">-{totalDeductions}đ</strong> ({studentRecords.length} lần ghi nhận)
+                Sổ chi tiết vi phạm nề nếp · Tổng điểm bị trừ: <strong className="text-[var(--st-bad)] font-bold">-{totalDeductions}đ</strong> ({studentRecords.length} lần phê bình)
               </p>
             </div>
           </div>
@@ -263,7 +263,7 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
                   {/* Crucial Section: WHO RECORDED THIS VIOLATION (Role Color Badge) */}
                   <div className="mt-2.5 pt-2.5 border-t border-token/60 flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-xs font-semibold text-muted">Người ghi nhận:</span>
+                      <span className="text-xs font-semibold text-muted">Người phê bình:</span>
                       <RecorderBadge
                         vaiTro={rec.vaiTroNguoiGhi}
                         nguoiGhi={rec.nguoiGhi}
@@ -370,7 +370,7 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
               className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
             >
               <PlusCircle className="w-3.5 h-3.5" />
-              <span>Ghi thêm vi phạm cho học sinh này</span>
+              <span>Phê bình vi phạm cho học sinh này</span>
             </button>
           ) : (
             <div />

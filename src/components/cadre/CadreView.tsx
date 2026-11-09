@@ -439,7 +439,7 @@ export const CadreView: React.FC<CadreViewProps> = ({
           }`}
         >
           <ClipboardList className="w-3.5 h-3.5 text-accent" />
-          <span>Ghi nhận vi phạm</span>
+          <span>Phê bình vi phạm</span>
         </button>
 
         <button
@@ -475,7 +475,7 @@ export const CadreView: React.FC<CadreViewProps> = ({
             onClick={() => setActiveMode('record')}
             className="px-3.5 py-1.5 rounded-xl bg-surface hover:bg-surface-2 border border-token text-main text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 hover:border-accent"
           >
-            <span>← Quay lại Bàn ghi nhận</span>
+            <span>← Quay lại Bàn phê bình</span>
           </button>
           <span className="text-xs font-bold text-muted">
             {activeMode === 'my_log' ? 'Sổ nhật ký của tôi' : 'Hồ sơ thi đua cá nhân'}
@@ -483,7 +483,7 @@ export const CadreView: React.FC<CadreViewProps> = ({
         </div>
       )}
 
-      {/* MODE 1: GHI NHẬN (Student Picker & Bottom Sheet) */}
+      {/* MODE 1: PHÊ BÌNH (Student Picker & Bottom Sheet) */}
       {activeMode === 'record' && (
         <div className="space-y-3">
           {/* Quick Notice Banner */}
@@ -492,7 +492,7 @@ export const CadreView: React.FC<CadreViewProps> = ({
               <Sparkles className="w-4 h-4 text-accent shrink-0" />
               <span>
                 {cadreRole === 'TT' 
-                  ? `Chỉ có quyền ghi nhận cho thành viên Tổ ${viewerTo}. Các tổ khác bị khóa.`
+                  ? `Chỉ có quyền phê bình cho thành viên Tổ ${viewerTo}. Các tổ khác bị khóa.`
                   : 'Chạm vào học sinh để ghi lỗi vi phạm nhanh 2 bước.'}
               </span>
             </div>
@@ -558,7 +558,7 @@ export const CadreView: React.FC<CadreViewProps> = ({
             <div className="px-4 py-3.5 border-b border-token flex items-center justify-between">
               <div>
                 <h3 className="text-xs font-bold text-main uppercase tracking-wider">
-                  Sổ ghi nhận nề nếp của bạn
+                  Sổ phê bình nề nếp của bạn
                 </h3>
                 <p className="text-[11px] text-muted mt-0.5">
                   Có thể sửa hoặc hủy trong thời hạn 24 giờ kể từ thời điểm ghi
@@ -573,7 +573,7 @@ export const CadreView: React.FC<CadreViewProps> = ({
               {filteredMyRecords.length === 0 ? (
                 <div className="p-8 text-center text-xs text-muted space-y-2">
                   <CheckCircle2 className="w-8 h-8 text-[var(--st-ok)] mx-auto" />
-                  <p>Không có lượt ghi nhận nào trong khoảng thời gian đã chọn.</p>
+                  <p>Không có lượt phê bình nào trong khoảng thời gian đã chọn.</p>
                 </div>
               ) : (
                 filteredMyRecords.map(rec => {
@@ -739,7 +739,7 @@ export const CadreView: React.FC<CadreViewProps> = ({
             </div>
 
             <p className="text-xs text-muted">
-              Bạn đang hủy ghi nhận lỗi của <strong>{voidModalRecord.hoTen}</strong> ({voidModalRecord.tenHanhVi}).
+              Bạn đang hủy phê bình lỗi của <strong>{voidModalRecord.hoTen}</strong> ({voidModalRecord.tenHanhVi}).
             </p>
 
             <div>

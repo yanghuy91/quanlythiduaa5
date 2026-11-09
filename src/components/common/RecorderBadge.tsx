@@ -50,7 +50,7 @@ export const RecorderBadge: React.FC<RecorderBadgeProps> = ({
           backgroundColor: config.bg,
           borderColor: `${config.fg}35`,
         }}
-        title={`Người ghi nhận: ${nguoiGhi} (${config.label})`}
+        title={`Người phê bình: ${nguoiGhi} (${config.label})`}
       >
         <span>{icon}</span>
         <span className="font-extrabold">[{config.short}]</span>
@@ -67,7 +67,7 @@ export const RecorderBadge: React.FC<RecorderBadgeProps> = ({
         backgroundColor: config.bg,
         borderColor: `${config.fg}40`,
       }}
-      title={`Người ghi nhận vi phạm: ${nguoiGhi} - Vai trò: ${config.label}`}
+      title={`Người phê bình vi phạm: ${nguoiGhi} - Vai trò: ${config.label}`}
     >
       <span>{icon}</span>
       <span className="font-extrabold">{config.label}:</span>

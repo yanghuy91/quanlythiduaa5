@@ -122,7 +122,7 @@ export async function saveCloudGeminiKeys(keys: any[], autoRotate: boolean = tru
     await setDoc(docRef, {
       geminiKeys: keys,
       geminiAutoRotate: autoRotate,
-      geminiModel: activeModel || 'gemini-2.5-flash',
+      geminiModel: activeModel || 'gemini-3.0-flash',
       geminiUpdatedAt: new Date().toISOString(),
     }, { merge: true });
     return true;

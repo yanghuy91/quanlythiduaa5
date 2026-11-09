@@ -246,7 +246,7 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted hover:text-main hover:bg-surface-2 transition-colors cursor-pointer"
-            aria-label="Đóng bảng ghi nhận"
+            aria-label="Đóng bảng phê bình"
           >
             <X className="w-5 h-5" />
           </button>
@@ -369,7 +369,7 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
               {/* 4. Ngày học */}
               <div>
                 <label className="block text-[10px] font-bold text-muted mb-0.5 uppercase tracking-wide">
-                  Ngày ghi nhận
+                  Ngày phê bình
                 </label>
                 <input
                   type="date"
