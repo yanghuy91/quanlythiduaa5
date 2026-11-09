@@ -37,7 +37,7 @@ import {
   clearAuthSession 
 } from './utils/authService';
 import { getAcademicRecords, saveAcademicRecords } from './data/academicCatalog';
-import { getTeacherAvatar, setTeacherAvatar } from './data/teacherAvatars';
+import { getTeacherAvatar, setTeacherAvatar, resolveTeacherAvatar, DEFAULT_TEACHER_AVATAR } from './data/teacherAvatars';
 import { TeacherAvatarModal } from './components/teacher/TeacherAvatarModal';
 import { TeacherProfileModal } from './components/teacher/TeacherProfileModal';
 import { getTeacherProfile, saveTeacherProfile, TeacherProfile } from './data/teacherProfile';
@@ -135,7 +135,7 @@ export default function App() {
   
   // Teacher & Student Avatar state
   const [teacherAvatar, setTeacherAvatarState] = useState<string>(() => {
-    return getTeacherAvatar();
+    return resolveTeacherAvatar(getTeacherAvatar());
   });
   const [isTeacherAvatarModalOpen, setIsTeacherAvatarModalOpen] = useState(false);
   const [isStudentAvatarModalOpen, setIsStudentAvatarModalOpen] = useState(false);
@@ -155,7 +155,8 @@ export default function App() {
         return {
           ...session.user,
           hoTen: prof.hoTen,
-          statusText: prof.statusText
+          statusText: prof.statusText,
+          avatarUrl: resolveTeacherAvatar(session.user.avatarUrl || getTeacherAvatar()),
         };
       }
       return session.user;
@@ -175,11 +176,12 @@ export default function App() {
 
   // Teacher updates their avatar
   const handleUpdateTeacherAvatar = useCallback((newAvatarUrl: string) => {
-    setTeacherAvatarState(newAvatarUrl);
-    setTeacherAvatar(newAvatarUrl);
+    const resolved = resolveTeacherAvatar(newAvatarUrl);
+    setTeacherAvatarState(resolved);
+    setTeacherAvatar(resolved);
     setCurrentUser(prev => {
       if (prev && prev.vaiTro.includes('GV')) {
-        const updated = { ...prev, avatarUrl: newAvatarUrl };
+        const updated = { ...prev, avatarUrl: resolved };
         saveAuthSession(updated, 'GV', true);
         return updated;
       }
@@ -277,8 +279,10 @@ export default function App() {
             localStorage.setItem('app_rules_10a5', JSON.stringify(serverState.rules));
           }
           if (serverState.teacherAvatar) {
-            setTeacherAvatarState(serverState.teacherAvatar);
-            setTeacherAvatar(serverState.teacherAvatar);
+            const resolved = resolveTeacherAvatar(serverState.teacherAvatar);
+            setTeacherAvatarState(resolved);
+            setTeacherAvatar(resolved);
+            setCurrentUser(prev => prev && prev.vaiTro.includes('GV') ? { ...prev, avatarUrl: resolved } : prev);
           }
           if (serverState.studentBadgesMap || serverState.studentActiveBadges) {
             setAllStudentBadgesState(serverState.studentBadgesMap, serverState.studentActiveBadges);
@@ -337,8 +341,10 @@ export default function App() {
         localStorage.setItem('app_rules_10a5', JSON.stringify(cloudState.rules));
       }
       if (cloudState.teacherAvatar) {
-        setTeacherAvatarState(cloudState.teacherAvatar);
-        setTeacherAvatar(cloudState.teacherAvatar);
+        const resolved = resolveTeacherAvatar(cloudState.teacherAvatar);
+        setTeacherAvatarState(resolved);
+        setTeacherAvatar(resolved);
+        setCurrentUser(prev => prev && prev.vaiTro.includes('GV') ? { ...prev, avatarUrl: resolved } : prev);
       }
       if (cloudState.studentBadgesMap || cloudState.studentActiveBadges) {
         setAllStudentBadgesState(cloudState.studentBadgesMap, cloudState.studentActiveBadges);
@@ -354,12 +360,13 @@ export default function App() {
         if (isAuthorizedTeacherEmail(firebaseUser.email)) {
           const prof = getTeacherProfile();
           const effectiveName = prof.hoTen || firebaseUser.displayName || 'Thầy Dương Văn Huy';
+          const resolvedAvatar = resolveTeacherAvatar(teacherAvatar || firebaseUser.photoURL);
           const teacherUser = {
             hoTen: effectiveName,
             statusText: prof.statusText,
             email: firebaseUser.email,
             vaiTro: ['GV'] as RoleCode[],
-            avatarUrl: teacherAvatar || firebaseUser.photoURL,
+            avatarUrl: resolvedAvatar,
           };
           saveAuthSession(teacherUser, 'GV', true);
           setCurrentUser(teacherUser);
@@ -610,7 +617,7 @@ export default function App() {
   const handleLoginTeacher = (remember = true, teacherInfo?: { hoTen?: string; email?: string; avatarUrl?: string }) => {
     const prof = getTeacherProfile();
     const effectiveName = prof.hoTen || teacherInfo?.hoTen || 'Thầy Dương Văn Huy';
-    const effectiveAvatar = teacherAvatar || teacherInfo?.avatarUrl;
+    const effectiveAvatar = resolveTeacherAvatar(teacherAvatar || teacherInfo?.avatarUrl);
 
     const teacherUser = {
       hoTen: effectiveName,

@@ -11,7 +11,7 @@ import {
   Edit3
 } from 'lucide-react';
 import { TeacherProfile, saveTeacherProfile } from '../../data/teacherProfile';
-import { getTeacherAvatar } from '../../data/teacherAvatars';
+import { getTeacherAvatar, resolveTeacherAvatar, DEFAULT_TEACHER_AVATAR } from '../../data/teacherAvatars';
 
 interface TeacherProfileModalProps {
   isOpen: boolean;
@@ -55,7 +55,7 @@ export const TeacherProfileModal: React.FC<TeacherProfileModalProps> = ({
 
   if (!isOpen) return null;
 
-  const effectiveAvatarUrl = currentAvatarUrl || getTeacherAvatar();
+  const effectiveAvatarUrl = resolveTeacherAvatar(currentAvatarUrl || getTeacherAvatar());
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,6 +111,9 @@ export const TeacherProfileModal: React.FC<TeacherProfileModalProps> = ({
                 src={effectiveAvatarUrl}
                 alt={hoTen}
                 className="w-16 h-16 rounded-2xl object-cover border-2 border-token shadow-sm ring-2 ring-accent/30"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = DEFAULT_TEACHER_AVATAR;
+                }}
               />
               <button
                 type="button"

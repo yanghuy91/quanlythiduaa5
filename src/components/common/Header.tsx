@@ -16,6 +16,7 @@ import { Student, RoleCode } from '../../types';
 import { ROLE_CONFIG } from '../../data/mockData';
 import { getStudentAvatarInitial } from '../../utils/vietnamese';
 import { Logo10A5 } from './Logo10A5';
+import { resolveTeacherAvatar, DEFAULT_TEACHER_AVATAR } from '../../data/teacherAvatars';
 
 interface HeaderProps {
   currentUser: Student | { hoTen: string; vaiTro: RoleCode[]; avatarUrl?: string; statusText?: string } | null;
@@ -145,11 +146,16 @@ export const Header: React.FC<HeaderProps> = ({
                 className="relative w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full overflow-hidden border-2 border-token/80 bg-surface-2 flex items-center justify-center shrink-0 shadow-xs ring-1 ring-token group cursor-pointer hover:ring-2 hover:ring-accent transition-all active:scale-95"
                 title={`Bấm để đổi ảnh đại diện ${currentRole === 'GV' ? 'Giáo viên' : 'Học sinh'} (chọn từ kho ảnh hoặc tải ảnh lên)`}
               >
-                {'avatarUrl' in currentUser && (currentUser as Student).avatarUrl ? (
+                {'avatarUrl' in currentUser && (currentUser as any).avatarUrl ? (
                   <img
-                    src={(currentUser as Student).avatarUrl}
+                    src={currentRole === 'GV' ? resolveTeacherAvatar((currentUser as any).avatarUrl) : (currentUser as Student).avatarUrl}
                     alt={currentUser.hoTen}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      if (currentRole === 'GV') {
+                        (e.target as HTMLImageElement).src = DEFAULT_TEACHER_AVATAR;
+                      }
+                    }}
                   />
                 ) : (
                   <span className="text-xs font-black text-accent">

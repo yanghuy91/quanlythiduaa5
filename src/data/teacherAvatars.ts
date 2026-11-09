@@ -17,6 +17,8 @@ export interface TeacherAvatarPreset {
   src: string;
 }
 
+export const DEFAULT_TEACHER_AVATAR = gv3d01;
+
 export const TEACHER_AVATAR_PRESETS: TeacherAvatarPreset[] = [
   {
     id: 'gv_3d_young_modern',
@@ -90,7 +92,71 @@ export const TEACHER_AVATAR_PRESETS: TeacherAvatarPreset[] = [
   },
 ];
 
+export const TEACHER_AVATAR_PRESET_MAP: Record<string, string> = {
+  gv_3d_young_modern: gv3d01,
+  gv_3d_distinguished: gv3d02,
+  gv_3d_stem_tech: gv3d03,
+  gv_3d_humanities: gv3d04,
+  gv_3d_sports: gv3d05,
+  gv_3d_arts: gv3d06,
+  gv_3d_music: gv3d07,
+  gv_3d_math: gv3d08,
+  gv_3d_global: gv3d09,
+  gv_3d_female_aodai: gv3d10,
+};
+
 export const STORAGE_KEY_TEACHER_AVATAR = 'app_teacher_avatar_10a5';
+
+/**
+ * Robustly resolve any avatar URL, preset ID, or legacy path to the current valid 3D avatar asset
+ */
+export function resolveTeacherAvatar(savedUrl?: string | null): string {
+  if (!savedUrl || typeof savedUrl !== 'string' || savedUrl.trim().length === 0) {
+    return gv3d01;
+  }
+
+  const clean = savedUrl.trim();
+
+  // If user uploaded a custom Base64 image
+  if (clean.startsWith('data:image/')) {
+    return clean;
+  }
+
+  // If it directly matches a preset ID
+  if (TEACHER_AVATAR_PRESET_MAP[clean]) {
+    return TEACHER_AVATAR_PRESET_MAP[clean];
+  }
+
+  // If it matches 3D presets by keyword or filename (handles any Vite build hash)
+  if (clean.includes('gv_3d_01')) return gv3d01;
+  if (clean.includes('gv_3d_02')) return gv3d02;
+  if (clean.includes('gv_3d_03')) return gv3d03;
+  if (clean.includes('gv_3d_04')) return gv3d04;
+  if (clean.includes('gv_3d_05')) return gv3d05;
+  if (clean.includes('gv_3d_06')) return gv3d06;
+  if (clean.includes('gv_3d_07')) return gv3d07;
+  if (clean.includes('gv_3d_08')) return gv3d08;
+  if (clean.includes('gv_3d_09')) return gv3d09;
+  if (clean.includes('gv_3d_10')) return gv3d10;
+
+  // Legacy realistic teacher avatar migration -> fallback cleanly to modern 3D
+  if (clean.includes('gv_nam_01') || clean.includes('gv_nam_03')) return gv3d02;
+  if (clean.includes('gv_nam_02') || clean.includes('gv_nam_04') || clean.includes('gv_nam_')) return gv3d01;
+  if (clean.includes('gv_nu_')) return gv3d10;
+  if (clean.includes('thay_huy') || clean.includes('teacher_')) return gv3d01;
+
+  // Valid Google Photo URL
+  if (clean.startsWith('https://lh3.googleusercontent.com')) {
+    return clean;
+  }
+
+  // Check if it's already an active preset import URL
+  const exact = TEACHER_AVATAR_PRESETS.find(p => p.src === clean);
+  if (exact) return exact.src;
+
+  // Final fallback
+  return gv3d01;
+}
 
 /**
  * Lấy avatar hiện tại của giáo viên (từ localStorage hoặc mặc định thầy 3D trẻ trung)
@@ -98,11 +164,11 @@ export const STORAGE_KEY_TEACHER_AVATAR = 'app_teacher_avatar_10a5';
 export function getTeacherAvatar(): string {
   try {
     const saved = localStorage.getItem(STORAGE_KEY_TEACHER_AVATAR);
-    if (saved && saved.length > 5) return saved;
+    return resolveTeacherAvatar(saved);
   } catch (e) {
     console.error('Error reading teacher avatar:', e);
   }
-  return gv3d01; // Mặc định Thầy giáo 3D trẻ trung & hiện đại
+  return gv3d01;
 }
 
 /**
@@ -110,7 +176,14 @@ export function getTeacherAvatar(): string {
  */
 export function setTeacherAvatar(avatarUrl: string): void {
   try {
-    localStorage.setItem(STORAGE_KEY_TEACHER_AVATAR, avatarUrl);
+    const resolved = resolveTeacherAvatar(avatarUrl);
+    // Find preset ID to store stable ID instead of transient hashed bundle URLs
+    const preset = TEACHER_AVATAR_PRESETS.find(p => p.src === resolved || p.src === avatarUrl);
+    if (preset) {
+      localStorage.setItem(STORAGE_KEY_TEACHER_AVATAR, preset.id);
+    } else {
+      localStorage.setItem(STORAGE_KEY_TEACHER_AVATAR, avatarUrl);
+    }
   } catch (e) {
     console.error('Error saving teacher avatar:', e);
   }
