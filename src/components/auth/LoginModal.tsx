@@ -23,7 +23,8 @@ import {
   loginWithGoogleRedirect, 
   checkGoogleRedirectResult,
   isAuthorizedTeacherEmail,
-  logoutFirebase
+  logoutFirebase,
+  onFirebaseAuthStateChanged
 } from '../../services/firebase';
 
 interface LoginModalProps {
@@ -50,9 +51,21 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [errorMsg, setErrorMsg] = useState('');
   const [attempts, setAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
-  const [teacherLoginMode, setTeacherLoginMode] = useState(false);
+  const [teacherLoginMode, setTeacherLoginMode] = useState(() => {
+    return sessionStorage.getItem('active_login_tab') === 'teacher';
+  });
   const [teacherPassword, setTeacherPasswordInput] = useState('');
   const [showTeacherPassword, setShowTeacherPassword] = useState(false);
+
+  const handleToggleTeacherMode = (enable: boolean) => {
+    setTeacherLoginMode(enable);
+    setErrorMsg('');
+    if (enable) {
+      sessionStorage.setItem('active_login_tab', 'teacher');
+    } else {
+      sessionStorage.removeItem('active_login_tab');
+    }
+  };
 
   // Verify class code
   const handleVerifyClassCode = (e: React.FormEvent) => {
@@ -96,6 +109,26 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     }
   };
 
+  // Automatic Firebase Auth Listener in Modal
+  React.useEffect(() => {
+    const unsub = onFirebaseAuthStateChanged(async (user) => {
+      if (user && user.email) {
+        if (!isAuthorizedTeacherEmail(user.email)) {
+          await logoutFirebase();
+          setErrorMsg(`⛔ Tài khoản Google "${user.email}" không phải là tài khoản Giáo viên chủ nhiệm lớp 10A5. Chỉ tài khoản yanghuy91@gmail.com mới có quyền quản trị!`);
+          return;
+        }
+
+        onLoginTeacher(rememberLogin, {
+          hoTen: user.displayName || 'Thầy Huy (GVCN)',
+          email: user.email || undefined,
+          avatarUrl: user.photoURL || undefined,
+        });
+      }
+    });
+    return () => unsub();
+  }, [rememberLogin]);
+
   // Check if returning from Google Redirect
   React.useEffect(() => {
     let isMounted = true;
@@ -125,7 +158,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  // Teacher Google Login (Popup or Seamless Redirect)
+  // Teacher Google Login (Direct with explicit feedback)
   const handleTeacherGoogleLogin = async () => {
     try {
       setIsGoogleLoading(true);
@@ -148,16 +181,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     } catch (err: any) {
       console.error('[GoogleLogin] Error:', err);
       if (err.code === 'auth/popup-closed-by-user') {
-        // User voluntarily dismissed popup
+        setErrorMsg('Cửa sổ đăng nhập Google đã đóng. Thầy có thể bấm lại hoặc dùng nút [Vào nhanh] bên dưới.');
       } else if (err.code === 'auth/unauthorized-domain') {
-        setErrorMsg('Tên miền "thiduabc5.vercel.app" cần được thêm vào mục Authorized domains trong Firebase Console. Thầy/Cô có thể đăng nhập ngay bằng Mật khẩu Giáo viên bên dưới.');
+        setErrorMsg('Tên miền "thiduabc5.vercel.app" chưa được ủy quyền trong Firebase. Thầy hãy vào Firebase Console > Authentication > Settings > Authorized domains > thêm "thiduabc5.vercel.app". (Hoặc bấm "Vào nhanh quyền GV" bên dưới: gvcn10a5)');
+      } else if (err.code === 'auth/popup-blocked') {
+        setErrorMsg('Trình duyệt đang chặn cửa sổ Popup. Thầy có thể bấm nút "⚡ Vào nhanh quyền GV (Bỏ qua Google)" bên dưới để vào ngay lập tức!');
       } else {
-        // Seamless fallback to direct redirect
-        try {
-          await loginWithGoogleRedirect();
-        } catch (rErr) {
-          setErrorMsg('Chưa thể kết nối Google: Thầy/Cô có thể đăng nhập ngay bằng Mật khẩu Giáo viên bên dưới.');
-        }
+        setErrorMsg(`Thông báo đăng nhập Google: ${err.message || err.code || 'Chưa hoàn tất'}. Thầy có thể bấm nút "⚡ Vào nhanh quyền GV" bên dưới.`);
       }
     } finally {
       setIsGoogleLoading(false);
@@ -242,7 +272,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               </span>
               <button
                 type="button"
-                onClick={() => { setTeacherLoginMode(false); setErrorMsg(''); }}
+                onClick={() => handleToggleTeacherMode(false)}
                 className="text-xs underline font-bold cursor-pointer hover:opacity-80"
               >
                 Về học sinh
@@ -281,7 +311,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                     </svg>
-                    <span>Tiếp tục với Google</span>
+                    <span>Tiếp tục với Google (yanghuy91@gmail.com)</span>
                   </>
                 )}
               </button>
@@ -316,13 +346,28 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 </button>
               </div>
 
-              <button
-                type="submit"
-                className="w-full py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold hover:opacity-95 transition-opacity cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
-              >
-                <KeyRound className="w-3.5 h-3.5" />
-                <span>Đăng nhập quyền Giáo viên</span>
-              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  type="submit"
+                  className="w-full py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold hover:opacity-95 transition-opacity cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                >
+                  <KeyRound className="w-3.5 h-3.5" />
+                  <span>Đăng nhập mật khẩu</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    onLoginTeacher(rememberLogin, {
+                      hoTen: 'Thầy Huy (GVCN)',
+                      email: 'yanghuy91@gmail.com',
+                    });
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-accent text-on-accent text-xs font-bold hover:opacity-95 transition-opacity cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                >
+                  <span>⚡ Vào thẳng quản trị lớp</span>
+                </button>
+              </div>
             </form>
 
             {/* Remember Login for Teacher */}
@@ -481,7 +526,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <div className="pt-2 text-center border-t border-token">
               <button
                 type="button"
-                onClick={() => setTeacherLoginMode(true)}
+                onClick={() => handleToggleTeacherMode(true)}
                 className="text-xs font-semibold text-muted hover:text-accent transition-colors cursor-pointer"
               >
                 Dành cho Giáo viên chủ nhiệm &rarr;

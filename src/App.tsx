@@ -50,7 +50,12 @@ import {
   getAllStudentBadgesState, 
   setAllStudentBadgesState 
 } from './data/badgeCatalog';
-import { subscribeToCloudClassState, logoutFirebase } from './services/firebase';
+import { 
+  subscribeToCloudClassState, 
+  logoutFirebase, 
+  onFirebaseAuthStateChanged, 
+  isAuthorizedTeacherEmail 
+} from './services/firebase';
 
 export default function App() {
   // Theme state
@@ -300,6 +305,32 @@ export default function App() {
     });
     return () => unsubscribe();
   }, []);
+
+  // Realtime Firebase Auth listener: Automatically log in teacher on Google redirect or session restore
+  useEffect(() => {
+    const unsub = onFirebaseAuthStateChanged((firebaseUser) => {
+      if (firebaseUser && firebaseUser.email) {
+        if (isAuthorizedTeacherEmail(firebaseUser.email)) {
+          const teacherUser = {
+            hoTen: firebaseUser.displayName || 'Thầy Huy (GVCN)',
+            email: firebaseUser.email,
+            vaiTro: ['GV'] as RoleCode[],
+            avatarUrl: firebaseUser.photoURL || teacherAvatar,
+          };
+          saveAuthSession(teacherUser, 'GV', true);
+          setCurrentUser(teacherUser);
+          setCurrentRole('GV');
+          setIsLoginModalOpen(false);
+          setToast({
+            id: Date.now().toString(),
+            message: `Chào mừng Thầy Chủ nhiệm: ${teacherUser.hoTen} 🎓`,
+            subMessage: `Tài khoản ${firebaseUser.email} đã được xác thực thành công!`,
+          });
+        }
+      }
+    });
+    return () => unsub();
+  }, [teacherAvatar]);
 
   // Debounced auto-save to server on any modification
   const isInitialMount = useRef(true);
