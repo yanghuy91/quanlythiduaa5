@@ -705,8 +705,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-app text-main antialiased selection:bg-accent/20">
-      {/* Header */}
-      <Header
+      {/* Header (Rendered for Teacher & Cadre; For Students, the Banner is the Integrated Header) */}
+      {currentUser && currentRole !== 'HS' && (
+        <Header
         currentUser={currentUser}
         currentRole={currentRole}
         onLogout={handleLogout}
@@ -716,7 +717,8 @@ export default function App() {
         onOpenTeacherAvatar={() => setIsTeacherAvatarModalOpen(true)}
         onOpenTeacherProfile={() => setIsTeacherProfileModalOpen(true)}
         onOpenStudentAvatar={() => setIsStudentAvatarModalOpen(true)}
-      />
+        />
+      )}
 
       {/* Main Content Area */}
       <main className="flex-1 w-full max-w-6xl xl:max-w-7xl mx-auto px-3 sm:px-6 py-4">

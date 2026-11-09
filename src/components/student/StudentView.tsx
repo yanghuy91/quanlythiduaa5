@@ -42,6 +42,7 @@ import {
   HierarchyPeriodFilter,
   StudentAcademicRecord
 } from '../../types';
+import { Logo10A5 } from '../common/Logo10A5';
 import { StudentGradeCard } from '../grades/StudentGradeCard';
 import { SeatGrid } from '../student-picker/SeatGrid';
 import { CadreBadge } from '../common/CadreBadge';
@@ -76,6 +77,7 @@ interface StudentViewProps {
   onSubmitExplanation: (recordId: string, explanation: string) => void;
   onUpdateStudentAvatar?: (studentId: string, avatarUrl: string) => void;
   onLogout?: () => void;
+  onChangeCurrentWeek?: (week: number) => void;
 }
 
 export const StudentView: React.FC<StudentViewProps> = ({
@@ -90,6 +92,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
   onSubmitExplanation,
   onUpdateStudentAvatar,
   onLogout,
+  onChangeCurrentWeek,
 }) => {
   const [activeTab, setActiveTab] = useState<'my_score' | 'grades' | 'badges' | 'seating' | 'ranking'>('my_score');
 
@@ -101,6 +104,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
   const [showCadreModal, setShowCadreModal] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const [selectedBadgeCategory, setSelectedBadgeCategory] = useState<'all' | BadgeCategory>('all');
 
@@ -486,36 +490,94 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
   return (
     <div className="w-full flex flex-col gap-4 animate-fadeIn">
-      {/* Role & Student Illustrated Banner */}
-      <div className="relative overflow-hidden rounded-3xl border border-token shadow-xs bg-surface">
-        <div className="relative h-28 sm:h-36 w-full overflow-hidden">
+      {/* Integrated Banner Header (Replaces separate top header on mobile & desktop) */}
+      <div className="relative overflow-hidden rounded-3xl border border-token shadow-md bg-surface">
+        <div className="relative min-h-[145px] sm:min-h-[155px] w-full overflow-hidden flex flex-col justify-between p-3.5 sm:p-4">
           {studentBanner.imageSrc ? (
             <img
               src={studentBanner.imageSrc}
               alt={studentBanner.roleName}
-              className="w-full h-full object-cover object-center"
+              className="absolute inset-0 w-full h-full object-cover object-center"
             />
           ) : (
-            <div className={`w-full h-full bg-gradient-to-r ${studentBanner.gradientFallback}`} />
+            <div className={`absolute inset-0 w-full h-full bg-gradient-to-r ${studentBanner.gradientFallback}`} />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20" />
-          
-          <div className="absolute top-3 left-4 right-4 flex items-center justify-between">
-            <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border backdrop-blur-md ${studentBanner.accentBadge}`}>
-              {studentBanner.roleName}
-            </span>
-            <span className="text-[11px] font-bold text-white/90 drop-shadow-sm">
-              {studentBanner.subtitle}
-            </span>
+          {/* Deep dark gradient overlay ensures all text is crisp and never sunken */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/40" />
+
+          {/* Top Row: Logo, Title, Week Selector & Logout */}
+          <div className="relative z-10 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Logo10A5 size="sm" animate={false} />
+              <div className="flex flex-col min-w-0 leading-tight">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-sm sm:text-base font-black tracking-tight text-white drop-shadow-md">
+                    LỚP 10A5
+                  </span>
+                  <span className="text-white/60 text-xs hidden xs:inline">•</span>
+                  <span className="text-xs font-bold text-white/90 drop-shadow-xs hidden xs:inline">
+                    THPT Số 2 Đức Phổ
+                  </span>
+                </div>
+                <span className="text-[10px] text-white/80 font-medium drop-shadow-xs">
+                  Năm học 2026-2027
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* Interactive Week Capsule Selector */}
+              <div className="flex items-center gap-1 px-2 py-1 rounded-xl bg-black/50 hover:bg-black/70 border border-white/25 text-amber-300 font-extrabold text-[11px] shadow-xs backdrop-blur-md transition-all">
+                <Calendar className="w-3 h-3 text-amber-300 shrink-0" />
+                {onChangeCurrentWeek ? (
+                  <select
+                    value={currentWeek}
+                    onChange={e => onChangeCurrentWeek(Number(e.target.value))}
+                    className="bg-transparent text-white font-bold cursor-pointer focus:outline-none pr-0.5 text-[11px]"
+                    title="Chạm để chuyển tuần học"
+                  >
+                    {Array.from({ length: 38 }, (_, i) => i + 1).map(w => (
+                      <option key={w} value={w} className="bg-slate-900 text-white font-semibold">
+                        Tuần {w} {w <= 19 ? '(HK1)' : '(HK2)'}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span>Tuần {currentWeek}</span>
+                )}
+              </div>
+
+              {/* Quick Logout Button */}
+              {onLogout && (
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="px-2.5 py-1 rounded-xl bg-rose-500/50 hover:bg-rose-600/80 border border-rose-300/40 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md"
+                  title="Đăng xuất khỏi tài khoản"
+                >
+                  <LogOut className="w-3 h-3 text-rose-200" />
+                  <span>Thoát</span>
+                </button>
+              )}
+            </div>
           </div>
-          
-          <div className="absolute bottom-2.5 left-4 right-4 text-xs font-semibold text-white/90 italic drop-shadow-sm flex items-center justify-between gap-2">
-            <span>"{studentBanner.tagline}"</span>
+
+          {/* Bottom Row: Role Badge & Motto */}
+          <div className="relative z-10 pt-2 flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border backdrop-blur-md shadow-xs ${studentBanner.accentBadge}`}>
+                {studentBanner.roleName}
+              </span>
+              <span className="text-[11px] text-white/95 italic font-semibold drop-shadow-md">
+                "{studentBanner.tagline}"
+              </span>
+            </div>
+
             {isCadre && (
               <button
                 type="button"
                 onClick={() => setShowCadreModal(true)}
-                className="shrink-0 px-2.5 py-0.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-[10px] font-bold backdrop-blur-xs transition-all cursor-pointer"
+                className="shrink-0 px-2.5 py-0.5 rounded-xl bg-white/20 hover:bg-white/35 text-white text-[10px] font-bold backdrop-blur-md transition-all cursor-pointer border border-white/20 shadow-xs"
               >
                 👑 Vinh danh cán sự
               </button>
@@ -541,30 +603,30 @@ export const StudentView: React.FC<StudentViewProps> = ({
         </div>
       )}
 
-      {/* Student Nav Tabs */}
-      <div className="flex items-center justify-center p-1 bg-surface-2 rounded-2xl border border-token max-w-xl mx-auto w-full overflow-x-auto no-scrollbar">
+      {/* Student Nav Tabs - Ultra Compact 1-Line (No Wrapping, No Text Cutting) */}
+      <div className="flex items-center gap-1 p-1 bg-surface-2 rounded-2xl border border-token w-full max-w-xl mx-auto overflow-x-auto scrollbar-none justify-between">
         <button
           onClick={() => setActiveTab('my_score')}
-          className={`flex-1 min-w-[70px] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+          className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             activeTab === 'my_score' 
-              ? 'bg-surface text-main shadow-xs' 
+              ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black' 
               : 'text-muted hover:text-main'
           }`}
         >
-          <User className="w-3.5 h-3.5 text-accent" />
+          <User className="w-3.5 h-3.5 text-accent shrink-0" />
           <span>Của tôi</span>
         </button>
 
         <button
           onClick={() => setActiveTab('grades')}
-          className={`flex-1 min-w-[90px] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+          className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             activeTab === 'grades' 
-              ? 'bg-surface text-main shadow-xs font-black ring-1 ring-accent/30 text-accent' 
+              ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-accent' 
               : 'text-muted hover:text-main'
           }`}
           title="Xem bảng điểm các môn học (Toán, Văn, Anh...)"
         >
-          <GraduationCap className="w-3.5 h-3.5 text-accent" />
+          <GraduationCap className="w-3.5 h-3.5 text-accent shrink-0" />
           <span>Điểm môn</span>
           {!settings.choPhepXemDiemMon && (
             <Lock className="w-2.5 h-2.5 text-amber-500 shrink-0" />
@@ -573,37 +635,37 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
         <button
           onClick={() => setActiveTab('badges')}
-          className={`flex-1 min-w-[75px] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+          className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             activeTab === 'badges' 
-              ? 'bg-surface text-main shadow-xs' 
+              ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-amber-600 dark:text-amber-400' 
               : 'text-muted hover:text-main'
           }`}
         >
-          <Award className="w-3.5 h-3.5 text-amber-500" />
+          <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
           <span>Huy hiệu</span>
         </button>
 
         <button
           onClick={() => setActiveTab('seating')}
-          className={`flex-1 min-w-[75px] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+          className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             activeTab === 'seating' 
-              ? 'bg-surface text-main shadow-xs' 
+              ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-purple-600 dark:text-purple-400' 
               : 'text-muted hover:text-main'
           }`}
         >
-          <LayoutGrid className="w-3.5 h-3.5 text-accent" />
-          <span>Sơ đồ lớp</span>
+          <LayoutGrid className="w-3.5 h-3.5 text-accent shrink-0" />
+          <span>Sơ đồ</span>
         </button>
 
         <button
           onClick={() => setActiveTab('ranking')}
-          className={`flex-1 min-w-[85px] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+          className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             activeTab === 'ranking' 
-              ? 'bg-surface text-main shadow-xs' 
+              ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-emerald-600 dark:text-emerald-400' 
               : 'text-muted hover:text-main'
           }`}
         >
-          <Trophy className="w-3.5 h-3.5 text-accent" />
+          <Trophy className="w-3.5 h-3.5 text-accent shrink-0" />
           <span>Thi đua</span>
         </button>
       </div>
@@ -613,8 +675,8 @@ export const StudentView: React.FC<StudentViewProps> = ({
         <div className="space-y-4">
           {/* Main Score & Profile Card */}
           <div className="relative overflow-hidden p-4 sm:p-5 rounded-3xl bg-surface border border-token shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5 w-full sm:w-auto">
-              {/* Avatar with Custom Frame, Photo & Camera Upload Button */}
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              {/* Avatar with Custom Frame, Photo & Camera Upload Button - Enlarged on mobile */}
               <div className="relative shrink-0">
                 <AvatarFrame
                   frame={myFrame}
@@ -631,17 +693,20 @@ export const StudentView: React.FC<StudentViewProps> = ({
                       ? `TT_${currentStudent.to}`
                       : undefined
                   }
-                  size="lg"
+                  size="xl"
+                  className="w-20 h-20 sm:w-24 sm:h-24 cursor-pointer group"
                 >
                   {currentStudent.avatarUrl ? (
                     <img
                       src={currentStudent.avatarUrl}
                       alt={currentStudent.hoTen}
-                      className="w-full h-full object-cover rounded-full"
+                      className="w-full h-full object-cover rounded-full group-hover:scale-105 transition-transform"
+                      onClick={() => setShowAvatarModal(true)}
                     />
                   ) : (
                     <div
-                      className={`w-full h-full rounded-full flex items-center justify-center font-black text-lg ${
+                      onClick={() => setShowAvatarModal(true)}
+                      className={`w-full h-full rounded-full flex items-center justify-center font-black text-2xl ${
                         currentStudent.gioiTinh === 'Nu'
                           ? 'bg-rose-100 text-rose-700'
                           : 'bg-sky-100 text-sky-700'
@@ -656,16 +721,16 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowAvatarModal(true)}
-                  title="Tải ảnh đại diện của bạn"
-                  className="absolute -top-1 -right-1 z-20 p-1.5 rounded-full bg-slate-900/80 hover:bg-slate-900 text-white shadow-md transition-all cursor-pointer hover:scale-110 active:scale-95"
+                  title="Đổi ảnh đại diện"
+                  className="absolute -top-1 -right-1 z-20 p-1.5 sm:p-2 rounded-full bg-slate-900/85 hover:bg-slate-900 text-white shadow-md transition-all cursor-pointer hover:scale-110 active:scale-95"
                 >
                   <Camera className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-base sm:text-lg font-bold text-main leading-tight truncate">
+                  <h2 className="text-base sm:text-lg font-black text-main leading-tight truncate">
                     {currentStudent.hoTen}
                   </h2>
                   {cadreRole && (
@@ -694,50 +759,22 @@ export const StudentView: React.FC<StudentViewProps> = ({
                     </button>
                   )}
                 </div>
-                <p className="text-xs font-semibold text-muted mt-0.5">
-                  Tổ {currentStudent.to}
-                </p>
-                <div className="flex items-center gap-3 mt-1 flex-wrap">
+
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <span className="text-xs font-semibold text-muted">
+                    Tổ {currentStudent.to}
+                  </span>
+                  <span className="text-muted/40">•</span>
+                  {/* Unified Cài Đặt Button */}
                   <button
                     type="button"
-                    onClick={() => setShowAvatarModal(true)}
-                    className="text-[11px] font-bold text-accent hover:underline flex items-center gap-1 cursor-pointer"
+                    onClick={() => setShowSettingsModal(true)}
+                    className="px-2.5 py-1 rounded-xl bg-surface-2 hover:bg-surface-3 border border-token text-[11px] font-bold text-main transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs hover:border-accent active:scale-95"
+                    title="Cài đặt tài khoản: Đổi ảnh đại diện, đổi huy hiệu, đổi mật khẩu"
                   >
-                    <Camera className="w-3 h-3" />
-                    <span>Đổi ảnh đại diện</span>
+                    <Settings className="w-3 h-3 text-accent" />
+                    <span>Cài đặt tài khoản</span>
                   </button>
-                  <span className="text-muted opacity-40">·</span>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('badges')}
-                    className="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <Award className="w-3 h-3" />
-                    <span>{activeDisplayedBadge ? 'Đổi huy hiệu' : 'Chọn huy hiệu'}</span>
-                  </button>
-                  <span className="text-muted opacity-40">·</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowPasswordModal(true)}
-                    className="text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <KeyRound className="w-3 h-3" />
-                    <span>Đổi mật khẩu</span>
-                  </button>
-                  {onLogout && (
-                    <>
-                      <span className="text-muted opacity-40">·</span>
-                      <button
-                        type="button"
-                        onClick={onLogout}
-                        className="text-[11px] font-bold text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 cursor-pointer"
-                        title="Đăng xuất khỏi tài khoản"
-                      >
-                        <LogOut className="w-3 h-3" />
-                        <span>Đăng xuất</span>
-                      </button>
-                    </>
-                  )}
                 </div>
               </div>
             </div>
