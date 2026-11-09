@@ -185,11 +185,24 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       } else if (err.code === 'auth/unauthorized-domain') {
         setErrorMsg('Tên miền "thiduabc5.vercel.app" chưa được thêm vào Firebase. Thầy hãy vào Firebase Console > Authentication > Settings > Authorized domains > thêm "thiduabc5.vercel.app".');
       } else if (err.code === 'auth/popup-blocked') {
-        setErrorMsg('Trình duyệt đang chặn cửa sổ Popup Google. Thầy vui lòng bấm vào biểu tượng Popup trên thanh địa chỉ để Chọn "Luôn cho phép hiển thị cửa sổ bật lên".');
+        setErrorMsg('Trình duyệt Chrome đang chặn cửa sổ Popup Google. Thầy hãy bấm biểu tượng [x] trên góc phải thanh địa chỉ để Chọn "Luôn cho phép hiển thị cửa sổ bật lên", HOẶC bấm dòng chữ "Chuyển trang trực tiếp" ngay dưới nút Google.');
       } else {
         setErrorMsg(`Lỗi kết nối Google (${err.code || 'unknown'}): ${err.message || 'Vui lòng thử lại.'}`);
       }
     } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  // Direct Google Redirect flow (100% immune to popup blockers)
+  const handleTeacherGoogleRedirect = async () => {
+    try {
+      setIsGoogleLoading(true);
+      setErrorMsg('');
+      await loginWithGoogleRedirect();
+    } catch (err: any) {
+      console.error('[GoogleRedirect] Error:', err);
+      setErrorMsg(`Lỗi chuyển trang Google: ${err.message || err.code}`);
       setIsGoogleLoading(false);
     }
   };
@@ -315,6 +328,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   </>
                 )}
               </button>
+
+              <div className="text-center pt-0.5">
+                <button
+                  type="button"
+                  onClick={handleTeacherGoogleRedirect}
+                  className="text-[11px] text-muted hover:text-accent underline cursor-pointer"
+                >
+                  Hoặc bấm vào đây để Chuyển trang trực tiếp sang Google (Nếu bị chặn Popup) &rarr;
+                </button>
+              </div>
             </div>
 
             {/* Divider */}
