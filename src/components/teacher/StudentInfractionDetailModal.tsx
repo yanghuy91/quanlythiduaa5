@@ -17,6 +17,7 @@ import { RecorderBadge } from '../common/RecorderBadge';
 import { AvatarFrame } from '../common/AvatarFrame';
 import { getFrameById } from '../../data/frameData';
 import { resolveStudentAvatar } from '../../data/avatarPresets';
+import { isRecordMatchingStudent, parseRecordPoints } from '../../utils/emulation';
 
 interface StudentInfractionDetailModalProps {
   isOpen: boolean;
@@ -36,7 +37,7 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
   student,
   records,
   summary,
-  currentWeek = 11,
+  currentWeek = 3,
   onAddRecordForStudent,
   onResolveExplanation,
   onVoidRecord,
@@ -46,19 +47,19 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
   const [voidConfirmId, setVoidConfirmId] = useState<string | null>(null);
   const [voidReason, setVoidReason] = useState<string>('Giáo viên chủ nhiệm xem xét hủy ghi nhận');
 
-  // Filter records belonging to this student
+  // Filter records belonging to this student (by maHS or hoTen)
   const studentRecords = useMemo(() => {
     if (!student) return [];
-    return records.filter(r => r.maHS === student.maHS);
+    return records.filter(r => isRecordMatchingStudent(r, student.maHS, student.hoTen));
   }, [student, records]);
 
   // Apply sub-filters
   const displayedRecords = useMemo(() => {
     return studentRecords.filter(r => {
       // Period filter
-      if (filterPeriod === 'this_week' && r.tuanHoc !== currentWeek) return false;
-      if (filterPeriod === 'hk1' && r.hocKi !== 1) return false;
-      if (filterPeriod === 'hk2' && r.hocKi !== 2) return false;
+      if (filterPeriod === 'this_week' && Number(r.tuanHoc) !== Number(currentWeek)) return false;
+      if (filterPeriod === 'hk1' && Number(r.hocKi || (Number(r.tuanHoc) <= 19 ? 1 : 2)) !== 1) return false;
+      if (filterPeriod === 'hk2' && Number(r.hocKi || (Number(r.tuanHoc) <= 19 ? 1 : 2)) !== 2) return false;
 
       // Status filter
       if (filterStatus === 'active' && r.trangThai !== 'HieuLuc') return false;
@@ -73,10 +74,23 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
 
   const frameId = student.customFrameId || student.activeFrameId;
   const frameConfig = frameId ? getFrameById(frameId) : undefined;
-  const currentScore = summary ? summary.diemHienTai : 100;
-  const totalDeductions = studentRecords
-    .filter(r => r.trangThai === 'HieuLuc' && r.loaiDiem === 'Tru')
-    .reduce((sum, r) => sum + r.diemSo, 0);
+
+  const effectiveDisplayed = displayedRecords.filter(
+    r => r.trangThai !== 'DaHuy' && r.trangThai !== 'DaChapNhan'
+  );
+  let totalDeductions = 0;
+  let totalBonuses = 0;
+  effectiveDisplayed.forEach(r => {
+    const { isBonus, points } = parseRecordPoints(r);
+    if (!isBonus) totalDeductions += points;
+    else totalBonuses += points;
+  });
+
+  const baseScore = summary?.diemKhoiDau ?? 100;
+  const isNoScoreWeek = filterPeriod === 'this_week' && summary?.chuaCoDiem;
+  const currentScore = isNoScoreWeek
+    ? baseScore
+    : Math.max(0, baseScore - totalDeductions + totalBonuses);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/75 animate-fade-in">
@@ -117,17 +131,23 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
                 <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-surface text-main border border-token shadow-2xs">
                   Tổ {student.to}
                 </span>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  currentScore >= 90 ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)]' :
-                  currentScore >= 75 ? 'bg-accent/15 text-accent' :
-                  currentScore >= 60 ? 'bg-[var(--st-warn)]/15 text-[var(--st-warn)]' :
-                  'bg-[var(--st-bad)]/15 text-[var(--st-bad)]'
-                }`}>
-                  {currentScore}đ · {currentScore >= 90 ? 'Tốt' : currentScore >= 75 ? 'Khá' : currentScore >= 60 ? 'Đạt' : 'Cần cố gắng'}
-                </span>
+                {isNoScoreWeek ? (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-500/15 text-slate-600">
+                    Chưa có điểm
+                  </span>
+                ) : (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    currentScore >= 90 ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)]' :
+                    currentScore >= 75 ? 'bg-accent/15 text-accent' :
+                    currentScore >= 60 ? 'bg-[var(--st-warn)]/15 text-[var(--st-warn)]' :
+                    'bg-[var(--st-bad)]/15 text-[var(--st-bad)]'
+                  }`}>
+                    {currentScore}đ · {currentScore >= 90 ? 'Tốt' : currentScore >= 75 ? 'Khá' : currentScore >= 60 ? 'Đạt' : 'Cần cố gắng'}
+                  </span>
+                )}
               </div>
               <p className="text-xs text-muted mt-0.5">
-                Sổ chi tiết vi phạm nề nếp · Tổng điểm bị trừ: <strong className="text-[var(--st-bad)] font-bold">-{totalDeductions}đ</strong> ({studentRecords.length} lần ghi nhận)
+                Sổ chi tiết vi phạm nề nếp · Tổng điểm bị trừ: <strong className="text-[var(--st-bad)] font-bold">-{totalDeductions}đ</strong> ({displayedRecords.length} lần ghi nhận)
               </p>
             </div>
           </div>

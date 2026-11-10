@@ -111,9 +111,10 @@ export const TimeDataImportCard: React.FC<TimeDataImportCardProps> = ({
 
         const isValid = isDateValid && !!matchedStudent && !!tenHanhVi;
 
+        const todayStr = new Date().toISOString().split('T')[0];
         rows.push({
           id: `row-${index}`,
-          ngayHoc: isDateValid ? ngayHoc : '2026-11-09',
+          ngayHoc: isDateValid ? ngayHoc : todayStr,
           buoi,
           tuanHoc,
           maHS: matchedStudent?.maHS || 'HS01',
@@ -168,7 +169,7 @@ export const TimeDataImportCard: React.FC<TimeDataImportCardProps> = ({
         ngayHoc: row.ngayHoc,
         buoi: row.buoi,
         tuanHoc: row.tuanHoc,
-        thang: parseInt(row.ngayHoc.split('-')[1], 10) || 11,
+        thang: parseInt(row.ngayHoc.split('-')[1], 10) || (new Date().getMonth() + 1),
         hocKi: (row.tuanHoc <= 19 ? 1 : 2) as 1 | 2,
         namHoc: '2026-2027',
         maNoiQuy: row.loaiDiem === 'Cong' ? 'NQ26' : 'NQ01',
@@ -178,7 +179,7 @@ export const TimeDataImportCard: React.FC<TimeDataImportCardProps> = ({
         diemSo: row.diemSo,
         loaiDiem: row.loaiDiem,
         ghiChu: row.ghiChu ? `[Nhập file ${fileName}] ${row.ghiChu}` : `[Nhập file ${fileName}]`,
-        nguoiGhi: 'Trần Văn Bình (GVCN)',
+        nguoiGhi: 'GVCN',
         vaiTroNguoiGhi: 'GV',
         nguonGhi: 'NhapTep',
         lanThuTrongBuoi: 1,

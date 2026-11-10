@@ -50,6 +50,8 @@ interface UniversalSmartImportSectionProps {
   records: DisciplineRecord[];
   rules: RuleItem[];
   settings: TeacherSettings;
+  currentWeek?: number;
+  teacherName?: string;
   academicRecords?: StudentAcademicRecord[];
   onUpdateStudentsAndLayout: (newStudents: Student[], newLayout: SeatLayoutNode[], isReplace: boolean) => void;
   onAddRecords: (newRecords: DisciplineRecord[]) => void;
@@ -244,6 +246,8 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
   records,
   rules,
   settings,
+  currentWeek = 3,
+  teacherName,
   academicRecords = [],
   onUpdateStudentsAndLayout,
   onAddRecords,
@@ -498,7 +502,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
           const rawBuoi = colBuoi !== -1 ? normalizeHeader(row[colBuoi]) : 'sang';
           const buoi: 'Sang' | 'Chieu' = rawBuoi.includes('chieu') ? 'Chieu' : 'Sang';
 
-          const tuanHoc = colTuan !== -1 && Number(row[colTuan]) > 0 ? Number(row[colTuan]) : 10;
+          const tuanHoc = colTuan !== -1 && Number(row[colTuan]) > 0 ? Number(row[colTuan]) : currentWeek;
           const toNum =
             colTo !== -1 && Number(row[colTo]) >= 1 && Number(row[colTo]) <= 4
               ? Number(row[colTo])
@@ -507,7 +511,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
           const rawLoai = colLoaiDiem !== -1 ? normalizeHeader(row[colLoaiDiem]) : '';
           const rawScoreNum = colSoDiem !== -1 ? Number(row[colSoDiem]) : 2;
           const loaiDiem: 'Tru' | 'Cong' =
-            rawLoai.includes('cong') || rawLoai.includes('+') || rawScoreNum > 0 && rawLoai.includes('thuong')
+            rawLoai.includes('cong') || rawLoai.includes('+') || (rawScoreNum > 0 && rawLoai.includes('thuong'))
               ? 'Cong'
               : 'Tru';
           const diemSo = Math.abs(rawScoreNum) || 2;
@@ -523,8 +527,8 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
             thoiGianMayChu: new Date().toISOString(),
             thoiGianMay: new Date().toISOString(),
             namHoc: '2026-2027',
-            hocKi: 1,
-            thang: Number(ngayHoc.split('-')[1]) || 11,
+            hocKi: tuanHoc <= 19 ? 1 : 2,
+            thang: Number(ngayHoc.split('-')[1]) || (new Date().getMonth() + 1),
             tuanHoc,
             ngayHoc,
             buoi,
@@ -539,7 +543,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
             diemSo,
             loaiDiem,
             ghiChu: colGhiChu !== -1 && row[colGhiChu] ? String(row[colGhiChu]).trim() : undefined,
-            nguoiGhi: 'Giáo viên chủ nhiệm',
+            nguoiGhi: teacherName ? `${teacherName} (GVCN)` : 'GVCN',
             vaiTroNguoiGhi: 'GV',
             nguonGhi: 'NhapTep',
             lanThuTrongBuoi: 1,

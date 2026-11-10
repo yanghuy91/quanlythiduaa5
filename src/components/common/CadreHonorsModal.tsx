@@ -1,19 +1,62 @@
 import React from 'react';
-import { X, Award, Shield, Sparkles, User, MapPin } from 'lucide-react';
-import { Student } from '../../types';
+import { X, ShieldCheck, Sparkles, MapPin, Check, KeyRound } from 'lucide-react';
+import { Student, CadreDelegatedPermission } from '../../types';
 import { CADRE_ROLES_INFO } from '../../data/badgeData';
 import { getCadreBanner } from '../../data/cadreBanners';
+
+export const CADRE_DELEGATED_PERMISSION_LIST: Array<{
+  id: CadreDelegatedPermission;
+  label: string;
+  shortDesc: string;
+}> = [
+  {
+    id: 'CHAM_CA_LOP',
+    label: 'Chấm thi đua cả 4 tổ',
+    shortDesc: 'Mở khóa ghi nhận vi phạm & điểm cộng cho toàn bộ học sinh 4 tổ',
+  },
+  {
+    id: 'DUYET_GIAI_TRINH',
+    label: 'Duyệt giải trình',
+    shortDesc: 'Chấp nhận hoặc từ chối đơn giải trình của học sinh thay GVCN',
+  },
+  {
+    id: 'HUY_MOI_GHI_NHAN',
+    label: 'Hủy ghi nhận bất kỳ',
+    shortDesc: 'Được phép hủy bản ghi vi phạm nhầm lẫn của bất kỳ thành viên nào',
+  },
+  {
+    id: 'QUAN_LY_TUAN',
+    label: 'Quản lý tuần & tuần nghỉ',
+    shortDesc: 'Đổi tuần hiện tại và đánh dấu tuần không có dữ liệu',
+  },
+  {
+    id: 'QUAN_LY_VINH_DANH',
+    label: 'Trao huy hiệu & Cờ đỏ',
+    shortDesc: 'Chọn Học sinh xuất sắc / Cờ đỏ tuần để vinh danh trên bảng lớp',
+  },
+  {
+    id: 'GOI_TEN_TRO_CHOI',
+    label: '10 Trò chơi gọi tên',
+    shortDesc: 'Mở bộ 10 trò chơi tương tác gọi tên ngẫu nhiên trên lớp',
+  },
+];
 
 interface CadreHonorsModalProps {
   isOpen: boolean;
   onClose: () => void;
   students: Student[];
+  isTeacher?: boolean;
+  delegatedPermissions?: Record<string, CadreDelegatedPermission[]>;
+  onTogglePermission?: (studentId: string, perm: CadreDelegatedPermission) => void;
 }
 
 export const CadreHonorsModal: React.FC<CadreHonorsModalProps> = ({
   isOpen,
   onClose,
   students,
+  isTeacher = false,
+  delegatedPermissions = {},
+  onTogglePermission,
 }) => {
   if (!isOpen) return null;
 
@@ -39,7 +82,7 @@ export const CadreHonorsModal: React.FC<CadreHonorsModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
       <div 
-        className="w-full max-w-2xl bg-surface border border-token rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-up"
+        className="w-full max-w-3xl bg-surface border border-token rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-up"
         onClick={e => e.stopPropagation()}
       >
         {/* Header with Leadership Crest Visual */}
@@ -54,15 +97,21 @@ export const CadreHonorsModal: React.FC<CadreHonorsModalProps> = ({
               />
             </div>
             <div>
-              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>VINH DANH BAN CÁN SỰ LỚP (DO GVCN TRAO)</span>
+                <span>
+                  {isTeacher
+                    ? 'VINH DANH & PHÂN QUYỀN BAN CÁN SỰ LỚP (DÀNH CHO GVCN)'
+                    : 'VINH DANH BAN CÁN SỰ LỚP (DO GVCN TRAO)'}
+                </span>
               </div>
               <h3 className="text-base sm:text-lg font-extrabold text-main leading-tight mt-0.5">
                 Đội Ngũ Đầu Tàu Thi Đua ⭐
               </h3>
               <p className="text-xs text-muted mt-0.5">
-                Danh hiệu danh dự do Giáo viên chủ nhiệm trao tặng · THPT Số 2 Đức Phổ · Năm học 2026-2027
+                {isTeacher
+                  ? 'GVCN có thể ủy quyền từng chức năng quản lý của mình cho bất kỳ thành viên Ban cán sự nào bên dưới'
+                  : 'Danh hiệu danh dự do Giáo viên chủ nhiệm trao tặng · THPT Số 2 Đức Phổ · Năm học 2026-2027'}
               </p>
             </div>
           </div>
@@ -86,6 +135,7 @@ export const CadreHonorsModal: React.FC<CadreHonorsModalProps> = ({
               const displayTitle = primaryRole === 'TT' && student.toTruongTo
                 ? `Tổ trưởng Tổ ${student.toTruongTo}`
                 : info.title;
+              const grantedPerms = delegatedPermissions[student.maHS] || [];
 
               return (
                 <div
@@ -141,6 +191,12 @@ export const CadreHonorsModal: React.FC<CadreHonorsModalProps> = ({
                             <MapPin className="w-3 h-3 text-accent" />
                             <span>Tổ {student.to}</span>
                           </span>
+                          {grantedPerms.length > 0 && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 font-bold text-[10px]">
+                              <ShieldCheck className="w-3 h-3" />
+                              +{grantedPerms.length} quyền GVCN
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -153,6 +209,48 @@ export const CadreHonorsModal: React.FC<CadreHonorsModalProps> = ({
                         <strong className="text-main">Trách nhiệm:</strong> {info.duty}
                       </div>
                     </div>
+
+                    {/* Delegated Permissions Section */}
+                    {(isTeacher || grantedPerms.length > 0) && (
+                      <div className="pt-2 border-t border-token/70 space-y-1.5">
+                        <div className="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-muted">
+                          <span className="flex items-center gap-1 text-main">
+                            <KeyRound className="w-3 h-3 text-amber-500" />
+                            {isTeacher ? 'Phân quyền đặc biệt của GVCN:' : 'Quyền được GVCN ủy nhiệm:'}
+                          </span>
+                          {isTeacher && (
+                            <span className="text-[9px] font-semibold text-accent">Bấm để bật/tắt</span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap gap-1.5">
+                          {CADRE_DELEGATED_PERMISSION_LIST.map(perm => {
+                            const isGranted = grantedPerms.includes(perm.id);
+                            if (!isTeacher && !isGranted) return null;
+
+                            return (
+                              <button
+                                key={perm.id}
+                                type="button"
+                                disabled={!isTeacher || !onTogglePermission}
+                                onClick={() => onTogglePermission && onTogglePermission(student.maHS, perm.id)}
+                                title={perm.shortDesc}
+                                className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+                                  isTeacher ? 'cursor-pointer active:scale-95' : 'cursor-default'
+                                } ${
+                                  isGranted
+                                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-800 shadow-2xs'
+                                    : 'bg-surface-2 border-token text-muted hover:text-main hover:border-accent/40'
+                                }`}
+                              >
+                                {isGranted && <Check className="w-3 h-3 text-emerald-600 shrink-0" />}
+                                <span>{perm.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

@@ -41,18 +41,19 @@ import {
   RuleItem, 
   StudentWeekSummary, 
   TeacherSettings,
-  StudentAcademicRecord
+  StudentAcademicRecord,
+  CadreDelegatedPermission
 } from '../../types';
 import { TeacherGradeManager } from '../grades/TeacherGradeManager';
 import { getAcademicRecords, saveAcademicRecords } from '../../data/academicCatalog';
 import { StudentPicker } from '../student-picker/StudentPicker';
 import { RecordBottomSheet } from '../record/RecordBottomSheet';
 import { DuplicateWarningModal } from '../record/DuplicateWarningModal';
-import { checkDuplicateRecord, calculateDenseRankings } from '../../utils/emulation';
+import { checkDuplicateRecord, calculateDenseRankings, isRecordMatchingStudent } from '../../utils/emulation';
 import { ClassroomLayoutEditor } from './ClassroomLayoutEditor';
 import { CadreHonorsModal } from '../common/CadreHonorsModal';
 import { PeriodHierarchyFilter as PeriodFilterComponent } from '../common/PeriodHierarchyFilter';
-import { filterRecordsByHierarchy, calculateStudentPeriodSummary, CURRENT_SCHOOL_YEAR } from '../../utils/hierarchy';
+import { filterRecordsByHierarchy, calculateStudentPeriodSummary, getSemesterFromWeek, CURRENT_SCHOOL_YEAR } from '../../utils/hierarchy';
 import { HierarchyPeriodFilter } from '../../types';
 import { Move, Trophy, Award, Sparkles as SparklesIcon, Dices, Crown, ArrowUpDown, Search, Filter, X, LayoutGrid, ListFilter } from 'lucide-react';
 import { CallingGamesHub } from './calling-games/CallingGamesHub';
@@ -243,12 +244,45 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   // Time hierarchy filter
   const [periodFilter, setPeriodFilter] = useState<HierarchyPeriodFilter>({
     namHoc: CURRENT_SCHOOL_YEAR,
-    hocKi: 1,
+    hocKi: getSemesterFromWeek(currentWeek),
     thang: 'all',
     tuanHoc: currentWeek,
     ngayHoc: 'all',
     buoi: 'all',
   });
+
+  // Sync periodFilter when currentWeek changes (e.g. after Firebase cloud hydration or week selector)
+  React.useEffect(() => {
+    setPeriodFilter(prev => ({
+      ...prev,
+      hocKi: getSemesterFromWeek(currentWeek),
+      tuanHoc: currentWeek,
+    }));
+  }, [currentWeek]);
+
+  // Toggle No-Data Week (Tuần không có dữ liệu)
+  const handleToggleNoDataWeek = (week: number) => {
+    const currentNoData = settings.noDataWeeks || [];
+    const nextNoData = currentNoData.includes(week)
+      ? currentNoData.filter(w => w !== week)
+      : [...currentNoData, week].sort((a, b) => a - b);
+    onUpdateSettings({ noDataWeeks: nextNoData });
+  };
+
+  // Toggle Cadre Delegated Permission (Phân quyền GV cho Ban cán sự)
+  const handleToggleCadrePermission = (studentId: string, perm: CadreDelegatedPermission) => {
+    const currentMap = settings.cadreDelegatedPermissions || {};
+    const currentPerms = currentMap[studentId] || [];
+    const nextPerms = currentPerms.includes(perm)
+      ? currentPerms.filter(p => p !== perm)
+      : [...currentPerms, perm];
+    onUpdateSettings({
+      cadreDelegatedPermissions: {
+        ...currentMap,
+        [studentId]: nextPerms,
+      },
+    });
+  };
 
   // Record flow state
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
@@ -280,7 +314,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   // Today's records
   const todayRecords = useMemo(() => {
-    const todayStr = '2026-11-09'; // demo date
+    const todayStr = new Date().toISOString().split('T')[0];
     return records.filter(r => r.ngayHoc === todayStr && r.trangThai !== 'DaHuy');
   }, [records]);
 
@@ -288,7 +322,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const attentionStudents = useMemo(() => {
     return students.filter(s => {
       const summary = studentSummaries[s.maHS];
-      return summary && (summary.mucMau === 'bad' || summary.mucMau === 'warn');
+      return summary && !summary.chuaCoDiem && (summary.mucMau === 'bad' || summary.mucMau === 'warn');
     });
   }, [students, studentSummaries]);
 
@@ -304,10 +338,10 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const teacherPeriodSummaries = useMemo(() => {
     const map: Record<string, ReturnType<typeof calculateStudentPeriodSummary>> = {};
     students.forEach(st => {
-      map[st.maHS] = calculateStudentPeriodSummary(st, records, periodFilter, settings);
+      map[st.maHS] = calculateStudentPeriodSummary(st, records, periodFilter, settings, currentWeek);
     });
     return map;
-  }, [students, records, periodFilter, settings]);
+  }, [students, records, periodFilter, settings, currentWeek]);
 
   // Official Emulation Rankings (Thuật toán xếp hạng chuẩn: cùng điểm thì cùng xếp hạng)
   const teacherOfficialRankings = useMemo(() => {
@@ -324,6 +358,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         xepLoai: summary.xepLoai,
         deductions: summary.tongDiemTru,
         bonuses: summary.tongDiemCong,
+        chuaCoDiem: summary.chuaCoDiem,
+        lyDoChuaCoDiem: summary.lyDoChuaCoDiem,
       };
     });
 
@@ -497,7 +533,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         diemSo: rule.diemSo,
         loaiDiem: rule.loaiDiem,
         ghiChu: note,
-        nguoiGhi: 'Trần Văn Bình (GVCN)',
+        nguoiGhi: `${internalTeacherProfile.hoTen || 'Giáo viên'} (GVCN)`,
         vaiTroNguoiGhi: 'GV',
         nguonGhi: 'TrucTiep',
         lanThuTrongBuoi: dupCheck.lanThu,
@@ -823,6 +859,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             onChangeFilter={setPeriodFilter}
             currentWeek={currentWeek}
             onChangeCurrentWeek={onChangeCurrentWeek}
+            noDataWeeks={settings.noDataWeeks || []}
+            onToggleNoDataWeek={handleToggleNoDataWeek}
             compact={true}
           />
 
@@ -1204,7 +1242,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     rankLabel = `${idx + 1}`;
                   }
 
-                  const studentViolations = records.filter(r => r.maHS === item.student.maHS && r.trangThai === 'HieuLuc');
+                  const studentViolations = records.filter(r => isRecordMatchingStudent(r, item.student.maHS, item.student.hoTen) && r.trangThai === 'HieuLuc');
 
                   return (
                     <div
@@ -1336,20 +1374,32 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                           </span>
                         )}
 
-                        <span className="text-xs font-black tabular-nums text-main">
-                          {item.score} đ
-                        </span>
+                        {item.chuaCoDiem ? (
+                          <span className={`text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border ${
+                            item.lyDoChuaCoDiem === 'no_data'
+                              ? 'bg-amber-50 text-amber-800 border-amber-300 border-dashed'
+                              : 'bg-slate-100 text-slate-600 border-slate-300 border-dashed'
+                          }`}>
+                            {item.lyDoChuaCoDiem === 'no_data' ? '⊘ Tuần không có dữ liệu' : '⏳ Chưa có điểm'}
+                          </span>
+                        ) : (
+                          <>
+                            <span className="text-xs font-black tabular-nums text-main">
+                              {item.score} đ
+                            </span>
 
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          item.xepLoai === 'Tot' ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)]' :
-                          item.xepLoai === 'Kha' ? 'bg-accent/15 text-accent' :
-                          item.xepLoai === 'Dat' ? 'bg-[var(--st-warn)]/15 text-[var(--st-warn)]' :
-                          'bg-[var(--st-bad)]/15 text-[var(--st-bad)]'
-                        }`}>
-                          {item.xepLoai === 'Tot' ? 'Tốt' :
-                           item.xepLoai === 'Kha' ? 'Khá' :
-                           item.xepLoai === 'Dat' ? 'Đạt' : 'Cần cố gắng'}
-                        </span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              item.xepLoai === 'Tot' ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)]' :
+                              item.xepLoai === 'Kha' ? 'bg-accent/15 text-accent' :
+                              item.xepLoai === 'Dat' ? 'bg-[var(--st-warn)]/15 text-[var(--st-warn)]' :
+                              'bg-[var(--st-bad)]/15 text-[var(--st-bad)]'
+                            }`}>
+                              {item.xepLoai === 'Tot' ? 'Tốt' :
+                               item.xepLoai === 'Kha' ? 'Khá' :
+                               item.xepLoai === 'Dat' ? 'Đạt' : 'Cần cố gắng'}
+                            </span>
+                          </>
+                        )}
 
                         {/* Nút Xem lỗi & Người ghi nhận */}
                         <button
@@ -1638,6 +1688,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           rules={rules}
           records={records}
           settings={settings}
+          currentWeek={currentWeek}
+          teacherName={internalTeacherProfile.hoTen}
           academicRecords={internalAcademicRecords}
           onUpdateStudentsAndLayout={(newStudents, newLayout, isReplace) => {
             if (onImportStudents) {
@@ -1648,7 +1700,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           }}
           onAddRecords={(newRecs) => {
             if (onImportRecords) {
-              onImportRecords([...newRecs, ...records]);
+              onImportRecords(newRecs);
             }
           }}
           onUpdateAcademicRecords={handleUpdateAcademicRecords}
@@ -2768,6 +2820,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         isOpen={showCadreModal}
         onClose={() => setShowCadreModal(false)}
         students={students}
+        isTeacher={true}
+        delegatedPermissions={settings.cadreDelegatedPermissions || {}}
+        onTogglePermission={handleToggleCadrePermission}
       />
 
       {/* 30 Badges Management Modal */}

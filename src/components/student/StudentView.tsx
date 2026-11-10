@@ -45,7 +45,8 @@ import {
   HierarchyPeriodFilter,
   StudentAcademicRecord,
   RoleCode,
-  RuleItem
+  RuleItem,
+  CadreDelegatedPermission
 } from '../../types';
 import { Logo10A5 } from '../common/Logo10A5';
 import { StudentGradeCard } from '../grades/StudentGradeCard';
@@ -54,10 +55,11 @@ import { StudentPicker } from '../student-picker/StudentPicker';
 import { RecordBottomSheet } from '../record/RecordBottomSheet';
 import { DuplicateWarningModal } from '../record/DuplicateWarningModal';
 import { PeriodHierarchyFilter as PeriodFilterComponent } from '../common/PeriodHierarchyFilter';
-import { checkDuplicateRecord, calculateDenseRankings } from '../../utils/emulation';
+import { checkDuplicateRecord, calculateDenseRankings, isRecordMatchingStudent, parseRecordPoints } from '../../utils/emulation';
 import { CadreBadge } from '../common/CadreBadge';
-import { CadreHonorsModal } from '../common/CadreHonorsModal';
-import { filterRecordsByHierarchy, calculateStudentPeriodSummary, CURRENT_SCHOOL_YEAR } from '../../utils/hierarchy';
+import { CadreHonorsModal, CADRE_DELEGATED_PERMISSION_LIST } from '../common/CadreHonorsModal';
+import { BadgeManagementModal } from '../teacher/BadgeManagementModal';
+import { filterRecordsByHierarchy, calculateStudentPeriodSummary, getSemesterFromWeek, CURRENT_SCHOOL_YEAR } from '../../utils/hierarchy';
 import { 
   AchievementBadge, 
   BadgeCategory, 
@@ -93,6 +95,9 @@ interface StudentViewProps {
   onUpdateStudentAvatar?: (studentId: string, avatarUrl: string) => void;
   onLogout?: () => void;
   onChangeCurrentWeek?: (week: number) => void;
+  onUpdateSettings?: (newSettings: Partial<TeacherSettings>) => void;
+  onResolveExplanation?: (recordId: string, result: 'ChapNhan' | 'TuChoi', reason: string) => void;
+  onOpenCallingGames?: () => void;
 }
 
 export const StudentView: React.FC<StudentViewProps> = ({
@@ -112,18 +117,41 @@ export const StudentView: React.FC<StudentViewProps> = ({
   onUpdateStudentAvatar,
   onLogout,
   onChangeCurrentWeek,
+  onUpdateSettings,
+  onResolveExplanation,
+  onOpenCallingGames,
 }) => {
   const primaryCadreRole = cadreRole || currentStudent.vaiTro.find(r => r !== 'HS') || 'HS';
   const isCadre = primaryCadreRole !== 'HS';
 
+  // Delegated Teacher permissions for this Cadre
+  const myDelegatedPermissions = useMemo<CadreDelegatedPermission[]>(() => {
+    return settings.cadreDelegatedPermissions?.[currentStudent.maHS] || [];
+  }, [settings.cadreDelegatedPermissions, currentStudent.maHS]);
+
+  const hasDelegatedPerm = (perm: CadreDelegatedPermission) => myDelegatedPermissions.includes(perm);
+
+  const [showDelegatedBadgeModal, setShowDelegatedBadgeModal] = useState(false);
+  const [showDelegatedExplanationsModal, setShowDelegatedExplanationsModal] = useState(false);
+
   const [activeTab, setActiveTab] = useState<'my_score' | 'grades' | 'badges' | 'seating' | 'ranking' | 'record' | 'my_log'>('my_score');
 
-  // Quyền chuyển tuần hiện tại: Chỉ có Lớp trưởng (LT), Bí thư (BT), Lớp phó học tập (LP_HT)
+  // Quyền chuyển tuần hiện tại: Lớp trưởng (LT), Bí thư (BT), Lớp phó học tập (LP_HT) hoặc được GV ủy quyền QUAN_LY_TUAN
   const canChangeCurrentWeek = useMemo(() => {
     return currentStudent.vaiTro.some(r => r === 'LT' || r === 'BT' || r === 'LP_HT') ||
-      primaryCadreRole === 'LT' || primaryCadreRole === 'BT' || primaryCadreRole === 'LP_HT';
-  }, [currentStudent.vaiTro, primaryCadreRole]);
+      primaryCadreRole === 'LT' || primaryCadreRole === 'BT' || primaryCadreRole === 'LP_HT' ||
+      myDelegatedPermissions.includes('QUAN_LY_TUAN');
+  }, [currentStudent.vaiTro, primaryCadreRole, myDelegatedPermissions]);
   const [pendingWeekChange, setPendingWeekChange] = useState<number | null>(null);
+
+  const handleToggleNoDataWeek = (week: number) => {
+    if (!onUpdateSettings) return;
+    const currentNoData = settings.noDataWeeks || [];
+    const nextNoData = currentNoData.includes(week)
+      ? currentNoData.filter(w => w !== week)
+      : [...currentNoData, week].sort((a, b) => a - b);
+    onUpdateSettings({ noDataWeeks: nextNoData });
+  };
 
   // Cadre specific state
   const [fastSaveEnabled, setFastSaveEnabled] = useState(false);
@@ -140,12 +168,20 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
   const [logPeriodFilter, setLogPeriodFilter] = useState<HierarchyPeriodFilter>({
     namHoc: CURRENT_SCHOOL_YEAR,
-    hocKi: 1,
+    hocKi: getSemesterFromWeek(currentWeek),
     thang: 'all',
     tuanHoc: currentWeek,
     ngayHoc: 'all',
     buoi: 'all',
   });
+
+  useEffect(() => {
+    setLogPeriodFilter(prev => ({
+      ...prev,
+      hocKi: getSemesterFromWeek(currentWeek),
+      tuanHoc: currentWeek,
+    }));
+  }, [currentWeek]);
 
   const selectedStudents = useMemo(() => {
     return allStudents.filter(s => selectedStudentIds.includes(s.maHS));
@@ -155,8 +191,11 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
   const filteredMyRecords = useMemo(() => {
     const list = filterRecordsByHierarchy(records, logPeriodFilter);
+    if (myDelegatedPermissions.includes('HUY_MOI_GHI_NHAN')) {
+      return list;
+    }
     return list.filter(r => r.nguoiGhi === currentStudent.hoTen);
-  }, [records, logPeriodFilter, currentStudent.hoTen]);
+  }, [records, logPeriodFilter, currentStudent.hoTen, myDelegatedPermissions]);
 
   const handleSelectStudent = (student: Student) => {
     if (isMultiSelect) {
@@ -349,12 +388,20 @@ export const StudentView: React.FC<StudentViewProps> = ({
   // Time hierarchy filter state: Năm học -> Học kì -> Tuần -> Buổi (Bỏ qua tháng)
   const [periodFilter, setPeriodFilter] = useState<HierarchyPeriodFilter>({
     namHoc: CURRENT_SCHOOL_YEAR,
-    hocKi: 1,
+    hocKi: getSemesterFromWeek(currentWeek),
     thang: 'all',
     tuanHoc: currentWeek,
     ngayHoc: 'all',
     buoi: 'all',
   });
+
+  useEffect(() => {
+    setPeriodFilter(prev => ({
+      ...prev,
+      hocKi: getSemesterFromWeek(currentWeek),
+      tuanHoc: currentWeek,
+    }));
+  }, [currentWeek]);
 
   // Filtered records based on hierarchy filter
   const filteredRecords = useMemo(() => {
@@ -365,10 +412,10 @@ export const StudentView: React.FC<StudentViewProps> = ({
   const studentPeriodSummaries = useMemo(() => {
     const map: Record<string, ReturnType<typeof calculateStudentPeriodSummary>> = {};
     allStudents.forEach(st => {
-      map[st.maHS] = calculateStudentPeriodSummary(st, records, periodFilter, settings);
+      map[st.maHS] = calculateStudentPeriodSummary(st, records, periodFilter, settings, currentWeek);
     });
     return map;
-  }, [allStudents, records, periodFilter, settings]);
+  }, [allStudents, records, periodFilter, settings, currentWeek]);
 
   const myPeriodSummary = studentPeriodSummaries[currentStudent.maHS] || {
     diemTrungBinh: settings.diemKhoiDau,
@@ -394,16 +441,16 @@ export const StudentView: React.FC<StudentViewProps> = ({
   // My personal records in filtered period
   const myRecords = useMemo(() => {
     return filteredRecords
-      .filter(r => r.maHS === currentStudent.maHS && r.trangThai !== 'DaHuy')
+      .filter(r => isRecordMatchingStudent(r, currentStudent.maHS, currentStudent.hoTen) && r.trangThai !== 'DaHuy')
       .sort((a, b) => new Date(b.thoiGianMayChu).getTime() - new Date(a.thoiGianMayChu).getTime());
-  }, [filteredRecords, currentStudent.maHS]);
+  }, [filteredRecords, currentStudent.maHS, currentStudent.hoTen]);
 
-  // 4 rows: Current week and 3 immediately adjacent weeks
+  // Recent weeks up to currentWeek (never include future weeks w > currentWeek)
   const fourRecentWeeks = useMemo(() => {
     const list: { week: number; isCurrent: boolean; label: string; offset: number }[] = [];
-    if (currentWeek >= 4) {
-      for (let i = 0; i < 4; i++) {
-        const w = currentWeek - i;
+    for (let i = 0; i < 4; i++) {
+      const w = currentWeek - i;
+      if (w >= 1) {
         list.push({
           week: w,
           isCurrent: i === 0,
@@ -411,19 +458,6 @@ export const StudentView: React.FC<StudentViewProps> = ({
           label: i === 0 ? 'Tuần này (Hiện tại)' : `${i} tuần trước`,
         });
       }
-    } else {
-      const order: number[] = [currentWeek];
-      for (let w = currentWeek - 1; w >= 1; w--) order.push(w);
-      for (let w = currentWeek + 1; order.length < 4 && w <= 38; w++) order.push(w);
-      order.slice(0, 4).forEach((w) => {
-        const diff = currentWeek - w;
-        list.push({
-          week: w,
-          isCurrent: w === currentWeek,
-          offset: diff,
-          label: w === currentWeek ? 'Tuần này (Hiện tại)' : diff > 0 ? `${diff} tuần trước` : `Tuần ${w}`,
-        });
-      });
     }
     return list;
   }, [currentWeek]);
@@ -493,19 +527,31 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
   // Pre-calculate weekly stats for each of the 4 rows
   const fourWeeksData = useMemo(() => {
+    const noDataWeeks = settings.noDataWeeks || [];
     return fourRecentWeeks.map(item => {
+      const isNoData = noDataWeeks.includes(item.week);
+      const isFuture = item.week > currentWeek;
+      const chuaCoDiem = isNoData || isFuture;
+
       const wRecords = records
-        .filter(r => r.maHS === currentStudent.maHS && r.tuanHoc === item.week && r.trangThai !== 'DaHuy')
+        .filter(r => isRecordMatchingStudent(r, currentStudent.maHS, currentStudent.hoTen) && Number(r.tuanHoc) === Number(item.week) && r.trangThai !== 'DaHuy')
         .sort((a, b) => new Date(b.thoiGianMayChu).getTime() - new Date(a.thoiGianMayChu).getTime());
 
       const effectiveRecords = wRecords.filter(r => r.trangThai !== 'DaChapNhan');
-      const tongTru = effectiveRecords
-        .filter(r => r.loaiDiem === 'Tru')
-        .reduce((sum, r) => sum + r.diemSo, 0);
-      const tongCong = settings.batDiemCong
-        ? effectiveRecords.filter(r => r.loaiDiem === 'Cong').reduce((sum, r) => sum + r.diemSo, 0)
-        : 0;
-      const soLoi = effectiveRecords.filter(r => r.loaiDiem === 'Tru').length;
+      let tongTru = 0;
+      let tongCong = 0;
+      let soLoi = 0;
+
+      effectiveRecords.forEach(r => {
+        const parsed = parseRecordPoints(r);
+        if (!parsed.isBonus) {
+          tongTru += parsed.points;
+          soLoi += 1;
+        } else if (settings.batDiemCong) {
+          tongCong += parsed.points;
+        }
+      });
+
       const score = Math.max(0, settings.diemKhoiDau - tongTru + tongCong);
 
       let xepLoai: 'Tot' | 'Kha' | 'Dat' | 'CanCoGang' = 'Tot';
@@ -523,9 +569,11 @@ export const StudentView: React.FC<StudentViewProps> = ({
         soLoi,
         score,
         xepLoai,
+        chuaCoDiem,
+        isNoData,
       };
     });
-  }, [fourRecentWeeks, records, currentStudent.maHS, settings]);
+  }, [fourRecentWeeks, records, currentStudent.maHS, currentStudent.hoTen, settings, currentWeek]);
 
   // Compute Unlocked Badges for current student from the 30-badge catalog
   const myBadges = useMemo(() => {
@@ -580,6 +628,8 @@ export const StudentView: React.FC<StudentViewProps> = ({
         xepLoai: summary.xepLoai,
         deductions: summary.tongDiemTru,
         bonuses: summary.tongDiemCong,
+        chuaCoDiem: summary.chuaCoDiem,
+        lyDoChuaCoDiem: summary.lyDoChuaCoDiem,
       };
     });
 
@@ -1037,6 +1087,72 @@ export const StudentView: React.FC<StudentViewProps> = ({
         </div>
       )}
 
+      {/* Delegated Teacher Permissions Action Bar for Cadres */}
+      {isCadre && myDelegatedPermissions.length > 0 && (
+        <div className="p-2.5 sm:p-3 rounded-2xl bg-indigo-50/90 border border-indigo-200 flex items-center justify-between flex-wrap gap-2 shadow-2xs">
+          <div className="flex items-center gap-1.5 text-xs font-extrabold text-indigo-900">
+            <Shield className="w-4 h-4 text-indigo-600 shrink-0" />
+            <span>Quyền GVCN ủy nhiệm:</span>
+          </div>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {myDelegatedPermissions.map(permKey => {
+              const meta = CADRE_DELEGATED_PERMISSION_LIST.find(p => p.id === permKey);
+              if (!meta) return null;
+              if (permKey === 'DUYET_GIAI_TRINH') {
+                const pendingCount = records.filter(r => r.trangThai === 'ChoDuyet').length;
+                return (
+                  <button
+                    key={permKey}
+                    type="button"
+                    onClick={() => setShowDelegatedExplanationsModal(true)}
+                    className="px-2.5 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs transition-all"
+                  >
+                    <span>✅</span>
+                    <span>Duyệt giải trình ({pendingCount})</span>
+                  </button>
+                );
+              }
+              if (permKey === 'QUAN_LY_VINH_DANH') {
+                return (
+                  <button
+                    key={permKey}
+                    type="button"
+                    onClick={() => setShowDelegatedBadgeModal(true)}
+                    className="px-2.5 py-1 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs transition-all"
+                  >
+                    <span>🏅</span>
+                    <span>Trao huy hiệu lớp</span>
+                  </button>
+                );
+              }
+              if (permKey === 'GOI_TEN_TRO_CHOI' && onOpenCallingGames) {
+                return (
+                  <button
+                    key={permKey}
+                    type="button"
+                    onClick={onOpenCallingGames}
+                    className="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs transition-all"
+                  >
+                    <span>🎲</span>
+                    <span>Mở trò chơi gọi tên</span>
+                  </button>
+                );
+              }
+              return (
+                <span
+                  key={permKey}
+                  className="px-2.5 py-1 rounded-xl bg-white border border-indigo-200 text-indigo-800 text-[11px] font-bold inline-flex items-center gap-1"
+                  title={meta.shortDesc}
+                >
+                  <span>⚡</span>
+                  <span>{meta.label}</span>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* TAB 1: CỦA TÔI */}
       {activeTab === 'my_score' && (
         <div className="space-y-4">
@@ -1155,24 +1271,32 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 <div className="text-[11px] text-muted font-medium">
                   {periodFilter.tuanHoc !== 'all' ? `Điểm tuần ${periodFilter.tuanHoc}` : 'Điểm trung bình'}
                 </div>
-                <div className="text-2xl sm:text-3xl font-extrabold tabular-nums text-main leading-none mt-1">
-                  {myPeriodSummary.diemTrungBinh} <span className="text-xs font-normal text-muted">/ 100</span>
-                </div>
+                {myPeriodSummary.chuaCoDiem ? (
+                  <div className="text-sm sm:text-base font-extrabold text-amber-700 leading-none mt-1.5">
+                    {myPeriodSummary.lyDoChuaCoDiem === 'no_data' ? '⊘ Không có dữ liệu' : '⏳ Chưa có điểm'}
+                  </div>
+                ) : (
+                  <div className="text-2xl sm:text-3xl font-extrabold tabular-nums text-main leading-none mt-1">
+                    {myPeriodSummary.diemTrungBinh} <span className="text-xs font-normal text-muted">/ 100</span>
+                  </div>
+                )}
               </div>
 
-              <div className={`px-3 py-1.5 rounded-2xl text-xs font-extrabold shadow-xs ${
-                myPeriodSummary.xepLoai === 'Tot' 
-                  ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)] border border-[var(--st-ok)]/30'
-                  : myPeriodSummary.xepLoai === 'Kha'
-                  ? 'bg-accent/15 text-accent border border-accent/30'
-                  : myPeriodSummary.xepLoai === 'Dat'
-                  ? 'bg-[var(--st-warn)]/15 text-[var(--st-warn)] border border-[var(--st-warn)]/30'
-                  : 'bg-[var(--st-bad)]/15 text-[var(--st-bad)] border border-[var(--st-bad)]/30'
-              }`}>
-                {myPeriodSummary.xepLoai === 'Tot' ? '🌟 Loại Tốt' :
-                 myPeriodSummary.xepLoai === 'Kha' ? '🚀 Loại Khá' :
-                 myPeriodSummary.xepLoai === 'Dat' ? '⚠️ Loại Đạt' : '❗ Cần cố gắng'}
-              </div>
+              {!myPeriodSummary.chuaCoDiem && (
+                <div className={`px-3 py-1.5 rounded-2xl text-xs font-extrabold shadow-xs ${
+                  myPeriodSummary.xepLoai === 'Tot' 
+                    ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)] border border-[var(--st-ok)]/30'
+                    : myPeriodSummary.xepLoai === 'Kha'
+                    ? 'bg-accent/15 text-accent border border-accent/30'
+                    : myPeriodSummary.xepLoai === 'Dat'
+                    ? 'bg-[var(--st-warn)]/15 text-[var(--st-warn)] border border-[var(--st-warn)]/30'
+                    : 'bg-[var(--st-bad)]/15 text-[var(--st-bad)] border border-[var(--st-bad)]/30'
+                }`}>
+                  {myPeriodSummary.xepLoai === 'Tot' ? '🌟 Loại Tốt' :
+                   myPeriodSummary.xepLoai === 'Kha' ? '🚀 Loại Khá' :
+                   myPeriodSummary.xepLoai === 'Dat' ? '⚠️ Loại Đạt' : '❗ Cần cố gắng'}
+                </div>
+              )}
             </div>
           </div>
 
@@ -1253,7 +1377,11 @@ export const StudentView: React.FC<StudentViewProps> = ({
                           </div>
 
                           <div className="text-[11px] text-muted flex items-center gap-2 mt-0.5 flex-wrap">
-                            {weekData.records.length === 0 ? (
+                            {weekData.isNoData ? (
+                              <span className="text-amber-700 font-semibold flex items-center gap-1">
+                                ⊘ Tuần không có dữ liệu (Nghỉ lễ / Không tính điểm)
+                              </span>
+                            ) : weekData.records.length === 0 ? (
                               <span className="text-[var(--st-ok)] font-medium flex items-center gap-1">
                                 <Check className="w-3 h-3" /> Chưa có ghi nhận vi phạm
                               </span>
@@ -1270,17 +1398,23 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
                       {/* Right: Score, Rating & Expand Toggle */}
                       <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
-                        <div className="text-right">
-                          <div className="text-sm sm:text-base font-black tabular-nums text-main leading-tight">
-                            {weekData.score}
-                            <span className="text-[10px] font-normal text-muted ml-0.5">/100đ</span>
+                        {weekData.chuaCoDiem ? (
+                          <span className="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 border border-dashed border-amber-300">
+                            {weekData.isNoData ? '⊘ Không có dữ liệu' : '⏳ Chưa có điểm'}
+                          </span>
+                        ) : (
+                          <div className="text-right">
+                            <div className="text-sm sm:text-base font-black tabular-nums text-main leading-tight">
+                              {weekData.score}
+                              <span className="text-[10px] font-normal text-muted ml-0.5">/100đ</span>
+                            </div>
+                            <div className="hidden sm:block mt-0.5">
+                              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md border ${ratingBadge.cls}`}>
+                                {ratingBadge.text}
+                              </span>
+                            </div>
                           </div>
-                          <div className="hidden sm:block mt-0.5">
-                            <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md border ${ratingBadge.cls}`}>
-                              {ratingBadge.text}
-                            </span>
-                          </div>
-                        </div>
+                        )}
 
                         <div className={`p-1.5 rounded-xl border border-token transition-colors ${
                           isExpanded ? 'bg-surface-2 text-main' : 'bg-surface text-muted hover:text-main'
@@ -1392,7 +1526,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
             selectedStudentIds={selectedStudentIds}
             onSelectStudent={handleSelectStudent}
             viewerRole={primaryCadreRole}
-            viewerTo={primaryCadreRole === 'TT' ? (currentStudent.toTruongTo || currentStudent.to) : undefined}
+            viewerTo={primaryCadreRole === 'TT' && !hasDelegatedPerm('CHAM_CA_LOP') ? (currentStudent.toTruongTo || currentStudent.to) : undefined}
             showStatusColors={true}
             isMultiSelect={isMultiSelect}
             onToggleMultiSelect={() => {
@@ -1426,6 +1560,10 @@ export const StudentView: React.FC<StudentViewProps> = ({
           <PeriodFilterComponent
             filter={logPeriodFilter}
             onChangeFilter={setLogPeriodFilter}
+            currentWeek={currentWeek}
+            onChangeCurrentWeek={canChangeCurrentWeek ? onChangeCurrentWeek : undefined}
+            noDataWeeks={settings.noDataWeeks || []}
+            onToggleNoDataWeek={hasDelegatedPerm('QUAN_LY_TUAN') ? handleToggleNoDataWeek : undefined}
             compact={true}
           />
 
@@ -1433,10 +1571,10 @@ export const StudentView: React.FC<StudentViewProps> = ({
             <div className="px-4 py-3.5 border-b border-token flex items-center justify-between">
               <div>
                 <h3 className="text-xs font-bold text-main uppercase tracking-wider">
-                  Sổ ghi nhận nề nếp của bạn
+                  {hasDelegatedPerm('HUY_MOI_GHI_NHAN') ? 'Sổ ghi nhận nề nếp toàn lớp (Được GV ủy quyền)' : 'Sổ ghi nhận nề nếp của bạn'}
                 </h3>
                 <p className="text-[11px] text-muted mt-0.5">
-                  Có thể sửa hoặc hủy trong thời hạn 24 giờ kể từ thời điểm ghi
+                  {hasDelegatedPerm('HUY_MOI_GHI_NHAN') ? 'Có thể xem và hủy mọi lượt ghi nhận theo ủy quyền của GVCN' : 'Có thể sửa hoặc hủy trong thời hạn 24 giờ kể từ thời điểm ghi'}
                 </p>
               </div>
               <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-surface-2 text-muted">
@@ -1454,7 +1592,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 filteredMyRecords.map(rec => {
                   const isVoided = rec.trangThai === 'DaHuy';
                   const remainingHours = getRemainingHours(rec.thoiGianMayChu);
-                  const canModify = !isVoided && remainingHours > 0;
+                  const canModify = !isVoided && (remainingHours > 0 || hasDelegatedPerm('HUY_MOI_GHI_NHAN'));
 
                   return (
                     <div key={rec.maGhiNhan} className="p-3.5 space-y-2 hover:bg-surface-2/40 transition-colors">
@@ -1724,7 +1862,17 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
       {/* TAB 4: BẢNG THI ĐUA CÁ NHÂN / TỔNG QUAN THI ĐUA HỌC SINH */}
       {activeTab === 'ranking' && (
-        <div className="bg-surface rounded-3xl border border-token overflow-hidden shadow-xs space-y-0">
+        <div className="space-y-3">
+          <PeriodFilterComponent
+            filter={periodFilter}
+            onChangeFilter={setPeriodFilter}
+            currentWeek={currentWeek}
+            onChangeCurrentWeek={canChangeCurrentWeek ? onChangeCurrentWeek : undefined}
+            noDataWeeks={settings.noDataWeeks || []}
+            onToggleNoDataWeek={hasDelegatedPerm('QUAN_LY_TUAN') ? handleToggleNoDataWeek : undefined}
+            compact={true}
+          />
+          <div className="bg-surface rounded-3xl border border-token overflow-hidden shadow-xs space-y-0">
           {/* Header */}
           <div className="p-4 sm:p-5 border-b border-token flex flex-col md:flex-row md:items-center justify-between gap-3 bg-surface-2/40">
             <div>
@@ -2006,25 +2154,34 @@ export const StudentView: React.FC<StudentViewProps> = ({
                         </span>
                       )}
 
-                      <span className="text-xs font-black tabular-nums text-main">
-                        {item.score} đ
-                      </span>
+                      {item.chuaCoDiem ? (
+                        <span className="text-[10.5px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-dashed border-amber-300">
+                          {item.lyDoChuaCoDiem === 'no_data' ? '⊘ Không có dữ liệu' : '⏳ Chưa có điểm'}
+                        </span>
+                      ) : (
+                        <>
+                          <span className="text-xs font-black tabular-nums text-main">
+                            {item.score} đ
+                          </span>
 
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        item.xepLoai === 'Tot' ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)]' :
-                        item.xepLoai === 'Kha' ? 'bg-accent/15 text-accent' :
-                        item.xepLoai === 'Dat' ? 'bg-[var(--st-warn)]/15 text-[var(--st-warn)]' :
-                        'bg-[var(--st-bad)]/15 text-[var(--st-bad)]'
-                      }`}>
-                        {item.xepLoai === 'Tot' ? 'Tốt' :
-                         item.xepLoai === 'Kha' ? 'Khá' :
-                         item.xepLoai === 'Dat' ? 'Đạt' : 'Cần cố gắng'}
-                      </span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            item.xepLoai === 'Tot' ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)]' :
+                            item.xepLoai === 'Kha' ? 'bg-accent/15 text-accent' :
+                            item.xepLoai === 'Dat' ? 'bg-[var(--st-warn)]/15 text-[var(--st-warn)]' :
+                            'bg-[var(--st-bad)]/15 text-[var(--st-bad)]'
+                          }`}>
+                            {item.xepLoai === 'Tot' ? 'Tốt' :
+                             item.xepLoai === 'Kha' ? 'Khá' :
+                             item.xepLoai === 'Dat' ? 'Đạt' : 'Cần cố gắng'}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                 );
               })
             )}
+          </div>
           </div>
         </div>
       )}
@@ -2080,7 +2237,78 @@ export const StudentView: React.FC<StudentViewProps> = ({
         isOpen={showCadreModal}
         onClose={() => setShowCadreModal(false)}
         students={allStudents}
+        delegatedPermissions={settings.cadreDelegatedPermissions || {}}
       />
+
+      {/* Delegated Badge Management Modal for Cadre */}
+      {showDelegatedBadgeModal && (
+        <BadgeManagementModal
+          isOpen={showDelegatedBadgeModal}
+          onClose={() => setShowDelegatedBadgeModal(false)}
+          students={allStudents}
+        />
+      )}
+
+      {/* Delegated Explanation Approval Modal for Cadre */}
+      {showDelegatedExplanationsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-lg bg-surface border border-token rounded-3xl shadow-2xl p-4 sm:p-5 space-y-3.5 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-token pb-2.5">
+              <div>
+                <h4 className="text-sm font-bold text-main">Duyệt giải trình (Ủy quyền từ GVCN)</h4>
+                <p className="text-[11px] text-muted">Cán sự được ủy quyền xét duyệt giải trình của học sinh</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDelegatedExplanationsModal(false)}
+                className="p-1.5 rounded-lg text-muted hover:text-main cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="divide-y divide-token overflow-y-auto flex-1">
+              {records.filter(r => r.trangThai === 'ChoDuyet').length === 0 ? (
+                <div className="p-6 text-center text-xs text-muted">
+                  Hiện không có giải trình nào đang chờ duyệt.
+                </div>
+              ) : (
+                records
+                  .filter(r => r.trangThai === 'ChoDuyet')
+                  .map(rec => (
+                    <div key={rec.maGhiNhan} className="py-3 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-main">{rec.hoTen} (Tổ {rec.to})</span>
+                        <span className="font-bold text-rose-600">-{rec.diemSo}đ · Tuần {rec.tuanHoc}</span>
+                      </div>
+                      <div className="text-xs text-muted">{rec.tenHanhVi} ({rec.ngayHoc})</div>
+                      <div className="p-2.5 rounded-xl bg-surface-2 border border-token text-xs italic text-main">
+                        "{rec.noiDungGiaiTrinh}"
+                      </div>
+                      {onResolveExplanation && (
+                        <div className="flex items-center justify-end gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => onResolveExplanation(rec.maGhiNhan, 'TuChoi', `Từ chối bởi cán sự ủy quyền (${currentStudent.hoTen})`)}
+                            className="px-3 py-1 rounded-lg border border-rose-300 text-rose-600 text-xs font-bold hover:bg-rose-50 cursor-pointer"
+                          >
+                            Từ chối
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onResolveExplanation(rec.maGhiNhan, 'ChapNhan', `Chấp nhận bởi cán sự ủy quyền (${currentStudent.hoTen})`)}
+                            className="px-3 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 cursor-pointer"
+                          >
+                            Chấp nhận (Hủy trừ điểm)
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Explanation Modal */}
       {selectedRecordForExplanation && (

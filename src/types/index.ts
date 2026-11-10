@@ -125,6 +125,14 @@ export type WeekEvaluation = 'Tot' | 'Kha' | 'Dat' | 'ChuaDat';
 
 export type StatusColorLevel = 'none' | 'warn' | 'bad' | 'ok';
 
+export type CadreDelegatedPermission =
+  | 'CHAM_CA_LOP'
+  | 'DUYET_GIAI_TRINH'
+  | 'HUY_MOI_GHI_NHAN'
+  | 'QUAN_LY_TUAN'
+  | 'QUAN_LY_VINH_DANH'
+  | 'GOI_TEN_TRO_CHOI';
+
 export interface StudentWeekSummary {
   maHS: string;
   hoTen: string;
@@ -138,6 +146,8 @@ export interface StudentWeekSummary {
   mucMau: StatusColorLevel;
   soLoiTrongTuan: number;
   coLoiNang: boolean;
+  chuaCoDiem?: boolean;
+  lyDoChuaCoDiem?: 'future' | 'no_data';
 }
 
 export interface StudentPeriodSummary {
@@ -150,10 +160,14 @@ export interface StudentPeriodSummary {
   soLoi: number;
   xepLoai: WeekEvaluation;
   mucMau: StatusColorLevel;
+  chuaCoDiem?: boolean;
+  lyDoChuaCoDiem?: 'future' | 'no_data';
   lichSuTuan: {
     tuanHoc: number;
     diem: number;
     soLoi: number;
+    chuaCoDiem?: boolean;
+    lyDoChuaCoDiem?: 'future' | 'no_data';
   }[];
 }
 
@@ -176,6 +190,8 @@ export interface TeacherSettings {
   maLop: string; // '10A5DP'
   choPhepXemDiemMon: boolean; // Bật / tắt cho học sinh xem điểm môn học
   choPhepTrungAvatar: boolean; // Bật / tắt cho phép học sinh dùng chung / trùng Avatar trong lớp
+  noDataWeeks?: number[]; // Các tuần được GV đánh dấu không có dữ liệu / nghỉ (không tính điểm)
+  cadreDelegatedPermissions?: Record<string, CadreDelegatedPermission[]>; // Phân quyền của GV cho từng Ban cán sự (key: maHS)
   bannerSloganText?: string; // Tùy chỉnh câu khẩu hiệu lớp trên Banner
   bannerSloganIcon?: string; // Biểu tượng sinh động
   bannerSloganColor?: string; // Màu sắc chữ khẩu hiệu

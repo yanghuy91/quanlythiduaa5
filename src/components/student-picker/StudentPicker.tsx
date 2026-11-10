@@ -253,17 +253,23 @@ export const StudentPicker: React.FC<StudentPickerProps> = ({
                   {/* Right side: Points or Status badge (only after login) */}
                   {showStatusColors && summary && (
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                        summary.mucMau === 'bad' 
-                          ? 'bg-[var(--st-bad)]/15 text-[var(--st-bad)]' 
-                          : summary.mucMau === 'warn'
-                          ? 'bg-[var(--st-warn)]/15 text-[var(--st-warn)]'
-                          : summary.mucMau === 'ok'
-                          ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)]'
-                          : 'bg-surface-2 text-muted'
-                      }`}>
-                        {summary.diemHienTai} đ
-                      </span>
+                      {summary.chuaCoDiem ? (
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-500/15 text-slate-600">
+                          Chưa có điểm
+                        </span>
+                      ) : (
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                          summary.mucMau === 'bad' 
+                            ? 'bg-[var(--st-bad)]/15 text-[var(--st-bad)]' 
+                            : summary.mucMau === 'warn'
+                            ? 'bg-[var(--st-warn)]/15 text-[var(--st-warn)]'
+                            : summary.mucMau === 'ok'
+                            ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)]'
+                            : 'bg-surface-2 text-muted'
+                        }`}>
+                          {summary.diemHienTai} đ
+                        </span>
+                      )}
 
                       {onInspectStudent && (
                         <span

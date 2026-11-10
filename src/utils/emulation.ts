@@ -1,17 +1,86 @@
 import { DisciplineRecord, StudentWeekSummary, TeacherSettings, WeekEvaluation, StatusColorLevel } from '../types';
 
+export function normalizeStudentName(name?: string): string {
+  return String(name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
+
+export function isRecordMatchingStudent(
+  rec: DisciplineRecord,
+  maHS: string,
+  hoTen?: string
+): boolean {
+  if (!rec) return false;
+  if (rec.maHS && maHS && String(rec.maHS).trim().toLowerCase() === String(maHS).trim().toLowerCase()) {
+    return true;
+  }
+  if (hoTen && rec.hoTen) {
+    const normStudent = normalizeStudentName(hoTen);
+    const normRec = normalizeStudentName(rec.hoTen);
+    if (normStudent && normRec && normStudent === normRec) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function parseRecordPoints(rec: DisciplineRecord): { isBonus: boolean; points: number } {
+  const rawScore = Number(rec.diemSo);
+  const absPoints = Number.isFinite(rawScore) ? Math.abs(rawScore) : 0;
+  const rawType = String(rec.loaiDiem || '').trim().toLowerCase();
+
+  const isBonus =
+    rawType === 'cong' ||
+    rawType === 'cộng' ||
+    rawType === 'bonus' ||
+    rawType === '+' ||
+    (rawType === '' && rawScore > 0 && String(rec.maNoiQuy || '').toUpperCase().startsWith('KT'));
+
+  return {
+    isBonus,
+    points: absPoints,
+  };
+}
+
 export function calculateStudentWeekSummary(
   maHS: string,
   hoTen: string,
   to: number,
   tuanHoc: number,
   records: DisciplineRecord[],
-  settings: TeacherSettings
+  settings: TeacherSettings,
+  currentWeek?: number
 ): StudentWeekSummary {
+  const targetWeek = Number(tuanHoc);
+  const noDataWeeks = (settings.noDataWeeks || []).map(Number);
+  const isFutureWeek = currentWeek !== undefined && targetWeek > Number(currentWeek);
+  const isNoDataWeek = noDataWeeks.includes(targetWeek);
+
+  if (isFutureWeek || isNoDataWeek) {
+    return {
+      maHS,
+      hoTen,
+      to,
+      tuanHoc: targetWeek,
+      diemKhoiDau: settings.diemKhoiDau,
+      tongDiemTru: 0,
+      tongDiemCong: 0,
+      diemHienTai: settings.diemKhoiDau,
+      xepLoai: 'Tot',
+      mucMau: 'none',
+      soLoiTrongTuan: 0,
+      coLoiNang: false,
+      chuaCoDiem: true,
+      lyDoChuaCoDiem: isFutureWeek ? 'future' : 'no_data',
+    };
+  }
+
   // Lọc bản ghi của học sinh trong tuần
   const studentRecords = records.filter(r => 
-    r.maHS === maHS &&
-    r.tuanHoc === tuanHoc &&
+    isRecordMatchingStudent(r, maHS, hoTen) &&
+    Number(r.tuanHoc) === targetWeek &&
     r.trangThai !== 'DaHuy' &&
     r.trangThai !== 'DaChapNhan' // Bản ghi đã chấp nhận giải trình thì không tính điểm
   );
@@ -21,17 +90,18 @@ export function calculateStudentWeekSummary(
   let coLoiNang = false;
 
   studentRecords.forEach(rec => {
-    if (rec.loaiDiem === 'Tru') {
-      tongDiemTru += rec.diemSo;
+    const { isBonus, points } = parseRecordPoints(rec);
+    if (!isBonus) {
+      tongDiemTru += points;
       if (rec.mucDo === 'Nang') {
         coLoiNang = true;
       }
-    } else if (rec.loaiDiem === 'Cong' && settings.batDiemCong) {
-      tongDiemCong += rec.diemSo;
+    } else if (settings.batDiemCong) {
+      tongDiemCong += points;
     }
   });
 
-  const diemHienTai = settings.diemKhoiDau - tongDiemTru + tongDiemCong;
+  const diemHienTai = Math.max(0, settings.diemKhoiDau - tongDiemTru + tongDiemCong);
 
   // Xếp loại cá nhân
   let xepLoai: WeekEvaluation = 'ChuaDat';
@@ -61,7 +131,7 @@ export function calculateStudentWeekSummary(
     maHS,
     hoTen,
     to,
-    tuanHoc,
+    tuanHoc: targetWeek,
     diemKhoiDau: settings.diemKhoiDau,
     tongDiemTru,
     tongDiemCong,
@@ -69,7 +139,8 @@ export function calculateStudentWeekSummary(
     xepLoai,
     mucMau,
     soLoiTrongTuan: studentRecords.length,
-    coLoiNang
+    coLoiNang,
+    chuaCoDiem: false,
   };
 }
 

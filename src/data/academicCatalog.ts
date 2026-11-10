@@ -113,101 +113,34 @@ export function evaluateAcademicStanding(
 }
 
 /**
- * Sinh dữ liệu điểm mẫu thực tế cho 42 học sinh Lớp 10A5 (Học kỳ 1)
+ * Khởi tạo danh sách điểm trống (không tạo sẵn điểm mẫu giả định trong code)
  */
 export function generateInitialAcademicRecords(): StudentAcademicRecord[] {
-  const records: StudentAcademicRecord[] = [];
-
-  MOCK_STUDENTS.forEach((student, index) => {
-    // Base score tier based on position/cadre role
-    let baseScore = 7.6;
-    if (['HS01', 'HS03'].includes(student.maHS)) baseScore = 9.2; // LT, LP_HT
-    else if (['HS02', 'HS04', 'HS12', 'HS23'].includes(student.maHS)) baseScore = 8.6; // BT, LP_LD, TTs
-    else if (index % 5 === 0) baseScore = 8.8;
-    else if (index % 4 === 0) baseScore = 8.2;
-    else if (index % 3 === 0) baseScore = 7.8;
-    else if (index % 2 === 0) baseScore = 7.4;
-    else baseScore = 7.1;
-
-    const subjectsRecord: Record<string, SubjectScore> = {};
-
-    DEFAULT_SUBJECTS.forEach((subj, sIdx) => {
-      if (subj.type === 'evaluate') {
-        subjectsRecord[subj.id] = {
-          subjectId: subj.id,
-          tx: [],
-          gk: null,
-          ck: null,
-          tb: null,
-          evaluateResult: 'Đ',
-          note: 'Hoàn thành tốt các nhiệm vụ môn học',
-        };
-        return;
-      }
-
-      // Small variation per subject
-      const variation = ((sIdx * 7 + index * 13) % 15 - 7) / 10;
-      let finalAvg = Math.min(10, Math.max(5.5, Math.round((baseScore + variation) * 10) / 10));
-
-      // Build plausible component scores that average around finalAvg
-      const tx1 = Math.min(10, Math.max(5, Math.round((finalAvg + 0.2) * 10) / 10));
-      const tx2 = Math.min(10, Math.max(5, Math.round((finalAvg - 0.3) * 10) / 10));
-      const tx3 = Math.min(10, Math.max(5, Math.round((finalAvg + 0.1) * 10) / 10));
-      const gk = Math.min(10, Math.max(5, Math.round(finalAvg * 10) / 10));
-      const ck = Math.min(10, Math.max(5, Math.round((finalAvg + 0.1) * 10) / 10));
-
-      const computedTb = Math.round(((tx1 + tx2 + tx3 + gk * 2 + ck * 3) / 8) * 10) / 10;
-
-      subjectsRecord[subj.id] = {
-        subjectId: subj.id,
-        tx: [tx1, tx2, tx3],
-        gk,
-        ck,
-        tb: computedTb,
-        note: computedTb >= 8.5 ? 'Nắm chắc kiến thức, tư duy tốt' : computedTb >= 7.0 ? 'Có cố gắng, chăm chỉ' : 'Cần tích cực ôn tập thêm',
-      };
-    });
-
-    const gpa = calculateOverallGPA(subjectsRecord);
-    const { hocLuc, danhHieu } = evaluateAcademicStanding(subjectsRecord, gpa);
-
-    records.push({
-      maHS: student.maHS,
-      hoTen: student.hoTen,
-      to: student.to,
-      hocKi: 1,
-      namHoc: '2026-2027',
-      subjects: subjectsRecord,
-      diemTBChung: gpa,
-      hocLuc,
-      danhHieu,
-      nhanXetGVCN: gpa && gpa >= 8.5 
-        ? 'Ý thức học tập xuất sắc, tích cực tham gia phát biểu và rèn luyện gương mẫu.'
-        : gpa && gpa >= 7.5
-          ? 'Ngoan ngoãn, chăm học, kết quả học tập tiến bộ đều các môn.'
-          : 'Cần phân bổ thêm thời gian tự học ở nhà và chú ý các môn tự nhiên.',
-      ngayCapNhat: '2026-11-09T08:00:00Z',
-    });
-  });
-
-  return records;
+  return [];
 }
 
 /**
- * Lấy danh sách điểm từ LocalStorage hoặc sinh ban đầu
+ * Lấy danh sách điểm từ LocalStorage (loại bỏ dữ liệu mẫu tự sinh cũ nếu có)
  */
 export function getAcademicRecords(): StudentAcademicRecord[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_ACADEMIC_GRADES);
     if (raw) {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        const cleaned = parsed.filter(
+          (r: StudentAcademicRecord) => r && r.ngayCapNhat !== '2026-11-09T08:00:00Z'
+        );
+        if (cleaned.length !== parsed.length) {
+          saveAcademicRecords(cleaned);
+        }
+        return cleaned;
+      }
     }
   } catch (e) {
     console.error('Error loading academic records from localStorage:', e);
   }
-  const initial = generateInitialAcademicRecords();
-  saveAcademicRecords(initial);
-  return initial;
+  return [];
 }
 
 /**

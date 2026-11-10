@@ -20,7 +20,8 @@ import {
   MOCK_SEAT_LAYOUT, 
   INITIAL_RECORDS, 
   INITIAL_SETTINGS,
-  getDefaultStudentAvatar
+  getDefaultStudentAvatar,
+  filterOutLegacyDemoRecords
 } from './data/mockData';
 import { calculateStudentWeekSummary, calculateDenseRankings } from './utils/emulation';
 import { Header } from './components/common/Header';
@@ -124,7 +125,13 @@ export default function App() {
   });
   const [records, setRecords] = useState<DisciplineRecord[]>(() => {
     const saved = localStorage.getItem('app_records_10a5');
-    return saved ? JSON.parse(saved) : INITIAL_RECORDS;
+    if (!saved) return INITIAL_RECORDS;
+    try {
+      const parsed = JSON.parse(saved);
+      return filterOutLegacyDemoRecords(parsed);
+    } catch {
+      return INITIAL_RECORDS;
+    }
   });
   const [academicRecords, setAcademicRecords] = useState<StudentAcademicRecord[]>(() => {
     return getAcademicRecords();
@@ -328,8 +335,9 @@ export default function App() {
       });
     }
     if (Array.isArray(cloudState.records)) {
-      setRecords(cloudState.records);
-      localStorage.setItem('app_records_10a5', JSON.stringify(cloudState.records));
+      const cleanedRecords = filterOutLegacyDemoRecords(cloudState.records);
+      setRecords(cleanedRecords);
+      localStorage.setItem('app_records_10a5', JSON.stringify(cleanedRecords));
     }
     if (Array.isArray(cloudState.academicRecords)) {
       setAcademicRecords(cloudState.academicRecords);
@@ -474,7 +482,8 @@ export default function App() {
         st.to,
         currentWeek,
         records,
-        settings
+        settings,
+        currentWeek
       );
     });
     return map;
@@ -575,14 +584,19 @@ export default function App() {
     });
   }, [records, buildFullStateSnapshot]);
 
-  // Teacher resolve explanation
+  // Teacher or delegated Cadre resolve explanation
   const handleResolveExplanation = useCallback((recordId: string, result: 'ChapNhan' | 'TuChoi', reason: string) => {
+    const approverLabel = currentRole === 'GV'
+      ? `${teacherProfile.hoTen} (GVCN)`
+      : currentUser && 'hoTen' in currentUser
+        ? `${currentUser.hoTen} (BCS được ủy quyền)`
+        : `${teacherProfile.hoTen} (GVCN)`;
     const updated = records.map(r => {
       if (r.maGhiNhan === recordId) {
         return {
           ...r,
           trangThai: (result === 'ChapNhan' ? 'DaChapNhan' : 'BiTuChoi') as DisciplineRecord['trangThai'],
-          nguoiDuyet: `${teacherProfile.hoTen} (GVCN)`,
+          nguoiDuyet: approverLabel,
           ketQuaDuyet: result,
           lyDoDuyet: reason,
         };
@@ -597,7 +611,7 @@ export default function App() {
       id: `res-${Date.now()}`,
       message: result === 'ChapNhan' ? 'Đã chấp nhận giải trình (Hủy trừ điểm).' : 'Đã từ chối giải trình.',
     });
-  }, [records, teacherProfile.hoTen, buildFullStateSnapshot]);
+  }, [records, currentRole, currentUser, teacherProfile.hoTen, buildFullStateSnapshot]);
 
   // Toggle rule pin
   const handleToggleRulePin = useCallback((ruleId: string) => {
@@ -716,15 +730,23 @@ export default function App() {
     });
   }, [students, currentRole, buildFullStateSnapshot]);
 
-  // Teacher import time-stamped records from file
+  // Teacher import time-stamped records from file (deduplicated by maGhiNhan)
   const handleImportRecords = useCallback((newRecords: DisciplineRecord[]) => {
-    const updated = [...newRecords, ...records];
+    const cleanedIncoming = filterOutLegacyDemoRecords(newRecords);
+    const seenIds = new Set<string>();
+    const updated: DisciplineRecord[] = [];
+    for (const r of [...cleanedIncoming, ...records]) {
+      if (!r || !r.maGhiNhan) continue;
+      if (seenIds.has(r.maGhiNhan)) continue;
+      seenIds.add(r.maGhiNhan);
+      updated.push(r);
+    }
     setRecords(updated);
     localStorage.setItem('app_records_10a5', JSON.stringify(updated));
     saveServerState(buildFullStateSnapshot({ records: updated }), true);
     setToast({
       id: Date.now().toString(),
-      message: `Đã nạp ${newRecords.length} bản ghi thời gian ✨`,
+      message: `Đã nạp ${cleanedIncoming.length} bản ghi thời gian ✨`,
       subMessage: 'Dữ liệu thi đua từ file đã được lưu lên đám mây thành công!',
     });
   }, [records, buildFullStateSnapshot]);
@@ -816,6 +838,7 @@ export default function App() {
               saveServerState(buildFullStateSnapshot({ settings: updatedSettings }), true);
             }}
             onAddRecord={handleAddRecord}
+            onVoidRecord={handleVoidRecord}
             onResolveExplanation={handleResolveExplanation}
             onToggleRulePin={handleToggleRulePin}
             onUpdateLayout={handleUpdateLayout}
@@ -847,11 +870,19 @@ export default function App() {
             currentWeek={currentWeek}
             onChangeCurrentWeek={handleSetCurrentWeek}
             settings={settings}
+            onUpdateSettings={newSets => {
+              const updatedSettings = { ...settings, ...newSets };
+              setSettings(updatedSettings);
+              localStorage.setItem('app_settings_10a5', JSON.stringify(updatedSettings));
+              saveServerState(buildFullStateSnapshot({ settings: updatedSettings }), true);
+            }}
             academicRecords={academicRecords}
             onAddRecord={handleAddRecord}
             onVoidRecord={handleVoidRecord}
+            onResolveExplanation={handleResolveExplanation}
             onSubmitExplanation={handleSubmitExplanation}
             onUpdateStudentAvatar={handleUpdateStudentAvatar}
+            onOpenCallingGames={() => setShowCallingGamesModal(true)}
             onLogout={handleLogout}
           />
         )}
@@ -861,14 +892,25 @@ export default function App() {
             currentStudent={activeLoggedInStudent}
             allStudents={students}
             layout={layout}
+            rules={rules}
             records={records}
             studentSummaries={studentSummaries}
             currentWeek={currentWeek}
             onChangeCurrentWeek={handleSetCurrentWeek}
             settings={settings}
+            onUpdateSettings={newSets => {
+              const updatedSettings = { ...settings, ...newSets };
+              setSettings(updatedSettings);
+              localStorage.setItem('app_settings_10a5', JSON.stringify(updatedSettings));
+              saveServerState(buildFullStateSnapshot({ settings: updatedSettings }), true);
+            }}
             academicRecords={academicRecords}
+            onAddRecord={handleAddRecord}
+            onVoidRecord={handleVoidRecord}
+            onResolveExplanation={handleResolveExplanation}
             onSubmitExplanation={handleSubmitExplanation}
             onUpdateStudentAvatar={handleUpdateStudentAvatar}
+            onOpenCallingGames={() => setShowCallingGamesModal(true)}
             onLogout={handleLogout}
           />
         )}
@@ -907,8 +949,8 @@ export default function App() {
         onClose={() => setToast(null)}
       />
 
-      {/* 10 Calling Games Modal (Direct Launch from anywhere for Teacher only) */}
-      {showCallingGamesModal && currentRole === 'GV' && (
+      {/* 10 Calling Games Modal (Direct Launch for Teacher or Delegated Cadre) */}
+      {showCallingGamesModal && (currentRole === 'GV' || (activeLoggedInStudent && (settings.cadreDelegatedPermissions?.[activeLoggedInStudent.maHS] || []).includes('GOI_TEN_TRO_CHOI'))) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/70 backdrop-blur-md animate-fadeIn">
           <div className="bg-surface rounded-3xl shadow-2xl border border-token w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
             {/* Modal Top Header */}
