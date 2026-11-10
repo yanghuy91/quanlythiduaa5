@@ -1,91 +1,86 @@
-# Tối ưu hóa Đồng bộ Đám mây & Khắc phục Lỗi Vượt Hạn mức Firestore
+# Cơ chế Bảo vệ Dữ liệu Đám mây (Chống Ghi đè Khi Cập nhật Ứng dụng)
 
-Giải pháp khắc phục triệt để lỗi `FirebaseError: [code=resource-exhausted]: Quota exceeded` của Cloud Firestore bằng cách chuyển hoàn toàn luồng lưu trữ đám mây sang Firebase Realtime Database kết hợp bộ nhớ máy chủ cục bộ, đồng thời áp dụng cơ chế chống ghi trùng lặp (deduplication) và giãn nhịp tự động lưu (debounce).
+Giải pháp bảo vệ tuyệt đối dữ liệu thật của Lớp 10A5 đã nạp trên Firebase để mỗi khi Giáo viên chỉnh sửa tính năng, cập nhật giao diện hoặc triển khai phiên bản mới từ đây, hệ thống luôn tải dữ liệu từ Firebase về trước và tuyệt đối không bao giờ lấy dữ liệu mẫu (mock data) hoặc tệp cục bộ trong dự án đè lên Firebase.
 
 ## Quyết định đã xác nhận từ Giáo viên
 
 > [!IMPORTANT]
-> Các lựa chọn kiến trúc dưới đây đã được xác nhận để đảm bảo hệ thống vận hành ổn định, tức thời trên mọi thiết bị mà không bao giờ gặp lỗi giới hạn hạn mức đọc/ghi trong ngày.
+> Hai nguyên tắc bảo vệ dữ liệu dưới đây được áp dụng xuyên suốt vòng đời ứng dụng:
 
-- **Quyết định 1 (Hạ tầng Đám mây)**: Ngừng hoàn toàn việc khởi tạo và gọi Cloud Firestore (`getFirestore`, `getDoc`, `setDoc`); sử dụng 100% **Firebase Realtime Database (RTDB)** kết hợp máy chủ nội bộ và `localStorage`.
-- **Quyết định 2 (Tối ưu hóa Tần suất Lưu)**: Tăng chu kỳ chờ tự động lưu (debounce) và bổ sung bộ kiểm tra chữ ký dữ liệu (payload fingerprint) để chỉ thực hiện lệnh ghi lên đám mây khi nội dung dữ liệu lớp học thực sự có sự thay đổi.
-
----
-
-## 1. Tổng quan & Mục tiêu Cốt lõi
-
-- **Chức năng giải quyết**: Loại bỏ hoàn toàn thông báo lỗi `Quota exceeded` và hiện tượng treo/chậm kết nối do bộ SDK của Cloud Firestore liên tục thử kết nối lại (exponential backoff) khi hết hạn mức miễn phí trong ngày.
-- **Đối tượng sử dụng**: Giáo viên chủ nhiệm, Ban cán sự lớp và 42 học sinh lớp 10A5 truy cập đồng thời trên điện thoại và máy tính.
-- **Giá trị mang lại**:
-  - Tốc độ đồng bộ thời gian thực mượt mà qua Realtime Database mà không bị giới hạn số lượt đọc/ghi tài liệu như Firestore.
-  - Giảm hơn 70% số lệnh ghi dư thừa nhờ cơ chế so sánh chữ ký dữ liệu trước khi gửi và loại bỏ việc ghi kép vừa qua REST vừa qua SDK trong cùng một thao tác.
+- **Quyết định 1 (Khóa Ghi Đè Khi Khởi Động)**: Luôn ưu tiên tải dữ liệu từ Firebase Realtime Database trước tiên và **khóa toàn bộ lệnh tự động ghi lên đám mây** cho đến khi quá trình tải dữ liệu từ Firebase hoàn tất thành công.
+- **Quyết định 2 (Cô lập Tệp Dữ liệu Dự án)**: Chỉ lưu và đồng bộ dữ liệu thật trên **Firebase Realtime Database** và **trình duyệt cá nhân (`localStorage`)**; ngắt bỏ hoàn toàn việc đọc/ghi tệp dữ liệu tĩnh trong mã nguồn dự án để dữ liệu mẫu trong kho mã nguồn không bao giờ lọt vào phiên làm việc hay ghi đè lên đám mây.
 
 ---
 
-## 2. Trải nghiệm Người dùng & Giao diện
+## 1. Nguyên nhân Gốc rễ & Giải pháp Cốt lõi
 
-- **Luồng hoạt động liền mạch**:
-  - Khi mở ứng dụng, dữ liệu lớp học (danh sách học sinh, sơ đồ chỗ ngồi, nội quy, bảng điểm, ghi nhận nề nếp) được tải tức thì từ bộ nhớ đệm và đồng bộ ngầm với Firebase Realtime Database mà không phát sinh bất kỳ lỗi ngầm nào trên bảng điều khiển.
-  - Khi Giáo viên hoặc Ban cán sự chấm điểm nề nếp, đổi tuần học, cập nhật huy hiệu hay nhập điểm môn học, trạng thái được cập nhật ngay trên giao diện và gom nhóm thông minh để đồng bộ lên đám mây.
-- **Bản sắc Giao diện & Hiển thị**:
-  - Giữ nguyên toàn bộ thiết kế giao diện sáng (`Light Mode` chuẩn mực với nền `#F6F6F3`, bề mặt `#FFFFFF`, điểm nhấn `#2457D6` và phông chữ `Be Vietnam Pro`).
-  - Đảm bảo trải nghiệm sạch sẽ, không hiển thị cảnh báo kỹ thuật gây nhiễu cho học sinh và giáo viên.
+- **Nguyên nhân gây nguy cơ mất dữ liệu trước đây**:
+  1. Khi ứng dụng vừa mở trên môi trường mới (hoặc sau khi cập nhật mã nguồn), trình duyệt chưa có `localStorage` nên khởi tạo tạm bằng danh sách 42 học sinh mẫu.
+  2. Nếu kết nối mạng tới Firebase chậm vài giây hoặc chập chờn lúc khởi động, hệ thống trước đây tự động chuyển sang đọc tệp dữ liệu tĩnh kèm theo mã nguồn hoặc kích hoạt nhánh *"tự động lưu trạng thái ban đầu lên máy chủ"*, dẫn đến việc đẩy ngược dữ liệu mẫu đè lên dữ liệu thật trên Firebase.
+- **Giải pháp cốt lõi**:
+  - Thiết lập **Chốt khóa Đồng bộ Đám mây (`Cloud Hydration Gate`)**: Mọi luồng tự động lưu (`auto-save`) bị vô hiệu hóa hoàn toàn ở thời điểm khởi động cho đến khi ứng dụng nhận được dữ liệu thật từ Firebase Realtime Database.
+  - Xóa bỏ nhánh tự động đẩy dữ liệu mặc định lên Firebase khi khởi chạy ứng dụng lần đầu.
+
+---
+
+## 2. Trải nghiệm Người dùng & Vận hành
+
+- **Khi cập nhật mã nguồn hoặc mở trên thiết bị mới**:
+  - Ngay khi mở trang, hệ thống kết nối thẳng tới Firebase Realtime Database để lấy danh sách học sinh, sơ đồ chỗ ngồi, bảng điểm và lịch sử nề nếp thật đã lưu.
+  - Trong thời gian đang tải từ Firebase, mọi thay đổi khởi tạo nội bộ không được phép phát lệnh ghi lên đám mây.
+  - Ngay khi dữ liệu từ Firebase tải về thành công, giao diện và bộ nhớ trình duyệt (`localStorage`) được cập nhật đồng bộ theo đúng dữ liệu trên Firebase, sau đó chốt khóa ghi mới được mở để phục vụ các thao tác chấm điểm hoặc chỉnh sửa tiếp theo của Giáo viên.
+- **Khi mất mạng tạm thời lúc mở ứng dụng**:
+  - Nếu không kết nối được Firebase lúc vừa mở trang, ứng dụng chỉ hiển thị dữ liệu lưu trong trình duyệt cá nhân và giữ nguyên trạng thái **khóa tự động ghi đè đám mây**, đảm bảo khi có mạng trở lại dữ liệu trên Firebase vẫn nguyên vẹn 100%.
 
 ---
 
 ## 3. Các Quyết định Kỹ thuật & Đánh đổi
 
-- **Quyết định 1: Loại bỏ hoàn toàn kết nối Cloud Firestore**
-  - *Phương án lựa chọn*: Gỡ bỏ toàn bộ lệnh gọi và khởi tạo Firestore SDK; sử dụng Firebase Realtime Database làm nguồn đám mây duy nhất cho cả trạng thái lớp học (`classes/10a5`) và cấu hình khóa AI (`gemini_pool/10a5`).
-  - *Lý do*: Cloud Firestore áp dụng giới hạn ngặt nghèo về số lượt đọc/ghi tài liệu miễn phí mỗi ngày, khi lưu toàn bộ trạng thái lớp học liên tục sẽ nhanh chóng chạm ngưỡng và kích hoạt vòng lặp `maximum backoff delay`. Ngược lại, Realtime Database hỗ trợ luồng WebSocket/REST tốc độ cao và ổn định cho dữ liệu JSON tập trung của một lớp học.
-  - *Phương án đã cân nhắc*: Giữ Firestore làm dự phòng — bị loại bỏ vì chỉ cần SDK Firestore thực hiện một lệnh đọc/ghi khi đã cạn quota, trình duyệt sẽ lập tức báo lỗi `resource-exhausted`.
+- **Quyết định 1: Thiết lập Cờ Trạng thái Đã Tải Đám mây (`cloudHydrated`)**
+  - *Phương án lựa chọn*: Chỉ mở quyền tự động lưu (`scheduleServerSync`) sau khi hàm tải dữ liệu đám mây (`fetchCloudClassState`) hoặc kênh lắng nghe trực tuyến (`subscribeToCloudClassState`) trả về dữ liệu hợp lệ từ Firebase.
+  - *Lý do*: Ngăn chặn triệt để hiện tượng trạng thái khởi tạo tạm thời (dữ liệu mẫu) bị đẩy lên Firebase trước khi dữ liệu thật kịp tải về.
 
-- **Quyết định 2: Khử trùng lặp dữ liệu (Fingerprint Deduplication) & Ghi đơn kênh**
-  - *Phương án lựa chọn*:
-    1. Tạo chữ ký nội dung (bỏ qua trường thời gian `updatedAt` và `version`) để kiểm tra xem dữ liệu mới có khác với lần lưu thành công gần nhất hay không. Nếu không có thay đổi thực sự, bỏ qua lệnh ghi đám mây.
-    2. Trong mỗi lần lưu lên Realtime Database, ưu tiên ghi qua một kênh chính (SDK hoặc REST fallback khi cần) thay vì phát đồng thời cả hai lệnh ghi kép như trước.
-    3. Giãn thời gian chờ tự động lưu (`debounce`) lên mức hợp lý (1500ms) và ngăn chặn hiện tượng tự kích hoạt lưu lại ngay khi vừa tải dữ liệu lần đầu từ máy chủ.
-  - *Lý do*: Tránh hiện tượng "bão lệnh ghi" (write amplification) khi khởi động ứng dụng hoặc khi thực hiện nhiều thao tác liên tiếp.
+- **Quyết định 2: Ngắt kết nối với Tệp Dữ liệu Tĩnh trong Dự án**
+  - *Phương án lựa chọn*: Bỏ cơ chế đọc/ghi dự phòng vào điểm cuối máy chủ nội bộ chứa dữ liệu mẫu của dự án; chỉ sử dụng 2 tầng lưu trữ là **Firebase Realtime Database** (nguồn chuẩn toàn cục) và **LocalStorage trên trình duyệt** (bộ đệm ngoại tuyến cá nhân).
+  - *Lý do*: Đảm bảo đúng yêu cầu của Giáo viên là chỉ giữ dữ liệu thật trên Firebase và trình duyệt cá nhân, không để tệp dữ liệu mẫu trong mã nguồn làm sai lệch dữ liệu lớp học khi cập nhật phiên bản.
 
 ---
 
-## 4. Kiến trúc Kỹ thuật & Luồng Dữ liệu
+## 4. Kiến trúc Kỹ thuật & Luồng Bảo vệ Dữ liệu
 
-### Sơ đồ Kiến trúc Đồng bộ Mới
+### Sơ đồ Luồng Bảo vệ Dữ liệu Khi Cập nhật / Khởi động
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                    GIAO DIỆN QUẢN LÝ LỚP 10A5 (React)                   │
-│     (Giáo viên chủ nhiệm  •  Ban cán sự lớp  •  42 Học sinh 10A5)       │
-└───────────────────┬─────────────────────────────────┬───────────────────┘
-                    │ Thao tác cập nhật               │ Lắng nghe Realtime
-                    ▼                                 │ (Không phản hồi lặp)
-┌───────────────────────────────────────┐             │
-│     BỘ ĐIỀU PHỐI ĐỒNG BỘ (Sync)       │             │
-│  1. Lưu tức thì vào LocalStorage      │             │
-│  2. Gom nhóm (Debounce 1500ms)        │             │
-│  3. Kiểm tra chữ ký dữ liệu (Diff)    │             │
-└─────────┬─────────────────────────────┴─────────────┼───────────────────┘
-          │ Chỉ gửi khi dữ liệu thực sự thay đổi      │
-          ▼                                           │
-┌─────────────────────────────────────────────────────┴───────────────────┐
-│               TẦNG LƯU TRỮ ĐÁM MÂY & MÁY CHỦ CỤC BỘ                     │
-│                                                                         │
-│  ┌───────────────────────────────────┐   ┌───────────────────────────┐  │
-│  │  Firebase Realtime Database       │   │  Máy chủ Nội bộ (/api)    │  │
-│  │  • classes/10a5 (Trạng thái lớp)  │   │  • classroom_state.json   │  │
-│  │  • gemini_pool/10a5 (Cấu hình)    │   │  (Bản sao lưu cục bộ)     │  │
-│  └───────────────────────────────────┘   └───────────────────────────┘  │
-│                                                                         │
-│  [Đã ngắt hoàn toàn Cloud Firestore SDK để triệt tiêu lỗi Quota]        │
-└─────────────────────────────────────────────────────────────────────────┘
+│                KHỞI ĐỘNG ỨNG DỤNG / CẬP NHẬT PHIÊN BẢN MỚI              │
+│         [Trạng thái ban đầu: KHÓA GHI ĐÁM MÂY (cloudHydrated = false)]  │
+└───────────────────────────────────┬─────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│             BƯỚC 1: TẢI DỮ LIỆU CHUẨN TỪ FIREBASE RTDB                  │
+│   • Đọc dữ liệu thật từ nút đám mây (classes/10a5)                      │
+│   • KHÔNG đọc tệp mẫu trong dự án, KHÔNG tự đẩy dữ liệu mẫu lên mây     │
+└─────────────────┬───────────────────────────────────┬───────────────────┘
+                  │                                   │
+     [Tải thành công từ Firebase]         [Mạng lỗi / Chưa tải xong]
+                  │                                   │
+                  ▼                                   ▼
+┌───────────────────────────────────┐ ┌───────────────────────────────────┐
+│  BƯỚC 2A: CẬP NHẬT & MỞ KHÓA      │ │  BƯỚC 2B: GIỮ KHÓA BẢO VỆ         │
+│  • Nạp dữ liệu thật vào Giao diện │ │  • Dùng bộ đệm trình duyệt        │
+│    và LocalStorage trình duyệt    │ │  • Giữ cloudHydrated = false      │
+│  • Lưu chữ ký dữ liệu chuẩn       │ │  • Chặn mọi lệnh auto-save đè     │
+│  • Mở khóa: cloudHydrated = true  │ │    lên Firebase cho tới khi       │
+│  • Cho phép lưu các thao tác mới  │ │    nhận được dữ liệu từ Firebase  │
+└───────────────────────────────────┘ └───────────────────────────────────┘
 ```
 
-### Mô hình Trạng thái & Ánh xạ Xử lý
-- **Khởi tạo phiên làm việc**:
-  - Khi tải trang, hệ thống đọc dữ liệu từ Realtime Database (hoặc máy chủ nội bộ nếu ngoại tuyến), đánh dấu trạng thái đang đồng bộ từ máy chủ (`isApplyingRemoteUpdate`) để không kích hoạt ngược lại bộ tự động lưu.
-  - Lưu chữ ký dữ liệu ban đầu làm mốc so sánh chuẩn.
-- **Khi người dùng thao tác (Chấm điểm, sửa sơ đồ, nhập điểm, đổi cài đặt)**:
-  - Cập nhật trạng thái giao diện và `localStorage` ngay lập tức (độ trễ 0ms).
-  - Đưa yêu cầu đồng bộ vào hàng đợi `scheduleServerSync` (chờ 1500ms để gộp các thao tác liên tiếp).
-  - So sánh chữ ký dữ liệu mới với chữ ký đã lưu gần nhất: chỉ khi phát hiện thay đổi thực sự mới gửi lệnh cập nhật lên Firebase Realtime Database và `/api/state`.
+### Mô hình Kiểm soát Trạng thái
+- **Khi khởi chạy (`Mount`)**:
+  - `cloudHydrated` = `false`.
+  - Mọi lệnh gọi `scheduleServerSync` sẽ kiểm tra `isCloudHydrated()`. Nếu `false`, hủy lệnh ngay lập tức mà không gửi bất kỳ gói tin nào lên Firebase.
+- **Khi nhận dữ liệu từ Firebase (`fetchServerState` hoặc `subscribeToCloudClassState`)**:
+  - Ghi nhận chữ ký dữ liệu chuẩn (`markRemoteStateApplied`), đánh dấu `cloudHydrated = true`, đồng thời cập nhật toàn bộ dữ liệu vào `localStorage` của trình duyệt.
+- **Khi Giáo viên chủ động nạp danh sách mới hoặc bấm Lưu thủ công**:
+  - Các thao tác chủ động của Giáo viên (nhập danh sách học sinh mới, khôi phục từ tệp sao lưu JSON, bấm nút đồng bộ thủ công) được cấp quyền ghi trực tiếp (`force = true`) và đồng thời mở khóa `cloudHydrated = true`.

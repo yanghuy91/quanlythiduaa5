@@ -254,7 +254,7 @@ export default function App() {
       updatedAt: new Date().toISOString(),
       version: Date.now(),
     };
-    saveServerState(fullState);
+    saveServerState(fullState, true);
 
     setToast({
       id: Date.now().toString(),
@@ -328,26 +328,9 @@ export default function App() {
           setTimeout(() => {
             isApplyingRemoteUpdate.current = false;
           }, 600);
-        } else {
-          // If server file doesn't exist yet, save current state to server
-          const badges = getAllStudentBadgesState();
-          const initialFullState: ClassroomFullState = {
-            students,
-            records,
-            academicRecords,
-            settings,
-            layout,
-            rules,
-            teacherAvatar,
-            studentBadgesMap: badges.studentBadgesMap,
-            studentActiveBadges: badges.studentActiveBadges,
-            updatedAt: new Date().toISOString(),
-            version: 1,
-          };
-          saveServerState(initialFullState);
         }
       } catch (err) {
-        console.warn('Initial server state sync error:', err);
+        console.warn('Initial cloud state sync error:', err);
       }
     })();
     return () => { isMounted = false; };

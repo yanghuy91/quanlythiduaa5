@@ -1949,7 +1949,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       const parsed = parseImportedJsonState(text);
                       if (parsed) {
                         if (confirm(`Bạn có chắc muốn khôi phục dữ liệu từ file sao lưu (${parsed.students?.length || 0} học sinh, ${parsed.records?.length || 0} ghi nhận vi phạm)?`)) {
-                          await saveServerState(parsed);
+                          await saveServerState(parsed, true);
                           window.location.reload();
                         }
                       } else {

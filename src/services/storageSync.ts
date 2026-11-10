@@ -25,6 +25,15 @@ export interface ClassroomFullState {
 let syncTimeout: ReturnType<typeof setTimeout> | null = null;
 let lastSyncTimestamp = 0;
 let lastSyncedFingerprint = '';
+let cloudHydrated = false;
+
+/**
+ * Check whether initial data from Firebase Realtime Database has been loaded.
+ * While false, automatic background saves are locked to prevent overwriting cloud data.
+ */
+export function isCloudHydrated(): boolean {
+  return cloudHydrated;
+}
 
 /**
  * Compute deterministic content fingerprint (ignoring volatile updatedAt & version fields)
@@ -49,20 +58,21 @@ export function computeStateFingerprint(state: ClassroomFullState): string {
 }
 
 /**
- * Record the fingerprint of a remote state update so we don't echo-save it back to Cloud
+ * Record the fingerprint of a remote state update from Firebase and unlock cloud sync
  */
 export function markRemoteStateApplied(state: ClassroomFullState): void {
   const fp = computeStateFingerprint(state);
   if (fp) {
     lastSyncedFingerprint = fp;
   }
+  cloudHydrated = true;
 }
 
 /**
- * Fetch state: Prioritizes Firebase Realtime Database, falls back to /api/state or null
+ * Fetch state strictly from Firebase Realtime Database.
+ * Does NOT fall back to static project files (/api/state) so repository mock data never overwrites real data.
  */
 export async function fetchServerState(): Promise<ClassroomFullState | null> {
-  // 1. Try Firebase Realtime Database first
   try {
     const cloudState = await fetchCloudClassState();
     if (cloudState && Array.isArray(cloudState.students) && cloudState.students.length > 0) {
@@ -71,29 +81,15 @@ export async function fetchServerState(): Promise<ClassroomFullState | null> {
       return cloudState;
     }
   } catch (err) {
-    console.warn('[StorageSync] Không thể kết nối Realtime Database, kiểm tra máy chủ nội bộ:', err);
+    console.warn('[StorageSync] Không thể kết nối Firebase Realtime Database:', err);
   }
 
-  // 2. Fall back to local endpoint /api/state
-  try {
-    const res = await fetch('/api/state', {
-      headers: { 'Accept': 'application/json' },
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data || data.initialized === false) return null;
-    const parsed = data as ClassroomFullState;
-    markRemoteStateApplied(parsed);
-    return parsed;
-  } catch (err) {
-    console.warn('[StorageSync] Không thể kết nối máy chủ nội bộ:', err);
-    return null;
-  }
+  return null;
 }
 
 /**
- * Save state: Saves to Firebase Realtime Database AND local /api/state
- * Skips redundant network writes if content fingerprint is identical unless force=true.
+ * Save state strictly to Firebase Realtime Database.
+ * Blocked if cloudHydrated is false (unless force=true from an explicit teacher import/restore action).
  */
 export async function saveServerState(state: ClassroomFullState, force: boolean = false): Promise<boolean> {
   if (syncTimeout) {
@@ -101,46 +97,41 @@ export async function saveServerState(state: ClassroomFullState, force: boolean 
     syncTimeout = null;
   }
 
+  // Protect Firebase data: never overwrite Cloud before initial Firebase hydration completes
+  if (!cloudHydrated && !force) {
+    console.info('[StorageSync] Đã chặn lệnh ghi sớm vì chưa tải xong dữ liệu gốc từ Firebase.');
+    return false;
+  }
+
   const currentFingerprint = computeStateFingerprint(state);
   if (!force && currentFingerprint && currentFingerprint === lastSyncedFingerprint) {
     return true;
   }
 
-  let cloudSuccess = false;
-
-  // 1. Save to Firebase Realtime Database
   try {
-    cloudSuccess = await saveCloudClassState(state);
+    const cloudSuccess = await saveCloudClassState(state);
     if (cloudSuccess) {
+      cloudHydrated = true;
       lastSyncTimestamp = Date.now();
       if (currentFingerprint) {
         lastSyncedFingerprint = currentFingerprint;
       }
     }
+    return cloudSuccess;
   } catch (err) {
-    console.warn('[StorageSync] Lưu Realtime Database thất bại:', err);
+    console.warn('[StorageSync] Lưu Firebase Realtime Database thất bại:', err);
+    return false;
   }
-
-  // 2. Save to local /api/state if available
-  try {
-    await fetch('/api/state', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(state),
-    });
-  } catch (err) {
-    // Ignore local api errors when running in production
-  }
-
-  return cloudSuccess;
 }
 
 /**
- * Debounced sync to Cloud & local server (1500ms coalescing window + diff check)
+ * Debounced sync to Firebase Realtime Database (1500ms coalescing window + hydration lock + diff check)
  */
 export function scheduleServerSync(state: ClassroomFullState): void {
+  if (!cloudHydrated) {
+    return;
+  }
+
   const candidateFingerprint = computeStateFingerprint(state);
   if (candidateFingerprint && candidateFingerprint === lastSyncedFingerprint) {
     return;
