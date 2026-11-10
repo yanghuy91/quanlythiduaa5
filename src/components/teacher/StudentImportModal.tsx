@@ -21,6 +21,11 @@ import * as XLSX from 'xlsx';
 import { Student, SeatLayoutNode, RoleCode } from '../../types';
 import { getDefaultStudentAvatar } from '../../data/mockData';
 import { exportDataSpecsWordDocument } from '../../utils/exportDataSpecsDoc';
+import {
+  generateDefaultLayoutForStudents,
+  isValidStudentName,
+  isTemplateSampleStudent,
+} from '../../utils/seatingMaster';
 
 interface StudentImportModalProps {
   isOpen: boolean;
@@ -142,7 +147,7 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
         return;
       }
 
-      if (hoTen.length >= 2) {
+      if (isValidStudentName(hoTen) && results.length < 48) {
         results.push({
           stt: results.length + 1,
           hoTen,
@@ -220,8 +225,10 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
           if (!Array.isArray(row) || row.length === 0) continue;
 
           let hoTen = '';
-          if (colNameIndex !== -1 && row[colNameIndex]) {
-            hoTen = String(row[colNameIndex]).trim();
+          if (colNameIndex !== -1) {
+            hoTen = row[colNameIndex] !== undefined && row[colNameIndex] !== null
+              ? String(row[colNameIndex]).trim()
+              : '';
           } else {
             // Find first string cell with length > 2
             for (let c = 0; c < row.length; c++) {
@@ -233,7 +240,17 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
             }
           }
 
-          if (!hoTen || hoTen.toLowerCase() === 'họ và tên' || hoTen.toLowerCase() === 'họ tên') continue;
+          if (!hoTen || !isValidStudentName(hoTen)) continue;
+
+          // DOB
+          let ngaySinh: string | undefined = undefined;
+          if (colDobIndex !== -1 && row[colDobIndex]) {
+            ngaySinh = String(row[colDobIndex]).trim();
+          }
+
+          if (jsonRows.length > 4 && isTemplateSampleStudent({ hoTen, ngaySinh })) {
+            continue;
+          }
 
           // Gender
           let gioiTinh: 'Nam' | 'Nu' = 'Nam';
@@ -256,19 +273,15 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
             if (m) to = Number(m[0]) as 1 | 2 | 3 | 4;
           }
 
-          // DOB
-          let ngaySinh: string | undefined = undefined;
-          if (colDobIndex !== -1 && row[colDobIndex]) {
-            ngaySinh = String(row[colDobIndex]).trim();
+          if (results.length < 48) {
+            results.push({
+              stt: results.length + 1,
+              hoTen,
+              gioiTinh,
+              to,
+              ngaySinh,
+            });
           }
-
-          results.push({
-            stt: results.length + 1,
-            hoTen,
-            gioiTinh,
-            to,
-            ngaySinh,
-          });
         }
 
         if (results.length === 0) {
@@ -286,72 +299,9 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
     reader.readAsArrayBuffer(file);
   };
 
-  // Generate Seating Layout for imported students
+  // Generate Seating Layout for imported students (strictly 4 Tổ x 6 Bàn = max 48 seats)
   const buildLayoutForStudents = (newStudentsList: Student[]): SeatLayoutNode[] => {
-    // 4 aisles of desks (Dãy 1: cot 9,10; Dãy 2: cot 6,7; Dãy 3: cot 3,4; Dãy 4: cot 0,1)
-    // Rows: Hang 1..N based on total students (approx max students per group / 2)
-    const maxStudentsPerGroup = Math.max(
-      ...[1, 2, 3, 4].map(g => newStudentsList.filter(s => s.to === g).length)
-    );
-    const totalRowsNeeded = Math.max(6, Math.ceil(maxStudentsPerGroup / 2));
-
-    const layoutNodes: SeatLayoutNode[] = [];
-
-    // Row 0: Podium & Teacher desk & Board
-    layoutNodes.push(
-      { hang: 0, cot: 0, loaiO: 'banGV', ghiChu: 'Bàn GV' },
-      { hang: 0, cot: 1, loaiO: 'banGV', ghiChu: 'Bàn GV' },
-      { hang: 0, cot: 2, loaiO: 'loidi' },
-      { hang: 0, cot: 3, loaiO: 'buc', ghiChu: 'Bảng' },
-      { hang: 0, cot: 4, loaiO: 'buc', ghiChu: 'Bảng' },
-      { hang: 0, cot: 5, loaiO: 'buc', ghiChu: 'Bảng 10A5' },
-      { hang: 0, cot: 6, loaiO: 'buc', ghiChu: 'Bảng' },
-      { hang: 0, cot: 7, loaiO: 'buc', ghiChu: 'Bảng' },
-      { hang: 0, cot: 8, loaiO: 'loidi' },
-      { hang: 0, cot: 9, loaiO: 'cua', ghiChu: 'Cửa chính' },
-      { hang: 0, cot: 10, loaiO: 'cua', ghiChu: 'Cửa chính' }
-    );
-
-    // Group students by Tổ
-    const to1 = newStudentsList.filter(s => s.to === 1);
-    const to2 = newStudentsList.filter(s => s.to === 2);
-    const to3 = newStudentsList.filter(s => s.to === 3);
-    const to4 = newStudentsList.filter(s => s.to === 4);
-
-    const getStudentForSeat = (groupList: Student[], hang: number, isRightSeat: boolean): string | undefined => {
-      const idx = (hang - 1) * 2 + (isRightSeat ? 1 : 0);
-      return groupList[idx]?.maHS;
-    };
-
-    // Rows 1 to totalRowsNeeded
-    for (let h = 1; h <= totalRowsNeeded; h++) {
-      // Dãy 4 (Tổ 4): cot 0, 1
-      layoutNodes.push({ hang: h, cot: 0, loaiO: 'ghe', maHS: getStudentForSeat(to4, h, false) });
-      layoutNodes.push({ hang: h, cot: 1, loaiO: 'ghe', maHS: getStudentForSeat(to4, h, true) });
-
-      // Lối đi 1
-      layoutNodes.push({ hang: h, cot: 2, loaiO: 'loidi' });
-
-      // Dãy 3 (Tổ 3): cot 3, 4
-      layoutNodes.push({ hang: h, cot: 3, loaiO: 'ghe', maHS: getStudentForSeat(to3, h, false) });
-      layoutNodes.push({ hang: h, cot: 4, loaiO: 'ghe', maHS: getStudentForSeat(to3, h, true) });
-
-      // Lối đi chính
-      layoutNodes.push({ hang: h, cot: 5, loaiO: 'loidi' });
-
-      // Dãy 2 (Tổ 2): cot 6, 7
-      layoutNodes.push({ hang: h, cot: 6, loaiO: 'ghe', maHS: getStudentForSeat(to2, h, false) });
-      layoutNodes.push({ hang: h, cot: 7, loaiO: 'ghe', maHS: getStudentForSeat(to2, h, true) });
-
-      // Lối đi 2
-      layoutNodes.push({ hang: h, cot: 8, loaiO: 'loidi' });
-
-      // Dãy 1 (Tổ 1): cot 9, 10
-      layoutNodes.push({ hang: h, cot: 9, loaiO: 'ghe', maHS: getStudentForSeat(to1, h, false) });
-      layoutNodes.push({ hang: h, cot: 10, loaiO: 'ghe', maHS: getStudentForSeat(to1, h, true) });
-    }
-
-    return layoutNodes;
+    return generateDefaultLayoutForStudents(newStudentsList);
   };
 
   // Confirm and Apply Import

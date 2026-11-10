@@ -1,15 +1,152 @@
 import { Student, SeatLayoutNode, StudentAcademicRecord, DisciplineRecord, RoleCode } from '../types';
 
 /**
- * Khởi tạo khung Sơ đồ lớp chuẩn (4 Dãy bàn / 4 Tổ x 6 Bàn = 48 ghế)
+ * Kiểm tra xem một bản ghi học sinh có phải là dòng dữ liệu mẫu mặc định trong file Excel mẫu cũ hay không
+ * (Nguyễn Minh Khôi - 15/03/2011 - 0901234567, Trần Ngọc Bảo Trâm - 22/08/2011 - 0902345678).
+ * Khi nạp danh sách lớp thật (> 2 học sinh), các dòng mẫu này sẽ tự động bị loại bỏ để không làm tăng sĩ số (VD: 48 -> 50).
+ */
+export function isTemplateSampleStudent(student?: Partial<Student> | null): boolean {
+  if (!student) return false;
+  const normName = normalizeStudentNameForMatch(student.hoTen);
+  const dob = String(student.ngaySinh || '').trim();
+  const phone = String(student.sdtPhuHuynh || '').trim();
+
+  if (
+    (normName === 'nguyen minh khoi' || normName === 'nguyễn minh khôi') &&
+    (dob === '15/03/2011' || phone === '0901234567')
+  ) {
+    return true;
+  }
+  if (
+    (normName === 'tran ngoc bao tram' || normName === 'trần ngọc bảo trâm') &&
+    (dob === '22/08/2011' || phone === '0902345678')
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Kiểm tra tên học sinh hợp lệ — loại bỏ triệt để các ô tiêu đề, ghi chú, bàn giáo viên, cửa lớp, tổng cộng...
+ * vô tình nằm trong bảng Excel khi nhập dữ liệu.
+ */
+export function isValidStudentName(rawName?: string | null): boolean {
+  if (!rawName) return false;
+  const cleaned = String(rawName)
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/\[[^\]]*\]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (cleaned.length < 2 || cleaned.length > 60) return false;
+  if (/^\d+$/.test(cleaned)) return false;
+  if (/^hs\d+$/i.test(cleaned)) return false;
+
+  const lower = cleaned.toLowerCase().normalize('NFC');
+  const exactBlocked = new Set([
+    'trống',
+    'trong',
+    'chỗ trống',
+    'cho trong',
+    'ghế trống',
+    'ghe trong',
+    'bàn giáo viên',
+    'ban giao vien',
+    'bàn gv',
+    'ban gv',
+    'bàn gvcn',
+    'giáo viên',
+    'giao vien',
+    'gvcn',
+    'bục giảng',
+    'buc giang',
+    'bảng',
+    'bang',
+    'bảng lớp',
+    'bảng đen',
+    'cửa',
+    'cửa vào',
+    'cửa ra vào',
+    'cửa chính',
+    'cửa lớp',
+    'cửa sau',
+    'cửa sổ',
+    'lối đi',
+    'loi di',
+    'hành lang',
+    'cuối lớp',
+    'đầu lớp',
+    'họ và tên',
+    'ho va ten',
+    'họ tên',
+    'ho ten',
+    'tên học sinh',
+    'học sinh',
+    'stt',
+    'mã hs',
+    'mã học sinh',
+    'giới tính',
+    'ngày sinh',
+    'tổng cộng',
+    'tổng số',
+    'trung bình',
+    'sĩ số',
+    'ghi chú',
+    'nhận xét',
+  ]);
+  if (exactBlocked.has(lower)) return false;
+
+  const blockedSubstrings = [
+    'bàn giáo viên',
+    'ban giao vien',
+    'bàn gv',
+    'ban gv',
+    'bục giảng',
+    'buc giang',
+    'bảng lớp',
+    'bảng 10',
+    'cửa chính',
+    'cửa vào',
+    'cửa ra vào',
+    'cửa lớp',
+    'cửa sau',
+    'lối đi',
+    'cuối lớp',
+    'khoảng trống',
+    'họ và tên',
+    'tên học sinh',
+    'danh sách học sinh',
+    'sơ đồ lớp',
+    'bảng điểm',
+    'hướng dẫn',
+    'nguyên tắc',
+    'tổng số học sinh',
+    'giáo viên chủ nhiệm',
+    'người lập bảng',
+  ];
+  if (blockedSubstrings.some(kw => lower.includes(kw))) return false;
+
+  if (
+    /^bàn\s*\d+/i.test(cleaned) ||
+    /^dãy\s*\d+/i.test(cleaned) ||
+    /^tổ\s*\d+/i.test(cleaned) ||
+    /^ghế\s*(trái|phải|\d+)/i.test(cleaned) ||
+    /^sĩ\s*số/i.test(cleaned) ||
+    /^tổng\s*(số|cộng|hợp)/i.test(cleaned)
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Khởi tạo khung Sơ đồ lớp chuẩn:
+ * Cố định 4 Dãy bàn (4 Tổ) x 6 Bàn (Hàng 1..6) = tối đa 48 vị trí ghế.
+ * Tuyệt đối không tạo ghế ở hàng 7 (vì hàng 7 là vạch "— CUỐI LỚP —" trên giao diện).
  */
 export function generateDefaultLayoutForStudents(studentsList: Student[] = []): SeatLayoutNode[] {
-  const maxStudentsPerGroup = Math.max(
-    1,
-    ...[1, 2, 3, 4].map(g => studentsList.filter(s => s.to === g).length)
-  );
-  const maxExplicitRow = Math.max(0, ...studentsList.map(s => s.soBan || 0));
-  const totalRowsNeeded = Math.max(6, Math.ceil(maxStudentsPerGroup / 2), maxExplicitRow);
+  const validList = (studentsList || []).filter(s => s && isValidStudentName(s.hoTen));
 
   const layoutNodes: SeatLayoutNode[] = [
     { hang: 0, cot: 0, loaiO: 'banGV', ghiChu: 'Bàn GV' },
@@ -25,38 +162,50 @@ export function generateDefaultLayoutForStudents(studentsList: Student[] = []): 
     { hang: 0, cot: 10, loaiO: 'cua', ghiChu: 'Cửa chính' },
   ];
 
-  const toGroups: Record<number, Student[]> = {
-    1: studentsList.filter(s => s.to === 1),
-    2: studentsList.filter(s => s.to === 2),
-    3: studentsList.filter(s => s.to === 3),
-    4: studentsList.filter(s => s.to === 4),
-  };
-
-  const getStudentForSeat = (groupNum: number, hang: number, isRightSeat: boolean): string | undefined => {
-    const groupList = toGroups[groupNum] || [];
-    const idx = (hang - 1) * 2 + (isRightSeat ? 1 : 0);
-    return groupList[idx]?.maHS;
-  };
-
-  for (let h = 1; h <= totalRowsNeeded; h++) {
+  // Khởi tạo 6 bàn mỗi dãy (4 dãy x 6 bàn x 2 ghế = 48 ghế chuẩn)
+  for (let h = 1; h <= 6; h++) {
     // Dãy 4 (Tổ 4): cột 0, 1
-    layoutNodes.push({ hang: h, cot: 0, loaiO: 'ghe', maHS: getStudentForSeat(4, h, false) });
-    layoutNodes.push({ hang: h, cot: 1, loaiO: 'ghe', maHS: getStudentForSeat(4, h, true) });
+    layoutNodes.push({ hang: h, cot: 0, loaiO: 'ghe' });
+    layoutNodes.push({ hang: h, cot: 1, loaiO: 'ghe' });
     layoutNodes.push({ hang: h, cot: 2, loaiO: 'loidi' });
 
     // Dãy 3 (Tổ 3): cột 3, 4
-    layoutNodes.push({ hang: h, cot: 3, loaiO: 'ghe', maHS: getStudentForSeat(3, h, false) });
-    layoutNodes.push({ hang: h, cot: 4, loaiO: 'ghe', maHS: getStudentForSeat(3, h, true) });
+    layoutNodes.push({ hang: h, cot: 3, loaiO: 'ghe' });
+    layoutNodes.push({ hang: h, cot: 4, loaiO: 'ghe' });
     layoutNodes.push({ hang: h, cot: 5, loaiO: 'loidi' });
 
     // Dãy 2 (Tổ 2): cột 6, 7
-    layoutNodes.push({ hang: h, cot: 6, loaiO: 'ghe', maHS: getStudentForSeat(2, h, false) });
-    layoutNodes.push({ hang: h, cot: 7, loaiO: 'ghe', maHS: getStudentForSeat(2, h, true) });
+    layoutNodes.push({ hang: h, cot: 6, loaiO: 'ghe' });
+    layoutNodes.push({ hang: h, cot: 7, loaiO: 'ghe' });
     layoutNodes.push({ hang: h, cot: 8, loaiO: 'loidi' });
 
     // Dãy 1 (Tổ 1): cột 9, 10
-    layoutNodes.push({ hang: h, cot: 9, loaiO: 'ghe', maHS: getStudentForSeat(1, h, false) });
-    layoutNodes.push({ hang: h, cot: 10, loaiO: 'ghe', maHS: getStudentForSeat(1, h, true) });
+    layoutNodes.push({ hang: h, cot: 9, loaiO: 'ghe' });
+    layoutNodes.push({ hang: h, cot: 10, loaiO: 'ghe' });
+  }
+
+  // Xếp tối đa 48 học sinh vào đúng Tổ (mỗi Tổ tối đa 12 ghế), nếu Tổ nào vượt 12 thì xếp sang ghế trống còn lại trong 48 ghế
+  const overflowStudents: Student[] = [];
+  for (const g of [1, 2, 3, 4] as const) {
+    const groupStudents = validList.filter(s => (s.dayBan || s.to || 1) === g);
+    const [colLeft, colRight] = getSeatColsForGroup(g);
+    const groupSeats = layoutNodes.filter(
+      n => n.loaiO === 'ghe' && (n.cot === colLeft || n.cot === colRight)
+    );
+    groupStudents.forEach((stu, idx) => {
+      if (idx < groupSeats.length) {
+        groupSeats[idx].maHS = stu.maHS;
+      } else {
+        overflowStudents.push(stu);
+      }
+    });
+  }
+
+  for (const stu of overflowStudents) {
+    const emptySeat = layoutNodes.find(n => n.loaiO === 'ghe' && !n.maHS);
+    if (emptySeat) {
+      emptySeat.maHS = stu.maHS;
+    }
   }
 
   return layoutNodes;
@@ -118,16 +267,27 @@ export function getGroupFromSeatCol(cot: number): 1 | 2 | 3 | 4 {
  * Quy đổi Tổ / Dãy bàn (1..4) sang cặp cột [ghế trái, ghế phải] trên Sơ đồ lớp.
  */
 export function getSeatColsForGroup(to: number): [number, number] {
-  if (to === 1) return [10, 9];
-  if (to === 2) return [7, 6];
-  if (to === 3) return [4, 3];
-  return [1, 0];
+  if (to === 1) return [9, 10];
+  if (to === 2) return [6, 7];
+  if (to === 3) return [3, 4];
+  return [0, 1];
+}
+
+const VALID_SEAT_COLS = new Set([0, 1, 3, 4, 6, 7, 9, 10]);
+
+function isPhysicalDeskSeatNode(node: SeatLayoutNode): boolean {
+  return (
+    node.hang >= 1 &&
+    node.hang <= 6 &&
+    VALID_SEAT_COLS.has(node.cot) &&
+    (node.loaiO === 'ghe' || node.loaiO === 'trong')
+  );
 }
 
 /**
  * Tìm học sinh trong danh sách chuẩn Sơ đồ lớp (`masterStudents`) bằng Mã HS hoặc Họ tên.
  * Ưu tiên khớp theo Họ và tên chuẩn hóa trước (vì các file ngoài như vnEdu/Excel thường có STT/Mã HS khác
- * hoặc tự đánh số HS01..HS42 theo thứ tự ABC thay vì thứ tự Sơ đồ lớp).
+ * hoặc tự đánh số HS01..HS48 theo thứ tự ABC thay vì thứ tự Sơ đồ lớp).
  */
 export function findStudentInSeatingMaster(
   masterStudents: Student[],
@@ -175,11 +335,12 @@ export function findStudentInSeatingMaster(
 }
 
 /**
- * ĐỒNG BỘ LẤY SƠ ĐỒ LỚP LÀM CHUẨN (`layout` + `students`):
- * - Mọi học sinh đang ngồi trên `layout` (`loaiO === 'ghe' && maHS`) sẽ được cập nhật chính xác
- *   `to` (Tổ 1..4), `dayBan` (1..4), `soBan` (1..6) và `toTruongTo` theo đúng vị trí ghế trên Sơ đồ lớp.
- * - Nếu có học sinh trong `students` chưa có ghế trên `layout`, tự động xếp vào ghế trống của Tổ tương ứng
- *   để Sơ đồ lớp và Danh sách học sinh luôn khớp 100%.
+ * ĐỒNG BỘ LẤY SƠ ĐỒ LỚP LÀM CHUẨN GỐC DUY NHẤT (`layout` + `students`):
+ * - Khung Sơ đồ lớp chuẩn có 4 Dãy bàn (4 Tổ) x 6 Bàn (hàng 1..6) = tối đa 48 ghế.
+ * - Tự động loại bỏ các dòng mẫu thừa (Nguyễn Minh Khôi / Trần Ngọc Bảo Trâm trong file mẫu) hoặc các dòng không phải tên HS.
+ * - Nếu có học sinh thật bị đẩy nhầm xuống hàng 7 (hàng bị ẩn bởi vạch "— CUỐI LỚP —"), tự động đưa lên ghế trống ở hàng 1..6.
+ * - Danh sách học sinh trả về (`students`) CHỈ GỒM ĐÚNG NHỮNG HỌC SINH ĐANG NGỒI TRÊN SƠ ĐỒ LỚP (hàng 1..6),
+ *   đảm bảo sĩ số trên Sơ đồ lớp (VD: 48 HS) và sĩ số toàn hệ thống luôn khớp nhau 100% (không bao giờ bị lệch 48 vs 50).
  */
 export function syncStudentsWithSeatingLayout(
   students: Student[],
@@ -189,63 +350,115 @@ export function syncStudentsWithSeatingLayout(
     return { students: [], layout: layout || [] };
   }
 
-  const baseLayout =
+  // 1. Lọc bỏ các bản ghi không phải học sinh thật hoặc 2 dòng học sinh mẫu bị lẫn vào danh sách thật
+  const hasRealClassRoster = students.length > 2;
+  const cleanedStudents: Student[] = [];
+  const seenIds = new Set<string>();
+
+  for (const s of students) {
+    if (!s || !isValidStudentName(s.hoTen)) continue;
+    if (hasRealClassRoster && isTemplateSampleStudent(s)) continue;
+    if (seenIds.has(s.maHS)) continue;
+    seenIds.add(s.maHS);
+    cleanedStudents.push({ ...s });
+  }
+
+  if (cleanedStudents.length === 0) {
+    return { students: [], layout: layout || [] };
+  }
+
+  const rawLayout =
     layout && layout.length > 0
       ? layout.map(node => ({ ...node }))
-      : generateDefaultLayoutForStudents(students);
+      : generateDefaultLayoutForStudents(cleanedStudents);
 
   const studentMap = new Map<string, Student>();
-  students.forEach(s => {
+  cleanedStudents.forEach(s => {
     studentMap.set(s.maHS, { ...s });
   });
 
-  // Loại bỏ các maHS trên ghế không còn tồn tại trong danh sách học sinh,
-  // hoặc bị trùng ghế (1 học sinh ngồi 2 ghế)
+  // Thu thập học sinh bị đẩy nhầm xuống hàng >= 7 (vì hàng 7 trên giao diện là vạch "— CUỐI LỚP —" không hiển thị ghế)
+  const displacedFromHiddenRows: string[] = [];
+  for (const node of rawLayout) {
+    if (node.hang >= 7 && node.maHS && studentMap.has(node.maHS)) {
+      displacedFromHiddenRows.push(node.maHS);
+    }
+  }
+
+  // Chỉ giữ lại các hàng 0..6 trên Sơ đồ lớp (loại bỏ các ghế ẩn ở hàng >= 7)
+  const baseLayout = rawLayout.filter(node => node.hang <= 6);
+
+  // Đảm bảo đủ 48 ô ghế vật lý ở hàng 1..6 nếu layout bị thiếu
+  if (baseLayout.filter(isPhysicalDeskSeatNode).length === 0) {
+    return syncStudentsWithSeatingLayout(cleanedStudents, generateDefaultLayoutForStudents(cleanedStudents));
+  }
+
+  // 2. Xác thực các học sinh đang ngồi trên 48 ghế chuẩn (hàng 1..6) của Sơ đồ lớp
   const seatedIds = new Set<string>();
   for (const node of baseLayout) {
-    if (node.loaiO === 'ghe' && node.maHS) {
+    if (isPhysicalDeskSeatNode(node) && node.maHS) {
       if (!studentMap.has(node.maHS) || seatedIds.has(node.maHS)) {
         node.maHS = undefined;
+        node.loaiO = 'trong';
       } else {
+        node.loaiO = 'ghe';
         seatedIds.add(node.maHS);
       }
+    } else if (node.hang >= 1 && node.hang <= 6 && VALID_SEAT_COLS.has(node.cot) && !node.maHS) {
+      // Giữ trạng thái ghế trống sẵn sàng xếp chỗ
+      if (node.loaiO !== 'ghe' && node.loaiO !== 'trong') {
+        node.loaiO = 'trong';
+      }
     }
   }
 
-  // Xếp chỗ tự động cho những học sinh có trong danh sách nhưng chưa có ghế trên Sơ đồ lớp
-  for (const s of students) {
-    if (!seatedIds.has(s.maHS)) {
-      const preferredGroup = (s.dayBan || s.to || 1) as 1 | 2 | 3 | 4;
-      const [colLeft, colRight] = getSeatColsForGroup(preferredGroup);
-      let targetSeat = baseLayout.find(
-        n =>
-          n.loaiO === 'ghe' &&
-          !n.maHS &&
-          (n.cot === colLeft || n.cot === colRight) &&
-          (!s.soBan || n.hang === s.soBan)
+  // 3. Nếu trên 48 ghế của Sơ đồ lớp (hàng 1..6) còn ghế trống, ưu tiên xếp các học sinh bị đẩy xuống hàng 7 trước,
+  // sau đó đến các học sinh chưa có ghế (cho đến khi lấp đầy tối đa 48 ghế của Sơ đồ lớp).
+  const unseatedCandidates: Student[] = [];
+  for (const ma of displacedFromHiddenRows) {
+    if (!seatedIds.has(ma) && studentMap.has(ma)) {
+      unseatedCandidates.push(studentMap.get(ma)!);
+    }
+  }
+  for (const s of cleanedStudents) {
+    if (!seatedIds.has(s.maHS) && !unseatedCandidates.some(u => u.maHS === s.maHS)) {
+      unseatedCandidates.push(s);
+    }
+  }
+
+  for (const s of unseatedCandidates) {
+    if (seatedIds.size >= 48) break; // Sơ đồ lớp tối đa 48 ghế (4 Tổ x 6 Bàn)
+    const preferredGroup = (s.dayBan || s.to || 1) as 1 | 2 | 3 | 4;
+    const [colLeft, colRight] = getSeatColsForGroup(preferredGroup);
+
+    let targetSeat = baseLayout.find(
+      n =>
+        isPhysicalDeskSeatNode(n) &&
+        !n.maHS &&
+        (n.cot === colLeft || n.cot === colRight) &&
+        (!s.soBan || n.hang === s.soBan)
+    );
+    if (!targetSeat) {
+      targetSeat = baseLayout.find(
+        n => isPhysicalDeskSeatNode(n) && !n.maHS && (n.cot === colLeft || n.cot === colRight)
       );
-      if (!targetSeat) {
-        targetSeat = baseLayout.find(
-          n => n.loaiO === 'ghe' && !n.maHS && (n.cot === colLeft || n.cot === colRight)
-        );
-      }
-      if (!targetSeat) {
-        targetSeat = baseLayout.find(n => n.loaiO === 'ghe' && !n.maHS);
-      }
-      if (targetSeat) {
-        targetSeat.maHS = s.maHS;
-        seatedIds.add(s.maHS);
-      }
+    }
+    if (!targetSeat) {
+      targetSeat = baseLayout.find(n => isPhysicalDeskSeatNode(n) && !n.maHS);
+    }
+    if (targetSeat) {
+      targetSeat.maHS = s.maHS;
+      targetSeat.loaiO = 'ghe';
+      seatedIds.add(s.maHS);
     }
   }
 
-  // Cập nhật thông tin Tổ, Dãy bàn, Số bàn cho từng học sinh dựa chuẩn theo vị trí trên Sơ đồ lớp
-  const maxRow = Math.max(6, ...baseLayout.map(n => n.hang));
+  // 4. Cập nhật thông tin Tổ, Dãy bàn, Số bàn cho từng học sinh dựa chuẩn 100% theo vị trí ghế trên Sơ đồ lớp (hàng 1..6)
   for (let group = 1; group <= 4; group++) {
     const [colLeft, colRight] = getSeatColsForGroup(group);
-    for (let row = 1; row <= maxRow; row++) {
+    for (let row = 1; row <= 6; row++) {
       for (const col of [colLeft, colRight]) {
-        const seat = baseLayout.find(n => n.loaiO === 'ghe' && n.hang === row && n.cot === col);
+        const seat = baseLayout.find(n => isPhysicalDeskSeatNode(n) && n.hang === row && n.cot === col);
         if (seat && seat.maHS) {
           const st = studentMap.get(seat.maHS);
           if (st) {
@@ -255,7 +468,7 @@ export function syncStudentsWithSeatingLayout(
               ...st,
               to: derivedGroup,
               dayBan: derivedGroup,
-              soBan: Math.max(1, seat.hang),
+              soBan: Math.max(1, Math.min(6, seat.hang)),
               toTruongTo: hasTT ? derivedGroup : undefined,
             };
             studentMap.set(seat.maHS, updated);
@@ -265,17 +478,20 @@ export function syncStudentsWithSeatingLayout(
     }
   }
 
-  // Giữ thứ tự gốc nhưng cập nhật đầy đủ thuộc tính Tổ/Dãy/Bàn từ Sơ đồ lớp
-  const syncedStudents = students.map((orig, idx) => {
-    const updated = studentMap.get(orig.maHS) || orig;
-    return {
-      ...updated,
-      viTriGhe: updated.viTriGhe || idx + 1,
-    };
-  });
+  // 5. QUAN TRỌNG: Danh sách học sinh chuẩn của lớp CHỈ LẤY NHỮNG HỌC SINH ĐANG NGỒI TRÊN SƠ ĐỒ LỚP (`seatedIds`).
+  // Mọi dòng thừa/ngoài sơ đồ lớp đều bị loại bỏ để sĩ số hiển thị khớp tuyệt đối với Sơ đồ lớp (VD: 48 HS = 48 HS).
+  const seatedOnlyStudents = cleanedStudents
+    .filter(orig => seatedIds.has(orig.maHS))
+    .map((orig, idx) => {
+      const updated = studentMap.get(orig.maHS) || orig;
+      return {
+        ...updated,
+        viTriGhe: idx + 1,
+      };
+    });
 
   return {
-    students: syncedStudents,
+    students: seatedOnlyStudents,
     layout: baseLayout,
   };
 }
@@ -415,24 +631,6 @@ function parseCellStudentInfo(rawCell: string): {
   if (!cleaned) return null;
 
   const lower = cleaned.toLowerCase();
-  if (
-    lower === 'trống' ||
-    lower === 'trong' ||
-    lower === 'ghế trống' ||
-    lower === 'bàn giáo viên' ||
-    lower === 'bàn gv' ||
-    lower === 'bục giảng' ||
-    lower === 'cửa vào' ||
-    lower === 'cửa chính' ||
-    lower === 'cửa lớp' ||
-    /^bàn\s*\d+$/i.test(cleaned) ||
-    /^dãy\s*\d+/i.test(cleaned) ||
-    /^tổ\s*\d+/i.test(cleaned) ||
-    /^ghế\s*(trái|phải|\d+)$/i.test(cleaned)
-  ) {
-    return null;
-  }
-
   const roles = new Set<RoleCode>(['HS']);
   if (lower.includes('lớp trưởng') || /\b(lt)\b/i.test(cleaned)) roles.add('LT');
   if (lower.includes('lớp phó học tập') || /\b(lp_ht|lpht|lp)\b/i.test(cleaned)) roles.add('LP_HT');
@@ -445,22 +643,24 @@ function parseCellStudentInfo(rawCell: string): {
     'HS',
   ];
 
-  // Tách Mã HS nếu có dạng "HS01 - Nguyễn Văn A"
+  // Tách Mã HS nếu có dạng "HS01 - Nguyễn Văn A" hoặc "1. Nguyễn Văn A"
   let explicitId: string | undefined;
   let namePart = cleaned.replace(/\([^)]*\)/g, '').replace(/\[[^\]]*\]/g, '').trim();
   const idMatch = namePart.match(/^(HS\d{1,5})\s*[-–:]\s*(.+)$/i);
   if (idMatch) {
     explicitId = idMatch[1].toUpperCase();
     namePart = idMatch[2].trim();
+  } else {
+    namePart = namePart.replace(/^\d+[\.\/\)\-:]\s*/, '').trim();
   }
 
-  if (!namePart || namePart.length < 2 || /^\d+$/.test(namePart)) return null;
+  if (!isValidStudentName(namePart)) return null;
   return { hoTen: namePart, explicitId, roles: orderedRoles };
 }
 
 /**
  * NHẬN DIỆN & ĐỌC SHEET SƠ ĐỒ LỚP 2D TRỰC QUAN TỪ FILE EXCEL:
- * Hỗ trợ bảng sơ đồ chỗ ngồi có các cột Dãy 1/Tổ 1 .. Dãy 4/Tổ 4 và các hàng Bàn 1 .. Bàn 6.
+ * Hỗ trợ bảng sơ đồ chỗ ngồi có các cột Dãy 1/Tổ 1 .. Dãy 4/Tổ 4 và các hàng Bàn 1 .. Bàn 6 (tối đa 48 HS).
  */
 export function parse2DSeatingGridSheet(
   rows: any[][],
@@ -505,12 +705,17 @@ export function parse2DSeatingGridSheet(
           const nextColHeader = String(row[baseCol + 1] ?? '').trim();
           const subLeft = String(subRow[baseCol] ?? '').toLowerCase();
           const subRight = String(subRow[baseCol + 1] ?? '').toLowerCase();
+          const hasDataInNextCol = rows
+            .slice(r + 1, Math.min(rows.length, r + 9))
+            .some(dataRow => parseCellStudentInfo(String(dataRow?.[baseCol + 1] ?? '')) !== null);
+
           if (
             !nextColHeader &&
             (subLeft.includes('ghế') ||
               subRight.includes('ghế') ||
               subLeft.includes('trái') ||
-              subRight.includes('phải'))
+              subRight.includes('phải') ||
+              hasDataInNextCol)
           ) {
             groupCols[g] = [baseCol, baseCol + 1];
           } else {
@@ -526,15 +731,26 @@ export function parse2DSeatingGridSheet(
 
   if (headerRowIdx === -1) return null;
 
+  // Kiểm tra xem sheet có cột nhãn "Bàn 1".."Bàn 6" tường minh không
+  const explicitDeskRowsCount = rows
+    .slice(headerRowIdx + 1)
+    .filter(r =>
+      Array.isArray(r) &&
+      r.slice(0, 2).some(cell => /^bàn\s*[1-6]$/i.test(String(cell ?? '').trim()))
+    ).length;
+  const requireExplicitDeskLabel = explicitDeskRowsCount >= 3;
+
   const layout = generateDefaultLayoutForStudents([]);
   const parsedStudents: Student[] = [];
   let autoIdCounter = 1;
   const usedIds = new Set<string>();
+  const seenNames = new Set<string>();
 
   let currentDeskRow = 0;
   for (let r = headerRowIdx + 1; r < rows.length; r++) {
     const row = rows[r] || [];
     const firstColText = String(row[0] ?? '').toLowerCase().trim();
+    const secondColText = String(row[1] ?? '').toLowerCase().trim();
 
     if (
       firstColText.includes('vị trí') ||
@@ -543,15 +759,41 @@ export function parse2DSeatingGridSheet(
       continue;
     }
 
-    const deskMatch = firstColText.match(/bàn\s*(\d+)/i) || firstColText.match(/^(\d+)$/);
+    // Bỏ qua dòng nếu dòng đó là khu vực Bàn GV / Bục giảng / Cửa lớp / Cuối lớp
+    const isFixtureRow = row.some(cell => {
+      const s = String(cell ?? '').toLowerCase().trim();
+      return (
+        s.includes('bàn giáo viên') ||
+        s.includes('bàn gv') ||
+        s.includes('bục giảng') ||
+        s.includes('cửa chính') ||
+        s.includes('cửa vào') ||
+        s.includes('cửa ra vào') ||
+        s.includes('cuối lớp')
+      );
+    });
+    if (isFixtureRow) continue;
+
+    const deskMatch =
+      firstColText.match(/^bàn\s*([1-6])$/i) ||
+      secondColText.match(/^bàn\s*([1-6])$/i) ||
+      firstColText.match(/^([1-6])$/);
+
     if (deskMatch) {
-      currentDeskRow = Math.min(6, Math.max(1, parseInt(deskMatch[1], 10)));
+      currentDeskRow = parseInt(deskMatch[1], 10);
+    } else if (requireExplicitDeskLabel) {
+      // Nếu bảng đã đánh nhãn Bàn 1..Bàn 6 rõ ràng thì mọi dòng ngoài Bàn 1..6 (như dòng ghi chú/tổng kết) đều bỏ qua
+      continue;
     } else {
       const hasAnyCell = ([1, 2, 3, 4] as const).some(g =>
         groupCols[g].some(c => parseCellStudentInfo(String(row[c] ?? '')) !== null)
       );
       if (!hasAnyCell) continue;
-      currentDeskRow = Math.min(6, currentDeskRow + 1);
+      currentDeskRow = currentDeskRow + 1;
+      if (currentDeskRow > 6) {
+        // Sơ đồ lớp chuẩn chỉ có tối đa 6 bàn mỗi dãy (48 chỗ ngồi)
+        break;
+      }
     }
 
     for (const g of [1, 2, 3, 4] as const) {
@@ -576,6 +818,10 @@ export function parse2DSeatingGridSheet(
         const info = parseCellStudentInfo(rawSeatValues[sIdx]);
         if (!info) continue;
 
+        const normKey = `${g}-${currentDeskRow}-${sIdx}-${normalizeStudentNameForMatch(info.hoTen)}`;
+        if (seenNames.has(normKey)) continue;
+        seenNames.add(normKey);
+
         const existing = findStudentInSeatingMaster(existingStudents, info.explicitId, info.hoTen);
         let maHS = info.explicitId || existing?.maHS || '';
         while (!maHS || usedIds.has(maHS)) {
@@ -591,6 +837,29 @@ export function parse2DSeatingGridSheet(
           ? existing.vaiTro
           : ['HS'];
 
+        const seatCol = targetCols[sIdx];
+        const seatNode = layout.find(
+          n => isPhysicalDeskSeatNode(n) && n.hang === currentDeskRow && n.cot === seatCol
+        );
+
+        let assignedSeat: SeatLayoutNode | undefined = undefined;
+        if (seatNode && !seatNode.maHS) {
+          assignedSeat = seatNode;
+        } else {
+          assignedSeat = layout.find(
+            n =>
+              isPhysicalDeskSeatNode(n) &&
+              !n.maHS &&
+              (n.cot === seatColLeft || n.cot === seatColRight)
+          );
+        }
+
+        // Chỉ thêm học sinh khi thực sự có ghế hợp lệ trong 48 ghế của Sơ đồ lớp
+        if (!assignedSeat) continue;
+
+        assignedSeat.maHS = maHS;
+        assignedSeat.loaiO = 'ghe';
+
         const newStudent: Student = {
           ...(existing || {}),
           maHS,
@@ -599,32 +868,13 @@ export function parse2DSeatingGridSheet(
           gioiTinh: existing?.gioiTinh || 'Nam',
           to: g,
           dayBan: g,
-          soBan: currentDeskRow,
+          soBan: assignedSeat.hang,
           viTriGhe: parsedStudents.length + 1,
           vaiTro: roles,
           toTruongTo: roles.includes('TT') ? g : undefined,
         };
 
         parsedStudents.push(newStudent);
-
-        const seatCol = targetCols[sIdx];
-        const seatNode = layout.find(
-          n => n.loaiO === 'ghe' && n.hang === currentDeskRow && n.cot === seatCol
-        );
-        if (seatNode && !seatNode.maHS) {
-          seatNode.maHS = maHS;
-        } else {
-          const fallbackSeat = layout.find(
-            n =>
-              n.loaiO === 'ghe' &&
-              !n.maHS &&
-              (n.cot === seatColLeft || n.cot === seatColRight)
-          );
-          if (fallbackSeat) {
-            fallbackSeat.maHS = maHS;
-            newStudent.soBan = fallbackSeat.hang;
-          }
-        }
       }
     }
   }

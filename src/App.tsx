@@ -90,28 +90,36 @@ export default function App() {
     document.documentElement.classList.remove('dark');
   }, []);
 
-  // App dataset
-  const [students, setStudents] = useState<Student[]>(() => {
-    const saved = localStorage.getItem('app_students_10a5_v4');
-    if (!saved) return MOCK_STUDENTS;
+  // App dataset (Luôn đồng bộ lấy Sơ đồ lớp 4 Tổ x 6 Bàn = tối đa 48 ghế làm chuẩn gốc)
+  const initialSeatingState = useMemo(() => {
+    let rawStudents = MOCK_STUDENTS;
+    let rawLayout = MOCK_SEAT_LAYOUT;
     try {
-      const parsed: Student[] = JSON.parse(saved);
-      return normalizeStudentsList(parsed);
-    } catch {
-      return MOCK_STUDENTS;
-    }
-  });
-  const [layout, setLayout] = useState<SeatLayoutNode[]>(() => {
-    const saved = localStorage.getItem('app_layout_10a5_v4');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return MOCK_SEAT_LAYOUT;
+      const savedStu = localStorage.getItem('app_students_10a5_v4');
+      if (savedStu) {
+        const parsed = JSON.parse(savedStu);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          rawStudents = normalizeStudentsList(parsed);
+        }
       }
-    }
-    return MOCK_SEAT_LAYOUT;
-  });
+    } catch {}
+    try {
+      const savedLay = localStorage.getItem('app_layout_10a5_v4');
+      if (savedLay) {
+        const parsed = JSON.parse(savedLay);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          rawLayout = parsed;
+        }
+      }
+    } catch {}
+    const synced = syncStudentsWithSeatingLayout(rawStudents, rawLayout);
+    localStorage.setItem('app_students_10a5_v4', JSON.stringify(synced.students));
+    localStorage.setItem('app_layout_10a5_v4', JSON.stringify(synced.layout));
+    return synced;
+  }, []);
+
+  const [students, setStudents] = useState<Student[]>(initialSeatingState.students);
+  const [layout, setLayout] = useState<SeatLayoutNode[]>(initialSeatingState.layout);
   const [rules, setRules] = useState<RuleItem[]>(() => {
     const saved = localStorage.getItem('app_rules_10a5');
     if (!saved) return MOCK_RULES;
@@ -424,10 +432,17 @@ export default function App() {
     markRemoteStateApplied(cloudState);
 
     let masterStudents: Student[] | null = null;
+    let masterLayout: SeatLayoutNode[] | null = null;
+    let wasTrimmedToSeating = false;
+
     if (Array.isArray(cloudState.students) && cloudState.students.length > 0) {
       const incomingLayout = Array.isArray(cloudState.layout) && cloudState.layout.length > 0 ? cloudState.layout : [];
       const synced = syncStudentsWithSeatingLayout(normalizeStudentsList(cloudState.students), incomingLayout);
       masterStudents = synced.students;
+      masterLayout = synced.layout;
+      if (cloudState.students.length !== synced.students.length) {
+        wasTrimmedToSeating = true;
+      }
       setStudents(synced.students);
       setLayout(synced.layout);
       localStorage.setItem('app_students_10a5_v4', JSON.stringify(synced.students));
@@ -450,20 +465,39 @@ export default function App() {
       localStorage.setItem('app_layout_10a5_v4', JSON.stringify(cloudState.layout));
     }
 
+    let finalRecords = cloudState.records;
     if (Array.isArray(cloudState.records)) {
       const cleanedRecords = filterOutLegacyDemoRecords(cloudState.records);
       const reconciled = masterStudents
         ? reconcileDisciplineRecordsWithSeating(masterStudents, cleanedRecords)
         : cleanedRecords;
+      finalRecords = reconciled;
       setRecords(reconciled);
       localStorage.setItem('app_records_10a5', JSON.stringify(reconciled));
     }
+    let finalAcademicRecords = cloudState.academicRecords;
     if (Array.isArray(cloudState.academicRecords)) {
       const reconciledGrades = masterStudents
         ? reconcileAcademicRecordsWithSeating(masterStudents, cloudState.academicRecords, 1)
         : cloudState.academicRecords;
+      finalAcademicRecords = reconciledGrades;
       setAcademicRecords(reconciledGrades);
       saveAcademicRecords(reconciledGrades);
+    }
+
+    // Nếu dữ liệu trên mây trước đó bị dư học sinh ngoài Sơ đồ lớp (VD: 50 HS trong khi Sơ đồ lớp có 48 HS),
+    // tự động lưu lại bản chuẩn 48 HS lên mây để đồng bộ vĩnh viễn.
+    if (wasTrimmedToSeating && masterStudents && masterLayout) {
+      saveServerState(
+        {
+          ...cloudState,
+          students: masterStudents,
+          layout: masterLayout,
+          records: finalRecords || [],
+          academicRecords: finalAcademicRecords || [],
+        },
+        true
+      );
     }
     if (cloudState.settings) {
       setSettings(prev => {

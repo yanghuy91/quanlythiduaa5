@@ -49,6 +49,9 @@ import {
   reconcileAcademicRecordsWithSeating,
   reconcileDisciplineRecordsWithSeating,
   parse2DSeatingGridSheet,
+  generateDefaultLayoutForStudents,
+  isValidStudentName,
+  isTemplateSampleStudent,
 } from '../../utils/seatingMaster';
 
 interface UniversalSmartImportSectionProps {
@@ -171,65 +174,10 @@ function parseRoleCodes(rawRole: string, to: number): { vaiTro: RoleCode[]; toTr
 }
 
 /**
- * Xây dựng sơ đồ lớp đồng bộ từ danh sách học sinh (hỗ trợ cả tọa độ bàn có sẵn hoặc tự động xếp theo 4 Tổ)
+ * Xây dựng sơ đồ lớp đồng bộ từ danh sách học sinh (cố định 4 Tổ x 6 Bàn = tối đa 48 ghế chuẩn)
  */
 export function buildSynchronizedLayoutForStudents(studentsList: Student[]): SeatLayoutNode[] {
-  const maxStudentsPerGroup = Math.max(
-    1,
-    ...[1, 2, 3, 4].map(g => studentsList.filter(s => s.to === g).length)
-  );
-  const maxExplicitRow = Math.max(0, ...studentsList.map(s => s.soBan || 0));
-  const totalRowsNeeded = Math.max(6, Math.ceil(maxStudentsPerGroup / 2), maxExplicitRow);
-
-  const layoutNodes: SeatLayoutNode[] = [
-    { hang: 0, cot: 0, loaiO: 'banGV', ghiChu: 'Bàn GV' },
-    { hang: 0, cot: 1, loaiO: 'banGV', ghiChu: 'Bàn GV' },
-    { hang: 0, cot: 2, loaiO: 'loidi' },
-    { hang: 0, cot: 3, loaiO: 'buc', ghiChu: 'Bảng' },
-    { hang: 0, cot: 4, loaiO: 'buc', ghiChu: 'Bảng' },
-    { hang: 0, cot: 5, loaiO: 'buc', ghiChu: 'Bảng 10A5' },
-    { hang: 0, cot: 6, loaiO: 'buc', ghiChu: 'Bảng' },
-    { hang: 0, cot: 7, loaiO: 'buc', ghiChu: 'Bảng' },
-    { hang: 0, cot: 8, loaiO: 'loidi' },
-    { hang: 0, cot: 9, loaiO: 'cua', ghiChu: 'Cửa chính' },
-    { hang: 0, cot: 10, loaiO: 'cua', ghiChu: 'Cửa chính' },
-  ];
-
-  const toGroups: Record<number, Student[]> = {
-    1: studentsList.filter(s => s.to === 1),
-    2: studentsList.filter(s => s.to === 2),
-    3: studentsList.filter(s => s.to === 3),
-    4: studentsList.filter(s => s.to === 4),
-  };
-
-  const getStudentForSeat = (groupNum: number, hang: number, isRightSeat: boolean): string | undefined => {
-    const groupList = toGroups[groupNum] || [];
-    const idx = (hang - 1) * 2 + (isRightSeat ? 1 : 0);
-    return groupList[idx]?.maHS;
-  };
-
-  for (let h = 1; h <= totalRowsNeeded; h++) {
-    // Dãy 4 (Tổ 4): cột 0, 1
-    layoutNodes.push({ hang: h, cot: 0, loaiO: 'ghe', maHS: getStudentForSeat(4, h, false) });
-    layoutNodes.push({ hang: h, cot: 1, loaiO: 'ghe', maHS: getStudentForSeat(4, h, true) });
-    layoutNodes.push({ hang: h, cot: 2, loaiO: 'loidi' });
-
-    // Dãy 3 (Tổ 3): cột 3, 4
-    layoutNodes.push({ hang: h, cot: 3, loaiO: 'ghe', maHS: getStudentForSeat(3, h, false) });
-    layoutNodes.push({ hang: h, cot: 4, loaiO: 'ghe', maHS: getStudentForSeat(3, h, true) });
-    layoutNodes.push({ hang: h, cot: 5, loaiO: 'loidi' });
-
-    // Dãy 2 (Tổ 2): cột 6, 7
-    layoutNodes.push({ hang: h, cot: 6, loaiO: 'ghe', maHS: getStudentForSeat(2, h, false) });
-    layoutNodes.push({ hang: h, cot: 7, loaiO: 'ghe', maHS: getStudentForSeat(2, h, true) });
-    layoutNodes.push({ hang: h, cot: 8, loaiO: 'loidi' });
-
-    // Dãy 1 (Tổ 1): cột 9, 10
-    layoutNodes.push({ hang: h, cot: 9, loaiO: 'ghe', maHS: getStudentForSeat(1, h, false) });
-    layoutNodes.push({ hang: h, cot: 10, loaiO: 'ghe', maHS: getStudentForSeat(1, h, true) });
-  }
-
-  return layoutNodes;
+  return generateDefaultLayoutForStudents(studentsList);
 }
 
 // Danh sách từ khóa nhận diện các môn học trong bảng tổng hợp hoặc vnEdu
@@ -629,12 +577,21 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
         const normName = normalizeHeader(hoTen);
         if (
           !hoTen ||
-          hoTen.length < 2 ||
+          !isValidStudentName(hoTen) ||
           normName === 'ho va ten' ||
           normName === 'ho ten' ||
           normName === 'stt' ||
           normName.startsWith('huong dan') ||
           normName.startsWith('nguyen tac')
+        ) {
+          continue;
+        }
+
+        const rawRowDob = colNgaySinh !== -1 && row[colNgaySinh] ? String(row[colNgaySinh]).trim() : '';
+        const rawRowPhone = colSDT !== -1 && row[colSDT] ? String(row[colSDT]).trim() : '';
+        if (
+          validRows.length > 4 &&
+          isTemplateSampleStudent({ hoTen, ngaySinh: rawRowDob, sdtPhuHuynh: rawRowPhone })
         ) {
           continue;
         }
@@ -725,7 +682,10 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
         };
 
         if (studentIdx === -1) {
-          extractedStudents.push(studentObj);
+          // Nếu file đã có Sheet Sơ đồ lớp 2D chuẩn thì tuyệt đối không thêm học sinh ngoài Sơ đồ lớp từ các sheet phụ
+          if (!has2DSeatingSheet && extractedStudents.length < 48) {
+            extractedStudents.push(studentObj);
+          }
         } else {
           extractedStudents[studentIdx] = {
             ...extractedStudents[studentIdx],

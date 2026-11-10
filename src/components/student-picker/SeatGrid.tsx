@@ -86,6 +86,22 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
     return map;
   }, [students]);
 
+  // Danh sách học sinh thực tế đang ngồi trên Sơ đồ lớp (Hàng 1..6)
+  const seatedStudents = React.useMemo(() => {
+    const list: Student[] = [];
+    const seen = new Set<string>();
+    layout.forEach(node => {
+      if (node.hang >= 1 && node.hang <= 6 && node.loaiO === 'ghe' && node.maHS && !seen.has(node.maHS)) {
+        const st = studentMap.get(node.maHS);
+        if (st) {
+          seen.add(node.maHS);
+          list.push(st);
+        }
+      }
+    });
+    return list.length > 0 ? list : students;
+  }, [layout, studentMap, students]);
+
   // Determine if a seat is locked for this viewer
   // Tổ trưởng: only members of their group are clickable
   const isSeatLockedForViewer = (student?: Student): boolean => {
@@ -174,14 +190,14 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
         <div className="flex items-center gap-2 text-[11px] font-semibold text-muted">
           <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-sky-700 dark:text-sky-300 border-2 border-sky-400 dark:border-sky-500 shadow-2xs font-bold">
             <span className="w-2 h-2 rounded-full bg-sky-500" />
-            <span>Nam: {students.filter(s => s.gioiTinh !== 'Nu').length}</span>
+            <span>Nam: {seatedStudents.filter(s => s.gioiTinh !== 'Nu').length}</span>
           </span>
           <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-rose-700 dark:text-rose-300 border-2 border-rose-400 dark:border-rose-500 shadow-2xs font-bold">
             <span className="w-2 h-2 rounded-full bg-rose-500" />
-            <span>Nữ: {students.filter(s => s.gioiTinh === 'Nu').length}</span>
+            <span>Nữ: {seatedStudents.filter(s => s.gioiTinh === 'Nu').length}</span>
           </span>
           <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-muted">
-            Tổng: <strong className="text-main">{students.length}</strong> ghế
+            Tổng: <strong className="text-main">{seatedStudents.length}</strong> HS
           </span>
         </div>
       </div>
