@@ -26,6 +26,21 @@ export function getAllStudentPasswords(): Record<string, string> {
 }
 
 /**
+ * Hydrate all custom student passwords from cloud state
+ */
+export function setAllStudentPasswords(passwordsMap?: Record<string, string>): void {
+  try {
+    if (passwordsMap && typeof passwordsMap === 'object') {
+      const existing = getAllStudentPasswords();
+      const merged = { ...existing, ...passwordsMap };
+      localStorage.setItem(STORAGE_KEY_PASSWORDS, JSON.stringify(merged));
+    }
+  } catch (e) {
+    console.error('Error setting student passwords:', e);
+  }
+}
+
+/**
  * Get password for a specific student. Defaults to '123456'.
  */
 export function getStudentPassword(maHS: string): string {
@@ -76,7 +91,10 @@ export function changeStudentPassword(
     const all = getAllStudentPasswords();
     all[maHS] = newPass;
     localStorage.setItem(STORAGE_KEY_PASSWORDS, JSON.stringify(all));
-    return { success: true, message: 'Đổi mật khẩu thành công! Vui lòng ghi nhớ mật khẩu mới.' };
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lop10a5:password_change'));
+    }
+    return { success: true, message: 'Đổi mật khẩu thành công! Mật khẩu mới đã được đồng bộ lên đám mây.' };
   } catch (e) {
     console.error('Error saving new password:', e);
     return { success: false, message: 'Có lỗi xảy ra khi lưu mật khẩu. Vui lòng thử lại.' };

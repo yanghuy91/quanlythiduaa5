@@ -2,7 +2,7 @@ import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Camera, Upload, Trash2, X, Check, Sparkles, Lock, ShieldAlert } from 'lucide-react';
 import { Student, TeacherSettings } from '../../types';
 import { getStudentAvatarInitial } from '../../utils/vietnamese';
-import { PRESET_STUDENT_AVATARS, StudentAvatarPreset } from '../../data/avatarPresets';
+import { PRESET_STUDENT_AVATARS, StudentAvatarPreset, resolveStudentAvatar } from '../../data/avatarPresets';
 
 interface AvatarUploadModalProps {
   student: Student;
@@ -21,7 +21,7 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
   allStudents = [],
   settings,
 }) => {
-  const [previewUrl, setPreviewUrl] = useState<string>(student?.avatarUrl || '');
+  const [previewUrl, setPreviewUrl] = useState<string>(resolveStudentAvatar(student?.avatarUrl) || '');
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -29,7 +29,7 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
   // Sync state whenever modal opens or active student changes (e.g. fast demo switcher)
   useEffect(() => {
     if (isOpen && student) {
-      setPreviewUrl(student.avatarUrl || '');
+      setPreviewUrl(resolveStudentAvatar(student.avatarUrl) || '');
       setErrorMsg(null);
     }
   }, [isOpen, student?.avatarUrl, student?.maHS]);
@@ -43,6 +43,8 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
     const map = new Map<string, string>();
     allStudents.forEach(st => {
       if (st && st.maHS !== student?.maHS && st.avatarUrl && typeof st.hoTen === 'string') {
+        const resolved = resolveStudentAvatar(st.avatarUrl) || st.avatarUrl;
+        map.set(resolved, st.hoTen);
         map.set(st.avatarUrl, st.hoTen);
       }
     });

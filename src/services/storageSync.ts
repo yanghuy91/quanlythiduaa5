@@ -16,8 +16,11 @@ export interface ClassroomFullState {
   layout: SeatLayoutNode[];
   rules: ViolationRule[];
   teacherAvatar: string;
+  teacherProfile?: any;
+  currentWeek?: number;
   studentBadgesMap?: Record<string, string[]>;
   studentActiveBadges?: Record<string, string>;
+  studentPasswords?: Record<string, string>;
   updatedAt: string;
   version: number;
 }
@@ -49,8 +52,11 @@ export function computeStateFingerprint(state: ClassroomFullState): string {
       layout: state.layout,
       rules: state.rules,
       teacherAvatar: state.teacherAvatar,
+      teacherProfile: state.teacherProfile,
+      currentWeek: state.currentWeek,
       studentBadgesMap: state.studentBadgesMap,
       studentActiveBadges: state.studentActiveBadges,
+      studentPasswords: state.studentPasswords,
     });
   } catch {
     return '';

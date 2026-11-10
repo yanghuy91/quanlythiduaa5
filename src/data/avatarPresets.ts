@@ -185,3 +185,38 @@ export const PRESET_STUDENT_AVATARS = STUDENT_AVATAR_PRESETS;
 
 export const AVATAR_PRESETS_NAM = STUDENT_AVATAR_PRESETS.filter(p => p.gender === 'Nam');
 export const AVATAR_PRESETS_NU = STUDENT_AVATAR_PRESETS.filter(p => p.gender === 'Nu');
+
+/**
+ * Resolve any student avatar URL (Base64 data URL, preset ID like 'avatar_nu_14',
+ * dev path '/src/assets/avatars/nu_14.jpg', or production hashed path '/assets/nu_14-xxxx.jpg')
+ * to a valid runtime image URL.
+ */
+export function resolveStudentAvatar(avatarUrl?: string | null): string | undefined {
+  if (!avatarUrl || typeof avatarUrl !== 'string') return undefined;
+  const clean = avatarUrl.trim();
+  if (!clean || clean.startsWith('HS') || clean.length <= 4) return undefined;
+
+  // 1. Custom uploaded Base64 image or external http(s) URL
+  if (clean.startsWith('data:image/') || clean.startsWith('http://') || clean.startsWith('https://')) {
+    return clean;
+  }
+
+  // 2. Direct match on preset ID or current runtime imageSrc
+  const directPreset = STUDENT_AVATAR_PRESETS.find(p => p.id === clean || p.imageSrc === clean);
+  if (directPreset) {
+    return directPreset.imageSrc;
+  }
+
+  // 3. Match by filename pattern (nam_01..nam_40 or nu_01..nu_40) across Vite dev/build hashes
+  const match = clean.match(/((?:nam|nu)_\d{2})/i);
+  if (match && match[1]) {
+    const presetId = `avatar_${match[1].toLowerCase()}`;
+    const matchedPreset = STUDENT_AVATAR_PRESETS.find(p => p.id === presetId);
+    if (matchedPreset) {
+      return matchedPreset.imageSrc;
+    }
+  }
+
+  return clean;
+}
+

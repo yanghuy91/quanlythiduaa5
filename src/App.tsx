@@ -34,10 +34,13 @@ import { CallingGamesHub } from './components/teacher/calling-games/CallingGames
 import { 
   saveAuthSession, 
   getSavedAuthSession, 
-  clearAuthSession 
+  clearAuthSession,
+  getAllStudentPasswords,
+  setAllStudentPasswords
 } from './utils/authService';
 import { getAcademicRecords, saveAcademicRecords } from './data/academicCatalog';
 import { getTeacherAvatar, setTeacherAvatar, resolveTeacherAvatar, DEFAULT_TEACHER_AVATAR } from './data/teacherAvatars';
+import { resolveStudentAvatar } from './data/avatarPresets';
 import { TeacherAvatarModal } from './components/teacher/TeacherAvatarModal';
 import { TeacherProfileModal } from './components/teacher/TeacherProfileModal';
 import { getTeacherProfile, saveTeacherProfile, TeacherProfile } from './data/teacherProfile';
@@ -60,6 +63,13 @@ import {
   isAuthorizedTeacherEmail 
 } from './services/firebase';
 
+function normalizeStudentsList(list: Student[]): Student[] {
+  return list.map(s => ({
+    ...s,
+    avatarUrl: resolveStudentAvatar(s.avatarUrl),
+  }));
+}
+
 export default function App() {
   // Enforce Light mode permanently (Default light, removed dark mode)
   useEffect(() => {
@@ -74,14 +84,7 @@ export default function App() {
     if (!saved) return MOCK_STUDENTS;
     try {
       const parsed: Student[] = JSON.parse(saved);
-      // Clean up any corrupted avatarUrl string like "HS01"
-      return parsed.map(s => {
-        const hasValidUrl = s.avatarUrl && !s.avatarUrl.startsWith('HS') && s.avatarUrl.length > 5;
-        return {
-          ...s,
-          avatarUrl: hasValidUrl ? s.avatarUrl : undefined
-        };
-      });
+      return normalizeStudentsList(parsed);
     } catch {
       return MOCK_STUDENTS;
     }
@@ -127,26 +130,11 @@ export default function App() {
     return getAcademicRecords();
   });
 
-  const handleUpdateAcademicRecords = useCallback((newRecords: StudentAcademicRecord[]) => {
-    setAcademicRecords(newRecords);
-    saveAcademicRecords(newRecords);
-  }, []);
-
   // Current session & week (Persisted and changeable)
   const [currentWeek, setCurrentWeek] = useState<number>(() => {
     const saved = localStorage.getItem('app_current_week');
     return saved ? Number(saved) : 3;
   });
-
-  const handleSetCurrentWeek = useCallback((week: number) => {
-    setCurrentWeek(week);
-    localStorage.setItem('app_current_week', String(week));
-    setToast({
-      id: Date.now().toString(),
-      message: `Đã đổi tuần học hiện tại: Tuần ${week} ✨`,
-      subMessage: `Điểm thi đua của lớp 10A5 được cập nhật theo Tuần ${week}`,
-    });
-  }, []);
   
   // Teacher & Student Avatar state
   const [teacherAvatar, setTeacherAvatarState] = useState<string>(() => {
@@ -174,6 +162,12 @@ export default function App() {
           avatarUrl: resolveTeacherAvatar((session.user as any).avatarUrl || getTeacherAvatar()),
         };
       }
+      if ('maHS' in session.user) {
+        return {
+          ...session.user,
+          avatarUrl: resolveStudentAvatar(session.user.avatarUrl),
+        };
+      }
       return session.user;
     }
     return null;
@@ -189,6 +183,49 @@ export default function App() {
   });
   const [showCallingGamesModal, setShowCallingGamesModal] = useState(false);
 
+  // Toast notification state
+  const [toast, setToast] = useState<ToastData | null>(null);
+
+  // Helper to construct a complete snapshot for immediate cloud persistence
+  const buildFullStateSnapshot = useCallback((overrides?: Partial<ClassroomFullState>): ClassroomFullState => {
+    const badges = getAllStudentBadgesState();
+    const passwords = getAllStudentPasswords();
+    return {
+      students,
+      records,
+      academicRecords,
+      settings,
+      layout,
+      rules,
+      teacherAvatar,
+      teacherProfile,
+      currentWeek,
+      studentBadgesMap: badges.studentBadgesMap,
+      studentActiveBadges: badges.studentActiveBadges,
+      studentPasswords: passwords,
+      updatedAt: new Date().toISOString(),
+      version: Date.now(),
+      ...overrides,
+    };
+  }, [students, records, academicRecords, settings, layout, rules, teacherAvatar, teacherProfile, currentWeek]);
+
+  const handleUpdateAcademicRecords = useCallback((newRecords: StudentAcademicRecord[]) => {
+    setAcademicRecords(newRecords);
+    saveAcademicRecords(newRecords);
+    saveServerState(buildFullStateSnapshot({ academicRecords: newRecords }), true);
+  }, [buildFullStateSnapshot]);
+
+  const handleSetCurrentWeek = useCallback((week: number) => {
+    setCurrentWeek(week);
+    localStorage.setItem('app_current_week', String(week));
+    saveServerState(buildFullStateSnapshot({ currentWeek: week }), true);
+    setToast({
+      id: Date.now().toString(),
+      message: `Đã đổi tuần học hiện tại: Tuần ${week} ✨`,
+      subMessage: `Điểm thi đua của lớp 10A5 được cập nhật theo Tuần ${week}`,
+    });
+  }, [buildFullStateSnapshot]);
+
   // Teacher updates their avatar
   const handleUpdateTeacherAvatar = useCallback((newAvatarUrl: string) => {
     const resolved = resolveTeacherAvatar(newAvatarUrl);
@@ -202,12 +239,13 @@ export default function App() {
       }
       return prev;
     });
+    saveServerState(buildFullStateSnapshot({ teacherAvatar: resolved }), true);
     setToast({
       id: Date.now().toString(),
       message: 'Đã cập nhật ảnh đại diện Thầy ✨',
-      subMessage: 'Ảnh đại diện Giáo viên chủ nhiệm đã được lưu thành công.',
+      subMessage: 'Ảnh đại diện Giáo viên chủ nhiệm đã được lưu lên đám mây.',
     });
-  }, []);
+  }, [buildFullStateSnapshot]);
 
   // Teacher updates profile (custom name & status text)
   const handleSaveTeacherProfile = useCallback((profile: TeacherProfile) => {
@@ -225,46 +263,30 @@ export default function App() {
       }
       return prev;
     });
+    saveServerState(buildFullStateSnapshot({ teacherProfile: profile }), true);
     setToast({
       id: Date.now().toString(),
       message: 'Đã lưu thông tin Giáo viên chủ nhiệm ✨',
       subMessage: `Họ tên: ${profile.hoTen} • ${profile.statusText}`,
     });
-  }, []);
+  }, [buildFullStateSnapshot]);
 
   // Teacher imports real student list from Excel or Text
   const handleImportStudents = useCallback((newStudents: Student[], newLayout: SeatLayoutNode[]) => {
-    setStudents(newStudents);
+    const normalized = normalizeStudentsList(newStudents);
+    setStudents(normalized);
     setLayout(newLayout);
-    localStorage.setItem('app_students_10a5_v4', JSON.stringify(newStudents));
+    localStorage.setItem('app_students_10a5_v4', JSON.stringify(normalized));
     localStorage.setItem('app_layout_10a5_v4', JSON.stringify(newLayout));
 
-    // Save immediately to Cloud and Local server
-    const badges = getAllStudentBadgesState();
-    const fullState: ClassroomFullState = {
-      students: newStudents,
-      records,
-      academicRecords,
-      settings,
-      layout: newLayout,
-      rules,
-      teacherAvatar,
-      studentBadgesMap: badges.studentBadgesMap,
-      studentActiveBadges: badges.studentActiveBadges,
-      updatedAt: new Date().toISOString(),
-      version: Date.now(),
-    };
-    saveServerState(fullState, true);
+    saveServerState(buildFullStateSnapshot({ students: normalized, layout: newLayout }), true);
 
     setToast({
       id: Date.now().toString(),
-      message: `Đã cập nhật danh sách lớp: ${newStudents.length} học sinh 🎓`,
+      message: `Đã cập nhật danh sách lớp: ${normalized.length} học sinh 🎓`,
       subMessage: 'Dữ liệu đã được lưu và đồng bộ lên đám mây thành công.',
     });
-  }, [records, academicRecords, settings, rules, teacherAvatar]);
-
-  // Toast notification state
-  const [toast, setToast] = useState<ToastData | null>(null);
+  }, [buildFullStateSnapshot]);
 
   // Sync to local storage
   useEffect(() => {
@@ -282,7 +304,84 @@ export default function App() {
   // Realtime Cloud Firebase Realtime Database sync listener across all devices
   const isApplyingRemoteUpdate = useRef(false);
 
-  // Persistent Server State: Initial fetch & hydration from server/cloud
+  // Apply remote cloud state helper (used by both initial fetch & realtime listener)
+  const applyCloudState = useCallback((cloudState: ClassroomFullState) => {
+    isApplyingRemoteUpdate.current = true;
+    markRemoteStateApplied(cloudState);
+
+    if (Array.isArray(cloudState.students) && cloudState.students.length > 0) {
+      const normalizedStudents = normalizeStudentsList(cloudState.students);
+      setStudents(normalizedStudents);
+      localStorage.setItem('app_students_10a5_v4', JSON.stringify(normalizedStudents));
+
+      // Keep logged-in Student/Cadre session synchronized with latest cloud student data
+      setCurrentUser(prev => {
+        if (prev && 'maHS' in prev) {
+          const freshStudent = normalizedStudents.find(s => s.maHS === (prev as Student).maHS);
+          if (freshStudent) {
+            const session = getSavedAuthSession();
+            saveAuthSession(freshStudent, session?.role || 'HS', session?.remember ?? true);
+            return freshStudent;
+          }
+        }
+        return prev;
+      });
+    }
+    if (Array.isArray(cloudState.records)) {
+      setRecords(cloudState.records);
+      localStorage.setItem('app_records_10a5', JSON.stringify(cloudState.records));
+    }
+    if (Array.isArray(cloudState.academicRecords)) {
+      setAcademicRecords(cloudState.academicRecords);
+      saveAcademicRecords(cloudState.academicRecords);
+    }
+    if (cloudState.settings) {
+      setSettings(prev => {
+        const merged = { ...prev, ...cloudState.settings };
+        localStorage.setItem('app_settings_10a5', JSON.stringify(merged));
+        return merged;
+      });
+    }
+    if (Array.isArray(cloudState.layout) && cloudState.layout.length > 0) {
+      setLayout(cloudState.layout);
+      localStorage.setItem('app_layout_10a5_v4', JSON.stringify(cloudState.layout));
+    }
+    if (Array.isArray(cloudState.rules)) {
+      setRules(cloudState.rules);
+      localStorage.setItem('app_rules_10a5', JSON.stringify(cloudState.rules));
+    }
+    if (cloudState.teacherAvatar) {
+      const resolved = resolveTeacherAvatar(cloudState.teacherAvatar);
+      setTeacherAvatarState(resolved);
+      setTeacherAvatar(resolved);
+      setCurrentUser(prev => prev && prev.vaiTro.includes('GV') ? { ...prev, avatarUrl: resolved } : prev);
+    }
+    if (cloudState.teacherProfile && typeof cloudState.teacherProfile === 'object') {
+      setTeacherProfileState(cloudState.teacherProfile);
+      saveTeacherProfile(cloudState.teacherProfile);
+      setCurrentUser(prev => prev && prev.vaiTro.includes('GV') ? {
+        ...prev,
+        hoTen: cloudState.teacherProfile.hoTen || prev.hoTen,
+        statusText: cloudState.teacherProfile.statusText || (prev as any).statusText,
+      } : prev);
+    }
+    if (typeof cloudState.currentWeek === 'number' && cloudState.currentWeek >= 1) {
+      setCurrentWeek(cloudState.currentWeek);
+      localStorage.setItem('app_current_week', String(cloudState.currentWeek));
+    }
+    if (cloudState.studentBadgesMap || cloudState.studentActiveBadges) {
+      setAllStudentBadgesState(cloudState.studentBadgesMap, cloudState.studentActiveBadges);
+    }
+    if (cloudState.studentPasswords && typeof cloudState.studentPasswords === 'object') {
+      setAllStudentPasswords(cloudState.studentPasswords);
+    }
+
+    setTimeout(() => {
+      isApplyingRemoteUpdate.current = false;
+    }, 600);
+  }, []);
+
+  // Persistent Server State: Initial fetch & hydration from Firebase Realtime Database
   useEffect(() => {
     let isMounted = true;
     (async () => {
@@ -290,96 +389,22 @@ export default function App() {
         const serverState = await fetchServerState();
         if (!isMounted) return;
         if (serverState) {
-          isApplyingRemoteUpdate.current = true;
-          markRemoteStateApplied(serverState);
-          if (Array.isArray(serverState.students) && serverState.students.length > 0) {
-            setStudents(serverState.students);
-            localStorage.setItem('app_students_10a5_v4', JSON.stringify(serverState.students));
-          }
-          if (Array.isArray(serverState.records)) {
-            setRecords(serverState.records);
-            localStorage.setItem('app_records_10a5', JSON.stringify(serverState.records));
-          }
-          if (Array.isArray(serverState.academicRecords)) {
-            setAcademicRecords(serverState.academicRecords);
-            saveAcademicRecords(serverState.academicRecords);
-          }
-          if (serverState.settings) {
-            setSettings(serverState.settings);
-            localStorage.setItem('app_settings_10a5', JSON.stringify(serverState.settings));
-          }
-          if (Array.isArray(serverState.layout) && serverState.layout.length > 0) {
-            setLayout(serverState.layout);
-            localStorage.setItem('app_layout_10a5_v4', JSON.stringify(serverState.layout));
-          }
-          if (Array.isArray(serverState.rules)) {
-            setRules(serverState.rules);
-            localStorage.setItem('app_rules_10a5', JSON.stringify(serverState.rules));
-          }
-          if (serverState.teacherAvatar) {
-            const resolved = resolveTeacherAvatar(serverState.teacherAvatar);
-            setTeacherAvatarState(resolved);
-            setTeacherAvatar(resolved);
-            setCurrentUser(prev => prev && prev.vaiTro.includes('GV') ? { ...prev, avatarUrl: resolved } : prev);
-          }
-          if (serverState.studentBadgesMap || serverState.studentActiveBadges) {
-            setAllStudentBadgesState(serverState.studentBadgesMap, serverState.studentActiveBadges);
-          }
-          setTimeout(() => {
-            isApplyingRemoteUpdate.current = false;
-          }, 600);
+          applyCloudState(serverState);
         }
       } catch (err) {
         console.warn('Initial cloud state sync error:', err);
       }
     })();
     return () => { isMounted = false; };
-  }, []);
+  }, [applyCloudState]);
 
   useEffect(() => {
     const unsubscribe = subscribeToCloudClassState((cloudState) => {
       if (!cloudState) return;
-      isApplyingRemoteUpdate.current = true;
-      markRemoteStateApplied(cloudState);
-      if (Array.isArray(cloudState.students) && cloudState.students.length > 0) {
-        setStudents(cloudState.students);
-        localStorage.setItem('app_students_10a5_v4', JSON.stringify(cloudState.students));
-      }
-      if (Array.isArray(cloudState.records)) {
-        setRecords(cloudState.records);
-        localStorage.setItem('app_records_10a5', JSON.stringify(cloudState.records));
-      }
-      if (Array.isArray(cloudState.academicRecords)) {
-        setAcademicRecords(cloudState.academicRecords);
-        localStorage.setItem('app_academic_records_10a5', JSON.stringify(cloudState.academicRecords));
-      }
-      if (cloudState.settings) {
-        setSettings(prev => ({ ...prev, ...cloudState.settings }));
-        localStorage.setItem('app_teacher_settings', JSON.stringify(cloudState.settings));
-      }
-      if (Array.isArray(cloudState.layout)) {
-        setLayout(cloudState.layout);
-        localStorage.setItem('app_layout_10a5_v4', JSON.stringify(cloudState.layout));
-      }
-      if (Array.isArray(cloudState.rules)) {
-        setRules(cloudState.rules);
-        localStorage.setItem('app_rules_10a5', JSON.stringify(cloudState.rules));
-      }
-      if (cloudState.teacherAvatar) {
-        const resolved = resolveTeacherAvatar(cloudState.teacherAvatar);
-        setTeacherAvatarState(resolved);
-        setTeacherAvatar(resolved);
-        setCurrentUser(prev => prev && prev.vaiTro.includes('GV') ? { ...prev, avatarUrl: resolved } : prev);
-      }
-      if (cloudState.studentBadgesMap || cloudState.studentActiveBadges) {
-        setAllStudentBadgesState(cloudState.studentBadgesMap, cloudState.studentActiveBadges);
-      }
-      setTimeout(() => {
-        isApplyingRemoteUpdate.current = false;
-      }, 500);
+      applyCloudState(cloudState);
     });
     return () => unsubscribe();
-  }, []);
+  }, [applyCloudState]);
 
   // Realtime Firebase Auth listener: Automatically log in teacher on Google redirect or session restore
   useEffect(() => {
@@ -400,7 +425,6 @@ export default function App() {
           setCurrentUser(teacherUser);
           setCurrentRole('GV');
           setIsLoginModalOpen(false);
-          // Removed welcome toast as requested for clean experience
         } else {
           await logoutFirebase().catch(() => {});
           setToast({
@@ -424,45 +448,21 @@ export default function App() {
     if (isApplyingRemoteUpdate.current) {
       return; // Bỏ qua tự lưu nếu dữ liệu vừa được cập nhật từ máy chủ realtime
     }
-    const badges = getAllStudentBadgesState();
-    const fullState: ClassroomFullState = {
-      students,
-      records,
-      academicRecords,
-      settings,
-      layout,
-      rules,
-      teacherAvatar,
-      studentBadgesMap: badges.studentBadgesMap,
-      studentActiveBadges: badges.studentActiveBadges,
-      updatedAt: new Date().toISOString(),
-      version: Date.now(),
-    };
-    scheduleServerSync(fullState);
-  }, [students, records, academicRecords, settings, layout, rules, teacherAvatar]);
+    scheduleServerSync(buildFullStateSnapshot());
+  }, [students, records, academicRecords, settings, layout, rules, teacherAvatar, teacherProfile, currentWeek, buildFullStateSnapshot]);
 
-  // Sync badges on badge change events
+  // Sync badges & passwords immediately on student/teacher change events
   useEffect(() => {
-    const handleBadgeChange = () => {
-      const badges = getAllStudentBadgesState();
-      const fullState: ClassroomFullState = {
-        students,
-        records,
-        academicRecords,
-        settings,
-        layout,
-        rules,
-        teacherAvatar,
-        studentBadgesMap: badges.studentBadgesMap,
-        studentActiveBadges: badges.studentActiveBadges,
-        updatedAt: new Date().toISOString(),
-        version: 1,
-      };
-      scheduleServerSync(fullState);
+    const handleImmediateEventSync = () => {
+      saveServerState(buildFullStateSnapshot(), true);
     };
-    window.addEventListener('lop10a5:badge_change', handleBadgeChange);
-    return () => window.removeEventListener('lop10a5:badge_change', handleBadgeChange);
-  }, [students, records, academicRecords, settings, layout, rules, teacherAvatar]);
+    window.addEventListener('lop10a5:badge_change', handleImmediateEventSync);
+    window.addEventListener('lop10a5:password_change', handleImmediateEventSync);
+    return () => {
+      window.removeEventListener('lop10a5:badge_change', handleImmediateEventSync);
+      window.removeEventListener('lop10a5:password_change', handleImmediateEventSync);
+    };
+  }, [buildFullStateSnapshot]);
 
   // Compute student summaries
   const studentSummaries = useMemo(() => {
@@ -492,28 +492,10 @@ export default function App() {
       thoiGianMay: nowISO,
     };
 
-    setRecords(prev => {
-      const updated = [record, ...prev];
-      localStorage.setItem('app_records_10a5', JSON.stringify(updated));
-
-      const badges = getAllStudentBadgesState();
-      const fullState: ClassroomFullState = {
-        students,
-        records: updated,
-        academicRecords,
-        settings,
-        layout,
-        rules,
-        teacherAvatar,
-        studentBadgesMap: badges.studentBadgesMap,
-        studentActiveBadges: badges.studentActiveBadges,
-        updatedAt: nowISO,
-        version: Date.now(),
-      };
-      saveServerState(fullState);
-
-      return updated;
-    });
+    const updated = [record, ...records];
+    setRecords(updated);
+    localStorage.setItem('app_records_10a5', JSON.stringify(updated));
+    saveServerState(buildFullStateSnapshot({ records: updated, updatedAt: nowISO }), true);
 
     // Show 8-second Toast with Undo
     setToast({
@@ -522,147 +504,120 @@ export default function App() {
       message: `Đã ghi: ${record.hoTen} – ${record.tenHanhVi}`,
       subMessage: `Trừ ${record.diemSo} điểm · Buổi ${record.buoi === 'Sang' ? 'Sáng' : 'Chiều'}`,
     });
-  }, [students, academicRecords, settings, layout, rules, teacherAvatar]);
+  }, [records, buildFullStateSnapshot]);
 
   // Undo / Void record handler
   const handleUndoRecord = useCallback((recordId: string) => {
-    setRecords(prev => {
-      const updated = prev.map(r => {
-        if (r.maGhiNhan === recordId) {
-          return {
-            ...r,
-            trangThai: 'DaHuy' as const,
-            lyDoHuy: 'Người ghi bấm Hoàn tác trong 8 giây',
-            thoiGianHuy: new Date().toISOString(),
-          };
-        }
-        return r;
-      });
-      localStorage.setItem('app_records_10a5', JSON.stringify(updated));
-
-      const badges = getAllStudentBadgesState();
-      const fullState: ClassroomFullState = {
-        students,
-        records: updated,
-        academicRecords,
-        settings,
-        layout,
-        rules,
-        teacherAvatar,
-        studentBadgesMap: badges.studentBadgesMap,
-        studentActiveBadges: badges.studentActiveBadges,
-        updatedAt: new Date().toISOString(),
-        version: Date.now(),
-      };
-      saveServerState(fullState);
-
-      return updated;
+    const updated = records.map(r => {
+      if (r.maGhiNhan === recordId) {
+        return {
+          ...r,
+          trangThai: 'DaHuy' as const,
+          lyDoHuy: 'Người ghi bấm Hoàn tác trong 8 giây',
+          thoiGianHuy: new Date().toISOString(),
+        };
+      }
+      return r;
     });
+    setRecords(updated);
+    localStorage.setItem('app_records_10a5', JSON.stringify(updated));
+    saveServerState(buildFullStateSnapshot({ records: updated }), true);
 
     setToast({
       id: `undo-${Date.now()}`,
       message: 'Đã hoàn tác bản ghi vi phạm thành công.',
     });
-  }, [students, academicRecords, settings, layout, rules, teacherAvatar]);
+  }, [records, buildFullStateSnapshot]);
 
   // Manual void by cadre or teacher
   const handleVoidRecord = useCallback((recordId: string, reason: string) => {
-    setRecords(prev => {
-      const updated = prev.map(r => {
-        if (r.maGhiNhan === recordId) {
-          return {
-            ...r,
-            trangThai: 'DaHuy' as const,
-            lyDoHuy: reason,
-            thoiGianHuy: new Date().toISOString(),
-          };
-        }
-        return r;
-      });
-      localStorage.setItem('app_records_10a5', JSON.stringify(updated));
-
-      const badges = getAllStudentBadgesState();
-      const fullState: ClassroomFullState = {
-        students,
-        records: updated,
-        academicRecords,
-        settings,
-        layout,
-        rules,
-        teacherAvatar,
-        studentBadgesMap: badges.studentBadgesMap,
-        studentActiveBadges: badges.studentActiveBadges,
-        updatedAt: new Date().toISOString(),
-        version: Date.now(),
-      };
-      saveServerState(fullState);
-
-      return updated;
+    const updated = records.map(r => {
+      if (r.maGhiNhan === recordId) {
+        return {
+          ...r,
+          trangThai: 'DaHuy' as const,
+          lyDoHuy: reason,
+          thoiGianHuy: new Date().toISOString(),
+        };
+      }
+      return r;
     });
+    setRecords(updated);
+    localStorage.setItem('app_records_10a5', JSON.stringify(updated));
+    saveServerState(buildFullStateSnapshot({ records: updated }), true);
 
     setToast({
       id: `void-${Date.now()}`,
       message: 'Bản ghi đã được chuyển sang trạng thái Đã hủy.',
     });
-  }, []);
+  }, [records, buildFullStateSnapshot]);
 
-  // Explanation submit
+  // Explanation submit by student
   const handleSubmitExplanation = useCallback((recordId: string, explanation: string) => {
-    setRecords(prev => prev.map(r => {
+    const updated = records.map(r => {
       if (r.maGhiNhan === recordId) {
         return {
           ...r,
-          trangThai: 'ChoDuyet',
+          trangThai: 'ChoDuyet' as const,
           noiDungGiaiTrinh: explanation,
           thoiGianGiaiTrinh: new Date().toISOString(),
         };
       }
       return r;
-    }));
+    });
+    setRecords(updated);
+    localStorage.setItem('app_records_10a5', JSON.stringify(updated));
+    saveServerState(buildFullStateSnapshot({ records: updated }), true);
 
     setToast({
       id: `exp-${Date.now()}`,
-      message: 'Đã gửi giải trình. Vui lòng chờ Giáo viên xem xét.',
+      message: 'Đã gửi giải trình lên đám mây. Vui lòng chờ Giáo viên xem xét.',
     });
-  }, []);
+  }, [records, buildFullStateSnapshot]);
 
   // Teacher resolve explanation
   const handleResolveExplanation = useCallback((recordId: string, result: 'ChapNhan' | 'TuChoi', reason: string) => {
-    setRecords(prev => prev.map(r => {
+    const updated = records.map(r => {
       if (r.maGhiNhan === recordId) {
         return {
           ...r,
-          trangThai: result === 'ChapNhan' ? 'DaChapNhan' : 'BiTuChoi',
-          nguoiDuyet: 'Trần Văn Bình (GVCN)',
+          trangThai: (result === 'ChapNhan' ? 'DaChapNhan' : 'BiTuChoi') as DisciplineRecord['trangThai'],
+          nguoiDuyet: `${teacherProfile.hoTen} (GVCN)`,
           ketQuaDuyet: result,
           lyDoDuyet: reason,
         };
       }
       return r;
-    }));
+    });
+    setRecords(updated);
+    localStorage.setItem('app_records_10a5', JSON.stringify(updated));
+    saveServerState(buildFullStateSnapshot({ records: updated }), true);
 
     setToast({
       id: `res-${Date.now()}`,
       message: result === 'ChapNhan' ? 'Đã chấp nhận giải trình (Hủy trừ điểm).' : 'Đã từ chối giải trình.',
     });
-  }, []);
+  }, [records, teacherProfile.hoTen, buildFullStateSnapshot]);
 
   // Toggle rule pin
   const handleToggleRulePin = useCallback((ruleId: string) => {
-    setRules(prev => prev.map(r => {
+    const updated = rules.map(r => {
       if (r.maNoiQuy === ruleId) {
         return { ...r, ghim: !r.ghim };
       }
       return r;
-    }));
-  }, []);
+    });
+    setRules(updated);
+    localStorage.setItem('app_rules_10a5', JSON.stringify(updated));
+    saveServerState(buildFullStateSnapshot({ rules: updated }), true);
+  }, [rules, buildFullStateSnapshot]);
 
   // Fast demo role switcher
   const handleSwitchDemoRole = (role: RoleCode, studentId?: string) => {
     setCurrentRole(role);
     if (role === 'GV') {
       setCurrentUser({
-        hoTen: 'Trần Văn Bình (GVCN)',
+        hoTen: teacherProfile.hoTen || 'Thầy Dương Văn Huy (GVCN)',
         vaiTro: ['GV'],
         avatarUrl: teacherAvatar,
       });
@@ -689,8 +644,9 @@ export default function App() {
 
   // Student login from modal
   const handleLoginStudent = (student: Student, role: RoleCode, remember = true) => {
-    saveAuthSession(student, role, remember);
-    setCurrentUser(student);
+    const freshStudent = students.find(s => s.maHS === student.maHS) || student;
+    saveAuthSession(freshStudent, role, remember);
+    setCurrentUser(freshStudent);
     setCurrentRole(role);
     setIsLoginModalOpen(false);
   };
@@ -716,95 +672,70 @@ export default function App() {
 
   // Teacher updates classroom seating and layout
   const handleUpdateLayout = useCallback((newLayout: SeatLayoutNode[], updatedStudents: Student[]) => {
+    const normalized = normalizeStudentsList(updatedStudents);
     setLayout(newLayout);
-    setStudents(updatedStudents);
+    setStudents(normalized);
     localStorage.setItem('app_layout_10a5_v4', JSON.stringify(newLayout));
-    localStorage.setItem('app_students_10a5_v4', JSON.stringify(updatedStudents));
+    localStorage.setItem('app_students_10a5_v4', JSON.stringify(normalized));
 
-    // Save immediately to Cloud and Local server
-    const badges = getAllStudentBadgesState();
-    const fullState: ClassroomFullState = {
-      students: updatedStudents,
-      records,
-      academicRecords,
-      settings,
-      layout: newLayout,
-      rules,
-      teacherAvatar,
-      studentBadgesMap: badges.studentBadgesMap,
-      studentActiveBadges: badges.studentActiveBadges,
-      updatedAt: new Date().toISOString(),
-      version: Date.now(),
-    };
-    saveServerState(fullState);
+    saveServerState(buildFullStateSnapshot({ students: normalized, layout: newLayout }), true);
 
     setToast({
       id: Date.now().toString(),
       message: 'Đã lưu sơ đồ lớp học ✨',
-      subMessage: `Đã lưu danh sách ${updatedStudents.length} học sinh và đồng bộ lên đám mây thành công!`,
+      subMessage: `Đã lưu danh sách ${normalized.length} học sinh và đồng bộ lên đám mây thành công!`,
     });
-  }, [records, academicRecords, settings, rules, teacherAvatar]);
+  }, [buildFullStateSnapshot]);
 
-  // Student avatar update
+  // Student or Teacher updates a student's avatar
   const handleUpdateStudentAvatar = useCallback((studentId: string, avatarUrl?: string) => {
-    // Sanitize: do not accept studentId or short garbage string
-    const validUrl = avatarUrl && !avatarUrl.startsWith('HS') ? avatarUrl : undefined;
+    const validUrl = resolveStudentAvatar(avatarUrl);
+    const updatedStudents = students.map(s => (s.maHS === studentId ? { ...s, avatarUrl: validUrl } : s));
 
-    setStudents(prev => {
-      const updated = prev.map(s => (s.maHS === studentId ? { ...s, avatarUrl: validUrl } : s));
-      localStorage.setItem('app_students_10a5_v4', JSON.stringify(updated));
+    setStudents(updatedStudents);
+    localStorage.setItem('app_students_10a5_v4', JSON.stringify(updatedStudents));
 
-      const badges = getAllStudentBadgesState();
-      const fullState: ClassroomFullState = {
-        students: updated,
-        records,
-        academicRecords,
-        settings,
-        layout,
-        rules,
-        teacherAvatar,
-        studentBadgesMap: badges.studentBadgesMap,
-        studentActiveBadges: badges.studentActiveBadges,
-        updatedAt: new Date().toISOString(),
-        version: Date.now(),
-      };
-      saveServerState(fullState);
+    // Persist immediately to Firebase Realtime Database (force = true)
+    saveServerState(buildFullStateSnapshot({ students: updatedStudents }), true);
 
-      return updated;
-    });
-
+    // Also update currentUser and persisted auth session if logged in as this student
     setCurrentUser(prev => {
       if (prev && 'maHS' in prev && (prev as Student).maHS === studentId) {
-        return { ...prev, avatarUrl: validUrl } as Student;
+        const updatedUser = { ...prev, avatarUrl: validUrl } as Student;
+        const session = getSavedAuthSession();
+        saveAuthSession(updatedUser, session?.role || currentRole, session?.remember ?? true);
+        return updatedUser;
       }
       return prev;
     });
 
     setToast({
       id: Date.now().toString(),
-      message: 'Đã cập nhật ảnh đại diện ✨',
-      subMessage: 'Ảnh đại diện mới đã được áp dụng vào hồ sơ và sơ đồ lớp!',
+      message: 'Đã cập nhật & lưu ảnh đại diện lên mây ✨',
+      subMessage: 'Ảnh đại diện mới đã được đồng bộ vào hồ sơ và sơ đồ lớp trên mọi thiết bị!',
     });
-  }, [records, academicRecords, settings, layout, rules, teacherAvatar]);
+  }, [students, currentRole, buildFullStateSnapshot]);
 
   // Teacher import time-stamped records from file
   const handleImportRecords = useCallback((newRecords: DisciplineRecord[]) => {
-    setRecords(prev => [...newRecords, ...prev]);
+    const updated = [...newRecords, ...records];
+    setRecords(updated);
+    localStorage.setItem('app_records_10a5', JSON.stringify(updated));
+    saveServerState(buildFullStateSnapshot({ records: updated }), true);
     setToast({
       id: Date.now().toString(),
       message: `Đã nạp ${newRecords.length} bản ghi thời gian ✨`,
-      subMessage: 'Dữ liệu thi đua từ file đã được tích hợp thành công vào hệ thống!',
+      subMessage: 'Dữ liệu thi đua từ file đã được lưu lên đám mây thành công!',
     });
-  }, []);
+  }, [records, buildFullStateSnapshot]);
 
   // Teacher assigns custom frame to student
   const handleAssignFrame = useCallback((studentId: string, frameId: string | undefined) => {
-    setStudents(prev => {
-      const updated = prev.map(s => (s.maHS === studentId ? { ...s, customFrameId: frameId } : s));
-      localStorage.setItem('app_students_10a5_v4', JSON.stringify(updated));
-      return updated;
-    });
-  }, []);
+    const updated = students.map(s => (s.maHS === studentId ? { ...s, customFrameId: frameId } : s));
+    setStudents(updated);
+    localStorage.setItem('app_students_10a5_v4', JSON.stringify(updated));
+    saveServerState(buildFullStateSnapshot({ students: updated }), true);
+  }, [students, buildFullStateSnapshot]);
 
   // Teacher auto awards frames according to ranking (cùng điểm thì cùng hạng, cùng nhận khung xứng đáng)
   const handleBatchAutoAssignByRank = useCallback(() => {
@@ -833,12 +764,21 @@ export default function App() {
 
     setStudents(updated);
     localStorage.setItem('app_students_10a5_v4', JSON.stringify(updated));
+    saveServerState(buildFullStateSnapshot({ students: updated }), true);
     setToast({
       id: Date.now().toString(),
       message: 'Đã tự động phong tặng khung vinh danh ✨',
-      subMessage: 'Top 1 (Kim Cương), Top 2-3 (Bạch Kim), Top 4-10 (Hoàng Kim) theo chuẩn đồng hạng đã được trao!',
+      subMessage: 'Top 1 (Kim Cương), Top 2-3 (Bạch Kim), Top 4-10 (Hoàng Kim) theo chuẩn đồng hạng đã được lưu lên mây!',
     });
-  }, [students, studentSummaries]);
+  }, [students, studentSummaries, buildFullStateSnapshot]);
+
+  // Active logged-in student synced with live students array
+  const activeLoggedInStudent = useMemo(() => {
+    if (currentUser && 'maHS' in currentUser) {
+      return students.find(s => s.maHS === (currentUser as Student).maHS) || (currentUser as Student);
+    }
+    return null;
+  }, [currentUser, students]);
 
   return (
     <div className="min-h-screen flex flex-col bg-app text-main antialiased selection:bg-accent/20">
@@ -869,7 +809,12 @@ export default function App() {
             currentWeek={currentWeek}
             onChangeCurrentWeek={handleSetCurrentWeek}
             settings={settings}
-            onUpdateSettings={newSets => setSettings(prev => ({ ...prev, ...newSets }))}
+            onUpdateSettings={newSets => {
+              const updatedSettings = { ...settings, ...newSets };
+              setSettings(updatedSettings);
+              localStorage.setItem('app_settings_10a5', JSON.stringify(updatedSettings));
+              saveServerState(buildFullStateSnapshot({ settings: updatedSettings }), true);
+            }}
             onAddRecord={handleAddRecord}
             onResolveExplanation={handleResolveExplanation}
             onToggleRulePin={handleToggleRulePin}
@@ -890,9 +835,9 @@ export default function App() {
           />
         )}
 
-        {currentUser && currentRole !== 'GV' && currentRole !== 'HS' && (
+        {activeLoggedInStudent && currentRole !== 'GV' && currentRole !== 'HS' && (
           <CadreView
-            currentCadre={currentUser as Student}
+            currentCadre={activeLoggedInStudent}
             cadreRole={currentRole}
             allStudents={students}
             layout={layout}
@@ -911,9 +856,9 @@ export default function App() {
           />
         )}
 
-        {currentUser && currentRole === 'HS' && (
+        {activeLoggedInStudent && currentRole === 'HS' && (
           <StudentView
-            currentStudent={currentUser as Student}
+            currentStudent={activeLoggedInStudent}
             allStudents={students}
             layout={layout}
             records={records}

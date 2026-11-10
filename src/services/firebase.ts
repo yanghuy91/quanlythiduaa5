@@ -14,6 +14,7 @@ import {
   getDatabase,
   ref as rtdbRef,
   set as rtdbSet,
+  update as rtdbUpdate,
   get as rtdbGet,
   onValue as rtdbOnValue
 } from 'firebase/database';
@@ -246,7 +247,7 @@ export async function fetchCloudClassState(): Promise<ClassroomFullState | null>
 }
 
 /**
- * Save full classroom state to Firebase Realtime Database (Single-channel write with fallback)
+ * Save classroom state to Firebase Realtime Database using PATCH / update
  */
 export async function saveCloudClassState(state: ClassroomFullState): Promise<boolean> {
   const updatedAt = state.updatedAt || new Date().toISOString();
@@ -257,10 +258,10 @@ export async function saveCloudClassState(state: ClassroomFullState): Promise<bo
     updatedAt,
   });
 
-  // 1. Primary: Direct REST PUT to Firebase Realtime Database
+  // 1. Primary: Direct REST PATCH to Firebase Realtime Database
   try {
     const res = await fetch('https://thiduaa5-default-rtdb.firebaseio.com/classes/10a5.json', {
-      method: 'PUT',
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cleanState),
     });
@@ -271,10 +272,10 @@ export async function saveCloudClassState(state: ClassroomFullState): Promise<bo
     console.warn('[Firebase RTDB REST] Lỗi ghi qua REST, chuyển sang SDK:', err?.message || err);
   }
 
-  // 2. Fallback: Realtime Database SDK write (only executed if REST failed)
+  // 2. Fallback: Realtime Database SDK update
   try {
     const classRef = rtdbRef(rtdb, 'classes/10a5');
-    await rtdbSet(classRef, cleanState);
+    await rtdbUpdate(classRef, cleanState as Record<string, any>);
     return true;
   } catch (err: any) {
     console.warn('[Firebase RTDB SDK] Lỗi ghi qua SDK:', err?.message || err);
