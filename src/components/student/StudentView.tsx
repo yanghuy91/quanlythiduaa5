@@ -769,9 +769,10 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowCadreModal(true)}
-                  className="shrink-0 px-2 py-0.5 rounded-xl bg-white/20 hover:bg-white/35 text-white text-[10px] font-bold backdrop-blur-md transition-all cursor-pointer border border-white/20 shadow-xs"
+                  className="shrink-0 px-2.5 py-0.5 rounded-xl bg-white/20 hover:bg-white/35 text-white text-[10px] font-bold backdrop-blur-md transition-all cursor-pointer border border-white/20 shadow-xs"
+                  title="Danh hiệu danh dự do Giáo viên chủ nhiệm trao tặng"
                 >
-                  👑 Vinh danh cán sự
+                  👑 Vinh danh cán sự (Do GVCN trao)
                 </button>
               )}
             </div>
@@ -934,16 +935,6 @@ export const StudentView: React.FC<StudentViewProps> = ({
                     </div>
                   )}
                 </AvatarFrame>
-
-                {/* Camera upload button */}
-                <button
-                  type="button"
-                  onClick={() => setShowAvatarModal(true)}
-                  title="Đổi ảnh đại diện"
-                  className="absolute -top-1 -right-1 z-20 p-1.5 sm:p-2 rounded-full bg-slate-900/85 hover:bg-slate-900 text-white shadow-md transition-all cursor-pointer hover:scale-110 active:scale-95"
-                >
-                  <Camera className="w-3.5 h-3.5" />
-                </button>
               </div>
 
               <div className="min-w-0 flex-1">
@@ -1244,18 +1235,6 @@ export const StudentView: React.FC<StudentViewProps> = ({
       {/* CADRE TAB 1: GHI NHẬN VI PHẠM */}
       {isCadre && activeTab === 'record' && (
         <div className="space-y-3">
-          <div className="flex items-center justify-end px-1">
-            <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-muted hover:text-main select-none">
-              <span>Lưu nhanh 1 chạm:</span>
-              <input
-                type="checkbox"
-                checked={fastSaveEnabled}
-                onChange={e => setFastSaveEnabled(e.target.checked)}
-                className="w-4 h-4 accent-accent rounded"
-              />
-            </label>
-          </div>
-
           <StudentPicker
             students={allStudents}
             layout={layout}
@@ -1270,6 +1249,8 @@ export const StudentView: React.FC<StudentViewProps> = ({
               setIsMultiSelect(!isMultiSelect);
               if (isMultiSelect) setSelectedStudentIds([]);
             }}
+            fastSaveEnabled={fastSaveEnabled}
+            onToggleFastSave={() => setFastSaveEnabled(!fastSaveEnabled)}
           />
 
           {isMultiSelect && selectedStudentIds.length > 0 && (

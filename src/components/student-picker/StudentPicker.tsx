@@ -7,7 +7,8 @@ import {
   Check, 
   X,
   Users,
-  Eye
+  Eye,
+  Zap
 } from 'lucide-react';
 import { Student, SeatLayoutNode, StudentWeekSummary, RoleCode } from '../../types';
 import { searchStudents, sortVietnameseNames, getStudentAvatarInitial } from '../../utils/vietnamese';
@@ -27,6 +28,8 @@ interface StudentPickerProps {
   initialDisplayMode?: 'compact' | 'avatar_badge';
   onToggleMultiSelect?: () => void;
   onInspectStudent?: (student: Student) => void;
+  fastSaveEnabled?: boolean;
+  onToggleFastSave?: () => void;
 }
 
 export const StudentPicker: React.FC<StudentPickerProps> = ({
@@ -42,125 +45,111 @@ export const StudentPicker: React.FC<StudentPickerProps> = ({
   initialDisplayMode = 'avatar_badge',
   onToggleMultiSelect,
   onInspectStudent,
+  fastSaveEnabled = false,
+  onToggleFastSave,
 }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterTo, setFilterTo] = useState<number | 'all'>('all');
 
   // Filter students if viewer is Tổ trưởng (hard scope filtering)
   const visibleStudents = useMemo(() => {
     let list = students;
     if (viewerRole === 'TT' && viewerTo !== undefined) {
       list = list.filter(s => s.to === viewerTo);
-    } else if (filterTo !== 'all') {
-      list = list.filter(s => s.to === filterTo);
     }
     return searchStudents(list, searchQuery);
-  }, [students, viewerRole, viewerTo, filterTo, searchQuery]);
+  }, [students, viewerRole, viewerTo, searchQuery]);
 
   const sortedList = useMemo(() => {
     return sortVietnameseNames(visibleStudents);
   }, [visibleStudents]);
 
   return (
-    <div className="w-full flex flex-col gap-3">
-      {/* Top Controls: Mode Switcher & Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+    <div className="w-full flex flex-col gap-2.5">
+      {/* Top Controls: Mode Switcher & Neat Action Buttons */}
+      <div className="flex items-center justify-between gap-2">
         {/* Toggle Grid vs List */}
-        <div className="flex items-center p-1 bg-surface-2 rounded-lg border border-token self-start sm:self-auto">
+        <div className="flex items-center p-0.5 bg-surface-2 rounded-xl border border-token">
           <button
             type="button"
             onClick={() => setViewMode('grid')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               viewMode === 'grid' 
-                ? 'bg-surface text-main shadow-xs' 
+                ? 'bg-surface text-main shadow-xs font-bold' 
                 : 'text-muted hover:text-main'
             }`}
           >
             <LayoutGrid className="w-3.5 h-3.5 text-accent" />
-            <span>Sơ đồ lớp</span>
+            <span>Sơ đồ</span>
           </button>
           <button
             type="button"
             onClick={() => setViewMode('list')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               viewMode === 'list' 
-                ? 'bg-surface text-main shadow-xs' 
+                ? 'bg-surface text-main shadow-xs font-bold' 
                 : 'text-muted hover:text-main'
             }`}
           >
             <ListFilter className="w-3.5 h-3.5 text-accent" />
-            <span>Danh sách ({visibleStudents.length})</span>
+            <span>DS ({visibleStudents.length})</span>
           </button>
         </div>
 
-        {/* Multi-Select Toggle Button if supported */}
-        {onToggleMultiSelect && (
-          <button
-            type="button"
-            onClick={onToggleMultiSelect}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors self-end sm:self-auto cursor-pointer ${
-              isMultiSelect 
-                ? 'bg-accent text-on-accent border-accent' 
-                : 'bg-surface border-token text-main hover:bg-surface-2'
-            }`}
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span>{isMultiSelect ? `Đang chọn (${selectedStudentIds.length})` : 'Chọn nhiều'}</span>
-          </button>
-        )}
-      </div>
-
-      {/* Search & Tổ Filters */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Tìm tên, chữ cái đầu (vd: huy, nkh)..."
-            className="w-full pl-9 pr-8 py-2 bg-surface border border-token rounded-lg text-xs text-main placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
-          />
-          {searchQuery && (
+        {/* Neat Action Buttons: Fast Save & Multi-Select */}
+        <div className="flex items-center gap-1.5">
+          {onToggleFastSave && (
             <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-main p-0.5"
+              type="button"
+              onClick={onToggleFastSave}
+              title={fastSaveEnabled ? 'Đang BẬT lưu nhanh 1 chạm (bấm học sinh để ghi nhận ngay)' : 'Bật lưu nhanh 1 chạm'}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                fastSaveEnabled
+                  ? 'bg-amber-500 text-white border-amber-600 shadow-xs ring-2 ring-amber-300 dark:ring-amber-900'
+                  : 'bg-surface border-token text-muted hover:text-main hover:bg-surface-2'
+              }`}
             >
-              <X className="w-3.5 h-3.5" />
+              <Zap className={`w-3.5 h-3.5 ${fastSaveEnabled ? 'fill-current text-white' : 'text-amber-500'}`} />
+              <span>1 chạm</span>
+            </button>
+          )}
+
+          {onToggleMultiSelect && (
+            <button
+              type="button"
+              onClick={onToggleMultiSelect}
+              title={isMultiSelect ? 'Tắt chọn nhiều' : 'Bật chọn nhiều học sinh cùng lúc'}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                isMultiSelect 
+                  ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs ring-2 ring-indigo-300 dark:ring-indigo-900' 
+                  : 'bg-surface border-token text-muted hover:text-main hover:bg-surface-2'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>{isMultiSelect ? `Chọn (${selectedStudentIds.length})` : 'Chọn nhiều'}</span>
             </button>
           )}
         </div>
+      </div>
 
-        {/* Group Filter Chips (Hidden if Tổ trưởng) */}
-        {!(viewerRole === 'TT' && viewerTo !== undefined) && (
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
-            <button
-              type="button"
-              onClick={() => setFilterTo('all')}
-              className={`px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
-                filterTo === 'all' 
-                  ? 'bg-primary text-on-primary font-bold' 
-                  : 'bg-surface border border-token text-muted hover:text-main'
-              }`}
-            >
-              Tất cả
-            </button>
-            {[1, 2, 3, 4].map(toNum => (
-              <button
-                key={toNum}
-                type="button"
-                onClick={() => setFilterTo(toNum)}
-                className={`px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
-                  filterTo === toNum 
-                    ? 'bg-primary text-on-primary font-bold' 
-                    : 'bg-surface border border-token text-muted hover:text-main'
-                }`}
-              >
-                Tổ {toNum}
-              </button>
-            ))}
-          </div>
+      {/* Clean Full-width Search Input */}
+      <div className="relative w-full">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Tìm tên hoặc chữ cái đầu (vd: huy, nkh)..."
+          className="w-full pl-9 pr-8 py-2 bg-surface border border-token rounded-xl text-xs text-main placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40 shadow-2xs"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-main p-0.5"
+            aria-label="Xóa tìm kiếm"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         )}
       </div>
 

@@ -56,13 +56,13 @@ export const CadreHonorsModal: React.FC<CadreHonorsModalProps> = ({
             <div>
               <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>VINH DANH BAN CÁN SỰ LỚP 10A5</span>
+                <span>VINH DANH BAN CÁN SỰ LỚP (DO GVCN TRAO)</span>
               </div>
               <h3 className="text-base sm:text-lg font-extrabold text-main leading-tight mt-0.5">
                 Đội Ngũ Đầu Tàu Thi Đua 👑
               </h3>
               <p className="text-xs text-muted mt-0.5">
-                THPT Số 2 Đức Phổ · Năm học 2026-2027
+                Danh hiệu danh dự do Giáo viên chủ nhiệm trao tặng · THPT Số 2 Đức Phổ · Năm học 2026-2027
               </p>
             </div>
           </div>

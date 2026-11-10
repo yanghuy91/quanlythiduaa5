@@ -323,7 +323,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                 key={rowKey}
                 className={activeDãyTab === 'all' 
                   ? (displayMode === 'compact' ? "gap-x-1 gap-y-1.5 sm:gap-x-1.5 sm:gap-y-2 items-start" : "gap-x-1 gap-y-2.5 sm:gap-x-1.5 sm:gap-y-3.5 items-start") 
-                  : "grid grid-cols-2 gap-1 sm:gap-1.5 items-start max-w-xs mx-auto"
+                  : "grid grid-cols-2 gap-2 sm:gap-2.5 items-stretch w-full max-w-sm sm:max-w-md mx-auto"
                 }
                 style={rowGridStyle}
               >
@@ -348,26 +348,21 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                     return null;
                   }
 
+                  const isGroupView = activeDãyTab !== 'all';
+
                   if (node.loaiO === 'trong') {
                     return (
                       <div 
                         key={`${node.hang}-${node.cot}`}
                         className={`w-full flex flex-col items-center select-none ${
-                          displayMode === 'avatar_badge' ? '' : 'h-12 sm:h-13'
+                          displayMode === 'avatar_badge' ? '' : (isGroupView ? 'min-h-[74px] sm:min-h-[80px]' : 'h-12 sm:h-13')
                         }`}
                         title={node.ghiChu || 'Chỗ trống'}
                       >
                         {displayMode === 'avatar_badge' ? (
-                          <>
-                            <div className="w-full aspect-square rounded-xl sm:rounded-2xl border-2 border-dashed border-token/60 bg-surface-2/30 flex items-center justify-center text-[10px] font-semibold text-muted/60">
-                              Trống
-                            </div>
-                            <span className="text-[10px] font-medium text-muted/40 mt-1">Trống</span>
-                          </>
+                          <div className="w-full aspect-square rounded-xl sm:rounded-2xl border-2 border-dashed border-token/40 bg-surface-2/20" />
                         ) : (
-                          <div className="w-full h-full rounded-xl border border-dashed border-token bg-transparent flex items-center justify-center text-[10px] font-medium text-muted opacity-40">
-                            Trống
-                          </div>
+                          <div className="w-full h-full rounded-xl border border-dashed border-token/40 bg-surface-2/10" />
                         )}
                       </div>
                     );
@@ -380,13 +375,13 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                       <div 
                         key={`${node.hang}-${node.cot}`}
                         className={`w-full flex flex-col items-center select-none ${
-                          displayMode === 'avatar_badge' ? '' : 'h-12 sm:h-13'
+                          displayMode === 'avatar_badge' ? '' : (isGroupView ? 'min-h-[74px] sm:min-h-[80px]' : 'h-12 sm:h-13')
                         }`}
                       >
                         {displayMode === 'avatar_badge' ? (
-                          <div className="w-full aspect-square rounded-xl sm:rounded-2xl border border-dashed border-token bg-surface-2 opacity-50" />
+                          <div className="w-full aspect-square rounded-xl sm:rounded-2xl border border-dashed border-token/40 bg-surface-2/20" />
                         ) : (
-                          <div className="w-full h-full rounded-xl border border-dashed border-token bg-surface-2 opacity-50" />
+                          <div className="w-full h-full rounded-xl border border-dashed border-token/40 bg-surface-2/10" />
                         )}
                       </div>
                     );
@@ -446,7 +441,10 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                       onClick={() => onSelectStudent(student)}
                       className={`
                         group relative w-full flex flex-col items-center transition-all cursor-pointer select-none
-                        ${displayMode === 'avatar_badge' ? '' : `px-0.5 py-1 sm:p-1.5 rounded-xl justify-between shadow-xs min-h-[56px] sm:min-h-[62px] bg-white dark:bg-white text-black dark:text-black ${compactBorderClass}`}
+                        ${displayMode === 'avatar_badge' ? '' : isGroupView
+                          ? `p-2 sm:p-2.5 rounded-xl justify-between shadow-xs min-h-[74px] sm:min-h-[80px] bg-white dark:bg-white text-black dark:text-black ${compactBorderClass}`
+                          : `px-0.5 py-1 sm:p-1.5 rounded-xl justify-between shadow-xs min-h-[56px] sm:min-h-[62px] bg-white dark:bg-white text-black dark:text-black ${compactBorderClass}`
+                        }
                         ${displayMode === 'compact' && isSelected ? 'ring-2 ring-indigo-500 shadow-md scale-[1.02] z-10' : ''}
                         ${isLocked ? 'opacity-30 cursor-not-allowed' : 'active:scale-95'}
                       `}
@@ -549,10 +547,10 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
 
                           {/* Tên học sinh đặt ngay phía dưới ảnh avatar */}
                           <div className="w-full mt-1 sm:mt-1.5 px-0.5 min-w-0 text-center">
-                            <span className={`text-[10px] sm:text-xs font-extrabold tracking-tight truncate block leading-tight ${
+                            <span className={`text-[10.5px] sm:text-xs font-extrabold tracking-tight truncate block leading-tight ${
                               isSelected ? 'text-accent' : 'text-main'
                             }`}>
-                              {getSeatingMapDisplayName(student, students)}
+                              {isGroupView ? student.hoTen : getSeatingMapDisplayName(student, students)}
                             </span>
                             {badgeDef ? (
                               <span 
@@ -566,7 +564,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                                 className="text-[9px] font-bold truncate block leading-none mt-0.5"
                                 style={{ color: roleConfig.fg }}
                               >
-                                {topRole === 'TT' && student.toTruongTo ? `Tổ trưởng ${student.toTruongTo}` : roleConfig.short}
+                                {topRole === 'TT' && student.toTruongTo ? `Tổ trưởng ${student.toTruongTo}` : roleConfig.label}
                               </span>
                             ) : (
                               <span className="text-[9px] font-medium text-muted truncate block leading-none opacity-70 mt-0.5">
@@ -582,7 +580,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                         <div className="w-full h-full flex flex-col justify-between items-center text-center">
                           {/* TẦNG 1: TRÊN LÀ SỐ THỨ TỰ TRONG DS LỚP */}
                           <div className="w-full flex items-center justify-between px-0.5 leading-none">
-                            <span className="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-400 tabular-nums">
+                            <span className={`${isGroupView ? 'text-[10px] sm:text-xs' : 'text-[9px] sm:text-[10px]'} font-black text-slate-400 dark:text-slate-400 tabular-nums`}>
                               #{stt}
                             </span>
 
@@ -598,37 +596,48 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
 
                           {/* TẦNG 2: GIỮA LÀ TÊN HỌC SINH (CHỮ ĐEN, KHÔNG BỊ CẮT) */}
                           <div className="w-full text-center min-w-0 flex items-center justify-center flex-1 my-0.5 px-0.5">
-                            <span className="text-[9px] sm:text-[10.5px] font-black text-black dark:text-black leading-[1.1] block break-words text-center tracking-tighter">
-                              {getSeatingMapDisplayName(student, students)}
-                            </span>
+                            {isGroupView ? (
+                              <span className="text-xs sm:text-sm font-black text-black dark:text-black leading-snug block break-words text-center">
+                                {student.hoTen}
+                              </span>
+                            ) : (
+                              <span className="text-[9px] sm:text-[10.5px] font-black text-black dark:text-black leading-[1.1] block break-words text-center tracking-tighter">
+                                {getSeatingMapDisplayName(student, students)}
+                              </span>
+                            )}
                           </div>
 
                           {/* TẦNG 3: DƯỚI LÀ CHỨC VỤ NẾU CÓ, KO THÌ ĐỂ HUY HIỆU ĐÃ MANG */}
                           <div className="w-full flex items-center justify-center min-h-[14px] leading-none px-0.5 overflow-hidden">
                             {topRole !== 'HS' ? (
                               <div 
-                                className="flex items-center justify-center gap-0.5 text-[8px] sm:text-[8.5px] font-black text-black dark:text-black truncate max-w-full"
+                                className={`flex items-center justify-center gap-1 ${isGroupView ? 'text-[10.5px] sm:text-xs' : 'text-[8px] sm:text-[8.5px]'} font-black text-black dark:text-black truncate max-w-full`}
                                 title={`${roleConfig.label}${badgeDef ? ` · Huy hiệu: ${badgeDef.name}` : ''}`}
                               >
                                 <span>{roleIcon}</span>
                                 {badgeDef ? (
-                                  <span className="shrink-0 inline-flex items-center" title={`Huy hiệu: ${badgeDef.name}`}>
-                                    <BadgeEmblem type={badgeDef.iconType} size="2xs" />
-                                  </span>
+                                  <>
+                                    <span className="truncate">{isGroupView ? roleConfig.label : roleTitleShort}</span>
+                                    <span className="shrink-0 inline-flex items-center" title={`Huy hiệu: ${badgeDef.name}`}>
+                                      <BadgeEmblem type={badgeDef.iconType} size="2xs" />
+                                    </span>
+                                  </>
                                 ) : (
-                                  <span className="truncate">{roleTitleShort}</span>
+                                  <span className="truncate">{isGroupView ? roleConfig.label : roleTitleShort}</span>
                                 )}
                               </div>
                             ) : badgeDef ? (
                               <div 
-                                className="flex items-center justify-center gap-0.5 text-[8px] sm:text-[8.5px] font-bold text-amber-700 dark:text-amber-700 truncate max-w-full" 
+                                className={`flex items-center justify-center gap-1 ${isGroupView ? 'text-[10.5px] sm:text-xs' : 'text-[8px] sm:text-[8.5px]'} font-bold text-amber-700 dark:text-amber-700 truncate max-w-full`} 
                                 title={`Huy hiệu: ${badgeDef.name}`}
                               >
                                 <BadgeEmblem type={badgeDef.iconType} size="2xs" />
-                                <span className="truncate hidden sm:inline">{badgeDef.name}</span>
+                                <span className="truncate">{badgeDef.name}</span>
                               </div>
                             ) : (
-                              <span className="text-[8px] text-slate-300 dark:text-slate-300 select-none">-</span>
+                              <span className={`${isGroupView ? 'text-[10px] text-slate-400' : 'text-[8px] text-slate-300 dark:text-slate-300'} select-none`}>
+                                {isGroupView ? 'Học sinh' : '-'}
+                              </span>
                             )}
                           </div>
                         </div>
