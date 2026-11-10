@@ -136,14 +136,6 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
   const [activeTab, setActiveTab] = useState<'my_score' | 'grades' | 'badges' | 'seating' | 'ranking' | 'record' | 'my_log'>('my_score');
 
-  // Quyền chuyển tuần hiện tại: Lớp trưởng (LT), Bí thư (BT), Lớp phó học tập (LP_HT) hoặc được GV ủy quyền QUAN_LY_TUAN
-  const canChangeCurrentWeek = useMemo(() => {
-    return currentStudent.vaiTro.some(r => r === 'LT' || r === 'BT' || r === 'LP_HT') ||
-      primaryCadreRole === 'LT' || primaryCadreRole === 'BT' || primaryCadreRole === 'LP_HT' ||
-      myDelegatedPermissions.includes('QUAN_LY_TUAN');
-  }, [currentStudent.vaiTro, primaryCadreRole, myDelegatedPermissions]);
-  const [pendingWeekChange, setPendingWeekChange] = useState<number | null>(null);
-
   const handleToggleNoDataWeek = (week: number) => {
     if (!onUpdateSettings) return;
     const currentNoData = settings.noDataWeeks || [];
@@ -760,8 +752,8 @@ export const StudentView: React.FC<StudentViewProps> = ({
           ) : (
             <div className={`absolute inset-0 w-full h-full bg-gradient-to-r ${studentBanner.gradientFallback}`} />
           )}
-          {/* Deep dark gradient overlay ensures all text is crisp and never sunken */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/65 to-black/45" />
+          {/* Balanced gradient overlay so background artwork and foreground text/badges stand out crisply */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-900/40 to-black/20" />
 
           {/* Top Row: Logo, Title horizontal, and Logout button */}
           <div className="relative z-10 flex items-center justify-between gap-2">
@@ -775,7 +767,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 <span className="text-xs sm:text-sm font-black tracking-tight text-white drop-shadow-md uppercase truncate group-hover:text-amber-300 transition-colors">
                   TRƯỜNG THPT SỐ 2 ĐỨC PHỔ
                 </span>
-                <span className="text-[9.5px] sm:text-[10px] font-semibold text-slate-300 drop-shadow leading-none">
+                <span className="text-[9.5px] sm:text-[10px] font-bold text-amber-100 drop-shadow leading-none">
                   Năm học 2026-2027 · Lớp 10A5
                 </span>
               </div>
@@ -786,10 +778,10 @@ export const StudentView: React.FC<StudentViewProps> = ({
               <button
                 type="button"
                 onClick={() => setShowSettingsModal(true)}
-                className="px-2.5 py-1 rounded-xl bg-black/45 hover:bg-black/70 border border-white/25 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0"
+                className="px-2.5 py-1 rounded-xl bg-white/95 hover:bg-white border border-amber-300 text-slate-900 text-[11px] font-extrabold transition-all flex items-center gap-1 cursor-pointer shadow-sm active:scale-95 shrink-0"
                 title="Cài đặt tài khoản & đổi ảnh đại diện"
               >
-                <Settings className="w-3.5 h-3.5 text-amber-300" />
+                <Settings className="w-3.5 h-3.5 text-amber-600" />
                 <span className="hidden xs:inline">Tài khoản</span>
               </button>
 
@@ -797,26 +789,26 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 <button
                   type="button"
                   onClick={onLogout}
-                  className="px-2.5 py-1 rounded-xl bg-rose-500/60 hover:bg-rose-600/85 border border-rose-300/40 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0"
+                  className="px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 border border-rose-300 text-white text-[11px] font-extrabold transition-all flex items-center gap-1 cursor-pointer shadow-sm active:scale-95 shrink-0"
                   title="Đăng xuất khỏi tài khoản"
                 >
-                  <LogOut className="w-3.5 h-3.5 text-rose-100" />
+                  <LogOut className="w-3.5 h-3.5 text-white" />
                   <span>Thoát</span>
                 </button>
               )}
             </div>
           </div>
 
-          {/* Middle & Bottom Area: Student/Cadre Identity Pill + Week Selector + Slogan */}
+          {/* Middle & Bottom Area: Student/Cadre Identity Pill + Week Badge + Slogan */}
           <div className="relative z-10 flex flex-col gap-2">
             <div className="flex items-center justify-between gap-2.5 flex-wrap">
-              {/* Student / Cadre Identity Pill on Banner */}
+              {/* Student / Cadre Identity Pill on Banner - High contrast so avatar & name pop */}
               <div
                 onClick={() => setShowAvatarModal(true)}
-                className="flex items-center gap-2.5 min-w-0 cursor-pointer group bg-black/45 hover:bg-black/65 border border-white/20 hover:border-amber-300/70 rounded-2xl p-1.5 pr-3 backdrop-blur-md transition-all shadow-sm"
+                className="flex items-center gap-2.5 min-w-0 cursor-pointer group bg-slate-900/80 hover:bg-slate-900/95 border-2 border-amber-300/80 hover:border-amber-300 rounded-2xl p-1.5 pr-3.5 backdrop-blur-md transition-all shadow-lg"
                 title="Bấm để đổi ảnh đại diện"
               >
-                <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden border-2 border-amber-300/80 bg-slate-800 shrink-0 shadow-xs flex items-center justify-center">
+                <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden border-2 border-amber-300 bg-white shrink-0 shadow-sm flex items-center justify-center">
                   {currentStudent.avatarUrl ? (
                     <img
                       src={resolveStudentAvatar(currentStudent.avatarUrl)}
@@ -824,7 +816,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-xs font-black text-amber-300">
+                    <span className="text-xs font-black text-slate-900">
                       {getStudentAvatarInitial(currentStudent.hoTen)}
                     </span>
                   )}
@@ -835,49 +827,29 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs sm:text-sm font-black text-white group-hover:text-amber-300 transition-colors truncate max-w-[175px] sm:max-w-[260px]">
+                    <span className="text-xs sm:text-sm font-black text-white group-hover:text-amber-300 transition-colors truncate max-w-[175px] sm:max-w-[260px] drop-shadow-sm">
                       {currentStudent.hoTen}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                    <span className={`text-[10px] font-black px-2 py-0.2 rounded-full border backdrop-blur-md shadow-xs ${studentBanner.accentBadge}`}>
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border shadow-xs ${studentBanner.accentBadge}`}>
                       {studentBanner.roleName}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-200">
+                    <span className="text-[10.5px] font-extrabold text-amber-200 drop-shadow-xs">
                       · Tổ {currentStudent.to}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Interactive Week Capsule Selector: Chỉ có Lớp trưởng, Bí thư, Lớp phó học tập mới có quyền đổi tuần */}
-              {canChangeCurrentWeek && onChangeCurrentWeek ? (
-                <div className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-black/55 hover:bg-black/75 border border-amber-300/40 text-amber-300 font-extrabold text-[11px] shadow-xs backdrop-blur-md transition-all shrink-0">
-                  <Calendar className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                  <select
-                    value={currentWeek}
-                    onChange={e => {
-                      const newW = Number(e.target.value);
-                      if (newW !== currentWeek) {
-                        setPendingWeekChange(newW);
-                      }
-                    }}
-                    className="bg-transparent text-white font-bold cursor-pointer focus:outline-none pr-0.5 text-[11px]"
-                    title="Chạm để chuyển tuần học (Chỉ dành cho Lớp trưởng, Bí thư, LP Học tập)"
-                  >
-                    {Array.from({ length: 38 }, (_, i) => i + 1).map(w => (
-                      <option key={w} value={w} className="bg-slate-900 text-white font-semibold">
-                        Tuần {w} {w <= 19 ? '(HK1)' : '(HK2)'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <div className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-black/50 border border-white/25 text-amber-300 font-extrabold text-[11px] shadow-xs backdrop-blur-md shrink-0">
-                  <Calendar className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                  <span>Tuần {currentWeek} {currentWeek <= 19 ? '(HK1)' : '(HK2)'}</span>
-                </div>
-              )}
+              {/* Current Week Badge (Read-only for Cadres & Students; automatically advances on Mondays) */}
+              <div
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 border-2 border-white font-black text-[11px] shadow-md shrink-0"
+                title="Tuần học hiện tại (Tự động chuyển sang tuần tiếp theo vào mỗi Thứ 2 đầu tuần)"
+              >
+                <Calendar className="w-3.5 h-3.5 text-slate-950 shrink-0" />
+                <span>Tuần {currentWeek} {currentWeek <= 19 ? '(HK1)' : '(HK2)'}</span>
+              </div>
             </div>
 
             {/* Slogan with customizable text, icon, color, style */}
@@ -1273,7 +1245,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 </div>
                 {myPeriodSummary.chuaCoDiem ? (
                   <div className="text-sm sm:text-base font-extrabold text-amber-700 leading-none mt-1.5">
-                    {myPeriodSummary.lyDoChuaCoDiem === 'no_data' ? '⊘ Không có dữ liệu' : '⏳ Chưa có điểm'}
+                    {myPeriodSummary.lyDoChuaCoDiem === 'no_data' ? '⊘ Không có dữ liệu' : '⏳ Tuần chưa học'}
                   </div>
                 ) : (
                   <div className="text-2xl sm:text-3xl font-extrabold tabular-nums text-main leading-none mt-1">
@@ -1400,7 +1372,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                       <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
                         {weekData.chuaCoDiem ? (
                           <span className="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 border border-dashed border-amber-300">
-                            {weekData.isNoData ? '⊘ Không có dữ liệu' : '⏳ Chưa có điểm'}
+                            {weekData.isNoData ? '⊘ Không có dữ liệu' : '⏳ Tuần chưa học'}
                           </span>
                         ) : (
                           <div className="text-right">
@@ -1538,14 +1510,14 @@ export const StudentView: React.FC<StudentViewProps> = ({
           />
 
           {isMultiSelect && selectedStudentIds.length > 0 && (
-            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 w-11/12 max-w-md bg-primary text-on-primary rounded-2xl shadow-2xl p-3 border border-token flex items-center justify-between animate-slide-up">
-              <div className="text-xs font-semibold">
-                Đã chọn <strong className="text-accent underline">{selectedStudentIds.length}</strong> học sinh
+            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 w-11/12 max-w-md bg-white text-slate-900 rounded-2xl shadow-2xl p-3.5 border-2 border-indigo-500 flex items-center justify-between animate-slide-up">
+              <div className="text-xs font-extrabold text-slate-800">
+                Đã chọn <strong className="text-indigo-600 underline text-sm">{selectedStudentIds.length}</strong> học sinh
               </div>
               <button
                 type="button"
                 onClick={() => setIsBottomSheetOpen(true)}
-                className="px-4 py-2 rounded-xl bg-accent text-on-accent text-xs font-bold shadow-xs hover:opacity-95 transition-opacity cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
               >
                 <span>Tiếp tục chọn lỗi</span>
               </button>
@@ -1561,7 +1533,6 @@ export const StudentView: React.FC<StudentViewProps> = ({
             filter={logPeriodFilter}
             onChangeFilter={setLogPeriodFilter}
             currentWeek={currentWeek}
-            onChangeCurrentWeek={canChangeCurrentWeek ? onChangeCurrentWeek : undefined}
             noDataWeeks={settings.noDataWeeks || []}
             onToggleNoDataWeek={hasDelegatedPerm('QUAN_LY_TUAN') ? handleToggleNoDataWeek : undefined}
             compact={true}
@@ -1690,62 +1661,62 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
               </div>
 
-            {/* Category Filter Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-surface-2 rounded-2xl border border-token text-xs overflow-x-auto">
+            {/* Category Filter Tabs: Chia gọn thành 2-3 hàng dễ nhìn */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 p-1.5 bg-surface-2 rounded-2xl border border-token text-xs">
               <button
                 type="button"
                 onClick={() => setSelectedBadgeCategory('all')}
-                className={`px-3 py-1 rounded-xl font-bold transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-2.5 py-2 rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
                   selectedBadgeCategory === 'all'
-                    ? 'bg-surface text-main shadow-xs'
-                    : 'text-muted hover:text-main'
+                    ? 'bg-amber-500 text-white shadow-xs font-extrabold'
+                    : 'bg-surface/80 text-muted hover:text-main border border-token/50'
                 }`}
               >
-                Tất cả (30)
+                <span>✨ Tất cả (30)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setSelectedBadgeCategory('discipline')}
-                className={`px-3 py-1 rounded-xl font-bold transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-2.5 py-2 rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
                   selectedBadgeCategory === 'discipline'
-                    ? 'bg-surface text-main shadow-xs'
-                    : 'text-muted hover:text-main'
+                    ? 'bg-amber-500 text-white shadow-xs font-extrabold'
+                    : 'bg-surface/80 text-muted hover:text-main border border-token/50'
                 }`}
               >
-                🛡️ Kỷ luật (8)
+                <span>🛡️ Kỷ luật (8)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setSelectedBadgeCategory('academic')}
-                className={`px-3 py-1 rounded-xl font-bold transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-2.5 py-2 rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
                   selectedBadgeCategory === 'academic'
-                    ? 'bg-surface text-main shadow-xs'
-                    : 'text-muted hover:text-main'
+                    ? 'bg-amber-500 text-white shadow-xs font-extrabold'
+                    : 'bg-surface/80 text-muted hover:text-main border border-token/50'
                 }`}
               >
-                📚 Học tập (8)
+                <span>📚 Học tập (8)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setSelectedBadgeCategory('movement')}
-                className={`px-3 py-1 rounded-xl font-bold transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-2.5 py-2 rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
                   selectedBadgeCategory === 'movement'
-                    ? 'bg-surface text-main shadow-xs'
-                    : 'text-muted hover:text-main'
+                    ? 'bg-amber-500 text-white shadow-xs font-extrabold'
+                    : 'bg-surface/80 text-muted hover:text-main border border-token/50'
                 }`}
               >
-                🚩 Phong trào (7)
+                <span>🚩 Phong trào (7)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setSelectedBadgeCategory('cadre')}
-                className={`px-3 py-1 rounded-xl font-bold transition-all cursor-pointer whitespace-nowrap ${
+                className={`col-span-2 sm:col-span-2 px-2.5 py-2 rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
                   selectedBadgeCategory === 'cadre'
-                    ? 'bg-surface text-main shadow-xs'
-                    : 'text-muted hover:text-main'
+                    ? 'bg-amber-500 text-white shadow-xs font-extrabold'
+                    : 'bg-surface/80 text-muted hover:text-main border border-token/50'
                 }`}
               >
-                ⭐ Cán sự & Lớp (7)
+                <span>⭐ Cán sự &amp; Lớp (7)</span>
               </button>
             </div>
 
@@ -1867,7 +1838,6 @@ export const StudentView: React.FC<StudentViewProps> = ({
             filter={periodFilter}
             onChangeFilter={setPeriodFilter}
             currentWeek={currentWeek}
-            onChangeCurrentWeek={canChangeCurrentWeek ? onChangeCurrentWeek : undefined}
             noDataWeeks={settings.noDataWeeks || []}
             onToggleNoDataWeek={hasDelegatedPerm('QUAN_LY_TUAN') ? handleToggleNoDataWeek : undefined}
             compact={true}
@@ -1884,7 +1854,6 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   Bảng tổng quan thi đua lớp 10A5
                 </h3>
               </div>
-              
             </div>
 
             <div className="flex items-center gap-2 flex-wrap shrink-0">
@@ -1900,11 +1869,10 @@ export const StudentView: React.FC<StudentViewProps> = ({
               >
                 <span>⭐ Vị trí của bạn: {myRank === 1 ? '🥇 Hạng 1' : myRank === 2 ? '🥈 Hạng 2' : myRank === 3 ? '🥉 Hạng 3' : `Hạng #${myRank}`}{myRankItem?.isTied ? ' (Đồng hạng)' : ''} ({myPeriodSummary.diemTrungBinh}đ)</span>
               </button>
-
-              </div>
+            </div>
           </div>
 
-          {/* Sắp xếp Toolbar (Gọn gàng 1 dòng dropdown) */}
+          {/* Sắp xếp & Lọc Tổ Toolbar (Gọn gàng) */}
           <div className="p-3 sm:p-4 border-b border-token bg-surface space-y-2.5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -1927,78 +1895,36 @@ export const StudentView: React.FC<StudentViewProps> = ({
               </div>
             </div>
 
-            {/* Hàng 3: Lọc theo Tổ */}
-            <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-token/60">
-              <span className="text-[11px] font-semibold text-muted mr-1 flex items-center gap-1">
-                <Filter className="w-3 h-3 text-muted" />
-                <span>Lọc theo:</span>
-              </span>
+            {/* Lọc theo Tổ: Gọn 1 dòng duy nhất (Cả lớp | Tổ 1 | Tổ 2 | Tổ 3 | Tổ 4) */}
+            <div className="grid grid-cols-5 gap-1.5 pt-1.5 border-t border-token/60">
               <button
                 type="button"
                 onClick={() => setRankingToFilter('all')}
-                className={`px-2.5 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`py-1.5 px-1 rounded-xl text-xs font-bold transition-all cursor-pointer text-center whitespace-nowrap ${
                   rankingToFilter === 'all'
-                    ? 'bg-main text-surface shadow-xs'
+                    ? 'bg-blue-600 text-white shadow-xs font-extrabold'
                     : 'bg-surface-2 text-muted hover:text-main hover:bg-surface border border-token'
                 }`}
               >
-                Cả lớp ({allStudents.length})
+                Cả lớp
               </button>
               {[1, 2, 3, 4].map(toNum => {
-                const count = allStudents.filter(s => s.to === toNum).length;
                 const isSelected = rankingToFilter === toNum;
-                const isMyTo = currentStudent.to === toNum;
                 return (
                   <button
                     key={toNum}
                     type="button"
                     onClick={() => setRankingToFilter(toNum)}
-                    className={`px-2.5 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    className={`py-1.5 px-1 rounded-xl text-xs font-bold transition-all cursor-pointer text-center whitespace-nowrap ${
                       isSelected
-                        ? 'bg-accent text-on-accent shadow-xs'
+                        ? 'bg-blue-600 text-white shadow-xs font-extrabold'
                         : 'bg-surface-2 text-muted hover:text-main hover:bg-surface border border-token'
                     }`}
                   >
-                    <span>Tổ {toNum} ({count})</span>
-                    {isMyTo && <span className="text-[9px] opacity-75">★ Tổ tôi</span>}
+                    Tổ {toNum}
                   </button>
                 );
               })}
-            </div>
-
-            {/* Hàng 4: Thống kê nhanh danh sách đang hiển thị */}
-            <div className="pt-2 border-t border-token/60 flex items-center justify-between flex-wrap gap-2 text-[11px] text-muted">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span>
-                  Đang hiển thị: <strong className="text-main font-bold">{displayedRankings.length}</strong> / {allStudents.length} học sinh
-                </span>
-                <span>·</span>
-                <span>
-                  Điểm trung bình: <strong className="text-accent font-bold">{rankingStats.avgScore} đ</strong>
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 flex-wrap font-medium">
-                <span className="text-[var(--st-ok)] font-bold">
-                  🌟 Tốt: {rankingStats.totCount}
-                </span>
-                <span>·</span>
-                <span className="text-accent font-bold">
-                  🚀 Khá: {rankingStats.khaCount}
-                </span>
-                <span>·</span>
-                <span className="text-[var(--st-warn)] font-bold">
-                  ⚠️ Đạt: {rankingStats.datCount}
-                </span>
-                {rankingStats.canCoGangCount > 0 && (
-                  <>
-                    <span>·</span>
-                    <span className="text-[var(--st-bad)] font-bold">
-                      ❗ Cần cố gắng: {rankingStats.canCoGangCount}
-                    </span>
-                  </>
-                )}
-              </div>
             </div>
           </div>
 
@@ -2156,7 +2082,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
                       {item.chuaCoDiem ? (
                         <span className="text-[10.5px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-dashed border-amber-300">
-                          {item.lyDoChuaCoDiem === 'no_data' ? '⊘ Không có dữ liệu' : '⏳ Chưa có điểm'}
+                          {item.lyDoChuaCoDiem === 'no_data' ? '⊘ Không có dữ liệu' : '⏳ Tuần chưa học'}
                         </span>
                       ) : (
                         <>
@@ -2182,52 +2108,6 @@ export const StudentView: React.FC<StudentViewProps> = ({
               })
             )}
           </div>
-          </div>
-        </div>
-      )}
-
-      {/* Week Change Warning Modal (Cảnh báo chuyển tuần học cho LT, BT, LP HT) */}
-      {pendingWeekChange !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-sm bg-surface border border-token rounded-3xl p-5 shadow-2xl space-y-4 animate-scale-up">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
-                <AlertTriangle className="w-5 h-5 stroke-[2.5]" />
-              </div>
-              <div>
-                <h4 className="text-sm font-extrabold text-main">Xác nhận chuyển tuần</h4>
-                <p className="text-[11px] text-muted">Quyền hạn Cán sự cốt cán (LT, BT, LP Học tập)</p>
-              </div>
-            </div>
-
-            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
-              Bạn có chắc chắn muốn chuyển tuần hiện tại của cả lớp từ <strong>Tuần {currentWeek}</strong> sang <strong>Tuần {pendingWeekChange}</strong> ({pendingWeekChange <= 19 ? 'Học kỳ 1' : 'Học kỳ 2'})?
-              <div className="mt-1 text-[11px] opacity-80">
-                ⚠️ Việc chuyển tuần sẽ cập nhật tuần làm việc hiện tại, ảnh hưởng đến việc ghi nhận nề nếp và thống kê thi đua của toàn bộ học sinh.
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setPendingWeekChange(null)}
-                className="px-3.5 py-2 rounded-xl bg-surface-2 text-muted hover:text-main text-xs font-bold transition-colors cursor-pointer"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (onChangeCurrentWeek && pendingWeekChange !== null) {
-                    onChangeCurrentWeek(pendingWeekChange);
-                  }
-                  setPendingWeekChange(null);
-                }}
-                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
-              >
-                Xác nhận chuyển
-              </button>
-            </div>
           </div>
         </div>
       )}

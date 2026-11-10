@@ -4,7 +4,8 @@ import {
   CalendarCheck2,
   Ban,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  RefreshCw
 } from 'lucide-react';
 import { HierarchyPeriodFilter } from '../../types';
 import { 
@@ -12,6 +13,7 @@ import {
   SEMESTER_2_WEEKS, 
   getSemesterFromWeek 
 } from '../../utils/hierarchy';
+import { getVietnamDateInfo, getNextVietnamMondayDisplayStr } from '../../utils/realtimeWeek';
 
 interface PeriodHierarchyFilterProps {
   filter: HierarchyPeriodFilter;
@@ -20,6 +22,8 @@ interface PeriodHierarchyFilterProps {
   onChangeCurrentWeek?: (week: number) => void;
   noDataWeeks?: number[];
   onToggleNoDataWeek?: (week: number) => void;
+  autoAdvanceWeek?: boolean;
+  onToggleAutoAdvanceWeek?: (enabled: boolean) => void;
   compact?: boolean;
 }
 
@@ -30,7 +34,11 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
   onChangeCurrentWeek,
   noDataWeeks = [],
   onToggleNoDataWeek,
+  autoAdvanceWeek = true,
+  onToggleAutoAdvanceWeek,
 }) => {
+  const vnNow = getVietnamDateInfo();
+  const nextMondayStr = getNextVietnamMondayDisplayStr();
   // Active semester for display: 1 or 2
   const activeSemester = filter.hocKi === 2 ? 2 : 1;
   const weeksToDisplay = activeSemester === 1 ? SEMESTER_1_WEEKS : SEMESTER_2_WEEKS;
@@ -116,7 +124,7 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
               {isSelectedWeekFuture && (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-500/15 text-slate-600 border border-slate-400/40 text-[9px] font-extrabold">
                   <Clock className="w-2.5 h-2.5" />
-                  Tuần tương lai (Chưa có điểm)
+                  Tuần chưa học
                 </span>
               )}
               {!isSelectedWeekFuture && isSelectedWeekNoData && (
@@ -132,7 +140,7 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
           </div>
         </div>
 
-        {/* Action Buttons: Mark No-Data Week, Set Current Week, Quick Jump */}
+        {/* Action Buttons: Mark No-Data Week, Set Current Week, Quick Jump, Auto-Advance Week */}
         <div className="flex items-center gap-1.5 flex-wrap self-start sm:self-auto">
           {onToggleNoDataWeek && selectedWeekNumber !== null && (
             <button
@@ -182,6 +190,26 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
               Tuần {currentWeek}
             </span>
           </button>
+
+          {onToggleAutoAdvanceWeek && (
+            <button
+              type="button"
+              onClick={() => onToggleAutoAdvanceWeek(!autoAdvanceWeek)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border font-bold text-[11px] cursor-pointer transition-all shadow-2xs ${
+                autoAdvanceWeek
+                  ? 'bg-indigo-50 text-indigo-700 border-indigo-300 hover:bg-indigo-100'
+                  : 'bg-surface-2 text-muted border-token hover:text-main'
+              }`}
+              title={`Hôm nay: ${vnNow.weekdayLabel}, ${vnNow.displayDateStr}. Khi bật, cứ đến Thứ 2 hàng tuần (${nextMondayStr}) hệ thống thời gian thực tự động tăng sang Tuần ${Math.min(38, currentWeek + 1)}`}
+            >
+              <RefreshCw className={`w-3 h-3 ${autoAdvanceWeek ? 'text-indigo-600' : 'text-muted'}`} />
+              <span>
+                {autoAdvanceWeek
+                  ? `Tự sang T${Math.min(38, currentWeek + 1)} vào Thứ 2 (${nextMondayStr.slice(0, 5)})`
+                  : 'Tự chuyển tuần Thứ 2: TẮT'}
+              </span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -267,7 +295,7 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
               } else if (isFuture) {
                 chipStyle = 'bg-slate-600 text-white shadow-sm ring-2 ring-slate-400 font-black scale-105';
               } else {
-                chipStyle = 'bg-primary text-on-primary shadow-sm ring-2 ring-accent/50 font-black scale-105';
+                chipStyle = 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-400 font-black scale-105';
               }
             } else if (isNoData) {
               chipStyle =
@@ -277,7 +305,7 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
                 'bg-emerald-500/15 border-2 border-emerald-500 text-emerald-700 font-black';
             } else if (isFuture) {
               chipStyle =
-                'bg-slate-200/60 border border-dashed border-slate-300 text-slate-400 hover:text-slate-600 hover:border-slate-400 font-medium';
+                'bg-slate-200/60 border border-dashed border-slate-300 text-slate-500 hover:text-slate-700 hover:border-slate-400 font-medium';
             }
 
             const statusNote = isNoData
@@ -285,7 +313,7 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
               : isCurrentWeekOfClass
                 ? ' (Tuần hiện tại của lớp)'
                 : isFuture
-                  ? ' (Tuần tương lai - Chưa có điểm)'
+                  ? ' (Tuần chưa học)'
                   : '';
 
             return (
@@ -333,7 +361,7 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-slate-200 border border-dashed border-slate-400 inline-block" />
-            <span>Tuần sau tuần hiện tại (Chưa có điểm)</span>
+            <span>Tuần chưa học</span>
           </span>
         </div>
       </div>

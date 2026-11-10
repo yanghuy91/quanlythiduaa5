@@ -24,7 +24,7 @@ export const CADRE_BANNERS: Record<string, CadreBannerConfig> = {
     subtitle: 'Lớp 10A5 · THPT Số 2 Đức Phổ',
     imageSrc: bannerGv,
     gradientFallback: 'from-purple-900 via-indigo-950 to-slate-900',
-    accentBadge: 'bg-purple-500/20 text-purple-300 border-purple-400/40',
+    accentBadge: 'bg-amber-400 text-slate-950 border-white',
     tagline: 'Tận tâm - Thấu hiểu - Định hướng tương lai 🎓',
   },
   LT: {
@@ -33,7 +33,7 @@ export const CADRE_BANNERS: Record<string, CadreBannerConfig> = {
     subtitle: 'Chỉ Huy Trưởng Nề Nếp 10A5',
     imageSrc: bannerLt,
     gradientFallback: 'from-amber-900 via-yellow-950 to-slate-900',
-    accentBadge: 'bg-amber-500/20 text-amber-300 border-amber-400/40',
+    accentBadge: 'bg-amber-400 text-slate-950 border-white',
     tagline: 'Gương mẫu - Quyết đoán - Đồng hành cùng tập thể ⭐',
   },
   BT: {
@@ -42,7 +42,7 @@ export const CADRE_BANNERS: Record<string, CadreBannerConfig> = {
     subtitle: 'Ngọn Cờ Phong Trào & Thi Đua 26/3',
     imageSrc: bannerBt,
     gradientFallback: 'from-rose-900 via-red-950 to-slate-900',
-    accentBadge: 'bg-rose-500/20 text-rose-300 border-rose-400/40',
+    accentBadge: 'bg-rose-500 text-white border-rose-200',
     tagline: 'Nhiệt huyết - Sáng tạo - Tiên phong hành động 🚩',
   },
   LP_HT: {
@@ -51,7 +51,7 @@ export const CADRE_BANNERS: Record<string, CadreBannerConfig> = {
     subtitle: 'Trụ Cột Tri Thức & Kỷ Cương Bài Vở',
     imageSrc: bannerLpHt,
     gradientFallback: 'from-emerald-900 via-teal-950 to-slate-900',
-    accentBadge: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40',
+    accentBadge: 'bg-emerald-400 text-slate-950 border-white',
     tagline: 'Kiên trì - Vững vàng - Chinh phục tri thức 📖',
   },
   LP_LD: {
@@ -60,7 +60,7 @@ export const CADRE_BANNERS: Record<string, CadreBannerConfig> = {
     subtitle: 'Chiến Binh Không Gian Xanh & Kỷ Luật',
     imageSrc: bannerLpLd,
     gradientFallback: 'from-orange-900 via-amber-950 to-slate-900',
-    accentBadge: 'bg-orange-500/20 text-orange-300 border-orange-400/40',
+    accentBadge: 'bg-orange-400 text-slate-950 border-white',
     tagline: 'Sạch đẹp - Chu đáo - Trách nhiệm vì lớp học xanh ⚡',
   },
   TT_1: {
@@ -69,7 +69,7 @@ export const CADRE_BANNERS: Record<string, CadreBannerConfig> = {
     subtitle: 'Dãy 1 Cửa Chính · 11 Thành Viên',
     imageSrc: bannerTt,
     gradientFallback: 'from-amber-900 via-slate-900 to-slate-950',
-    accentBadge: 'bg-amber-500/20 text-amber-300 border-amber-400/40',
+    accentBadge: 'bg-amber-400 text-slate-950 border-white',
     tagline: 'Bám sát nề nếp dãy cửa, nhắc nhở kịp thời 🛡️',
   },
   TT_2: {
@@ -78,7 +78,7 @@ export const CADRE_BANNERS: Record<string, CadreBannerConfig> = {
     subtitle: 'Dãy 2 Giữa · 11 Thành Viên',
     imageSrc: bannerTt,
     gradientFallback: 'from-emerald-900 via-slate-900 to-slate-950',
-    accentBadge: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40',
+    accentBadge: 'bg-emerald-400 text-slate-950 border-white',
     tagline: 'Công tâm, gương mẫu, hỗ trợ tổ viên tiến bộ 🛡️',
   },
   TT_3: {
@@ -87,7 +87,7 @@ export const CADRE_BANNERS: Record<string, CadreBannerConfig> = {
     subtitle: 'Dãy 3 Giữa · 10 Thành Viên',
     imageSrc: bannerTt,
     gradientFallback: 'from-purple-900 via-slate-900 to-slate-950',
-    accentBadge: 'bg-purple-500/20 text-purple-300 border-purple-400/40',
+    accentBadge: 'bg-purple-400 text-slate-950 border-white',
     tagline: 'Đoàn kết, tự giác, hoàn thành xuất sắc nhiệm vụ 🛡️',
   },
   TT_4: {
@@ -96,7 +96,7 @@ export const CADRE_BANNERS: Record<string, CadreBannerConfig> = {
     subtitle: 'Dãy 4 Bàn GV · 10 Thành Viên',
     imageSrc: bannerTt,
     gradientFallback: 'from-blue-900 via-slate-900 to-slate-950',
-    accentBadge: 'bg-blue-500/20 text-blue-300 border-blue-400/40',
+    accentBadge: 'bg-sky-400 text-slate-950 border-white',
     tagline: 'Gần gũi thầy cô, quản lý nề nếp dãy trong nghiêm túc 🛡️',
   },
   TT: {
@@ -105,7 +105,7 @@ export const CADRE_BANNERS: Record<string, CadreBannerConfig> = {
     subtitle: 'Đầu Tàu Gương Mẫu Của Tổ',
     imageSrc: bannerTt,
     gradientFallback: 'from-indigo-900 via-slate-900 to-slate-950',
-    accentBadge: 'bg-indigo-500/20 text-indigo-300 border-indigo-400/40',
+    accentBadge: 'bg-indigo-400 text-slate-950 border-white',
     tagline: 'Trách nhiệm, kỷ cương, cùng tổ viên thi đua dẫn đầu 🛡️',
   },
   HS: {
@@ -114,7 +114,7 @@ export const CADRE_BANNERS: Record<string, CadreBannerConfig> = {
     subtitle: 'Tập thể Lớp 10A5 · THPT Số 2 Đức Phổ',
     imageSrc: bannerHs,
     gradientFallback: 'from-amber-600 via-sky-800 to-indigo-950',
-    accentBadge: 'bg-sky-500/20 text-sky-300 border-sky-400/40',
+    accentBadge: 'bg-sky-400 text-slate-950 border-white',
     tagline: 'Chăm ngoan - Sáng tạo - Đoàn kết vững bước tương lai 🌟',
   },
 };

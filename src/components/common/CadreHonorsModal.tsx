@@ -26,8 +26,8 @@ export const CADRE_DELEGATED_PERMISSION_LIST: Array<{
   },
   {
     id: 'QUAN_LY_TUAN',
-    label: 'Quản lý tuần & tuần nghỉ',
-    shortDesc: 'Đổi tuần hiện tại và đánh dấu tuần không có dữ liệu',
+    label: 'Đánh dấu tuần nghỉ',
+    shortDesc: 'Đánh dấu hoặc bỏ đánh dấu các tuần nghỉ lễ / không có dữ liệu',
   },
   {
     id: 'QUAN_LY_VINH_DANH',
@@ -153,18 +153,18 @@ export const CadreHonorsModal: React.FC<CadreHonorsModalProps> = ({
                     ) : (
                       <div className={`w-full h-full bg-gradient-to-r ${banner.gradientFallback}`} />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-900/35 to-transparent" />
                     
                     <div className="absolute top-2 left-2.5 right-2.5 flex items-center justify-between">
-                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border backdrop-blur-md ${banner.accentBadge}`}>
+                      <span className={`text-[9.5px] font-black px-2 py-0.5 rounded-full border shadow-xs ${banner.accentBadge}`}>
                         {displayTitle}
                       </span>
-                      <span className="text-[10px] text-white/90 font-bold drop-shadow-sm">
+                      <span className="text-[10px] text-amber-200 font-extrabold drop-shadow-sm">
                         {info.badgeLevel}
                       </span>
                     </div>
 
-                    <div className="absolute bottom-1.5 left-2.5 right-2.5 text-[10px] text-white/90 italic drop-shadow-sm truncate">
+                    <div className="absolute bottom-1.5 left-2.5 right-2.5 text-[10px] text-white font-semibold italic drop-shadow-md truncate">
                       "{banner.tagline}"
                     </div>
                   </div>

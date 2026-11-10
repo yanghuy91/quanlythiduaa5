@@ -43,6 +43,13 @@ import {
   exportCurrentClassToUnifiedExcel,
   AI_MASTER_PROMPT_TEXT,
 } from '../../utils/exportDataSpecsDoc';
+import {
+  findStudentInSeatingMaster,
+  syncStudentsWithSeatingLayout,
+  reconcileAcademicRecordsWithSeating,
+  reconcileDisciplineRecordsWithSeating,
+  parse2DSeatingGridSheet,
+} from '../../utils/seatingMaster';
 
 interface UniversalSmartImportSectionProps {
   students: Student[];
@@ -76,6 +83,9 @@ interface UnifiedParsedPackage {
   rawJsonPayload?: any;
   students: Student[];
   hasStudentRoster: boolean;
+  seatingLayoutFromFile?: SeatLayoutNode[];
+  has2DSeatingSheet?: boolean;
+  hasExplicitSeatCols?: boolean;
   academicRecords: StudentAcademicRecord[];
   gradesCount: number;
   disciplineRecords: DisciplineRecord[];
@@ -113,7 +123,7 @@ function guessGenderFromName(fullName: string): 'Nam' | 'Nu' {
     lower.includes('hà') ||
     lower.includes('vy') ||
     lower.includes('nhi') ||
-    lower.includes('anh') && lower.includes('ngọc')
+    (lower.includes('anh') && lower.includes('ngọc'))
   ) {
     return 'Nu';
   }
@@ -263,10 +273,16 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
   const [pastedText, setPastedText] = useState('');
   const [showPasteBox, setShowPasteBox] = useState(false);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
-  const [rosterImportMode, setRosterImportMode] = useState<'replace' | 'append'>('replace');
+  // Mặc định luôn ưu tiên "reconcile_seating": Lấy Sơ đồ lớp làm chuẩn và quy chiếu mọi danh sách khác từ Sơ đồ lớp
+  const [rosterImportMode, setRosterImportMode] = useState<'reconcile_seating' | 'replace'>('reconcile_seating');
   const [parsedPackage, setParsedPackage] = useState<UnifiedParsedPackage | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [statusBanner, setStatusBanner] = useState<{ title: string; sub?: string } | null>(null);
+
+  // Danh sách học sinh chuẩn đã đồng bộ với Sơ đồ lớp hiện tại (`layout`)
+  const currentSeatingMaster = React.useMemo(() => {
+    return syncStudentsWithSeatingLayout(students, layout);
+  }, [students, layout]);
 
   const universalFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -290,10 +306,10 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
       version: '2.0',
       exportedAt: new Date().toISOString(),
       className: '10A5',
-      students,
-      layout,
-      records,
-      academicRecords,
+      students: currentSeatingMaster.students,
+      layout: currentSeatingMaster.layout,
+      records: reconcileDisciplineRecordsWithSeating(currentSeatingMaster.students, records),
+      academicRecords: reconcileAcademicRecordsWithSeating(currentSeatingMaster.students, academicRecords, 1),
       rules,
       settings,
     };
@@ -304,12 +320,15 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
     a.download = `Sao_Luu_10A5_Day_Du_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    onShowToast('Đã tải xuống file sao lưu JSON (.json)');
+    onShowToast('Đã tải xuống file sao lưu JSON (.json) chuẩn Sơ đồ lớp');
   };
 
   /**
    * Bộ phân tích Hợp Nhất 1-File (Đọc tất cả các Sheet trong Excel hoặc Bảng văn bản)
-   * Trích xuất đồng thời: Danh sách HS + Tổ + Chức vụ + Chỗ ngồi + Điểm môn học + Nề nếp
+   * NGUYÊN TẮC BẤT BIẾN:
+   * - Dù lấy dữ liệu từ file nào, luôn lấy SƠ ĐỒ LỚP làm chuẩn gốc (Mã HS, Họ tên, Tổ 1..4, Dãy bàn, Số bàn).
+   * - Nếu trong file có Sheet Sơ đồ lớp 2D trực quan -> đọc Sơ đồ lớp đó làm chuẩn trước, sau đó quy chiếu tất cả các sheet khác theo Sơ đồ lớp đó.
+   * - Nếu file là Bảng điểm / Nề nếp / Danh sách trích ngang -> tự động đối chiếu từng học sinh vào Sơ đồ lớp hiện tại (`currentSeatingMaster.students`).
    */
   const parseSheetsToUnifiedPackage = (
     sheets: { sheetName: string; rows: any[][] }[],
@@ -320,7 +339,42 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
     const extractedDiscipline: DisciplineRecord[] = [];
     const summaryNotes: string[] = [];
 
-    for (const { sheetName, rows } of sheets) {
+    let seatingLayoutFromFile: SeatLayoutNode[] | undefined = undefined;
+    let has2DSeatingSheet = false;
+    let hasExplicitSeatCols = false;
+
+    // BƯỚC 0: Quét tìm Sheet Sơ đồ lớp 2D trực quan trước (nếu có trong file) để lấy làm chuẩn gốc
+    const processedSheetIndices = new Set<number>();
+    for (let sIdx = 0; sIdx < sheets.length; sIdx++) {
+      const { sheetName, rows } = sheets[sIdx];
+      const normSheetName = normalizeHeader(sheetName);
+      if (normSheetName.includes('huongdan') || normSheetName.includes('huong dan')) {
+        processedSheetIndices.add(sIdx);
+        continue;
+      }
+
+      const parsed2D = parse2DSeatingGridSheet(rows, currentSeatingMaster.students);
+      if (parsed2D && parsed2D.students.length > 0) {
+        has2DSeatingSheet = true;
+        seatingLayoutFromFile = parsed2D.layout;
+        extractedStudents.push(...parsed2D.students);
+        processedSheetIndices.add(sIdx);
+        summaryNotes.push(
+          `Lấy Sơ đồ lớp 2D (Sheet "${sheetName}") làm chuẩn gốc: ${parsed2D.students.length} học sinh`
+        );
+        break;
+      }
+    }
+
+    // Danh sách Sơ đồ lớp dùng để quy chiếu cho các sheet còn lại
+    const getMasterReferenceRoster = (): Student[] => {
+      if (extractedStudents.length > 0) return extractedStudents;
+      return currentSeatingMaster.students;
+    };
+
+    for (let sIdx = 0; sIdx < sheets.length; sIdx++) {
+      if (processedSheetIndices.has(sIdx)) continue;
+      const { sheetName, rows } = sheets[sIdx];
       const normSheetName = normalizeHeader(sheetName);
       if (normSheetName.includes('huongdan') || normSheetName.includes('huong dan')) {
         continue;
@@ -430,7 +484,6 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
           } else if (norm === 'ghi chu') {
             colGhiChu = cIdx;
           } else {
-            // Kiểm tra xem có phải cột môn học không
             for (const subj of DEFAULT_SUBJECTS) {
               const aliases = SUBJECT_HEADER_ALIASES[subj.id] || [normalizeHeader(subj.shortName)];
               const matchedAlias = aliases.some(
@@ -467,6 +520,10 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
         }
       }
 
+      if (colTo !== -1 || colDayBan !== -1 || colSoBan !== -1) {
+        hasExplicitSeatCols = true;
+      }
+
       const isDisciplineSheet =
         colTenHanhVi !== -1 ||
         colLoaiDiem !== -1 ||
@@ -475,24 +532,20 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
 
       const startRow = headerRowIdx !== -1 ? headerRowIdx + 1 : 0;
 
-      // TRƯỜNG HỢP 1: BẢNG NHẬT KÝ NỀ NẾP / VI PHẠM
+      // TRƯỜNG HỢP 1: BẢNG NHẬT KÝ NỀ NẾP / VI PHẠM (Quy chiếu từ Sơ đồ lớp)
       if (isDisciplineSheet && colTenHanhVi !== -1) {
-        const poolStudents = extractedStudents.length > 0 ? extractedStudents : students;
+        const poolStudents = getMasterReferenceRoster();
 
         for (let r = startRow; r < validRows.length; r++) {
           const row = validRows[r];
           const behaviorText = String(row[colTenHanhVi] || '').trim();
           if (!behaviorText || normalizeHeader(behaviorText).includes('noi dung hanh vi')) continue;
 
-          const rawStudentRef = colHoTen !== -1 ? String(row[colHoTen] || '').trim() : colMaHS !== -1 ? String(row[colMaHS] || '').trim() : '';
-          if (!rawStudentRef) continue;
+          const rawMaRef = colMaHS !== -1 ? String(row[colMaHS] || '').trim() : '';
+          const rawNameRef = colHoTen !== -1 ? String(row[colHoTen] || '').trim() : '';
+          if (!rawMaRef && !rawNameRef) continue;
 
-          const matchedStudent = poolStudents.find(
-            s =>
-              s.maHS.toLowerCase() === rawStudentRef.toLowerCase() ||
-              s.hoTen.toLowerCase() === rawStudentRef.toLowerCase() ||
-              s.hoTen.toLowerCase().includes(rawStudentRef.toLowerCase())
-          );
+          const matchedStudent = findStudentInSeatingMaster(poolStudents, rawMaRef, rawNameRef || rawMaRef);
 
           const rawDate = colNgayHoc !== -1 ? String(row[colNgayHoc] || '').trim() : '';
           const ngayHoc = rawDate.match(/^\d{4}-\d{2}-\d{2}$/)
@@ -503,10 +556,10 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
           const buoi: 'Sang' | 'Chieu' = rawBuoi.includes('chieu') ? 'Chieu' : 'Sang';
 
           const tuanHoc = colTuan !== -1 && Number(row[colTuan]) > 0 ? Number(row[colTuan]) : currentWeek;
+          // Luôn ưu tiên Tổ của học sinh trên Sơ đồ lớp làm chuẩn
           const toNum =
-            colTo !== -1 && Number(row[colTo]) >= 1 && Number(row[colTo]) <= 4
-              ? Number(row[colTo])
-              : matchedStudent?.to || 1;
+            matchedStudent?.to ||
+            (colTo !== -1 && Number(row[colTo]) >= 1 && Number(row[colTo]) <= 4 ? Number(row[colTo]) : 1);
 
           const rawLoai = colLoaiDiem !== -1 ? normalizeHeader(row[colLoaiDiem]) : '';
           const rawScoreNum = colSoDiem !== -1 ? Number(row[colSoDiem]) : 2;
@@ -533,8 +586,8 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
             ngayHoc,
             buoi,
             doiTuong: 'HocSinh',
-            maHS: matchedStudent?.maHS || `HS01`,
-            hoTen: matchedStudent?.hoTen || rawStudentRef,
+            maHS: matchedStudent?.maHS || rawMaRef || 'HS01',
+            hoTen: matchedStudent?.hoTen || rawNameRef || rawMaRef,
             to: toNum,
             maNoiQuy: loaiDiem === 'Cong' ? 'NQ_CONG' : 'NQ_VIPHAM',
             nhomHanhVi,
@@ -564,7 +617,6 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
         if (colHoTen !== -1 && row[colHoTen] !== undefined && row[colHoTen] !== null) {
           hoTen = String(row[colHoTen]).trim();
         } else {
-          // Tự động tìm ô chứa tên người nếu file không có dòng tiêu đề chuẩn
           for (let c = 0; c < Math.min(4, row.length); c++) {
             const val = String(row[c] || '').trim();
             if (val.length >= 3 && !val.match(/^\d+$/) && !val.match(/^hs\d+$/i) && val.includes(' ')) {
@@ -581,25 +633,35 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
           normName === 'ho va ten' ||
           normName === 'ho ten' ||
           normName === 'stt' ||
-          normName.startsWith(' hướng dẫn') ||
+          normName.startsWith('huong dan') ||
           normName.startsWith('nguyen tac')
         ) {
           continue;
         }
 
-        // Tìm hoặc tạo học sinh
+        const rawMa = colMaHS !== -1 && row[colMaHS] ? String(row[colMaHS]).trim().toUpperCase() : '';
+
+        // Đối chiếu với Sơ đồ lớp chuẩn (từ Sheet Sơ đồ lớp 2D hoặc Sơ đồ lớp hiện tại của lớp)
+        const matchedInSeating = findStudentInSeatingMaster(
+          getMasterReferenceRoster(),
+          rawMa,
+          hoTen
+        );
+
         let studentIdx = extractedStudents.findIndex(
-          s => normalizeHeader(s.hoTen) === normName
+          s =>
+            (matchedInSeating && s.maHS === matchedInSeating.maHS) ||
+            normalizeHeader(s.hoTen) === normName
         );
         const orderNumber = studentIdx !== -1 ? studentIdx + 1 : extractedStudents.length + 1;
 
-        const rawMa = colMaHS !== -1 && row[colMaHS] ? String(row[colMaHS]).trim().toUpperCase() : '';
-        const maHS = rawMa.match(/^HS\d+$/i)
-          ? rawMa
-          : `HS${orderNumber < 10 ? '0' + orderNumber : orderNumber}`;
+        // Mã HS ưu tiên lấy từ Sơ đồ lớp chuẩn nếu tìm thấy học sinh trên Sơ đồ lớp
+        const maHS =
+          matchedInSeating?.maHS ||
+          (rawMa.match(/^HS\d+$/i) ? rawMa : `HS${orderNumber < 10 ? '0' + orderNumber : orderNumber}`);
 
         // Giới tính
-        let gioiTinh: 'Nam' | 'Nu' = guessGenderFromName(hoTen);
+        let gioiTinh: 'Nam' | 'Nu' = matchedInSeating?.gioiTinh || guessGenderFromName(hoTen);
         if (colGioiTinh !== -1 && row[colGioiTinh]) {
           const gNorm = normalizeHeader(row[colGioiTinh]);
           if (gNorm === 'nu' || gNorm === 'f' || gNorm === 'gai' || gNorm === 'x') {
@@ -609,39 +671,53 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
           }
         }
 
-        // Tổ (1..4)
-        let to: 1 | 2 | 3 | 4 = (((orderNumber - 1) % 4) + 1) as 1 | 2 | 3 | 4;
-        if (colTo !== -1 && row[colTo]) {
+        // Tổ (1..4): Nếu đã có Sơ đồ lớp chuẩn thì lấy Tổ của Sơ đồ lớp; chỉ lấy từ cột Tổ khi file chỉ định rõ và chưa có Sheet 2D
+        let to: 1 | 2 | 3 | 4 = (matchedInSeating?.to as 1 | 2 | 3 | 4) || ((((orderNumber - 1) % 4) + 1) as 1 | 2 | 3 | 4);
+        if (!has2DSeatingSheet && colTo !== -1 && row[colTo]) {
           const m = String(row[colTo]).match(/[1-4]/);
           if (m) to = Number(m[0]) as 1 | 2 | 3 | 4;
         }
 
-        // Chức vụ
+        // Chức vụ: giữ chức vụ từ Sơ đồ lớp chuẩn nếu file không có cột chức vụ
         const rawRole = colChucVu !== -1 && row[colChucVu] ? String(row[colChucVu]) : '';
-        const { vaiTro, toTruongTo } = parseRoleCodes(rawRole, to);
+        const parsedRoles = rawRole ? parseRoleCodes(rawRole, to) : null;
+        const vaiTro: RoleCode[] =
+          parsedRoles && parsedRoles.vaiTro.some(r => r !== 'HS')
+            ? parsedRoles.vaiTro
+            : matchedInSeating?.vaiTro && matchedInSeating.vaiTro.length > 0
+            ? matchedInSeating.vaiTro
+            : ['HS'];
+        const toTruongTo = vaiTro.includes('TT') ? to : undefined;
 
-        // Dãy bàn & Số bàn
+        // Dãy bàn & Số bàn: Lấy chuẩn từ Sơ đồ lớp nếu không chỉ định rõ
         const dayBan =
-          colDayBan !== -1 && Number(row[colDayBan]) >= 1 && Number(row[colDayBan]) <= 4
+          !has2DSeatingSheet && colDayBan !== -1 && Number(row[colDayBan]) >= 1 && Number(row[colDayBan]) <= 4
             ? Number(row[colDayBan])
-            : to;
+            : matchedInSeating?.dayBan || to;
         const soBan =
-          colSoBan !== -1 && Number(row[colSoBan]) >= 1 && Number(row[colSoBan]) <= 8
+          !has2DSeatingSheet && colSoBan !== -1 && Number(row[colSoBan]) >= 1 && Number(row[colSoBan]) <= 8
             ? Number(row[colSoBan])
-            : Math.min(6, Math.floor((orderNumber - 1) / 8) + 1);
+            : matchedInSeating?.soBan || Math.min(6, Math.floor((orderNumber - 1) / 8) + 1);
 
-        const ngaySinh = colNgaySinh !== -1 && row[colNgaySinh] ? String(row[colNgaySinh]).trim() : undefined;
-        const sdtPhuHuynh = colSDT !== -1 && row[colSDT] ? String(row[colSDT]).trim() : undefined;
+        const ngaySinh =
+          colNgaySinh !== -1 && row[colNgaySinh]
+            ? String(row[colNgaySinh]).trim()
+            : matchedInSeating?.ngaySinh;
+        const sdtPhuHuynh =
+          colSDT !== -1 && row[colSDT]
+            ? String(row[colSDT]).trim()
+            : matchedInSeating?.sdtPhuHuynh;
 
         const studentObj: Student = {
+          ...(matchedInSeating || {}),
           maHS,
-          hoTen,
-          tenRutGon: makeShortName(hoTen),
+          hoTen: matchedInSeating?.hoTen || hoTen,
+          tenRutGon: makeShortName(matchedInSeating?.hoTen || hoTen),
           gioiTinh,
           to,
           dayBan,
           soBan,
-          viTriGhe: orderNumber,
+          viTriGhe: matchedInSeating?.viTriGhe || orderNumber,
           vaiTro,
           toTruongTo,
           ngaySinh,
@@ -654,10 +730,14 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
           extractedStudents[studentIdx] = {
             ...extractedStudents[studentIdx],
             ...studentObj,
+            // Nếu đã có Sơ đồ lớp 2D làm chuẩn, giữ nguyên vị trí ghế/Tổ của Sơ đồ lớp 2D
+            to: has2DSeatingSheet ? extractedStudents[studentIdx].to : studentObj.to,
+            dayBan: has2DSeatingSheet ? extractedStudents[studentIdx].dayBan : studentObj.dayBan,
+            soBan: has2DSeatingSheet ? extractedStudents[studentIdx].soBan : studentObj.soBan,
           };
         }
 
-        // Nếu có các cột Điểm môn học trên cùng dòng này -> Trích xuất bảng điểm
+        // Nếu có các cột Điểm môn học trên cùng dòng này -> Trích xuất bảng điểm quy chiếu theo Sơ đồ lớp
         if (hasSubjectColumns) {
           const subjectsRecord: Record<string, SubjectScore> = {};
           let hasAnyValidScoreOnRow = false;
@@ -723,10 +803,11 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                   ? 'Kết quả học tập tốt, tích cực xây dựng bài.'
                   : 'Chăm ngoan, cố gắng hoàn thành nhiệm vụ học tập.';
 
-            extractedAcademicMap.set(maHS, {
-              maHS,
-              hoTen,
-              to,
+            const targetStudent = studentIdx !== -1 ? extractedStudents[studentIdx] : studentObj;
+            extractedAcademicMap.set(targetStudent.maHS, {
+              maHS: targetStudent.maHS,
+              hoTen: targetStudent.hoTen,
+              to: targetStudent.to,
               hocKi: 1,
               namHoc: '2026-2027',
               subjects: subjectsRecord,
@@ -741,14 +822,20 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
       }
     }
 
-    if (extractedStudents.length > 0) {
-      summaryNotes.push(`Nhận diện ${extractedStudents.length} học sinh (kèm phân Tổ, Chức vụ & Sơ đồ chỗ ngồi)`);
+    if (extractedStudents.length > 0 && !has2DSeatingSheet) {
+      summaryNotes.push(
+        `Đối chiếu ${extractedStudents.length} học sinh với Sơ đồ lớp chuẩn`
+      );
     }
     if (extractedAcademicMap.size > 0) {
-      summaryNotes.push(`Nhận diện bảng điểm môn học của ${extractedAcademicMap.size} học sinh`);
+      summaryNotes.push(
+        `Quy chiếu bảng điểm môn học của ${extractedAcademicMap.size} học sinh theo Sơ đồ lớp`
+      );
     }
     if (extractedDiscipline.length > 0) {
-      summaryNotes.push(`Nhận diện ${extractedDiscipline.length} lượt ghi nhận Nề nếp (Vi phạm / Điểm cộng)`);
+      summaryNotes.push(
+        `Quy chiếu ${extractedDiscipline.length} lượt ghi nhận Nề nếp theo Sơ đồ lớp`
+      );
     }
 
     return {
@@ -756,6 +843,9 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
       isJsonBackup: false,
       students: extractedStudents,
       hasStudentRoster: extractedStudents.length > 0,
+      seatingLayoutFromFile,
+      has2DSeatingSheet,
+      hasExplicitSeatCols,
       academicRecords: Array.from(extractedAcademicMap.values()),
       gradesCount: extractedAcademicMap.size,
       disciplineRecords: extractedDiscipline,
@@ -813,9 +903,11 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
             'Không tìm thấy dữ liệu hợp lệ trong file. Thầy vui lòng kiểm tra lại cột "Họ và tên" hoặc tải File Excel Mẫu Chuẩn (1 File) để đối chiếu.'
           );
         } else {
+          // Mặc định chọn chế độ Quy chiếu theo Sơ đồ lớp ('reconcile_seating') trừ khi file có Sheet Sơ đồ lớp 2D mới
+          setRosterImportMode('reconcile_seating');
           setParsedPackage(pkg);
           onShowToast(
-            `Đã đọc thành công file "${file.name}"!`,
+            `Đã đọc & quy chiếu file "${file.name}" theo Sơ đồ lớp!`,
             pkg.summaryNotes.join(' • ')
           );
         }
@@ -847,7 +939,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
     const lines = trimmed
       .split(/\r?\n/)
       .map(l => l.trim())
-      .filter(l => l.length > 0 && !l.match(/^[\|\-\:\s]+$/)); // Bỏ dòng gạch ngang bảng Markdown |---|---|
+      .filter(l => l.length > 0 && !l.match(/^[\|\-\:\s]+$/));
 
     const rows: any[][] = lines.map(line => {
       if (line.includes('\t')) {
@@ -868,40 +960,103 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
       return;
     }
 
+    setRosterImportMode('reconcile_seating');
     setParsedPackage(pkg);
-    onShowToast('Đã phân tích bảng dữ liệu thành công!', pkg.summaryNotes.join(' • '));
+    onShowToast('Đã phân tích & quy chiếu bảng dữ liệu theo Sơ đồ lớp!', pkg.summaryNotes.join(' • '));
   };
 
   /**
    * Áp dụng toàn bộ dữ liệu đã nhận diện từ 1 File vào hệ thống và đồng bộ lên Firebase
+   * LUÔN LẤY SƠ ĐỒ LỚP LÀM CHUẨN VÀ QUY CHIẾU TẤT CẢ CÁC DANH SÁCH KHÁC TỪ SƠ ĐỒ LỚP!
    */
   const handleApplyUnifiedPackage = () => {
     if (!parsedPackage) return;
 
-    // 1. Nếu là file JSON Backup toàn phần
+    // 1. Nếu là file JSON Backup toàn phần -> Đồng bộ lấy Sơ đồ lớp trong bản backup làm chuẩn
     if (parsedPackage.isJsonBackup && parsedPackage.rawJsonPayload) {
-      onRestoreFullBackup(parsedPackage.rawJsonPayload);
-      if (Array.isArray(parsedPackage.rawJsonPayload.academicRecords) && onUpdateAcademicRecords) {
-        onUpdateAcademicRecords(parsedPackage.rawJsonPayload.academicRecords);
-        saveAcademicRecords(parsedPackage.rawJsonPayload.academicRecords);
+      const raw = parsedPackage.rawJsonPayload;
+      const synced = syncStudentsWithSeatingLayout(raw.students || students, raw.layout || layout);
+      const reconciledGrades = reconcileAcademicRecordsWithSeating(
+        synced.students,
+        raw.academicRecords || academicRecords,
+        1
+      );
+      const reconciledDisc = reconcileDisciplineRecordsWithSeating(
+        synced.students,
+        raw.records || records
+      );
+
+      onRestoreFullBackup({
+        ...raw,
+        students: synced.students,
+        layout: synced.layout,
+        records: reconciledDisc,
+        academicRecords: reconciledGrades,
+      });
+      if (onUpdateAcademicRecords) {
+        onUpdateAcademicRecords(reconciledGrades);
+        saveAcademicRecords(reconciledGrades);
       }
       setParsedPackage(null);
       return;
     }
 
-    let finalStudentsList = students;
+    let masterStudents = currentSeatingMaster.students;
+    let masterLayout = currentSeatingMaster.layout;
 
-    // 2. Cập nhật Danh sách học sinh + Tổ + Chức vụ + Sơ đồ chỗ ngồi
+    // 2. Xác định Sơ đồ lớp chuẩn (Master Seating Chart) & Quy chiếu thông tin học sinh
     if (parsedPackage.hasStudentRoster && parsedPackage.students.length > 0) {
-      if (rosterImportMode === 'replace') {
-        // Giữ lại avatar đã đổi của học sinh nếu trùng Họ và tên hoặc Mã HS
-        const existingByName = new Map<string, Student>();
-        students.forEach(s => existingByName.set(normalizeHeader(s.hoTen), s));
+      if (parsedPackage.has2DSeatingSheet && parsedPackage.seatingLayoutFromFile) {
+        // Trường hợp file có chứa Sheet Sơ đồ lớp 2D trực quan -> Lấy Sơ đồ lớp 2D đó làm chuẩn gốc
+        const synced2D = syncStudentsWithSeatingLayout(
+          parsedPackage.students,
+          parsedPackage.seatingLayoutFromFile
+        );
+        masterStudents = synced2D.students;
+        masterLayout = synced2D.layout;
+        onUpdateStudentsAndLayout(masterStudents, masterLayout, true);
+      } else if (rosterImportMode === 'reconcile_seating' && currentSeatingMaster.students.length > 0) {
+        // CHẾ ĐỘ MẶC ĐỊNH: LẤY SƠ ĐỒ LỚP HIỆN TẠI LÀM CHUẨN GỐC
+        // Chỉ quy chiếu & bổ sung thông tin hồ sơ (Ngày sinh, Giới tính, SĐT, Chức vụ) từ file vào đúng học sinh trên Sơ đồ lớp,
+        // TUYỆT ĐỐI KHÔNG làm xáo trộn chỗ ngồi, Mã HS hay Tổ trên Sơ đồ lớp!
+        const enrichedMaster = currentSeatingMaster.students.map(seatingStu => {
+          const incoming = findStudentInSeatingMaster(
+            parsedPackage.students,
+            seatingStu.maHS,
+            seatingStu.hoTen
+          );
+          if (!incoming) return seatingStu;
 
-        finalStudentsList = parsedPackage.students.map((s, idx) => {
-          const prev = existingByName.get(normalizeHeader(s.hoTen));
+          const incomingHasCadre = incoming.vaiTro && incoming.vaiTro.some(r => r !== 'HS');
+          const finalRoles = incomingHasCadre ? incoming.vaiTro : seatingStu.vaiTro;
+
+          return {
+            ...seatingStu,
+            gioiTinh: incoming.gioiTinh || seatingStu.gioiTinh,
+            ngaySinh: incoming.ngaySinh || seatingStu.ngaySinh,
+            sdtPhuHuynh: incoming.sdtPhuHuynh || seatingStu.sdtPhuHuynh,
+            vaiTro: finalRoles,
+            // Tổ, Dãy bàn, Số bàn giữ nguyên 100% theo Sơ đồ lớp chuẩn
+            to: seatingStu.to,
+            dayBan: seatingStu.dayBan,
+            soBan: seatingStu.soBan,
+            toTruongTo: finalRoles.includes('TT') ? seatingStu.to : undefined,
+            avatarUrl: seatingStu.avatarUrl || incoming.avatarUrl,
+            activeFrameId: seatingStu.activeFrameId || incoming.activeFrameId,
+            customBadgeIds: seatingStu.customBadgeIds || incoming.customBadgeIds,
+          };
+        });
+
+        const synced = syncStudentsWithSeatingLayout(enrichedMaster, currentSeatingMaster.layout);
+        masterStudents = synced.students;
+        masterLayout = synced.layout;
+        onUpdateStudentsAndLayout(masterStudents, masterLayout, false);
+      } else {
+        // Chế độ "replace": Tạo mới Sơ đồ lớp chuẩn từ danh sách trong file này rồi dùng làm chuẩn quy chiếu
+        const replacedStudents = parsedPackage.students.map((s, idx) => {
+          const prev = findStudentInSeatingMaster(currentSeatingMaster.students, s.maHS, s.hoTen);
           const num = idx + 1;
-          const maHS = s.maHS || `HS${num < 10 ? '0' + num : num}`;
+          const maHS = s.maHS || prev?.maHS || `HS${num < 10 ? '0' + num : num}`;
           return {
             ...s,
             maHS,
@@ -911,89 +1066,44 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
             customBadgeIds: s.customBadgeIds || prev?.customBadgeIds,
           };
         });
-      } else {
-        // Chế độ Cập nhật / Bổ sung vào danh sách hiện có
-        const merged = [...students];
-        parsedPackage.students.forEach(incoming => {
-          const existingIdx = merged.findIndex(
-            ex =>
-              ex.maHS.toLowerCase() === incoming.maHS.toLowerCase() ||
-              normalizeHeader(ex.hoTen) === normalizeHeader(incoming.hoTen)
-          );
-          if (existingIdx !== -1) {
-            merged[existingIdx] = {
-              ...merged[existingIdx],
-              ...incoming,
-              maHS: merged[existingIdx].maHS,
-              avatarUrl: incoming.avatarUrl || merged[existingIdx].avatarUrl,
-            };
-          } else {
-            const nextNum = merged.length + 1;
-            merged.push({
-              ...incoming,
-              maHS: `HS${nextNum < 10 ? '0' + nextNum : nextNum}`,
-              viTriGhe: nextNum,
-            });
-          }
-        });
-        finalStudentsList = merged;
+        const builtLayout = buildSynchronizedLayoutForStudents(replacedStudents);
+        const synced = syncStudentsWithSeatingLayout(replacedStudents, builtLayout);
+        masterStudents = synced.students;
+        masterLayout = synced.layout;
+        onUpdateStudentsAndLayout(masterStudents, masterLayout, true);
       }
-
-      const newLayout = buildSynchronizedLayoutForStudents(finalStudentsList);
-      onUpdateStudentsAndLayout(finalStudentsList, newLayout, rosterImportMode === 'replace');
     }
 
-    // 3. Cập nhật Bảng điểm môn học (nếu trong file có cột điểm)
-    if (parsedPackage.gradesCount > 0 && onUpdateAcademicRecords) {
-      const incomingByName = new Map<string, StudentAcademicRecord>();
-      parsedPackage.academicRecords.forEach(ar => {
-        incomingByName.set(normalizeHeader(ar.hoTen), ar);
-      });
+    // 3. QUY CHIẾU BẢNG ĐIỂM MÔN HỌC THEO SƠ ĐỒ LỚP CHUẨN (`masterStudents`)
+    if (onUpdateAcademicRecords && (parsedPackage.gradesCount > 0 || academicRecords.length > 0)) {
+      // Gộp bảng điểm hiện có và bảng điểm mới nhập từ file, sau đó quy chiếu 100% theo `masterStudents` của Sơ đồ lớp
+      const baseReconciled = reconcileAcademicRecordsWithSeating(masterStudents, academicRecords, 1);
+      const updatedAcademic: StudentAcademicRecord[] = baseReconciled.map(baseRec => {
+        const matchedIncoming = parsedPackage.academicRecords.find(ar => {
+          const matchedStu = findStudentInSeatingMaster([
+            masterStudents.find(s => s.maHS === baseRec.maHS)!,
+          ].filter(Boolean), ar.maHS, ar.hoTen);
+          return Boolean(matchedStu);
+        });
 
-      const updatedAcademic: StudentAcademicRecord[] = finalStudentsList.map(stu => {
-        const matchedIncoming = incomingByName.get(normalizeHeader(stu.hoTen));
-        const existingRecord = academicRecords.find(
-          r => r.maHS === stu.maHS || normalizeHeader(r.hoTen) === normalizeHeader(stu.hoTen)
-        );
+        if (!matchedIncoming) return baseRec;
 
-        if (matchedIncoming) {
-          const mergedSubjects = {
-            ...(existingRecord?.subjects || {}),
-            ...matchedIncoming.subjects,
-          };
-          const gpa = calculateOverallGPA(mergedSubjects);
-          const { hocLuc, danhHieu } = evaluateAcademicStanding(mergedSubjects, gpa);
-          return {
-            ...matchedIncoming,
-            maHS: stu.maHS,
-            hoTen: stu.hoTen,
-            to: stu.to,
-            subjects: mergedSubjects,
-            diemTBChung: gpa,
-            hocLuc,
-            danhHieu,
-          };
-        }
-
-        if (existingRecord) {
-          return {
-            ...existingRecord,
-            maHS: stu.maHS,
-            hoTen: stu.hoTen,
-            to: stu.to,
-          };
-        }
-
+        const mergedSubjects = {
+          ...(baseRec.subjects || {}),
+          ...(matchedIncoming.subjects || {}),
+        };
+        const gpa = calculateOverallGPA(mergedSubjects);
+        const { hocLuc, danhHieu } = evaluateAcademicStanding(mergedSubjects, gpa);
         return {
-          maHS: stu.maHS,
-          hoTen: stu.hoTen,
-          to: stu.to,
-          hocKi: 1,
-          namHoc: '2026-2027',
-          subjects: {},
-          diemTBChung: null,
-          hocLuc: null,
-          danhHieu: null,
+          ...baseRec,
+          maHS: baseRec.maHS,
+          hoTen: baseRec.hoTen,
+          to: baseRec.to,
+          subjects: mergedSubjects,
+          diemTBChung: gpa,
+          hocLuc,
+          danhHieu,
+          nhanXetGVCN: matchedIncoming.nhanXetGVCN || baseRec.nhanXetGVCN,
           ngayCapNhat: new Date().toISOString(),
         };
       });
@@ -1002,30 +1112,17 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
       saveAcademicRecords(updatedAcademic);
     }
 
-    // 4. Cập nhật Nhật ký Nề nếp (nếu trong file có dữ liệu nề nếp)
+    // 4. QUY CHIẾU NHẬT KÝ NỀ NẾP THEO SƠ ĐỒ LỚP CHUẨN (`masterStudents`)
     if (parsedPackage.disciplineRecords.length > 0) {
-      // Đồng bộ lại maHS và Tổ theo danh sách học sinh mới nhất
-      const syncedDiscipline = parsedPackage.disciplineRecords.map(rec => {
-        const stu = finalStudentsList.find(
-          s =>
-            s.maHS.toLowerCase() === rec.maHS.toLowerCase() ||
-            normalizeHeader(s.hoTen) === normalizeHeader(rec.hoTen)
-        );
-        if (stu) {
-          return {
-            ...rec,
-            maHS: stu.maHS,
-            hoTen: stu.hoTen,
-            to: stu.to,
-          };
-        }
-        return rec;
-      });
+      const syncedDiscipline = reconcileDisciplineRecordsWithSeating(
+        masterStudents,
+        parsedPackage.disciplineRecords
+      );
       onAddRecords(syncedDiscipline);
     }
 
     triggerToast(
-      'Đã nạp toàn bộ dữ liệu thành công & lưu lên Đám mây!',
+      'Đã quy chiếu theo Sơ đồ lớp & lưu lên Đám mây thành công!',
       parsedPackage.summaryNotes.join(' • ')
     );
     setParsedPackage(null);
@@ -1065,14 +1162,14 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-base sm:text-lg font-black tracking-tight uppercase">
-                  Trung Tâm Nhập / Xuất Hợp Nhất (Chỉ Cần 1 File Duy Nhất)
+                  Trung Tâm Nhập / Xuất Hợp Nhất (Lấy Sơ Đồ Lớp Làm Chuẩn)
                 </h3>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-400 text-slate-950">
-                  Chuẩn Hóa Mới
+                  Sơ Đồ Lớp Làm Chuẩn
                 </span>
               </div>
               <p className="text-xs text-indigo-100 mt-0.5">
-                Đưa <b>1 file Excel (.xlsx) duy nhất</b> vào là nạp đủ: Danh sách HS + Tổ + Ban cán sự + Sơ đồ chỗ ngồi + Điểm các môn + Nề nếp
+                Dù lấy dữ liệu từ file nào, hệ thống luôn <b>lấy Sơ đồ lớp làm chuẩn gốc</b> và tự động <b>quy chiếu</b> Bảng điểm môn học, Nề nếp, Hồ sơ theo đúng Sơ đồ lớp.
               </p>
             </div>
           </div>
@@ -1081,16 +1178,16 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
             <button
               type="button"
               onClick={() => {
-                downloadUnifiedExcelTemplate();
+                downloadUnifiedExcelTemplate(currentSeatingMaster.students, currentSeatingMaster.layout);
                 triggerToast(
-                  'Đã tải File Excel Mẫu Chuẩn (1 File Đầy Đủ)!',
-                  'Thầy điền dữ liệu vào file này rồi kéo thả vào ô bên dưới.'
+                  'Đã tải File Excel Mẫu Chuẩn (Theo Sơ Đồ Lớp)!',
+                  'File đã có sẵn Sheet Sơ đồ lớp chuẩn và danh sách quy chiếu của lớp 10A5.'
                 );
               }}
               className="px-3.5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
             >
               <FileSpreadsheet className="w-4 h-4" />
-              <span>1. Tải File Excel Mẫu (1 File Đầy Đủ)</span>
+              <span>1. Tải File Excel Mẫu (Chuẩn Sơ Đồ Lớp)</span>
             </button>
 
             <button
@@ -1099,7 +1196,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                 exportDataSpecsWordDocument();
                 triggerToast(
                   'Đã tải File Hướng Dẫn (.doc)!',
-                  'Tài liệu Word giải thích chi tiết quy tắc cột và câu lệnh AI.'
+                  'Tài liệu Word giải thích nguyên tắc lấy Sơ đồ lớp làm chuẩn và quy chiếu 1 file.'
                 );
               }}
               className="px-3.5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs flex items-center gap-1.5 border border-white/25 transition-all cursor-pointer"
@@ -1111,6 +1208,19 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
         </div>
 
         <div className="p-5 space-y-5">
+          {/* Thông báo nguyên tắc Sơ đồ lớp làm chuẩn */}
+          <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-300/90 text-amber-950 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shrink-0 mt-0.5">
+              <Grid className="w-4 h-4" />
+            </div>
+            <div className="text-xs leading-relaxed">
+              <span className="font-black uppercase text-amber-900">
+                Nguyên tắc Chuẩn Hóa &amp; Quy Chiếu Tự Động:
+              </span>{' '}
+              <b>Sơ đồ lớp hiện tại ({currentSeatingMaster.students.length} học sinh · 4 Tổ)</b> được dùng làm gốc chuẩn duy nhất. Khi thầy thả bất kỳ file nào vào (Bảng điểm vnEdu/SMAS, Danh sách trích ngang, Sổ nề nếp...), hệ thống sẽ <b>tự động đối chiếu theo Họ tên / Mã HS</b> để gắn điểm và thông tin vào đúng học sinh, đúng Tổ và đúng vị trí ghế trên Sơ đồ lớp.
+            </div>
+          </div>
+
           {/* Tóm tắt 3 bước trực quan */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200/80 flex items-start gap-3">
@@ -1118,9 +1228,9 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                 1
               </div>
               <div>
-                <h4 className="text-xs font-black text-indigo-950">Tải File Mẫu hoặc Dùng AI</h4>
+                <h4 className="text-xs font-black text-indigo-950">Sơ Đồ Lớp Là Gốc Chuẩn</h4>
                 <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                  Tải <b>File Excel Mẫu (.xlsx)</b> ở trên (hoặc copy câu lệnh AI để gom ảnh chụp danh sách/bảng điểm thành 1 bảng).
+                  Tổ 1–4, Dãy bàn, Số bàn và Mã HS của học sinh luôn được bảo toàn theo <b>Sơ đồ lớp</b>.
                 </p>
               </div>
             </div>
@@ -1130,9 +1240,9 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                 2
               </div>
               <div>
-                <h4 className="text-xs font-black text-indigo-950">Thả 1 File Duy Nhất Vào Ô Dưới</h4>
+                <h4 className="text-xs font-black text-indigo-950">Thả Bất Kỳ File Nào Vào Ô Dưới</h4>
                 <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                  Hệ thống tự đọc tất cả các Sheet: <b>Học sinh, Tổ, Chức vụ, Chỗ ngồi, Điểm 14 môn</b> và <b>Nhật ký nề nếp</b>.
+                  Dù là <b>File Bảng điểm, File Nề nếp, File Hồ sơ</b> hay <b>File Tổng hợp</b>, hệ thống đều tự quy chiếu từ Sơ đồ lớp.
                 </p>
               </div>
             </div>
@@ -1144,7 +1254,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
               <div>
                 <h4 className="text-xs font-black text-emerald-950">Bấm "Áp Dụng Ngay" (Lưu Lên Mây)</h4>
                 <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                  Xem trước kết quả ngay trên màn hình và bấm <b>1 nút duy nhất</b> để cập nhật toàn bộ lớp học lên Firebase.
+                  Xem trước kết quả quy chiếu và bấm <b>1 nút duy nhất</b> để đồng bộ toàn bộ lên Firebase.
                 </p>
               </div>
             </div>
@@ -1192,11 +1302,11 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
 
             <p className="text-sm sm:text-base font-black text-main">
               {isAnalyzing
-                ? 'Đang đọc và bóc tách toàn bộ dữ liệu trong file...'
-                : 'Kéo thả 1 File Excel (.xlsx), CSV hoặc JSON vào đây (Hoặc nhấn để chọn file)'}
+                ? 'Đang đọc file và quy chiếu dữ liệu theo Sơ đồ lớp...'
+                : 'Kéo thả File Excel (.xlsx), CSV hoặc JSON vào đây (Hoặc nhấn để chọn file)'}
             </p>
             <p className="text-xs text-muted mt-1 max-w-xl">
-              Chỉ cần <b>1 file duy nhất</b>: Tự động nhận diện Danh sách học sinh, Tổ, Chức vụ (LT, BT, LP, TT), Sơ đồ chỗ ngồi, Điểm các môn học và Nhật ký nề nếp.
+              Lấy <b>Sơ đồ lớp làm chuẩn</b>: Tự động quy chiếu Điểm các môn học, Nhật ký nề nếp, Ngày sinh, Giới tính, Chức vụ từ file vào đúng học sinh trên Sơ đồ lớp.
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-2 mt-4" onClick={e => e.stopPropagation()}>
@@ -1270,7 +1380,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                   className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow-sm cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Đọc &amp; Kiểm Tra Bảng Vừa Dán</span>
+                  <span>Đọc &amp; Quy Chiếu Theo Sơ Đồ Lớp</span>
                 </button>
               </div>
             </div>
@@ -1298,10 +1408,10 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h4 className="text-sm sm:text-base font-black text-emerald-950">
-                        Đã Đọc Xong File: {parsedPackage.sourceName}
+                        Đã Đọc &amp; Quy Chiếu File: {parsedPackage.sourceName}
                       </h4>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-600 text-white uppercase">
-                        Sẵn sàng nạp 1 chạm
+                        Chuẩn Sơ Đồ Lớp
                       </span>
                     </div>
                     <p className="text-xs text-emerald-800 mt-0.5 font-medium">
@@ -1326,11 +1436,13 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                     <Users className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="text-[11px] font-bold text-slate-500">Học sinh &amp; Chỗ ngồi</div>
+                    <div className="text-[11px] font-bold text-slate-500">Sơ đồ lớp &amp; Học sinh</div>
                     <div className="text-sm font-black text-slate-900">
-                      {parsedPackage.students.length > 0
-                        ? `${parsedPackage.students.length} học sinh (Đủ 4 Tổ)`
-                        : 'Không thay đổi'}
+                      {parsedPackage.has2DSeatingSheet
+                        ? `Sơ đồ 2D chuẩn (${parsedPackage.students.length} HS)`
+                        : parsedPackage.students.length > 0
+                        ? `Đối chiếu ${parsedPackage.students.length} HS với Sơ đồ lớp`
+                        : `Giữ chuẩn Sơ đồ lớp (${currentSeatingMaster.students.length} HS)`}
                     </div>
                   </div>
                 </div>
@@ -1340,7 +1452,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                     <GraduationCap className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="text-[11px] font-bold text-slate-500">Bảng điểm môn học</div>
+                    <div className="text-[11px] font-bold text-slate-500">Bảng điểm (Quy chiếu Sơ đồ lớp)</div>
                     <div className="text-sm font-black text-slate-900">
                       {parsedPackage.gradesCount > 0
                         ? `${parsedPackage.gradesCount} bảng điểm HS`
@@ -1354,7 +1466,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                     <ClipboardList className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="text-[11px] font-bold text-slate-500">Nhật ký Nề nếp</div>
+                    <div className="text-[11px] font-bold text-slate-500">Nề nếp (Quy chiếu Sơ đồ lớp)</div>
                     <div className="text-sm font-black text-slate-900">
                       {parsedPackage.disciplineRecords.length > 0
                         ? `${parsedPackage.disciplineRecords.length} lượt ghi nhận`
@@ -1364,29 +1476,35 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                 </div>
               </div>
 
-              {/* Tuỳ chọn chế độ nạp Danh sách học sinh */}
-              {!parsedPackage.isJsonBackup && parsedPackage.hasStudentRoster && (
-                <div className="flex flex-wrap items-center gap-3 bg-white p-3 rounded-xl border border-emerald-200">
-                  <span className="text-xs font-black text-slate-700">Chế độ nạp danh sách lớp:</span>
-                  <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800 cursor-pointer">
+              {/* Tuỳ chọn chế độ Quy chiếu theo Sơ đồ lớp */}
+              {!parsedPackage.isJsonBackup && parsedPackage.hasStudentRoster && !parsedPackage.has2DSeatingSheet && (
+                <div className="flex flex-col gap-2 bg-white p-3.5 rounded-xl border border-emerald-200">
+                  <span className="text-xs font-black text-slate-800">
+                    Nguyên tắc xử lý Sơ đồ lớp khi nạp file này:
+                  </span>
+                  <label className="flex items-start gap-2 text-xs font-bold text-slate-800 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="rosterImportMode"
+                      checked={rosterImportMode === 'reconcile_seating'}
+                      onChange={() => setRosterImportMode('reconcile_seating')}
+                      className="accent-emerald-600 mt-0.5"
+                    />
+                    <span>
+                      <b>Lấy Sơ đồ lớp hiện tại làm chuẩn gốc</b> &amp; chỉ quy chiếu điểm số, nề nếp, thông tin bổ sung từ file vào Sơ đồ lớp (Giữ nguyên 100% vị trí chỗ ngồi và Tổ trên Sơ đồ lớp — <b>Khuyên dùng</b>)
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-2 text-xs font-bold text-slate-700 cursor-pointer">
                     <input
                       type="radio"
                       name="rosterImportMode"
                       checked={rosterImportMode === 'replace'}
                       onChange={() => setRosterImportMode('replace')}
-                      className="accent-indigo-600"
+                      className="accent-indigo-600 mt-0.5"
                     />
-                    <span>Thay thế bằng danh sách mới này (Khuyên dùng)</span>
-                  </label>
-                  <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="rosterImportMode"
-                      checked={rosterImportMode === 'append'}
-                      onChange={() => setRosterImportMode('append')}
-                      className="accent-indigo-600"
-                    />
-                    <span>Cập nhật / Bổ sung vào danh sách hiện có</span>
+                    <span>
+                      Cập nhật / Tạo mới lại Sơ đồ lớp theo danh sách trong file này, sau đó quy chiếu các danh sách khác theo Sơ đồ lớp mới
+                    </span>
                   </label>
                 </div>
               )}
@@ -1396,19 +1514,19 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                 <div className="bg-white rounded-xl border border-emerald-200 overflow-hidden">
                   <div className="px-3.5 py-2 bg-emerald-100/60 border-b border-emerald-200 flex items-center justify-between">
                     <span className="text-[11px] font-black text-emerald-950 uppercase">
-                      Xem trước Danh sách Học sinh &amp; Điểm môn học ({parsedPackage.students.length} HS)
+                      Xem trước kết quả quy chiếu theo Sơ đồ lớp ({parsedPackage.students.length} HS)
                     </span>
                   </div>
                   <div className="overflow-x-auto max-h-56">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600">
-                          <th className="py-2 px-3">Mã HS</th>
+                          <th className="py-2 px-3">Mã HS (Chuẩn SĐL)</th>
                           <th className="py-2 px-3">Họ và tên</th>
                           <th className="py-2 px-2">Phái</th>
-                          <th className="py-2 px-2">Tổ</th>
+                          <th className="py-2 px-2">Tổ (SĐL)</th>
                           <th className="py-2 px-2">Chức vụ</th>
-                          <th className="py-2 px-2">Chỗ ngồi</th>
+                          <th className="py-2 px-2">Chỗ ngồi (SĐL)</th>
                           <th className="py-2 px-3">ĐTB Chung / Học lực</th>
                         </tr>
                       </thead>
@@ -1450,7 +1568,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                   </div>
                   {parsedPackage.students.length > 10 && (
                     <div className="px-3 py-1.5 bg-slate-50 text-center text-[11px] font-semibold text-slate-500 border-t border-slate-200">
-                      ... và {parsedPackage.students.length - 10} học sinh khác trong file
+                      ... và {parsedPackage.students.length - 10} học sinh khác được quy chiếu theo Sơ đồ lớp
                     </div>
                   )}
                 </div>
@@ -1471,7 +1589,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                   className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-black flex items-center gap-2 shadow-md transition-all cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Áp Dụng Ngay Vào Hệ Thống &amp; Lưu Lên Mây</span>
+                  <span>Quy Chiếu Theo Sơ Đồ Lớp &amp; Lưu Lên Mây</span>
                 </button>
               </div>
             </div>
@@ -1489,10 +1607,10 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
             </div>
             <div>
               <h4 className="text-sm font-black text-main uppercase">
-                Xuất Toàn Bộ Dữ Liệu Lớp Hiện Tại Ra 1 File
+                Xuất Toàn Bộ Dữ Liệu Lớp Hiện Tại Ra 1 File (Chuẩn Sơ Đồ Lớp)
               </h4>
               <p className="text-xs text-muted mt-0.5">
-                File Excel xuất ra có đúng cấu trúc chuẩn 1-File (gồm Danh sách + Chỗ ngồi + Điểm số + Nề nếp). Thầy có thể chỉnh sửa trên Excel rồi thả ngược lại vào ô trên để cập nhật!
+                File Excel xuất ra có sẵn <b>Sheet 0: Sơ đồ lớp 2D chuẩn</b> cùng các Sheet Danh sách, Điểm số và Nề nếp đã quy chiếu đồng nhất từ Sơ đồ lớp.
               </p>
             </div>
           </div>
@@ -1501,9 +1619,14 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
             <button
               type="button"
               onClick={() => {
-                exportCurrentClassToUnifiedExcel(students, layout, records, academicRecords);
+                exportCurrentClassToUnifiedExcel(
+                  currentSeatingMaster.students,
+                  currentSeatingMaster.layout,
+                  records,
+                  academicRecords
+                );
                 onShowToast(
-                  'Đã xuất toàn bộ dữ liệu lớp ra 1 file Excel (.xlsx)!',
+                  'Đã xuất toàn bộ dữ liệu lớp (Chuẩn Sơ Đồ Lớp) ra 1 file Excel (.xlsx)!',
                   'Thầy có thể mở chỉnh sửa trên Excel và nạp lại bất cứ lúc nào.'
                 );
               }}

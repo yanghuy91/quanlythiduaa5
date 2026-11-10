@@ -12,6 +12,7 @@ import {
   FileText
 } from 'lucide-react';
 import { Student, DisciplineRecord, RuleItem } from '../../types';
+import { findStudentInSeatingMaster } from '../../utils/seatingMaster';
 
 interface TimeDataImportCardProps {
   students: Student[];
@@ -26,6 +27,7 @@ interface ParsedRow {
   tuanHoc: number;
   maHS: string;
   hoTen: string;
+  to: number;
   tenHanhVi: string;
   loaiDiem: 'Tru' | 'Cong';
   diemSo: number;
@@ -46,25 +48,16 @@ export const TimeDataImportCard: React.FC<TimeDataImportCardProps> = ({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Map student names and IDs for fuzzy matching
-  const studentMap = React.useMemo(() => {
-    const map = new Map<string, Student>();
-    students.forEach(s => {
-      map.set(s.maHS.toLowerCase(), s);
-      map.set(s.hoTen.toLowerCase(), s);
-      map.set(s.tenRutGon.toLowerCase(), s);
-    });
-    return map;
-  }, [students]);
-
-  // Download standard CSV template for teachers
+  // Download standard CSV template for teachers (pre-filled with Sơ đồ lớp student names)
   const handleDownloadTemplate = () => {
     const headers = 'NgayHoc,Buoi,TuanHoc,MaHS_HoTen,TenHanhVi,LoaiDiem,DiemSo,GhiChu\n';
+    const stu1 = students[0]?.hoTen || 'Nguyễn Khắc Huy';
+    const stu2 = students[1]?.hoTen || 'Võ Minh Quân';
+    const stu3 = students[2]?.hoTen || 'Đỗ Thị Thu Trang';
     const sampleRows = [
-      '2026-11-09,Sang,3,Nguyễn Khắc Huy,Đi học muộn,Tru,2,Trễ 10 phút',
-      '2026-11-09,Chieu,3,Võ Minh Quân,Sử dụng điện thoại trong giờ,Tru,5,Chơi game',
-      '2026-11-10,Sang,3,Đỗ Thị Thu Trang,Đạt điểm 10 kiểm tra miệng,Cong,2,Phát biểu xuất sắc',
-      '2026-11-11,Sang,3,HS01,Khăn quàng / bảng tên đầy đủ,Cong,1,Gương mẫu',
+      `2026-11-09,Sang,3,${stu1},Đi học muộn,Tru,2,Trễ 10 phút`,
+      `2026-11-09,Chieu,3,${stu2},Sử dụng điện thoại trong giờ,Tru,5,Chơi game`,
+      `2026-11-10,Sang,3,${stu3},Đạt điểm 10 kiểm tra miệng,Cong,2,Phát biểu xuất sắc`,
     ].join('\n');
 
     const blob = new Blob([headers + sampleRows], { type: 'text/csv;charset=utf-8;' });
@@ -77,7 +70,7 @@ export const TimeDataImportCard: React.FC<TimeDataImportCardProps> = ({
     document.body.removeChild(link);
   };
 
-  // Parse text / CSV content
+  // Parse text / CSV content (Quy chiếu học sinh theo Sơ đồ lớp làm chuẩn)
   const parseCSVContent = (content: string, name: string) => {
     try {
       const lines = content.split(/\r?\n/).filter(line => line.trim().length > 0);
@@ -86,28 +79,27 @@ export const TimeDataImportCard: React.FC<TimeDataImportCardProps> = ({
         return;
       }
 
-      // Check header
       const rows: ParsedRow[] = [];
       const dataLines = lines.slice(1); // skip header line
 
       dataLines.forEach((line, index) => {
-        // Support comma or semicolon or tab
         const parts = line.split(/[,;\t]/).map(p => p.trim().replace(/^["']|["']$/g, ''));
         if (parts.length < 5) return;
 
         const [ngayHoc, buoiRaw, tuanRaw, studentIdentifier, tenHanhVi, loaiDiemRaw, diemSoRaw, ghiChu] = parts;
 
-        // Validation
         const isDateValid = /^\d{4}-\d{2}-\d{2}$/.test(ngayHoc);
         const buoi: 'Sang' | 'Chieu' = buoiRaw?.toLowerCase().includes('chieu') ? 'Chieu' : 'Sang';
         const tuanHoc = parseInt(tuanRaw, 10) || 3;
         const loaiDiem: 'Tru' | 'Cong' = loaiDiemRaw?.toLowerCase().includes('cong') ? 'Cong' : 'Tru';
         const diemSo = Math.abs(parseInt(diemSoRaw, 10)) || 2;
 
-        // Match student
-        const cleanIdent = studentIdentifier?.toLowerCase() || '';
-        const matchedStudent = studentMap.get(cleanIdent) || 
-          students.find(s => s.hoTen.toLowerCase().includes(cleanIdent) || s.maHS.toLowerCase() === cleanIdent);
+        // Quy chiếu học sinh từ Sơ đồ lớp làm chuẩn
+        const matchedStudent = findStudentInSeatingMaster(
+          students,
+          studentIdentifier,
+          studentIdentifier
+        );
 
         const isValid = isDateValid && !!matchedStudent && !!tenHanhVi;
 
@@ -119,20 +111,25 @@ export const TimeDataImportCard: React.FC<TimeDataImportCardProps> = ({
           tuanHoc,
           maHS: matchedStudent?.maHS || 'HS01',
           hoTen: matchedStudent?.hoTen || studentIdentifier || 'Chưa rõ',
+          to: matchedStudent?.to || 1,
           tenHanhVi: tenHanhVi || 'Vi phạm nề nếp',
           loaiDiem,
           diemSo,
           nhomHanhVi: loaiDiem === 'Cong' ? 'Điểm cộng' : 'Nề nếp',
           ghiChu: ghiChu || '',
           isValid,
-          error: !isDateValid ? 'Sai định dạng ngày (YYYY-MM-DD)' : !matchedStudent ? 'Không tìm thấy học sinh trong lớp' : undefined,
+          error: !isDateValid
+            ? 'Sai định dạng ngày (YYYY-MM-DD)'
+            : !matchedStudent
+            ? 'Không tìm thấy học sinh trên Sơ đồ lớp'
+            : undefined,
         });
       });
 
       setFileName(name);
       setParsedRows(rows);
       setErrorMsg(null);
-      setSuccessMsg(`Đã đọc thành công ${rows.length} dòng dữ liệu từ ${name}!`);
+      setSuccessMsg(`Đã đọc & quy chiếu thành công ${rows.length} dòng dữ liệu theo Sơ đồ lớp từ ${name}!`);
     } catch {
       setErrorMsg('Lỗi đọc tệp. Vui lòng kiểm tra định dạng CSV UTF-8.');
     }
@@ -165,7 +162,7 @@ export const TimeDataImportCard: React.FC<TimeDataImportCardProps> = ({
         doiTuong: 'HocSinh',
         maHS: row.maHS,
         hoTen: row.hoTen,
-        to: studentMap.get(row.maHS)?.to || 1,
+        to: row.to,
         ngayHoc: row.ngayHoc,
         buoi: row.buoi,
         tuanHoc: row.tuanHoc,

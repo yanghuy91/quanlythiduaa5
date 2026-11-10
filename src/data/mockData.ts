@@ -37,6 +37,7 @@ export const INITIAL_SETTINGS: TeacherSettings = {
   choPhepTrungAvatar: true, // Cho phép dùng chung Avatar (GV có thể tắt để bắt buộc mỗi HS 1 Avatar)
   noDataWeeks: [],
   cadreDelegatedPermissions: {},
+  tuDongChuyenTuan: true, // Mặc định BẬT tự động chuyển tuần vào Thứ 2 hàng tuần theo thời gian thực
   bannerSloganText: 'Chăm ngoan - Sáng tạo - Đoàn kết vững bước tương lai',
   bannerSloganIcon: '🌟',
   bannerSloganColor: '#ffffff',

@@ -126,14 +126,14 @@ export const VinylDJ: React.FC<VinylDJProps> = ({
         </div>
 
         {/* Current Name Target */}
-        <div className="mt-4 min-h-[36px]">
+        <div className="mt-4 min-h-[36px] px-4 py-1.5 rounded-2xl bg-white/10 border border-violet-300/30 backdrop-blur-xs flex items-center justify-center">
           {currentDJStudent ? (
-            <span className="text-lg font-black text-violet-300 tracking-tight">
+            <span className="text-lg font-black text-amber-300 tracking-tight drop-shadow-sm">
               {currentDJStudent.hoTen} · Tổ {currentDJStudent.to}
             </span>
           ) : (
-            <span className="text-xs text-muted">
-              Nhấn Bật Nhạc DJ để xoay đĩa than
+            <span className="text-xs font-bold text-violet-100">
+              Nhấn &quot;BẬT NHẠC DJ&quot; bên dưới để xoay đĩa than
             </span>
           )}
         </div>

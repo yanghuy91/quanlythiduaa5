@@ -254,8 +254,8 @@ export const StudentPicker: React.FC<StudentPickerProps> = ({
                   {showStatusColors && summary && (
                     <div className="flex items-center gap-2 shrink-0">
                       {summary.chuaCoDiem ? (
-                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-500/15 text-slate-600">
-                          Chưa có điểm
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-dashed border-amber-300">
+                          {summary.lyDoChuaCoDiem === 'no_data' ? 'Không có dữ liệu' : 'Tuần chưa học'}
                         </span>
                       ) : (
                         <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${

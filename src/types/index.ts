@@ -192,6 +192,9 @@ export interface TeacherSettings {
   choPhepTrungAvatar: boolean; // Bật / tắt cho phép học sinh dùng chung / trùng Avatar trong lớp
   noDataWeeks?: number[]; // Các tuần được GV đánh dấu không có dữ liệu / nghỉ (không tính điểm)
   cadreDelegatedPermissions?: Record<string, CadreDelegatedPermission[]>; // Phân quyền của GV cho từng Ban cán sự (key: maHS)
+  tuDongChuyenTuan?: boolean; // Tự động chuyển sang tuần kế tiếp vào mỗi Thứ 2 hàng tuần theo thời gian thực
+  tuanGocTuDong?: number; // Tuần mốc khi GV thiết lập tuần hiện tại
+  ngayThietLapTuanGoc?: string; // Ngày Thứ 2 đầu tuần (YYYY-MM-DD) lúc GV thiết lập tuần mốc
   bannerSloganText?: string; // Tùy chỉnh câu khẩu hiệu lớp trên Banner
   bannerSloganIcon?: string; // Biểu tượng sinh động
   bannerSloganColor?: string; // Màu sắc chữ khẩu hiệu

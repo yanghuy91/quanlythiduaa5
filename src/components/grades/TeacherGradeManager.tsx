@@ -30,6 +30,7 @@ import {
   calculateOverallGPA,
   evaluateAcademicStanding
 } from '../../data/academicCatalog';
+import { reconcileAcademicRecordsWithSeating } from '../../utils/seatingMaster';
 
 interface TeacherGradeManagerProps {
   students: Student[];
@@ -76,9 +77,18 @@ export const TeacherGradeManager: React.FC<TeacherGradeManagerProps> = ({
     );
   };
 
+  // Quy chiếu toàn bộ danh sách điểm từ Sơ đồ lớp (`students`) làm chuẩn
+  const canonicalAllRecords = useMemo(() => {
+    return reconcileAcademicRecordsWithSeating(students, records, selectedHocKi);
+  }, [students, records, selectedHocKi]);
+
+  const semesterRecords = useMemo(() => {
+    return canonicalAllRecords.filter(r => (r.hocKi || 1) === selectedHocKi);
+  }, [canonicalAllRecords, selectedHocKi]);
+
   // Filtered records
   const filteredRecords = useMemo(() => {
-    return records.filter(r => {
+    return semesterRecords.filter(r => {
       if (selectedTo !== 'all' && r.to !== selectedTo) return false;
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase();
@@ -88,11 +98,11 @@ export const TeacherGradeManager: React.FC<TeacherGradeManagerProps> = ({
       }
       return true;
     });
-  }, [records, selectedTo, searchTerm]);
+  }, [semesterRecords, selectedTo, searchTerm]);
 
   // Statistics
   const stats = useMemo(() => {
-    const validGpas = records
+    const validGpas = semesterRecords
       .map(r => r.diemTBChung)
       .filter((v): v is number => typeof v === 'number');
 
@@ -100,22 +110,24 @@ export const TeacherGradeManager: React.FC<TeacherGradeManagerProps> = ({
       ? Math.round((validGpas.reduce((a, b) => a + b, 0) / validGpas.length) * 10) / 10 
       : null;
 
-    const countXuatSac = records.filter(r => r.hocLuc === 'Xuất sắc').length;
-    const countGioi = records.filter(r => r.hocLuc === 'Giỏi').length;
-    const countKha = records.filter(r => r.hocLuc === 'Khá').length;
-    const countDat = records.filter(r => r.hocLuc === 'Đạt').length;
+    const countXuatSac = semesterRecords.filter(r => r.hocLuc === 'Xuất sắc').length;
+    const countGioi = semesterRecords.filter(r => r.hocLuc === 'Giỏi').length;
+    const countKha = semesterRecords.filter(r => r.hocLuc === 'Khá').length;
+    const countDat = semesterRecords.filter(r => r.hocLuc === 'Đạt').length;
+    const countHasGrades = semesterRecords.filter(r => r.diemTBChung !== null || Object.keys(r.subjects || {}).length > 0).length;
 
     return {
-      total: records.length,
+      total: students.length,
+      countHasGrades,
       avgClassGpa,
       countXuatSac,
       countGioi,
       countKha,
       countDat,
     };
-  }, [records]);
+  }, [semesterRecords, students.length]);
 
-  // Handle Excel File Drop / Selection
+  // Handle Excel File Drop / Selection (Quy chiếu vào Sơ đồ lớp làm chuẩn)
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -125,13 +137,13 @@ export const TeacherGradeManager: React.FC<TeacherGradeManagerProps> = ({
     setUploadSuccessMsg(null);
 
     try {
-      const res = await importGradesFromExcel(file, records, selectedHocKi);
+      const res = await importGradesFromExcel(file, canonicalAllRecords, selectedHocKi, students);
       if (res.success) {
         onUpdateRecords(res.importedRecords);
-        setUploadSuccessMsg(`Nhập điểm thành công cho ${res.recordsCount} học sinh từ file "${file.name}"!`);
+        setUploadSuccessMsg(`Đã quy chiếu và nhập điểm thành công cho ${res.recordsCount} học sinh theo chuẩn Sơ đồ lớp từ file "${file.name}"!`);
         onShowToast(
-          `Đã nhập điểm thành công từ Excel ✨`,
-          `Cập nhật dữ liệu điểm môn học cho ${res.recordsCount} học sinh lớp 10A5.`
+          `Đã nhập điểm & quy chiếu theo Sơ đồ lớp ✨`,
+          `Cập nhật dữ liệu điểm môn học cho ${res.recordsCount}/${students.length} học sinh trên Sơ đồ lớp.`
         );
       } else {
         setUploadError(res.errors.join('; ') || 'Không thể nhập dữ liệu từ file này.');
@@ -146,21 +158,24 @@ export const TeacherGradeManager: React.FC<TeacherGradeManagerProps> = ({
 
   // Reset to default sample grades
   const handleResetSampleGrades = () => {
-    if (window.confirm('Khôi phục lại dữ liệu bảng điểm mẫu ban đầu cho toàn bộ 42 học sinh?')) {
-      const { resetAcademicRecords } = require('../../data/academicCatalog');
-      const reset = resetAcademicRecords();
+    if (window.confirm(`Xóa trắng dữ liệu điểm đang nhập để nhập lại từ đầu theo Sơ đồ lớp (${students.length} học sinh)?`)) {
+      const reset = reconcileAcademicRecordsWithSeating(students, [], selectedHocKi);
       onUpdateRecords(reset);
-      onShowToast('Đã khôi phục bảng điểm mẫu', 'Bảng điểm của 42 học sinh đã được nạp lại mặc định.');
+      onShowToast('Đã làm mới bảng điểm theo Sơ đồ lớp', `Bảng điểm đã được đồng bộ chuẩn với ${students.length} học sinh trên Sơ đồ lớp.`);
     }
   };
 
   // Save changes to single student from detail modal
   const handleSaveStudentDetail = (updatedStudent: StudentAcademicRecord) => {
-    const updated = records.map(r => r.maHS === updatedStudent.maHS ? updatedStudent : r);
+    const updated = canonicalAllRecords.map(r =>
+      r.maHS === updatedStudent.maHS && (r.hocKi || 1) === (updatedStudent.hocKi || selectedHocKi)
+        ? updatedStudent
+        : r
+    );
     onUpdateRecords(updated);
     saveAcademicRecords(updated);
     setSelectedStudentForDetail(null);
-    onShowToast(`Đã lưu bảng điểm của ${updatedStudent.hoTen}`, 'Dữ liệu điểm thành phần đã được cập nhật.');
+    onShowToast(`Đã lưu bảng điểm của ${updatedStudent.hoTen}`, 'Dữ liệu điểm thành phần đã được cập nhật và quy chiếu theo Sơ đồ lớp.');
   };
 
   return (
@@ -243,18 +258,18 @@ export const TeacherGradeManager: React.FC<TeacherGradeManagerProps> = ({
             {/* Download Template */}
             <button
               type="button"
-              onClick={exportGradeTemplate}
+              onClick={() => exportGradeTemplate(students)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-2 border border-token text-main text-xs font-bold hover:bg-surface-3 cursor-pointer transition-all"
-              title="Tải file mẫu Excel chuẩn để nhập điểm"
+              title="Tải file mẫu Excel chuẩn theo danh sách Sơ đồ lớp hiện tại"
             >
               <Download className="w-3.5 h-3.5 text-accent" />
-              <span>Tải file mẫu</span>
+              <span>Tải file mẫu (Theo Sơ đồ lớp)</span>
             </button>
 
             {/* Export Current Class Grades */}
             <button
               type="button"
-              onClick={() => exportClassGrades(records, selectedHocKi)}
+              onClick={() => exportClassGrades(semesterRecords, selectedHocKi)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-2 border border-token text-main text-xs font-bold hover:bg-surface-3 cursor-pointer transition-all"
               title="Xuất bảng điểm lớp hiện tại ra file Excel"
             >
@@ -267,10 +282,10 @@ export const TeacherGradeManager: React.FC<TeacherGradeManagerProps> = ({
             type="button"
             onClick={handleResetSampleGrades}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-muted text-xs font-semibold hover:text-main hover:bg-surface-2 cursor-pointer transition-all"
-            title="Khôi phục lại dữ liệu bảng điểm mẫu ban đầu"
+            title="Làm mới bảng điểm theo danh sách Sơ đồ lớp"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Khôi phục mẫu</span>
+            <span>Đồng bộ Sơ đồ lớp</span>
           </button>
         </div>
       </div>
@@ -278,13 +293,13 @@ export const TeacherGradeManager: React.FC<TeacherGradeManagerProps> = ({
       {/* Class Statistics Overview Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-surface rounded-xl border border-token p-3 flex flex-col justify-between">
-          <span className="text-[11px] font-bold text-muted uppercase">Sĩ số có điểm</span>
+          <span className="text-[11px] font-bold text-muted uppercase">Sĩ số (Chuẩn Sơ đồ lớp)</span>
           <div className="my-1 flex items-baseline gap-1">
-            <span className="text-xl sm:text-2xl font-black text-main">{records.length}</span>
-            <span className="text-xs text-muted">/ 42 học sinh</span>
+            <span className="text-xl sm:text-2xl font-black text-main">{stats.countHasGrades}</span>
+            <span className="text-xs text-muted">/ {stats.total} học sinh</span>
           </div>
           <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-            Đạt 100% dữ liệu
+            Quy chiếu 100% từ Sơ đồ lớp
           </span>
         </div>
 
@@ -307,7 +322,7 @@ export const TeacherGradeManager: React.FC<TeacherGradeManagerProps> = ({
             <span className="text-xl sm:text-2xl font-black text-purple-600 dark:text-purple-400">
               {stats.countXuatSac + stats.countGioi}
             </span>
-            <span className="text-xs text-muted">HS ({Math.round(((stats.countXuatSac + stats.countGioi) / (records.length || 1)) * 100)}%)</span>
+            <span className="text-xs text-muted">HS ({Math.round(((stats.countXuatSac + stats.countGioi) / (stats.total || 1)) * 100)}%)</span>
           </div>
           <span className="text-[10px] text-purple-600 dark:text-purple-400 font-medium">
             {stats.countXuatSac} Xuất sắc · {stats.countGioi} Giỏi
@@ -320,7 +335,7 @@ export const TeacherGradeManager: React.FC<TeacherGradeManagerProps> = ({
             <span className="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400">
               {stats.countKha + stats.countDat}
             </span>
-            <span className="text-xs text-muted">HS ({Math.round(((stats.countKha + stats.countDat) / (records.length || 1)) * 100)}%)</span>
+            <span className="text-xs text-muted">HS ({Math.round(((stats.countKha + stats.countDat) / (stats.total || 1)) * 100)}%)</span>
           </div>
           <span className="text-[10px] text-muted">
             {stats.countKha} Khá · {stats.countDat} Đạt
@@ -610,11 +625,11 @@ export const TeacherGradeManager: React.FC<TeacherGradeManagerProps> = ({
             <div className="flex items-center justify-between pt-2 border-t border-token/60">
               <button
                 type="button"
-                onClick={exportGradeTemplate}
+                onClick={() => exportGradeTemplate(students)}
                 className="text-xs text-accent hover:underline font-semibold flex items-center gap-1 cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>Tải file mẫu nếu chưa có</span>
+                <span>Tải file mẫu (Theo Sơ đồ lớp hiện tại)</span>
               </button>
 
               <button

@@ -3,9 +3,11 @@ import {
   SubjectDefinition, 
   SubjectScore, 
   StudentAcademicRecord, 
-  AcademicStanding 
+  AcademicStanding,
+  Student
 } from '../types';
 import { MOCK_STUDENTS } from './mockData';
+import { findStudentInSeatingMaster, reconcileAcademicRecordsWithSeating } from '../utils/seatingMaster';
 
 export const STORAGE_KEY_ACADEMIC_GRADES = 'app_academic_grades_10a5_v1';
 
@@ -164,10 +166,11 @@ export function resetAcademicRecords(): StudentAcademicRecord[] {
 }
 
 /**
- * Xuất file mẫu Excel (.xlsx) chuẩn để GV nhập điểm
+ * Xuất file mẫu Excel (.xlsx) chuẩn để GV nhập điểm — Lấy danh sách từ Sơ đồ lớp (`masterStudents`) làm chuẩn
  */
-export function exportGradeTemplate(): void {
+export function exportGradeTemplate(masterStudents?: Student[]): void {
   const wb = XLSX.utils.book_new();
+  const roster = Array.isArray(masterStudents) && masterStudents.length > 0 ? masterStudents : MOCK_STUDENTS;
 
   // Create Header Row
   const headers = [
@@ -195,8 +198,8 @@ export function exportGradeTemplate(): void {
 
   const rows: any[] = [headers];
 
-  // Pre-fill all 42 students
-  MOCK_STUDENTS.forEach((st, idx) => {
+  // Điền danh sách học sinh chuẩn từ Sơ đồ lớp
+  roster.forEach((st, idx) => {
     rows.push([
       idx + 1,
       st.maHS,
@@ -303,17 +306,21 @@ export function exportClassGrades(records: StudentAcademicRecord[], hocKi: 1 | 2
 
 /**
  * Đọc và phân tích file Excel bảng điểm tải lên từ Giáo viên
+ * Luôn lấy danh sách học sinh trên Sơ đồ lớp (`masterStudents`) làm chuẩn và quy chiếu điểm theo Họ tên / Mã HS.
  */
 export async function importGradesFromExcel(
   file: File,
   currentRecords: StudentAcademicRecord[],
-  hocKi: 1 | 2 = 1
+  hocKi: 1 | 2 = 1,
+  masterStudents?: Student[]
 ): Promise<{
   success: boolean;
   recordsCount: number;
   importedRecords: StudentAcademicRecord[];
   errors: string[];
 }> {
+  const roster = Array.isArray(masterStudents) && masterStudents.length > 0 ? masterStudents : MOCK_STUDENTS;
+
   return new Promise((resolve) => {
     const reader = new FileReader();
 
@@ -332,8 +339,16 @@ export async function importGradesFromExcel(
           return;
         }
 
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
+        // Tìm sheet có chứa cột tên học sinh và điểm môn học
+        let targetSheetName = workbook.SheetNames[0];
+        for (const sName of workbook.SheetNames) {
+          const lowerName = sName.toLowerCase();
+          if (lowerName.includes('điểm') || lowerName.includes('diem') || lowerName.includes('danhsach')) {
+            targetSheetName = sName;
+            break;
+          }
+        }
+        const worksheet = workbook.Sheets[targetSheetName];
         const jsonRows: any[] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
         if (jsonRows.length < 2) {
@@ -346,8 +361,17 @@ export async function importGradesFromExcel(
           return;
         }
 
-        // Row 0 is header
-        const rawHeaders: string[] = (jsonRows[0] || []).map((h: any) => String(h || '').trim());
+        // Tìm dòng tiêu đề trong 10 dòng đầu
+        let headerRowIdx = 0;
+        for (let r = 0; r < Math.min(10, jsonRows.length); r++) {
+          const rowStr = (jsonRows[r] || []).map((c: any) => String(c || '').toLowerCase()).join(' ');
+          if (rowStr.includes('họ và tên') || rowStr.includes('họ tên') || rowStr.includes('toán')) {
+            headerRowIdx = r;
+            break;
+          }
+        }
+
+        const rawHeaders: string[] = (jsonRows[headerRowIdx] || []).map((h: any) => String(h || '').trim());
         const lowerHeaders = rawHeaders.map(h => h.toLowerCase());
 
         // Find index of essential columns
@@ -371,7 +395,6 @@ export async function importGradesFromExcel(
         lowerHeaders.forEach((colName, cIdx) => {
           if (cIdx === idxMaHS || cIdx === idxHoTen) return;
 
-          // Helper to check subject
           const matchSubj = (keywords: string[]) => keywords.some(k => colName.includes(k));
 
           let targetSubjId: string | null = null;
@@ -403,41 +426,43 @@ export async function importGradesFromExcel(
             } else if (targetSubjId === 'td' || targetSubjId === 'hdtn') {
               conf.evalCol = cIdx;
             } else {
-              // Default to TB column if not specified
               if (conf.tb === undefined) conf.tb = cIdx;
             }
           }
         });
 
+        // Khởi tạo danh sách bảng điểm chuẩn theo Sơ đồ lớp (`roster`)
+        const reconciledBase = reconcileAcademicRecordsWithSeating(roster, currentRecords, hocKi);
         const newRecordsMap = new Map<string, StudentAcademicRecord>();
-        // Pre-populate with current
-        currentRecords.forEach(r => newRecordsMap.set(r.maHS, { ...r }));
+        reconciledBase.forEach(r => {
+          if ((r.hocKi || 1) === hocKi) {
+            newRecordsMap.set(r.maHS, { ...r });
+          }
+        });
 
         let updatedCount = 0;
         const errors: string[] = [];
 
-        // Parse student data rows
-        for (let r = 1; r < jsonRows.length; r++) {
+        // Parse student data rows and cross-reference against Sơ đồ lớp (`roster`)
+        for (let r = headerRowIdx + 1; r < jsonRows.length; r++) {
           const row = jsonRows[r];
           if (!row || row.length === 0) continue;
 
-          let maHS = idxMaHS !== -1 ? String(row[idxMaHS] || '').trim() : '';
-          const hoTen = idxHoTen !== -1 ? String(row[idxHoTen] || '').trim() : '';
+          const rawMaHS = idxMaHS !== -1 ? String(row[idxMaHS] || '').trim() : '';
+          const rawHoTen = idxHoTen !== -1 ? String(row[idxHoTen] || '').trim() : '';
 
-          // If maHS not provided, try to match by row index or student name
-          if (!maHS && r - 1 < MOCK_STUDENTS.length) {
-            maHS = MOCK_STUDENTS[r - 1].maHS;
-          } else if (!maHS && hoTen) {
-            const found = MOCK_STUDENTS.find(s => s.hoTen.toLowerCase() === hoTen.toLowerCase());
-            if (found) maHS = found.maHS;
+          // Quy chiếu học sinh từ Sơ đồ lớp làm chuẩn
+          let matchedStudent = findStudentInSeatingMaster(roster, rawMaHS, rawHoTen);
+          if (!matchedStudent && !rawMaHS && !rawHoTen && r - (headerRowIdx + 1) < roster.length) {
+            matchedStudent = roster[r - (headerRowIdx + 1)];
           }
+          if (!matchedStudent) continue;
 
-          if (!maHS) continue;
-
+          const maHS = matchedStudent.maHS;
           const existingRecord = newRecordsMap.get(maHS) || {
-            maHS,
-            hoTen: hoTen || (MOCK_STUDENTS.find(s => s.maHS === maHS)?.hoTen ?? `Học sinh ${maHS}`),
-            to: MOCK_STUDENTS.find(s => s.maHS === maHS)?.to ?? 1,
+            maHS: matchedStudent.maHS,
+            hoTen: matchedStudent.hoTen,
+            to: matchedStudent.to,
             hocKi,
             namHoc: '2026-2027',
             subjects: {},
@@ -454,16 +479,18 @@ export async function importGradesFromExcel(
             if (!cols) return;
 
             if (subj.type === 'evaluate') {
-              let val = cols.evalCol !== undefined ? String(row[cols.evalCol] || '').trim().toUpperCase() : undefined;
-              const evalRes: 'Đ' | 'CĐ' = val === 'CĐ' || val === 'CD' || val === 'K' ? 'CĐ' : 'Đ';
-              updatedSubjects[subj.id] = {
-                subjectId: subj.id,
-                tx: [],
-                gk: null,
-                ck: null,
-                tb: null,
-                evaluateResult: evalRes,
-              };
+              const val = cols.evalCol !== undefined ? String(row[cols.evalCol] || '').trim().toUpperCase() : undefined;
+              if (val) {
+                const evalRes: 'Đ' | 'CĐ' = val === 'CĐ' || val === 'CD' || val === 'K' ? 'CĐ' : 'Đ';
+                updatedSubjects[subj.id] = {
+                  subjectId: subj.id,
+                  tx: [],
+                  gk: null,
+                  ck: null,
+                  tb: null,
+                  evaluateResult: evalRes,
+                };
+              }
               return;
             }
 
@@ -507,6 +534,9 @@ export async function importGradesFromExcel(
 
           newRecordsMap.set(maHS, {
             ...existingRecord,
+            maHS: matchedStudent.maHS,
+            hoTen: matchedStudent.hoTen,
+            to: matchedStudent.to,
             hocKi,
             subjects: updatedSubjects,
             diemTBChung: gpa,
@@ -518,7 +548,13 @@ export async function importGradesFromExcel(
           updatedCount++;
         }
 
-        const finalRecords = Array.from(newRecordsMap.values());
+        // Gộp lại các học kỳ khác (nếu có) và đảm bảo chuẩn hóa theo Sơ đồ lớp
+        const otherSemesters = reconciledBase.filter(r => (r.hocKi || 1) !== hocKi);
+        const finalRecords = reconcileAcademicRecordsWithSeating(
+          roster,
+          [...otherSemesters, ...Array.from(newRecordsMap.values())],
+          hocKi
+        );
         saveAcademicRecords(finalRecords);
 
         resolve({

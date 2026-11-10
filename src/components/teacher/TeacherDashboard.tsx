@@ -54,6 +54,7 @@ import { ClassroomLayoutEditor } from './ClassroomLayoutEditor';
 import { CadreHonorsModal } from '../common/CadreHonorsModal';
 import { PeriodHierarchyFilter as PeriodFilterComponent } from '../common/PeriodHierarchyFilter';
 import { filterRecordsByHierarchy, calculateStudentPeriodSummary, getSemesterFromWeek, CURRENT_SCHOOL_YEAR } from '../../utils/hierarchy';
+import { getVietnamMondayDateStr } from '../../utils/realtimeWeek';
 import { HierarchyPeriodFilter } from '../../types';
 import { Move, Trophy, Award, Sparkles as SparklesIcon, Dices, Crown, ArrowUpDown, Search, Filter, X, LayoutGrid, ListFilter } from 'lucide-react';
 import { CallingGamesHub } from './calling-games/CallingGamesHub';
@@ -558,8 +559,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             className="absolute inset-0 w-full h-full object-cover object-center"
             referrerPolicy="no-referrer"
           />
-          {/* Deep dark gradient overlay ensures all text is crisp and never sunken */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/65 to-black/45" />
+          {/* Balanced gradient overlay so background artwork and foreground text/badges stand out crisply */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-900/40 to-black/20" />
 
           {/* Top Row: School Logo + Name on the Left; Logout on the Right (Clean, never overflows on mobile) */}
           <div className="relative z-10 flex items-center justify-between gap-2">
@@ -573,7 +574,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 <span className="text-xs sm:text-sm font-black tracking-tight text-white drop-shadow-md uppercase truncate group-hover:text-amber-300 transition-colors">
                   TRƯỜNG THPT SỐ 2 ĐỨC PHỔ
                 </span>
-                <span className="text-[9.5px] sm:text-[10px] font-semibold text-slate-300 drop-shadow leading-none">
+                <span className="text-[9.5px] sm:text-[10px] font-bold text-amber-100 drop-shadow leading-none">
                   Năm học 2026-2027 · Lớp 10A5
                 </span>
               </div>
@@ -583,10 +584,10 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               <button
                 type="button"
                 onClick={onLogout}
-                className="px-2.5 py-1 rounded-xl bg-rose-500/60 hover:bg-rose-600/85 border border-rose-300/40 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0"
+                className="px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 border border-rose-300 text-white text-[11px] font-extrabold transition-all flex items-center gap-1 cursor-pointer shadow-sm active:scale-95 shrink-0"
                 title="Đăng xuất khỏi Bảng điều khiển Giáo viên"
               >
-                <LogOut className="w-3.5 h-3.5 text-rose-100" />
+                <LogOut className="w-3.5 h-3.5 text-white" />
                 <span>Thoát</span>
               </button>
             )}
@@ -594,14 +595,14 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
           {/* Middle & Bottom Area: Teacher Avatar + Name + Week Selector + Slogan */}
           <div className="relative z-10 flex flex-col gap-2">
-            {/* Teacher Identity Bar on Banner */}
+            {/* Teacher Identity Bar on Banner - High contrast so avatar & name pop */}
             <div className="flex items-center justify-between gap-2.5 flex-wrap">
               <div
                 onClick={() => setIsTeacherProfileModalOpen(true)}
-                className="flex items-center gap-2.5 min-w-0 cursor-pointer group bg-black/45 hover:bg-black/65 border border-white/20 hover:border-amber-300/70 rounded-2xl p-1.5 pr-3 backdrop-blur-md transition-all shadow-sm"
+                className="flex items-center gap-2.5 min-w-0 cursor-pointer group bg-slate-900/80 hover:bg-slate-900/95 border-2 border-amber-300/80 hover:border-amber-300 rounded-2xl p-1.5 pr-3.5 backdrop-blur-md transition-all shadow-lg"
                 title="Bấm để đổi ảnh đại diện và thông tin hồ sơ Giáo viên"
               >
-                <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden border-2 border-amber-300/80 bg-slate-800 shrink-0 shadow-xs">
+                <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden border-2 border-amber-300 bg-white shrink-0 shadow-sm">
                   <img
                     src={resolveTeacherAvatar(teacherAvatarUrl)}
                     alt={internalTeacherProfile.hoTen || 'Giáo viên Chủ nhiệm'}
@@ -617,17 +618,17 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs sm:text-sm font-black text-white group-hover:text-amber-300 transition-colors truncate max-w-[175px] sm:max-w-[260px]">
+                    <span className="text-xs sm:text-sm font-black text-white group-hover:text-amber-300 transition-colors truncate max-w-[175px] sm:max-w-[260px] drop-shadow-sm">
                       {internalTeacherProfile.hoTen || 'Thầy Dương Văn Huy'}
                     </span>
-                    <Edit3 className="w-3 h-3 text-amber-300 shrink-0 opacity-85 group-hover:opacity-100" />
+                    <Edit3 className="w-3 h-3 text-amber-300 shrink-0 opacity-90 group-hover:opacity-100" />
                   </div>
                   <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                    <span className="text-[10px] font-extrabold px-2 py-0.2 rounded-full bg-purple-500/35 text-purple-200 border border-purple-300/40">
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 border border-white shadow-xs">
                       GV Chủ nhiệm 10A5
                     </span>
                     {internalTeacherProfile.statusText && (
-                      <span className="text-[10px] text-slate-300 truncate max-w-[140px] sm:max-w-[220px] hidden xs:inline">
+                      <span className="text-[10px] font-bold text-amber-100 truncate max-w-[140px] sm:max-w-[220px] hidden xs:inline">
                         · {internalTeacherProfile.statusText}
                       </span>
                     )}
@@ -636,17 +637,17 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               </div>
 
               {/* Interactive Week Capsule Selector for Teacher */}
-              <div className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-black/55 hover:bg-black/75 border border-amber-300/40 text-amber-300 font-extrabold text-[11px] shadow-xs backdrop-blur-md transition-all shrink-0">
-                <Calendar className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+              <div className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 border-2 border-white text-slate-950 font-black text-[11px] shadow-md transition-all shrink-0">
+                <Calendar className="w-3.5 h-3.5 text-slate-950 shrink-0" />
                 {onChangeCurrentWeek ? (
                   <select
                     value={currentWeek}
                     onChange={e => onChangeCurrentWeek(Number(e.target.value))}
-                    className="bg-transparent text-white font-bold cursor-pointer focus:outline-none pr-0.5 text-[11px]"
+                    className="bg-transparent text-slate-950 font-black cursor-pointer focus:outline-none pr-0.5 text-[11px]"
                     title="Chạm để chuyển tuần học"
                   >
                     {Array.from({ length: 38 }, (_, i) => i + 1).map(w => (
-                      <option key={w} value={w} className="bg-slate-900 text-white font-semibold">
+                      <option key={w} value={w} className="bg-white text-slate-900 font-bold">
                         Tuần {w} {w <= 19 ? '(HK1)' : '(HK2)'}
                       </option>
                     ))}
@@ -861,6 +862,14 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             onChangeCurrentWeek={onChangeCurrentWeek}
             noDataWeeks={settings.noDataWeeks || []}
             onToggleNoDataWeek={handleToggleNoDataWeek}
+            autoAdvanceWeek={settings.tuDongChuyenTuan !== false}
+            onToggleAutoAdvanceWeek={(enabled) => {
+              onUpdateSettings({
+                tuDongChuyenTuan: enabled,
+                tuanGocTuDong: currentWeek,
+                ngayThietLapTuanGoc: getVietnamMondayDateStr(),
+              });
+            }}
             compact={true}
           />
 
@@ -1380,7 +1389,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                               ? 'bg-amber-50 text-amber-800 border-amber-300 border-dashed'
                               : 'bg-slate-100 text-slate-600 border-slate-300 border-dashed'
                           }`}>
-                            {item.lyDoChuaCoDiem === 'no_data' ? '⊘ Tuần không có dữ liệu' : '⏳ Chưa có điểm'}
+                            {item.lyDoChuaCoDiem === 'no_data' ? '⊘ Tuần không có dữ liệu' : '⏳ Tuần chưa học'}
                           </span>
                         ) : (
                           <>
@@ -1540,7 +1549,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   setInitialAddSeat(undefined);
                   setIsLayoutEditorOpen(true);
                 }}
-                className="px-3.5 py-1.5 rounded-xl bg-primary text-on-primary text-xs font-bold shadow-xs hover:opacity-95 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
                 title="Kéo thả đổi chỗ, thêm hoặc chỉnh sửa vị trí bàn ghế"
               >
                 <Move className="w-3.5 h-3.5 text-amber-300" />
@@ -1568,14 +1577,14 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           </div>
 
           {isMultiSelect && selectedStudentIds.length > 0 && (
-            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 w-11/12 max-w-md bg-primary text-on-primary rounded-2xl shadow-2xl p-3 border border-token flex items-center justify-between animate-slide-up">
-              <div className="text-xs font-semibold">
-                Đã chọn <strong className="text-accent underline">{selectedStudentIds.length}</strong> học sinh
+            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 w-11/12 max-w-md bg-white text-slate-900 rounded-2xl shadow-2xl p-3.5 border-2 border-indigo-500 flex items-center justify-between animate-slide-up">
+              <div className="text-xs font-extrabold text-slate-800">
+                Đã chọn <strong className="text-indigo-600 underline text-sm">{selectedStudentIds.length}</strong> học sinh
               </div>
               <button
                 type="button"
                 onClick={() => setIsBottomSheetOpen(true)}
-                className="px-4 py-2 rounded-xl bg-accent text-on-accent text-xs font-bold shadow-xs hover:opacity-95 transition-opacity cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
               >
                 <span>Chọn hành vi để Ghi nhận vi phạm</span>
               </button>
@@ -1741,6 +1750,34 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           </h3>
 
           <div className="space-y-3 text-xs">
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200">
+              <div>
+                <span className="font-bold text-emerald-950 block flex items-center gap-1.5">
+                  <span>⏱️ Tự động chuyển tuần vào mỗi Thứ 2 đầu tuần:</span>
+                  <span className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded-md ${
+                    settings.tuDongChuyenTuan !== false
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-slate-200 text-slate-700'
+                  }`}>
+                    {settings.tuDongChuyenTuan !== false ? 'Đang bật (Thời gian thực)' : 'Đang tắt'}
+                  </span>
+                </span>
+                <span className="text-[11px] text-emerald-800">
+                  Kết nối đồng hồ máy chủ thời gian thực (UTC+7): Hễ sang Thứ 2 tuần kế tiếp sẽ tự động tăng từ Tuần {currentWeek} lên Tuần {Math.min(38, currentWeek + 1)}
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={settings.tuDongChuyenTuan !== false}
+                onChange={e => onUpdateSettings({
+                  tuDongChuyenTuan: e.target.checked,
+                  tuanGocTuDong: currentWeek,
+                  ngayThietLapTuanGoc: getVietnamMondayDateStr(),
+                })}
+                className="w-5 h-5 accent-emerald-600 rounded cursor-pointer shrink-0"
+              />
+            </div>
+
             <div className="flex items-center justify-between">
               <div>
                 <span className="font-semibold text-main block">Điểm khởi đầu mỗi tuần:</span>
@@ -1956,8 +1993,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </div>
 
             {/* Xem trước trực tiếp */}
-            <div className="p-3 rounded-xl bg-slate-900 border border-slate-700/80 text-center shadow-inner">
-              <span className="text-[10px] text-white/50 block mb-0.5 uppercase tracking-wider font-extrabold">Xem trước hiển thị:</span>
+            <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-900 via-slate-800 to-indigo-950 border-2 border-amber-300/60 text-center shadow-md">
+              <span className="text-[10px] text-amber-200 block mb-0.5 uppercase tracking-wider font-extrabold">Xem trước trên nền Banner:</span>
               <span
                 style={{
                   color: settings.bannerSloganColor ?? '#ffffff',

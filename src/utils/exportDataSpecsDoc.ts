@@ -1,22 +1,30 @@
 import * as XLSX from 'xlsx';
 import { Student, SeatLayoutNode, DisciplineRecord, StudentAcademicRecord, RoleCode } from '../types';
 import { DEFAULT_SUBJECTS } from '../data/academicCatalog';
+import {
+  syncStudentsWithSeatingLayout,
+  getSeatColsForGroup,
+  reconcileAcademicRecordsWithSeating,
+  reconcileDisciplineRecordsWithSeating,
+} from './seatingMaster';
 
 /**
  * Bản mẫu Câu lệnh AI (Prompt) chuẩn hóa — Gom toàn bộ thông tin vào 1 Bảng / 1 File duy nhất
+ * Lấy SƠ ĐỒ LỚP làm chuẩn gốc và quy chiếu các danh sách khác từ Sơ đồ lớp.
  */
-export const AI_MASTER_PROMPT_TEXT = `Đóng vai trợ lý dữ liệu giáo dục chuyên nghiệp. Hãy đọc toàn bộ file/hình ảnh tôi đính kèm (danh sách lớp, sơ đồ chỗ ngồi, bảng điểm hoặc sổ ghi đầu bài/nề nếp) và chuẩn hóa thành ĐÚNG CẤU TRÚC BẢNG CHUẨN dưới đây để tôi nạp 1 lần vào Phần mềm Quản lý Lớp học 10A5:
+export const AI_MASTER_PROMPT_TEXT = `Đóng vai trợ lý dữ liệu giáo dục chuyên nghiệp. Hãy đọc toàn bộ file/hình ảnh tôi đính kèm (sơ đồ lớp học, danh sách lớp, bảng điểm hoặc sổ ghi đầu bài/nề nếp) và chuẩn hóa thành ĐÚNG CẤU TRÚC BẢNG CHUẨN dưới đây.
+NGUYÊN TẮC BẮT BUỘC: LẤY SƠ ĐỒ LỚP LÀM CHUẨN GỐC (Mã HS, Họ và tên, Tổ 1..4 theo Dãy bàn 1..4, Số bàn 1..6), mọi danh sách khác (điểm môn học, nề nếp, thông tin cá nhân) phải quy chiếu theo đúng học sinh trên Sơ đồ lớp:
 
-1. BẢNG TỔNG HỢP HỌC SINH - CHỖ NGỒI - ĐIỂM MÔN HỌC (Ngăn cách bằng dấu Tab hoặc xuất ra Sheet 1 file Excel):
+1. BẢNG TỔNG HỢP CHUẨN THEO SƠ ĐỒ LỚP - ĐIỂM MÔN HỌC (Ngăn cách bằng dấu Tab hoặc xuất ra Sheet 1 file Excel):
 Các cột theo đúng thứ tự:
 STT | Mã HS | Họ và tên | Giới tính | Ngày sinh | Tổ | Chức vụ | Dãy bàn | Số bàn | Toán | Ngữ văn | Tiếng Anh | Vật lí | Hóa học | Sinh học | Lịch sử | Địa lí | GDKT&PL | Tin học | Công nghệ | GDQP-AN | GDTC | HĐTN-HN | Nhận xét GVCN
 
 Quy tắc điền dữ liệu Bảng 1:
-- Mã HS: HS01, HS02... đến hết danh sách.
+- Mã HS: HS01, HS02... theo chuẩn Sơ đồ lớp.
 - Họ và tên: Viết hoa chữ cái đầu mỗi từ (VD: Nguyễn Văn An).
 - Giới tính: Chỉ ghi "Nam" hoặc "Nữ". (Nếu nguồn không ghi rõ, hãy tự suy luận hợp lý theo tên tiếng Việt).
 - Ngày sinh: Định dạng DD/MM/YYYY (nếu có, không có để trống).
-- Tổ: Chỉ ghi số 1, 2, 3 hoặc 4 (Nếu nguồn chưa chia tổ, tự chia đều luân phiên vào 4 tổ 1, 2, 3, 4).
+- Tổ: Ghi số 1, 2, 3 hoặc 4 theo đúng Dãy bàn trên Sơ đồ lớp (Dãy 1 = Tổ 1, Dãy 2 = Tổ 2, Dãy 3 = Tổ 3, Dãy 4 = Tổ 4).
 - Chức vụ: Ghi mã viết tắt chuẩn:
   + LT (Lớp trưởng)
   + BT (Bí thư)
@@ -24,12 +32,12 @@ Quy tắc điền dữ liệu Bảng 1:
   + LP_LD (Lớp phó lao động)
   + TT (Tổ trưởng)
   + HS (Học sinh - mặc định nếu không giữ chức vụ)
-- Dãy bàn: Số từ 1 đến 4 (mặc định bằng số Tổ).
-- Số bàn: Số bàn từ 1 đến 6 (tính từ trên bục giảng xuống).
-- Các cột môn tính điểm (Toán -> GDQP-AN): Ghi điểm trung bình môn hệ 10 (VD: 8.5). Nếu chưa có điểm thì để trống.
+- Dãy bàn: Số từ 1 đến 4 (chuẩn theo Tổ trên Sơ đồ lớp).
+- Số bàn: Số bàn từ 1 đến 6 (tính từ trên bục giảng xuống theo Sơ đồ lớp).
+- Các cột môn tính điểm (Toán -> GDQP-AN): Quy chiếu từ bảng điểm vào đúng học sinh trên Sơ đồ lớp, ghi điểm trung bình môn hệ 10 (VD: 8.5). Nếu chưa có điểm thì để trống.
 - Các cột môn nhận xét (GDTC, HĐTN-HN): Ghi "Đ" (Đạt) hoặc "CĐ" (Chưa đạt). Nếu chưa có thì để trống.
 
-2. BẢNG NHẬT KÝ NỀ NẾP - VI PHẠM & ĐIỂM CỘNG (Chỉ tạo nếu trong tài liệu của tôi có dữ liệu vi phạm/điểm cộng - xuất ra Sheet 2 hoặc bảng riêng bên dưới):
+2. BẢNG NHẬT KÝ NỀ NẾP - VI PHẠM & ĐIỂM CỘNG (Quy chiếu theo học sinh trên Sơ đồ lớp - Chỉ tạo nếu có dữ liệu vi phạm/điểm cộng):
 Các cột theo đúng thứ tự:
 Ngày học | Buổi | Tuần | Mã hoặc Họ tên HS | Tổ | Nhóm hành vi | Nội dung hành vi | Loại điểm | Số điểm | Ghi chú
 - Ngày học: YYYY-MM-DD (VD: 2026-11-09)
@@ -37,7 +45,7 @@ Ngày học | Buổi | Tuần | Mã hoặc Họ tên HS | Tổ | Nhóm hành vi 
 - Loại điểm: "Trừ" (vi phạm) hoặc "Cộng" (tuyên dương)
 - Số điểm: Số nguyên dương (VD: 2, 5, 10)
 
-YÊU CẦU QUAN TRỌNG: Chỉ xuất ra bảng dữ liệu sạch để tôi copy hoặc tải về 1 file Excel (.xlsx) thả thẳng vào phần mềm, không giải thích dài dòng.`;
+YÊU CẦU QUAN TRỌNG: Chỉ xuất ra bảng dữ liệu sạch đã quy chiếu chuẩn theo Sơ đồ lớp để tôi copy hoặc tải về 1 file Excel (.xlsx) thả thẳng vào phần mềm, không giải thích dài dòng.`;
 
 /**
  * Chuyển đổi mảng vaiTro sang chuỗi mã chức vụ hiển thị trong Excel
@@ -49,15 +57,88 @@ export function formatRolesForExcel(vaiTro: RoleCode[]): string {
 }
 
 /**
- * Tải xuống File Excel Mẫu Chuẩn 1 File Đầy Đủ (.xlsx)
- * Gồm 2 Sheet trong cùng 1 file:
- * - Sheet 1: 1_DanhSach_Chongoi_Diem (Danh sách HS + Tổ + Chức vụ + Chỗ ngồi + Điểm các môn)
- * - Sheet 2: 2_NhatKy_NeNep (Ghi nhận vi phạm / điểm cộng nề nếp)
+ * Xây dựng dữ liệu bảng 2D cho Sheet "0_SoDoLop_Chuan" từ Sơ đồ lớp (`students` + `layout`)
+ * Giúp giáo viên nhìn trực quan 4 Tổ (4 Dãy bàn) x 6 Bàn và khi nhập ngược lại sẽ được đọc làm chuẩn gốc.
  */
-export function downloadUnifiedExcelTemplate(): void {
-  const wb = XLSX.utils.book_new();
+function build2DSeatingGridAoA(students: Student[], layout?: SeatLayoutNode[]): any[][] {
+  const synced = syncStudentsWithSeatingLayout(students, layout || []);
+  const stuByMa = new Map<string, Student>();
+  synced.students.forEach(s => stuByMa.set(s.maHS, s));
 
-  // Sheet 1: Danh sách + Chỗ ngồi + Điểm môn học
+  const headerRow = [
+    'Bàn \\ Tổ - Dãy',
+    'Tổ 1 - Dãy 1 (Ghế trái)',
+    'Tổ 1 - Dãy 1 (Ghế phải)',
+    'Tổ 2 - Dãy 2 (Ghế trái)',
+    'Tổ 2 - Dãy 2 (Ghế phải)',
+    'Tổ 3 - Dãy 3 (Ghế trái)',
+    'Tổ 3 - Dãy 3 (Ghế phải)',
+    'Tổ 4 - Dãy 4 (Ghế trái)',
+    'Tổ 4 - Dãy 4 (Ghế phải)',
+  ];
+
+  const rows: any[][] = [headerRow];
+  const maxRow = Math.max(6, ...synced.layout.filter(n => n.loaiO === 'ghe').map(n => n.hang));
+
+  for (let r = 1; r <= maxRow; r++) {
+    const rowCells: any[] = [`Bàn ${r}`];
+    for (const g of [1, 2, 3, 4] as const) {
+      const [colLeft, colRight] = getSeatColsForGroup(g);
+      for (const col of [colLeft, colRight]) {
+        const seat = synced.layout.find(n => n.loaiO === 'ghe' && n.hang === r && n.cot === col);
+        const st = seat?.maHS ? stuByMa.get(seat.maHS) : undefined;
+        if (st) {
+          const nonHsRoles = (st.vaiTro || []).filter(role => role !== 'HS' && role !== 'GV');
+          const roleSuffix = nonHsRoles.length > 0 ? ` (${nonHsRoles.join(',')})` : '';
+          rowCells.push(`${st.maHS} - ${st.hoTen}${roleSuffix}`);
+        } else {
+          rowCells.push('');
+        }
+      }
+    }
+    rows.push(rowCells);
+  }
+
+  return rows;
+}
+
+/**
+ * Tải xuống File Excel Mẫu Chuẩn 1 File Đầy Đủ (.xlsx)
+ * Lấy SƠ ĐỒ LỚP hiện tại làm chuẩn gốc:
+ * - Sheet 0: 0_SoDoLop_Chuan (Sơ đồ chỗ ngồi 2D trực quan 4 Tổ x 6 Bàn làm chuẩn)
+ * - Sheet 1: 1_DanhSach_Chongoi_Diem (Danh sách HS quy chiếu từ Sơ đồ lớp + Điểm các môn)
+ * - Sheet 2: 2_NhatKy_NeNep (Ghi nhận vi phạm / điểm cộng quy chiếu theo Sơ đồ lớp)
+ * - Sheet 3: 3_HuongDan
+ */
+export function downloadUnifiedExcelTemplate(
+  masterStudents?: Student[],
+  masterLayout?: SeatLayoutNode[]
+): void {
+  const wb = XLSX.utils.book_new();
+  const hasRealRoster = Array.isArray(masterStudents) && masterStudents.length > 0;
+  const synced = hasRealRoster
+    ? syncStudentsWithSeatingLayout(masterStudents!, masterLayout || [])
+    : null;
+
+  // Sheet 0: Sơ đồ lớp 2D Chuẩn
+  if (synced && synced.students.length > 0) {
+    const ws0Rows = build2DSeatingGridAoA(synced.students, synced.layout);
+    const ws0 = XLSX.utils.aoa_to_sheet(ws0Rows);
+    ws0['!cols'] = [
+      { wch: 16 },
+      { wch: 26 },
+      { wch: 26 },
+      { wch: 26 },
+      { wch: 26 },
+      { wch: 26 },
+      { wch: 26 },
+      { wch: 26 },
+      { wch: 26 },
+    ];
+    XLSX.utils.book_append_sheet(wb, ws0, '0_SoDoLop_Chuan');
+  }
+
+  // Sheet 1: Danh sách + Chỗ ngồi + Điểm môn học (Quy chiếu từ Sơ đồ lớp)
   const sheet1Headers = [
     'STT',
     'Mã HS',
@@ -73,33 +154,34 @@ export function downloadUnifiedExcelTemplate(): void {
     'Nhận xét GVCN',
   ];
 
-  const sheet1SampleRows = [
-    [
-      1, 'HS01', 'Nguyễn Minh Khôi', 'Nam', '15/03/2011', 1, 'LT', 1, 1, '0901234567',
-      9.2, 8.5, 9.0, 8.8, 8.6, 8.4, 8.5, 8.7, 9.0, 9.5, 8.8, 9.0, 'Đ', 'Đ',
-      'Lớp trưởng gương mẫu, học giỏi đều các môn',
-    ],
-    [
-      2, 'HS02', 'Trần Ngọc Bảo Trâm', 'Nữ', '22/08/2011', 1, 'LP_HT', 1, 1, '0902345678',
-      8.8, 9.2, 9.4, 8.2, 8.5, 8.8, 9.0, 8.9, 9.1, 8.7, 8.6, 8.8, 'Đ', 'Đ',
-      'Năng nổ trong học tập, hỗ trợ các bạn rất tốt',
-    ],
-    [
-      3, 'HS03', 'Lê Hoàng Gia Bảo', 'Nam', '10/05/2011', 2, 'TT', 2, 1, '0903456789',
-      8.4, 7.8, 8.2, 8.6, 8.4, 8.0, 7.9, 8.1, 8.5, 8.8, 8.3, 8.5, 'Đ', 'Đ',
-      'Tổ trưởng Tổ 2 trách nhiệm, tích cực',
-    ],
-    [
-      4, 'HS04', 'Phạm Phương Thảo', 'Nữ', '04/11/2011', 3, 'BT', 3, 1, '0904567890',
-      8.5, 8.9, 8.7, 8.0, 8.1, 8.4, 8.8, 8.6, 9.0, 8.4, 8.5, 8.9, 'Đ', 'Đ',
-      'Bí thư chi đoàn năng động, sáng tạo',
-    ],
-    [
-      5, 'HS05', 'Vũ Đức Anh', 'Nam', '19/01/2011', 4, 'HS', 4, 1, '0905678901',
-      7.5, 7.2, 7.6, 7.8, 7.4, 7.5, 7.3, 7.6, 8.0, 8.2, 7.7, 8.0, 'Đ', 'Đ',
-      'Chăm ngoan, cần phát biểu sôi nổi hơn',
-    ],
-  ];
+  const sheet1SampleRows =
+    synced && synced.students.length > 0
+      ? synced.students.map((s, idx) => [
+          idx + 1,
+          s.maHS,
+          s.hoTen,
+          s.gioiTinh === 'Nu' ? 'Nữ' : 'Nam',
+          s.ngaySinh || '',
+          s.to,
+          formatRolesForExcel(s.vaiTro),
+          s.dayBan || s.to,
+          s.soBan || Math.min(6, Math.floor(idx / 8) + 1),
+          s.sdtPhuHuynh || '',
+          ...DEFAULT_SUBJECTS.map(subj => (subj.type === 'evaluate' ? 'Đ' : '')),
+          '',
+        ])
+      : [
+          [
+            1, 'HS01', 'Nguyễn Minh Khôi', 'Nam', '15/03/2011', 1, 'LT', 1, 1, '0901234567',
+            9.2, 8.5, 9.0, 8.8, 8.6, 8.4, 8.5, 8.7, 9.0, 9.5, 8.8, 9.0, 'Đ', 'Đ',
+            'Lớp trưởng gương mẫu, học giỏi đều các môn',
+          ],
+          [
+            2, 'HS02', 'Trần Ngọc Bảo Trâm', 'Nữ', '22/08/2011', 1, 'LP_HT', 1, 1, '0902345678',
+            8.8, 9.2, 9.4, 8.2, 8.5, 8.8, 9.0, 8.9, 9.1, 8.7, 8.6, 8.8, 'Đ', 'Đ',
+            'Năng nổ trong học tập, hỗ trợ các bạn rất tốt',
+          ],
+        ];
 
   const ws1 = XLSX.utils.aoa_to_sheet([sheet1Headers, ...sheet1SampleRows]);
   ws1['!cols'] = [
@@ -133,9 +215,10 @@ export function downloadUnifiedExcelTemplate(): void {
   ];
 
   const todayStr = new Date().toISOString().split('T')[0];
+  const sampleStu1 = synced?.students?.[0]?.hoTen || 'Nguyễn Minh Khôi';
+  const sampleTo1 = synced?.students?.[0]?.to || 1;
   const sheet2SampleRows = [
-    [todayStr, 'Sáng', 10, 'Nguyễn Minh Khôi', 1, 'Học tập', 'Phát biểu xây dựng bài sôi nổi', 'Cộng', 5, 'Tiết Toán'],
-    [todayStr, 'Sáng', 10, 'Vũ Đức Anh', 4, 'Chuyên cần', 'Đi học muộn dưới 5 phút', 'Trừ', 2, 'Muộn giờ truy bài'],
+    [todayStr, 'Sáng', 10, sampleStu1, sampleTo1, 'Học tập', 'Phát biểu xây dựng bài sôi nổi', 'Cộng', 5, 'Tiết Toán'],
   ];
 
   const ws2 = XLSX.utils.aoa_to_sheet([sheet2Headers, ...sheet2SampleRows]);
@@ -155,42 +238,63 @@ export function downloadUnifiedExcelTemplate(): void {
 
   // Sheet 3: Hướng dẫn nhanh ngay trong file Excel
   const sheet3Guide = [
-    ['HƯỚNG DẪN NHẬP DỮ LIỆU 1 FILE DUY NHẤT - LỚP 10A5'],
+    ['HƯỚNG DẪN NHẬP DỮ LIỆU CHUẨN SƠ ĐỒ LỚP (1 FILE DUY NHẤT) - LỚP 10A5'],
     [''],
-    ['Nguyên tắc vàng: Thầy chỉ cần điền vào file Excel này rồi kéo thả vào phần mềm. Hệ thống tự động nhận diện đồng thời:'],
-    ['1. Sheet "1_DanhSach_Chongoi_Diem": Chứa Danh sách học sinh, Tổ, Chức vụ, Vị trí bàn ngồi và Điểm các môn học.'],
-    ['   - Bắt buộc duy nhất cột "Họ và tên". Các cột Mã HS, Giới tính, Tổ, Dãy bàn, Số bàn nếu để trống hệ thống sẽ tự động điền và xếp chỗ ngồi thông minh.'],
-    ['   - Cột "Chức vụ": Điền LT (Lớp trưởng), BT (Bí thư), LP_HT (Lớp phó học tập), LP_LD (Lớp phó lao động), TT (Tổ trưởng), hoặc HS (Học sinh).'],
-    ['   - Các cột môn học (Toán -> GDQP-AN): Điền điểm TB môn (VD: 8.5). Môn GDTC và HĐTN-HN điền Đ hoặc CĐ. Nếu chưa có điểm có thể để trống.'],
-    ['2. Sheet "2_NhatKy_NeNep": Chứa các lượt ghi nhận vi phạm hoặc điểm cộng (Tùy chọn - nếu không có có thể xóa các dòng mẫu).'],
-    ['   - Cột "Mã hoặc Họ tên HS": Ghi Mã HS (VD: HS01) hoặc Họ và tên học sinh đều được hệ thống tự khớp chính xác.'],
-    ['   - Cột "Loại điểm": Ghi "Trừ" hoặc "Cộng". Cột "Số điểm": Ghi số nguyên dương (VD: 2, 5).'],
+    ['NGUYÊN TẮC VÀNG: DÙ LẤY DỮ LIỆU TỪ FILE NÀO, HỆ THỐNG LUÔN LẤY SƠ ĐỒ LỚP LÀM CHUẨN GỐC VÀ TỰ ĐỘNG QUY CHIẾU CÁC DANH SÁCH KHÁC TỪ SƠ ĐỒ LỚP.'],
+    ['0. Sheet "0_SoDoLop_Chuan": Sơ đồ chỗ ngồi 2D trực quan của lớp (4 Tổ / 4 Dãy bàn x 6 Bàn). Đây là chuẩn gốc về Mã HS, Họ tên, Tổ và chỗ ngồi.'],
+    ['1. Sheet "1_DanhSach_Chongoi_Diem": Chứa Danh sách học sinh đã quy chiếu từ Sơ đồ lớp kèm Điểm các môn học.'],
+    ['   - Khi thầy nhập bất kỳ file điểm hoặc danh sách nào, hệ thống sẽ đối chiếu Họ và tên / Mã HS vào đúng học sinh trên Sơ đồ lớp.'],
+    ['2. Sheet "2_NhatKy_NeNep": Chứa các lượt ghi nhận vi phạm hoặc điểm cộng (Tự động quy chiếu Tổ và Mã HS từ Sơ đồ lớp).'],
   ];
   const ws3 = XLSX.utils.aoa_to_sheet(sheet3Guide);
-  ws3['!cols'] = [{ wch: 110 }];
+  ws3['!cols'] = [{ wch: 115 }];
   XLSX.utils.book_append_sheet(wb, ws3, '3_HuongDan');
 
-  XLSX.writeFile(wb, 'File_Mau_Nhap_Du_Lieu_10A5_1File.xlsx');
+  XLSX.writeFile(wb, 'File_Mau_Nhap_Du_Lieu_10A5_Chuan_SoDoLop.xlsx');
 }
 
 /**
- * Xuất toàn bộ dữ liệu thực tế hiện tại của lớp ra 1 File Excel (.xlsx) chuẩn
- * File xuất ra có thể chỉnh sửa và nạp ngược lại 100% vào hệ thống
+ * Xuất toàn bộ dữ liệu thực tế hiện tại của lớp ra 1 File Excel (.xlsx) chuẩn Sơ đồ lớp
+ * File xuất ra có Sheet 0_SoDoLop_Chuan làm gốc và quy chiếu toàn bộ Điểm + Nề nếp theo Sơ đồ lớp.
  */
 export function exportCurrentClassToUnifiedExcel(
   students: Student[],
-  _layout: SeatLayoutNode[],
+  layout: SeatLayoutNode[],
   records: DisciplineRecord[],
   academicRecords: StudentAcademicRecord[]
 ): void {
   const wb = XLSX.utils.book_new();
 
-  // Map academic records by maHS and normalized name
+  // Đồng bộ lấy Sơ đồ lớp làm chuẩn gốc
+  const synced = syncStudentsWithSeatingLayout(students, layout);
+  const masterStudents = synced.students;
+  const masterLayout = synced.layout;
+
+  // Sheet 0: Sơ đồ lớp 2D Chuẩn
+  if (masterStudents.length > 0) {
+    const ws0Rows = build2DSeatingGridAoA(masterStudents, masterLayout);
+    const ws0 = XLSX.utils.aoa_to_sheet(ws0Rows);
+    ws0['!cols'] = [
+      { wch: 16 },
+      { wch: 26 },
+      { wch: 26 },
+      { wch: 26 },
+      { wch: 26 },
+      { wch: 26 },
+      { wch: 26 },
+      { wch: 26 },
+      { wch: 26 },
+    ];
+    XLSX.utils.book_append_sheet(wb, ws0, '0_SoDoLop_Chuan');
+  }
+
+  // Quy chiếu Bảng điểm theo Sơ đồ lớp
+  const reconciledGrades = reconcileAcademicRecordsWithSeating(masterStudents, academicRecords || [], 1);
   const gradeByMa = new Map<string, StudentAcademicRecord>();
-  const gradeByName = new Map<string, StudentAcademicRecord>();
-  (academicRecords || []).forEach(ar => {
-    gradeByMa.set(ar.maHS.toUpperCase(), ar);
-    gradeByName.set(ar.hoTen.trim().toLowerCase(), ar);
+  reconciledGrades.forEach(ar => {
+    if ((ar.hocKi || 1) === 1) {
+      gradeByMa.set(ar.maHS.toUpperCase(), ar);
+    }
   });
 
   const sheet1Headers = [
@@ -208,8 +312,8 @@ export function exportCurrentClassToUnifiedExcel(
     'Nhận xét GVCN',
   ];
 
-  const sheet1Rows = students.map((s, idx) => {
-    const ar = gradeByMa.get(s.maHS.toUpperCase()) || gradeByName.get(s.hoTen.trim().toLowerCase());
+  const sheet1Rows = masterStudents.map((s, idx) => {
+    const ar = gradeByMa.get(s.maHS.toUpperCase());
     const subjValues = DEFAULT_SUBJECTS.map(subj => {
       const sc = ar?.subjects?.[subj.id];
       if (!sc) return '';
@@ -250,7 +354,7 @@ export function exportCurrentClassToUnifiedExcel(
   ];
   XLSX.utils.book_append_sheet(wb, ws1, '1_DanhSach_Chongoi_Diem');
 
-  // Sheet 2: Nhật ký nề nếp
+  // Sheet 2: Nhật ký nề nếp (Quy chiếu theo Sơ đồ lớp)
   const sheet2Headers = [
     'Ngày học',
     'Buổi',
@@ -264,7 +368,10 @@ export function exportCurrentClassToUnifiedExcel(
     'Ghi chú',
   ];
 
-  const activeRecords = (records || []).filter(r => r.trangThai !== 'DaHuy');
+  const activeRecords = reconcileDisciplineRecordsWithSeating(
+    masterStudents,
+    (records || []).filter(r => r.trangThai !== 'DaHuy')
+  );
   const sheet2Rows = activeRecords.map(r => [
     r.ngayHoc,
     r.buoi === 'Chieu' ? 'Chiều' : 'Sáng',
@@ -294,7 +401,7 @@ export function exportCurrentClassToUnifiedExcel(
   XLSX.utils.book_append_sheet(wb, ws2, '2_NhatKy_NeNep');
 
   const dateTag = new Date().toISOString().split('T')[0];
-  XLSX.writeFile(wb, `Du_Lieu_Lop_10A5_Day_Du_${dateTag}.xlsx`);
+  XLSX.writeFile(wb, `Du_Lieu_Lop_10A5_Chuan_SoDoLop_${dateTag}.xlsx`);
 }
 
 /**

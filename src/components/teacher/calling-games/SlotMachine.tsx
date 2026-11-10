@@ -111,27 +111,27 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
         </div>
 
         {/* 3 Reels Grid */}
-        <div className="grid grid-cols-3 gap-2 w-full mt-4 bg-gray-900 p-3 rounded-2xl border-2 border-amber-300 shadow-inner">
+        <div className="grid grid-cols-3 gap-2 w-full mt-4 bg-amber-950/90 p-3 rounded-2xl border-2 border-amber-300 shadow-inner">
           {/* Reel 1: Tổ */}
-          <div className="h-28 rounded-xl bg-gradient-to-b from-gray-800 via-surface to-gray-800 border border-token flex flex-col items-center justify-center p-2 overflow-hidden shadow-md">
-            <span className="text-[9px] uppercase font-bold text-muted mb-1">Dãy / Tổ</span>
-            <div className={`text-base sm:text-lg font-black text-accent truncate ${isSpinning ? 'blur-[0.5px] animate-pulse' : ''}`}>
+          <div className="h-28 rounded-xl bg-gradient-to-b from-amber-50 via-white to-amber-50 border-2 border-amber-300 flex flex-col items-center justify-center p-2 overflow-hidden shadow-md">
+            <span className="text-[9px] uppercase font-extrabold text-slate-600 mb-1">Dãy / Tổ</span>
+            <div className={`text-base sm:text-lg font-black text-blue-700 truncate ${isSpinning ? 'blur-[0.5px] animate-pulse' : ''}`}>
               {reel1}
             </div>
           </div>
 
           {/* Reel 2: Tên Học Sinh */}
-          <div className="h-28 rounded-xl bg-gradient-to-b from-gray-800 via-surface to-gray-800 border-2 border-amber-400 flex flex-col items-center justify-center p-2 overflow-hidden shadow-lg">
-            <span className="text-[9px] uppercase font-bold text-amber-500 mb-1">Gương mặt</span>
-            <div className={`text-base sm:text-lg font-black text-amber-500 truncate ${isSpinning ? 'blur-[0.5px] animate-pulse' : ''}`}>
+          <div className="h-28 rounded-xl bg-gradient-to-b from-amber-50 via-white to-amber-50 border-2 border-amber-500 flex flex-col items-center justify-center p-2 overflow-hidden shadow-lg">
+            <span className="text-[9px] uppercase font-extrabold text-amber-700 mb-1">Gương mặt</span>
+            <div className={`text-base sm:text-lg font-black text-amber-600 truncate ${isSpinning ? 'blur-[0.5px] animate-pulse' : ''}`}>
               {reel2}
             </div>
           </div>
 
           {/* Reel 3: Nhiệm vụ */}
-          <div className="h-28 rounded-xl bg-gradient-to-b from-gray-800 via-surface to-gray-800 border border-token flex flex-col items-center justify-center p-2 overflow-hidden shadow-md">
-            <span className="text-[9px] uppercase font-bold text-muted mb-1">Thử thách</span>
-            <div className={`text-xs sm:text-xs font-bold text-main line-clamp-2 ${isSpinning ? 'blur-[0.5px] animate-pulse' : ''}`}>
+          <div className="h-28 rounded-xl bg-gradient-to-b from-amber-50 via-white to-amber-50 border-2 border-amber-300 flex flex-col items-center justify-center p-2 overflow-hidden shadow-md">
+            <span className="text-[9px] uppercase font-extrabold text-slate-600 mb-1">Thử thách</span>
+            <div className={`text-xs sm:text-xs font-extrabold text-slate-900 line-clamp-2 ${isSpinning ? 'blur-[0.5px] animate-pulse' : ''}`}>
               {reel3}
             </div>
           </div>

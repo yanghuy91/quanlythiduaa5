@@ -63,6 +63,17 @@ import {
   onFirebaseAuthStateChanged, 
   isAuthorizedTeacherEmail 
 } from './services/firebase';
+import {
+  initRealtimeClockSync,
+  getVietnamMondayDateStr,
+  getNextVietnamMondayDisplayStr,
+  calculateMondaysElapsed
+} from './utils/realtimeWeek';
+import {
+  syncStudentsWithSeatingLayout,
+  reconcileAcademicRecordsWithSeating,
+  reconcileDisciplineRecordsWithSeating
+} from './utils/seatingMaster';
 
 function normalizeStudentsList(list: Student[]): Student[] {
   return list.map(s => ({
@@ -223,15 +234,93 @@ export default function App() {
   }, [buildFullStateSnapshot]);
 
   const handleSetCurrentWeek = useCallback((week: number) => {
+    const mondayStr = getVietnamMondayDateStr();
+    const updatedSettings: TeacherSettings = {
+      ...settings,
+      tuanGocTuDong: week,
+      ngayThietLapTuanGoc: mondayStr,
+    };
+    setSettings(updatedSettings);
+    localStorage.setItem('app_settings_10a5', JSON.stringify(updatedSettings));
     setCurrentWeek(week);
     localStorage.setItem('app_current_week', String(week));
-    saveServerState(buildFullStateSnapshot({ currentWeek: week }), true);
+    saveServerState(buildFullStateSnapshot({ currentWeek: week, settings: updatedSettings }), true);
     setToast({
       id: Date.now().toString(),
-      message: `Đã đổi tuần học hiện tại: Tuần ${week} ✨`,
-      subMessage: `Điểm thi đua của lớp 10A5 được cập nhật theo Tuần ${week}`,
+      message: `Đã chọn tuần hiện tại: Tuần ${week} ✨`,
+      subMessage: updatedSettings.tuDongChuyenTuan !== false && week < 38
+        ? `Đồng bộ thời gian thực: Tự động sang Tuần ${week + 1} vào Thứ 2 tới (${getNextVietnamMondayDisplayStr()})`
+        : `Điểm thi đua của lớp 10A5 được cập nhật theo Tuần ${week}`,
     });
-  }, [buildFullStateSnapshot]);
+  }, [settings, buildFullStateSnapshot]);
+
+  // Real-time Monday Auto-Advance Week Engine (Tự động chuyển sang tuần tiếp theo vào Thứ 2 hàng tuần)
+  useEffect(() => {
+    const checkAndAdvanceWeek = () => {
+      if (settings.tuDongChuyenTuan === false) return;
+
+      const currentMondayStr = getVietnamMondayDateStr();
+      const anchorWeek = settings.tuanGocTuDong;
+      const anchorMonday = settings.ngayThietLapTuanGoc;
+
+      // Nếu chưa có mốc ngày Thứ 2, khởi tạo mốc theo tuần hiện tại để từ Thứ 2 tuần sau tự động tăng
+      if (!anchorMonday || typeof anchorWeek !== 'number') {
+        const initializedSettings: TeacherSettings = {
+          ...settings,
+          tuDongChuyenTuan: true,
+          tuanGocTuDong: currentWeek,
+          ngayThietLapTuanGoc: currentMondayStr,
+        };
+        setSettings(initializedSettings);
+        localStorage.setItem('app_settings_10a5', JSON.stringify(initializedSettings));
+        return;
+      }
+
+      const weeksElapsed = calculateMondaysElapsed(anchorMonday, currentMondayStr);
+      if (weeksElapsed > 0) {
+        const nextWeek = Math.min(38, Math.max(1, anchorWeek + weeksElapsed));
+        const updatedSettings: TeacherSettings = {
+          ...settings,
+          tuanGocTuDong: nextWeek,
+          ngayThietLapTuanGoc: currentMondayStr,
+        };
+        setSettings(updatedSettings);
+        localStorage.setItem('app_settings_10a5', JSON.stringify(updatedSettings));
+
+        if (nextWeek !== currentWeek) {
+          setCurrentWeek(nextWeek);
+          localStorage.setItem('app_current_week', String(nextWeek));
+          saveServerState(buildFullStateSnapshot({ currentWeek: nextWeek, settings: updatedSettings }), true);
+          setToast({
+            id: `auto-week-${nextWeek}`,
+            message: `Đã sang Thứ 2 tuần mới: Tự động chuyển sang Tuần ${nextWeek} 📅`,
+            subMessage: `Hệ thống thời gian thực đã tự động cập nhật từ Tuần ${currentWeek} sang Tuần ${nextWeek}.`,
+          });
+        }
+      }
+    };
+
+    const unsubClock = initRealtimeClockSync(() => {
+      checkAndAdvanceWeek();
+    });
+
+    checkAndAdvanceWeek();
+    const intervalId = window.setInterval(checkAndAdvanceWeek, 30000);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        checkAndAdvanceWeek();
+      }
+    };
+    window.addEventListener('focus', checkAndAdvanceWeek);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      unsubClock();
+      clearInterval(intervalId);
+      window.removeEventListener('focus', checkAndAdvanceWeek);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [settings, currentWeek, buildFullStateSnapshot]);
 
   // Teacher updates their avatar
   const handleUpdateTeacherAvatar = useCallback((newAvatarUrl: string) => {
@@ -278,22 +367,39 @@ export default function App() {
     });
   }, [buildFullStateSnapshot]);
 
-  // Teacher imports real student list from Excel or Text
+  // Teacher imports real student list from Excel or Text (Lấy Sơ đồ lớp làm chuẩn & quy chiếu)
   const handleImportStudents = useCallback((newStudents: Student[], newLayout: SeatLayoutNode[]) => {
-    const normalized = normalizeStudentsList(newStudents);
-    setStudents(normalized);
-    setLayout(newLayout);
-    localStorage.setItem('app_students_10a5_v4', JSON.stringify(normalized));
-    localStorage.setItem('app_layout_10a5_v4', JSON.stringify(newLayout));
+    const synced = syncStudentsWithSeatingLayout(normalizeStudentsList(newStudents), newLayout);
+    const normalized = synced.students;
+    const syncedLayout = synced.layout;
+    const reconciledAcademic = reconcileAcademicRecordsWithSeating(normalized, academicRecords, 1);
+    const reconciledRecords = reconcileDisciplineRecordsWithSeating(normalized, records);
 
-    saveServerState(buildFullStateSnapshot({ students: normalized, layout: newLayout }), true);
+    setStudents(normalized);
+    setLayout(syncedLayout);
+    setAcademicRecords(reconciledAcademic);
+    setRecords(reconciledRecords);
+    localStorage.setItem('app_students_10a5_v4', JSON.stringify(normalized));
+    localStorage.setItem('app_layout_10a5_v4', JSON.stringify(syncedLayout));
+    localStorage.setItem('app_records_10a5', JSON.stringify(reconciledRecords));
+    saveAcademicRecords(reconciledAcademic);
+
+    saveServerState(
+      buildFullStateSnapshot({
+        students: normalized,
+        layout: syncedLayout,
+        academicRecords: reconciledAcademic,
+        records: reconciledRecords,
+      }),
+      true
+    );
 
     setToast({
       id: Date.now().toString(),
-      message: `Đã cập nhật danh sách lớp: ${normalized.length} học sinh 🎓`,
-      subMessage: 'Dữ liệu đã được lưu và đồng bộ lên đám mây thành công.',
+      message: `Đã đồng bộ Sơ đồ lớp chuẩn: ${normalized.length} học sinh 🎓`,
+      subMessage: 'Tất cả danh sách điểm và nề nếp đã được quy chiếu theo Sơ đồ lớp và lưu lên mây.',
     });
-  }, [buildFullStateSnapshot]);
+  }, [academicRecords, records, buildFullStateSnapshot]);
 
   // Sync to local storage
   useEffect(() => {
@@ -312,19 +418,25 @@ export default function App() {
   const isApplyingRemoteUpdate = useRef(false);
 
   // Apply remote cloud state helper (used by both initial fetch & realtime listener)
+  // Luôn lấy Sơ đồ lớp (`layout` + `students`) làm chuẩn và quy chiếu các danh sách khác
   const applyCloudState = useCallback((cloudState: ClassroomFullState) => {
     isApplyingRemoteUpdate.current = true;
     markRemoteStateApplied(cloudState);
 
+    let masterStudents: Student[] | null = null;
     if (Array.isArray(cloudState.students) && cloudState.students.length > 0) {
-      const normalizedStudents = normalizeStudentsList(cloudState.students);
-      setStudents(normalizedStudents);
-      localStorage.setItem('app_students_10a5_v4', JSON.stringify(normalizedStudents));
+      const incomingLayout = Array.isArray(cloudState.layout) && cloudState.layout.length > 0 ? cloudState.layout : [];
+      const synced = syncStudentsWithSeatingLayout(normalizeStudentsList(cloudState.students), incomingLayout);
+      masterStudents = synced.students;
+      setStudents(synced.students);
+      setLayout(synced.layout);
+      localStorage.setItem('app_students_10a5_v4', JSON.stringify(synced.students));
+      localStorage.setItem('app_layout_10a5_v4', JSON.stringify(synced.layout));
 
       // Keep logged-in Student/Cadre session synchronized with latest cloud student data
       setCurrentUser(prev => {
         if (prev && 'maHS' in prev) {
-          const freshStudent = normalizedStudents.find(s => s.maHS === (prev as Student).maHS);
+          const freshStudent = synced.students.find(s => s.maHS === (prev as Student).maHS);
           if (freshStudent) {
             const session = getSavedAuthSession();
             saveAuthSession(freshStudent, session?.role || 'HS', session?.remember ?? true);
@@ -333,15 +445,25 @@ export default function App() {
         }
         return prev;
       });
+    } else if (Array.isArray(cloudState.layout) && cloudState.layout.length > 0) {
+      setLayout(cloudState.layout);
+      localStorage.setItem('app_layout_10a5_v4', JSON.stringify(cloudState.layout));
     }
+
     if (Array.isArray(cloudState.records)) {
       const cleanedRecords = filterOutLegacyDemoRecords(cloudState.records);
-      setRecords(cleanedRecords);
-      localStorage.setItem('app_records_10a5', JSON.stringify(cleanedRecords));
+      const reconciled = masterStudents
+        ? reconcileDisciplineRecordsWithSeating(masterStudents, cleanedRecords)
+        : cleanedRecords;
+      setRecords(reconciled);
+      localStorage.setItem('app_records_10a5', JSON.stringify(reconciled));
     }
     if (Array.isArray(cloudState.academicRecords)) {
-      setAcademicRecords(cloudState.academicRecords);
-      saveAcademicRecords(cloudState.academicRecords);
+      const reconciledGrades = masterStudents
+        ? reconcileAcademicRecordsWithSeating(masterStudents, cloudState.academicRecords, 1)
+        : cloudState.academicRecords;
+      setAcademicRecords(reconciledGrades);
+      saveAcademicRecords(reconciledGrades);
     }
     if (cloudState.settings) {
       setSettings(prev => {
@@ -349,10 +471,6 @@ export default function App() {
         localStorage.setItem('app_settings_10a5', JSON.stringify(merged));
         return merged;
       });
-    }
-    if (Array.isArray(cloudState.layout) && cloudState.layout.length > 0) {
-      setLayout(cloudState.layout);
-      localStorage.setItem('app_layout_10a5_v4', JSON.stringify(cloudState.layout));
     }
     if (Array.isArray(cloudState.rules)) {
       setRules(cloudState.rules);
@@ -684,22 +802,39 @@ export default function App() {
     setIsLoginModalOpen(false);
   };
 
-  // Teacher updates classroom seating and layout
+  // Teacher updates classroom seating and layout (Lấy Sơ đồ lớp làm chuẩn & quy chiếu toàn bộ danh sách khác)
   const handleUpdateLayout = useCallback((newLayout: SeatLayoutNode[], updatedStudents: Student[]) => {
-    const normalized = normalizeStudentsList(updatedStudents);
-    setLayout(newLayout);
-    setStudents(normalized);
-    localStorage.setItem('app_layout_10a5_v4', JSON.stringify(newLayout));
-    localStorage.setItem('app_students_10a5_v4', JSON.stringify(normalized));
+    const synced = syncStudentsWithSeatingLayout(normalizeStudentsList(updatedStudents), newLayout);
+    const normalized = synced.students;
+    const syncedLayout = synced.layout;
+    const reconciledAcademic = reconcileAcademicRecordsWithSeating(normalized, academicRecords, 1);
+    const reconciledRecords = reconcileDisciplineRecordsWithSeating(normalized, records);
 
-    saveServerState(buildFullStateSnapshot({ students: normalized, layout: newLayout }), true);
+    setLayout(syncedLayout);
+    setStudents(normalized);
+    setAcademicRecords(reconciledAcademic);
+    setRecords(reconciledRecords);
+    localStorage.setItem('app_layout_10a5_v4', JSON.stringify(syncedLayout));
+    localStorage.setItem('app_students_10a5_v4', JSON.stringify(normalized));
+    localStorage.setItem('app_records_10a5', JSON.stringify(reconciledRecords));
+    saveAcademicRecords(reconciledAcademic);
+
+    saveServerState(
+      buildFullStateSnapshot({
+        students: normalized,
+        layout: syncedLayout,
+        academicRecords: reconciledAcademic,
+        records: reconciledRecords,
+      }),
+      true
+    );
 
     setToast({
       id: Date.now().toString(),
-      message: 'Đã lưu sơ đồ lớp học ✨',
-      subMessage: `Đã lưu danh sách ${normalized.length} học sinh và đồng bộ lên đám mây thành công!`,
+      message: 'Đã lưu Sơ đồ lớp chuẩn & quy chiếu dữ liệu ✨',
+      subMessage: `Đã đồng bộ ${normalized.length} học sinh trên Sơ đồ lớp với Bảng điểm & Nhật ký nề nếp lên đám mây!`,
     });
-  }, [buildFullStateSnapshot]);
+  }, [academicRecords, records, buildFullStateSnapshot]);
 
   // Student or Teacher updates a student's avatar
   const handleUpdateStudentAvatar = useCallback((studentId: string, avatarUrl?: string) => {
@@ -730,9 +865,13 @@ export default function App() {
     });
   }, [students, currentRole, buildFullStateSnapshot]);
 
-  // Teacher import time-stamped records from file (deduplicated by maGhiNhan)
+  // Teacher import time-stamped records from file (Quy chiếu theo Sơ đồ lớp & deduplicated by maGhiNhan)
   const handleImportRecords = useCallback((newRecords: DisciplineRecord[]) => {
-    const cleanedIncoming = filterOutLegacyDemoRecords(newRecords);
+    const syncedSeating = syncStudentsWithSeatingLayout(students, layout);
+    const cleanedIncoming = reconcileDisciplineRecordsWithSeating(
+      syncedSeating.students,
+      filterOutLegacyDemoRecords(newRecords)
+    );
     const seenIds = new Set<string>();
     const updated: DisciplineRecord[] = [];
     for (const r of [...cleanedIncoming, ...records]) {
@@ -746,10 +885,10 @@ export default function App() {
     saveServerState(buildFullStateSnapshot({ records: updated }), true);
     setToast({
       id: Date.now().toString(),
-      message: `Đã nạp ${cleanedIncoming.length} bản ghi thời gian ✨`,
-      subMessage: 'Dữ liệu thi đua từ file đã được lưu lên đám mây thành công!',
+      message: `Đã nạp & quy chiếu ${cleanedIncoming.length} bản ghi theo Sơ đồ lớp ✨`,
+      subMessage: 'Dữ liệu thi đua từ file đã được quy chiếu theo Sơ đồ lớp và lưu lên đám mây thành công!',
     });
-  }, [records, buildFullStateSnapshot]);
+  }, [students, layout, records, buildFullStateSnapshot]);
 
   // Teacher assigns custom frame to student
   const handleAssignFrame = useCallback((studentId: string, frameId: string | undefined) => {
@@ -811,7 +950,6 @@ export default function App() {
           currentRole={currentRole}
           onLogout={handleLogout}
           currentWeek={currentWeek}
-          onChangeCurrentWeek={handleSetCurrentWeek}
           onOpenCallingGames={currentRole === 'GV' ? () => setShowCallingGamesModal(true) : undefined}
           onOpenTeacherAvatar={() => setIsTeacherAvatarModalOpen(true)}
           onOpenTeacherProfile={() => setIsTeacherProfileModalOpen(true)}
@@ -868,7 +1006,6 @@ export default function App() {
             records={records}
             studentSummaries={studentSummaries}
             currentWeek={currentWeek}
-            onChangeCurrentWeek={handleSetCurrentWeek}
             settings={settings}
             onUpdateSettings={newSets => {
               const updatedSettings = { ...settings, ...newSets };
@@ -896,7 +1033,6 @@ export default function App() {
             records={records}
             studentSummaries={studentSummaries}
             currentWeek={currentWeek}
-            onChangeCurrentWeek={handleSetCurrentWeek}
             settings={settings}
             onUpdateSettings={newSets => {
               const updatedSettings = { ...settings, ...newSets };

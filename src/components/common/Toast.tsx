@@ -42,16 +42,18 @@ export const Toast: React.FC<ToastProps> = ({ toast, onUndo, onClose }) => {
     <div 
       role="status" 
       aria-live="polite"
-      className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-md bg-primary text-on-primary rounded-xl shadow-xl p-3.5 border border-token flex items-center justify-between gap-3 animate-slide-up"
+      className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-md bg-white text-slate-900 rounded-2xl shadow-2xl p-3.5 border-2 border-emerald-500 flex items-center justify-between gap-3 animate-slide-up"
     >
       <div className="flex items-center gap-2.5 min-w-0">
-        <CheckCircle2 className="w-5 h-5 text-[var(--st-ok)] shrink-0" />
+        <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+          <CheckCircle2 className="w-5 h-5 shrink-0" />
+        </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold truncate leading-tight">
+          <p className="text-xs font-extrabold text-slate-900 truncate leading-tight">
             {toast.message}
           </p>
           {toast.subMessage && (
-            <p className="text-[11px] opacity-80 truncate mt-0.5">
+            <p className="text-[11px] font-semibold text-slate-600 truncate mt-0.5">
               {toast.subMessage}
             </p>
           )}
@@ -65,16 +67,16 @@ export const Toast: React.FC<ToastProps> = ({ toast, onUndo, onClose }) => {
               onUndo(toast.recordId!);
               onClose();
             }}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface text-main text-xs font-bold hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-extrabold transition-colors cursor-pointer shadow-2xs"
           >
-            <RotateCcw className="w-3.5 h-3.5 text-accent" />
+            <RotateCcw className="w-3.5 h-3.5 text-amber-700" />
             <span>Hoàn tác ({secondsLeft}s)</span>
           </button>
         )}
 
         <button
           onClick={onClose}
-          className="p-1 rounded-md opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
           aria-label="Đóng thông báo"
         >
           <X className="w-4 h-4" />
