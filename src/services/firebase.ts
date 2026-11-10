@@ -212,96 +212,122 @@ export function onFirebaseAuthStateChanged(callback: (user: User | null) => void
 }
 
 /**
- * Fetch full classroom state from Cloud (RTDB & Firestore with newest updatedAt)
+ * In-memory tracker of the last saved timestamp to suppress echo loops
+ */
+let lastSavedUpdatedAt = '';
+
+/**
+ * Fetch full classroom state from Cloud (RTDB REST primary, RTDB SDK secondary, Firestore fallback)
  */
 export async function fetchCloudClassState(): Promise<ClassroomFullState | null> {
-  let rtdbData: ClassroomFullState | null = null;
-  let firestoreData: ClassroomFullState | null = null;
+  // 1. Fetch from Firebase Realtime Database via REST (fastest, guaranteed, no socket handshake delays)
+  try {
+    const res = await fetch('https://thiduaa5-default-rtdb.firebaseio.com/classes/10a5.json', {
+      cache: 'no-store',
+      headers: { 'Accept': 'application/json' },
+    });
+    if (res.ok) {
+      const val = await res.json();
+      if (val && Array.isArray(val.students) && val.students.length > 0) {
+        return val as ClassroomFullState;
+      }
+    }
+  } catch (err: any) {
+    console.warn('[Firebase RTDB REST] Lỗi đọc qua REST:', err?.message || err);
+  }
 
-  // 1. Fetch from Firebase Realtime Database
+  // 2. Fetch from Firebase Realtime Database via SDK
   try {
     const snap = await rtdbGet(rtdbRef(rtdb, 'classes/10a5'));
     if (snap.exists()) {
       const val = snap.val();
       if (val && Array.isArray(val.students) && val.students.length > 0) {
-        rtdbData = val as ClassroomFullState;
+        return val as ClassroomFullState;
       }
     }
   } catch (err: any) {
-    console.warn('[Firebase RTDB] Lỗi đọc Realtime Database:', err?.message || err);
+    console.warn('[Firebase RTDB SDK] Lỗi đọc Realtime Database:', err?.message || err);
   }
 
-  // 2. Fetch from Cloud Firestore
+  // 3. Fallback to Cloud Firestore
   try {
     const docRef = doc(db, 'classes', '10a5');
     const snap = await getDoc(docRef);
     if (snap.exists()) {
       const val = snap.data();
       if (val && Array.isArray(val.students) && val.students.length > 0) {
-        firestoreData = val as ClassroomFullState;
+        return val as ClassroomFullState;
       }
     }
   } catch (err: any) {
     console.warn('[Firebase Firestore] Lỗi đọc Firestore:', err?.message || err);
   }
 
-  // Return the one with the newest updatedAt timestamp
-  if (rtdbData && firestoreData) {
-    const rtdbTime = new Date(rtdbData.updatedAt || 0).getTime();
-    const fsTime = new Date(firestoreData.updatedAt || 0).getTime();
-    return rtdbTime >= fsTime ? rtdbData : firestoreData;
-  }
-
-  return rtdbData || firestoreData || null;
+  return null;
 }
 
 /**
- * Save full classroom state to Firebase Realtime Database & Cloud Firestore
+ * Save full classroom state directly to Firebase Realtime Database
  */
 export async function saveCloudClassState(state: ClassroomFullState): Promise<boolean> {
+  const updatedAt = state.updatedAt || new Date().toISOString();
+  lastSavedUpdatedAt = updatedAt;
+
   const cleanState = sanitizeForFirebase({
     ...state,
-    updatedAt: state.updatedAt || new Date().toISOString(),
+    updatedAt,
   });
 
   let rtdbSuccess = false;
-  let firestoreSuccess = false;
 
-  // 1. Primary write: Firebase Realtime Database (không bị quota 20k writes/ngày chặn)
+  // 1. Direct REST PUT to Firebase Realtime Database (guaranteed, instant, works on all mobile & desktop browsers)
+  try {
+    const res = await fetch('https://thiduaa5-default-rtdb.firebaseio.com/classes/10a5.json', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cleanState),
+    });
+    if (res.ok) {
+      rtdbSuccess = true;
+    }
+  } catch (err: any) {
+    console.warn('[Firebase RTDB REST] Lỗi ghi qua REST:', err?.message || err);
+  }
+
+  // 2. Realtime Database SDK write
   try {
     const classRef = rtdbRef(rtdb, 'classes/10a5');
     await rtdbSet(classRef, cleanState);
     rtdbSuccess = true;
   } catch (err: any) {
-    console.warn('[Firebase RTDB] Lỗi ghi Realtime Database:', err?.message || err);
+    console.warn('[Firebase RTDB SDK] Lỗi ghi qua SDK:', err?.message || err);
   }
 
-  // 2. Secondary write: Cloud Firestore (nếu còn quota)
+  // 3. Firestore write (fire-and-forget in background without blocking)
   try {
     const docRef = doc(db, 'classes', '10a5');
-    await setDoc(docRef, cleanState, { merge: true });
-    firestoreSuccess = true;
-  } catch (err: any) {
-    console.warn('[Firebase Firestore] Lỗi ghi Firestore (Spark quota hoặc network):', err?.message || err);
-  }
+    setDoc(docRef, cleanState, { merge: true }).catch(() => {});
+  } catch (err) {}
 
-  return rtdbSuccess || firestoreSuccess;
+  return rtdbSuccess;
 }
 
 /**
- * Real-time listener for Cloud updates (RTDB onValue + Firestore onSnapshot)
+ * Real-time listener for Cloud updates (RTDB onValue without self-echo)
  */
 export function subscribeToCloudClassState(onUpdate: (state: ClassroomFullState) => void): () => void {
   let unsubRtdb = () => {};
-  let unsubFs = () => {};
 
-  // 1. RTDB listener
   try {
     const classRef = rtdbRef(rtdb, 'classes/10a5');
     unsubRtdb = rtdbOnValue(classRef, (snap) => {
       if (snap.exists()) {
         const data = snap.val() as ClassroomFullState;
         if (data && Array.isArray(data.students) && data.students.length > 0) {
+          // Bỏ qua echo nếu dữ liệu trùng với mốc vừa được lưu bởi chính phiên này
+          if (data.updatedAt && data.updatedAt === lastSavedUpdatedAt) {
+            return;
+          }
           onUpdate(data);
         }
       }
@@ -312,25 +338,7 @@ export function subscribeToCloudClassState(onUpdate: (state: ClassroomFullState)
     console.warn('[Firebase RTDB] Kết nối realtime lỗi:', err);
   }
 
-  // 2. Firestore listener
-  try {
-    const docRef = doc(db, 'classes', '10a5');
-    unsubFs = onSnapshot(docRef, (snap) => {
-      if (snap.exists()) {
-        const data = snap.data() as ClassroomFullState;
-        if (data && Array.isArray(data.students) && data.students.length > 0) {
-          onUpdate(data);
-        }
-      }
-    }, (error) => {
-      // Ignored silently for quota exceeded
-    });
-  } catch (err) {
-    // Ignored
-  }
-
   return () => {
     unsubRtdb();
-    unsubFs();
   };
 }

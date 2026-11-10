@@ -344,10 +344,12 @@ export default function App() {
     return () => { isMounted = false; };
   }, []);
 
-  // Realtime Cloud Firestore sync listener across all devices
+  // Realtime Cloud Firebase Realtime Database sync listener across all devices
+  const isApplyingRemoteUpdate = useRef(false);
   useEffect(() => {
     const unsubscribe = subscribeToCloudClassState((cloudState) => {
       if (!cloudState) return;
+      isApplyingRemoteUpdate.current = true;
       if (Array.isArray(cloudState.students) && cloudState.students.length > 0) {
         setStudents(cloudState.students);
         localStorage.setItem('app_students_10a5_v4', JSON.stringify(cloudState.students));
@@ -381,6 +383,9 @@ export default function App() {
       if (cloudState.studentBadgesMap || cloudState.studentActiveBadges) {
         setAllStudentBadgesState(cloudState.studentBadgesMap, cloudState.studentActiveBadges);
       }
+      setTimeout(() => {
+        isApplyingRemoteUpdate.current = false;
+      }, 500);
     });
     return () => unsubscribe();
   }, []);
@@ -425,6 +430,9 @@ export default function App() {
       isInitialMount.current = false;
       return;
     }
+    if (isApplyingRemoteUpdate.current) {
+      return; // Bỏ qua tự lưu nếu dữ liệu vừa được cập nhật từ máy chủ realtime
+    }
     const badges = getAllStudentBadgesState();
     const fullState: ClassroomFullState = {
       students,
@@ -437,7 +445,7 @@ export default function App() {
       studentBadgesMap: badges.studentBadgesMap,
       studentActiveBadges: badges.studentActiveBadges,
       updatedAt: new Date().toISOString(),
-      version: 1,
+      version: Date.now(),
     };
     scheduleServerSync(fullState);
   }, [students, records, academicRecords, settings, layout, rules, teacherAvatar]);
@@ -493,7 +501,28 @@ export default function App() {
       thoiGianMay: nowISO,
     };
 
-    setRecords(prev => [record, ...prev]);
+    setRecords(prev => {
+      const updated = [record, ...prev];
+      localStorage.setItem('app_records_10a5', JSON.stringify(updated));
+
+      const badges = getAllStudentBadgesState();
+      const fullState: ClassroomFullState = {
+        students,
+        records: updated,
+        academicRecords,
+        settings,
+        layout,
+        rules,
+        teacherAvatar,
+        studentBadgesMap: badges.studentBadgesMap,
+        studentActiveBadges: badges.studentActiveBadges,
+        updatedAt: nowISO,
+        version: Date.now(),
+      };
+      saveServerState(fullState);
+
+      return updated;
+    });
 
     // Show 8-second Toast with Undo
     setToast({
@@ -502,41 +531,83 @@ export default function App() {
       message: `Đã ghi: ${record.hoTen} – ${record.tenHanhVi}`,
       subMessage: `Trừ ${record.diemSo} điểm · Buổi ${record.buoi === 'Sang' ? 'Sáng' : 'Chiều'}`,
     });
-  }, []);
+  }, [students, academicRecords, settings, layout, rules, teacherAvatar]);
 
   // Undo / Void record handler
   const handleUndoRecord = useCallback((recordId: string) => {
-    setRecords(prev => prev.map(r => {
-      if (r.maGhiNhan === recordId) {
-        return {
-          ...r,
-          trangThai: 'DaHuy',
-          lyDoHuy: 'Người ghi bấm Hoàn tác trong 8 giây',
-          thoiGianHuy: new Date().toISOString(),
-        };
-      }
-      return r;
-    }));
+    setRecords(prev => {
+      const updated = prev.map(r => {
+        if (r.maGhiNhan === recordId) {
+          return {
+            ...r,
+            trangThai: 'DaHuy' as const,
+            lyDoHuy: 'Người ghi bấm Hoàn tác trong 8 giây',
+            thoiGianHuy: new Date().toISOString(),
+          };
+        }
+        return r;
+      });
+      localStorage.setItem('app_records_10a5', JSON.stringify(updated));
+
+      const badges = getAllStudentBadgesState();
+      const fullState: ClassroomFullState = {
+        students,
+        records: updated,
+        academicRecords,
+        settings,
+        layout,
+        rules,
+        teacherAvatar,
+        studentBadgesMap: badges.studentBadgesMap,
+        studentActiveBadges: badges.studentActiveBadges,
+        updatedAt: new Date().toISOString(),
+        version: Date.now(),
+      };
+      saveServerState(fullState);
+
+      return updated;
+    });
 
     setToast({
       id: `undo-${Date.now()}`,
       message: 'Đã hoàn tác bản ghi vi phạm thành công.',
     });
-  }, []);
+  }, [students, academicRecords, settings, layout, rules, teacherAvatar]);
 
   // Manual void by cadre or teacher
   const handleVoidRecord = useCallback((recordId: string, reason: string) => {
-    setRecords(prev => prev.map(r => {
-      if (r.maGhiNhan === recordId) {
-        return {
-          ...r,
-          trangThai: 'DaHuy',
-          lyDoHuy: reason,
-          thoiGianHuy: new Date().toISOString(),
-        };
-      }
-      return r;
-    }));
+    setRecords(prev => {
+      const updated = prev.map(r => {
+        if (r.maGhiNhan === recordId) {
+          return {
+            ...r,
+            trangThai: 'DaHuy' as const,
+            lyDoHuy: reason,
+            thoiGianHuy: new Date().toISOString(),
+          };
+        }
+        return r;
+      });
+      localStorage.setItem('app_records_10a5', JSON.stringify(updated));
+
+      const badges = getAllStudentBadgesState();
+      const fullState: ClassroomFullState = {
+        students,
+        records: updated,
+        academicRecords,
+        settings,
+        layout,
+        rules,
+        teacherAvatar,
+        studentBadgesMap: badges.studentBadgesMap,
+        studentActiveBadges: badges.studentActiveBadges,
+        updatedAt: new Date().toISOString(),
+        version: Date.now(),
+      };
+      saveServerState(fullState);
+
+      return updated;
+    });
 
     setToast({
       id: `void-${Date.now()}`,
