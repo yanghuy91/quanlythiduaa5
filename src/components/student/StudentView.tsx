@@ -53,7 +53,7 @@ import { StudentPicker } from '../student-picker/StudentPicker';
 import { RecordBottomSheet } from '../record/RecordBottomSheet';
 import { DuplicateWarningModal } from '../record/DuplicateWarningModal';
 import { PeriodHierarchyFilter as PeriodFilterComponent } from '../common/PeriodHierarchyFilter';
-import { checkDuplicateRecord } from '../../utils/emulation';
+import { checkDuplicateRecord, calculateDenseRankings } from '../../utils/emulation';
 import { CadreBadge } from '../common/CadreBadge';
 import { CadreHonorsModal } from '../common/CadreHonorsModal';
 import { filterRecordsByHierarchy, calculateStudentPeriodSummary, CURRENT_SCHOOL_YEAR } from '../../utils/hierarchy';
@@ -555,7 +555,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
     return myBadges.find(b => b.id === selectedBadgeId && b.unlocked) || null;
   }, [selectedBadgeId, myBadges]);
 
-  // Class Individual Official Ranking (Fixed official rank based on score descending)
+  // Class Individual Official Ranking (Thuật toán xếp hạng chuẩn: cùng điểm thì cùng xếp hạng)
   const officialClassRankings = useMemo(() => {
     const list = allStudents.map(student => {
       const summary = studentPeriodSummaries[student.maHS] || {
@@ -573,22 +573,20 @@ export const StudentView: React.FC<StudentViewProps> = ({
       };
     });
 
-    list.sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      return a.student.hoTen.localeCompare(b.student.hoTen, 'vi');
-    });
-
-    return list.map((item, idx) => ({
-      ...item,
-      officialRank: idx + 1,
-    }));
+    return calculateDenseRankings(
+      list,
+      item => item.score,
+      item => item.deductions,
+      item => item.bonuses
+    );
   }, [allStudents, studentPeriodSummaries, settings.diemKhoiDau]);
 
   // Current Student Rank & Frame
-  const myRank = useMemo(() => {
-    const found = officialClassRankings.find(item => item.student.maHS === currentStudent.maHS);
-    return found ? found.officialRank : 1;
+  const myRankItem = useMemo(() => {
+    return officialClassRankings.find(item => item.student.maHS === currentStudent.maHS);
   }, [officialClassRankings, currentStudent.maHS]);
+
+  const myRank = myRankItem ? myRankItem.officialRank : 1;
 
   // Sorted and filtered rankings for user viewing
   const displayedRankings = useMemo(() => {
@@ -1600,7 +1598,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 }`}
                 title="Bấm để lọc nhanh xem riêng vị trí thi đua của bạn"
               >
-                <span>⭐ Vị trí của bạn: Hạng #{myRank} ({myPeriodSummary.diemTrungBinh}đ)</span>
+                <span>⭐ Vị trí của bạn: {myRank === 1 ? '🥇 Hạng 1' : myRank === 2 ? '🥈 Hạng 2' : myRank === 3 ? '🥉 Hạng 3' : `Hạng #${myRank}`}{myRankItem?.isTied ? ' (Đồng hạng)' : ''} ({myPeriodSummary.diemTrungBinh}đ)</span>
               </button>
 
               </div>
@@ -1797,23 +1795,31 @@ export const StudentView: React.FC<StudentViewProps> = ({
                               officialRank <= 3 ? 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30' :
                               'bg-surface-2 text-muted border border-token'
                             }`}>
-                              {officialRank === 1 ? '🥇 Hạng 1' : officialRank === 2 ? '🥈 Hạng 2' : officialRank === 3 ? '🥉 Hạng 3' : `Hạng #${officialRank}`}
+                              {officialRank === 1 ? (item.isTied ? '🥇 Đồng hạng 1' : '🥇 Hạng 1') :
+                               officialRank === 2 ? (item.isTied ? '🥈 Đồng hạng 2' : '🥈 Hạng 2') :
+                               officialRank === 3 ? (item.isTied ? '🥉 Đồng hạng 3' : '🥉 Hạng 3') :
+                               (item.isTied ? `Đồng hạng #${officialRank}` : `Hạng #${officialRank}`)}
                             </span>
                           )}
 
                           {officialRank === 1 && rankingSortBy === 'score_desc' && (
                             <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
-                              TOP 1
+                              {item.isTied ? 'ĐỒNG HẠNG 1' : 'TOP 1'}
                             </span>
                           )}
                           {(officialRank === 2 || officialRank === 3) && rankingSortBy === 'score_desc' && (
                             <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30">
-                              TOP 2-3
+                              {item.isTied ? `ĐỒNG HẠNG ${officialRank}` : 'TOP 2-3'}
                             </span>
                           )}
                           {officialRank >= 4 && officialRank <= 10 && rankingSortBy === 'score_desc' && (
                             <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                              TOP 10
+                              {item.isTied ? `ĐỒNG HẠNG ${officialRank}` : 'TOP 10'}
+                            </span>
+                          )}
+                          {officialRank > 10 && item.isTied && rankingSortBy === 'score_desc' && (
+                            <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/30">
+                              ĐỒNG HẠNG #{officialRank}
                             </span>
                           )}
                         </div>

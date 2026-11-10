@@ -103,45 +103,52 @@ export const MOCK_STUDENTS: Student[] = RAW_MOCK_STUDENTS.map(s => ({
 
 // Danh mục nội quy nề nếp thi đua
 export const MOCK_RULES: RuleItem[] = [
-  // Chuyên cần
+  // Chuyên cần & Học tập
   { maNoiQuy: 'NQ01', nhomHanhVi: 'Chuyên cần', tenHanhVi: 'Đi muộn', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: true, thuTu: 1 },
-  { maNoiQuy: 'NQ02', nhomHanhVi: 'Chuyên cần', tenHanhVi: 'Nghỉ học không phép', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Vua', ghim: true, thuTu: 2 },
-  { maNoiQuy: 'NQ03', nhomHanhVi: 'Chuyên cần', tenHanhVi: 'Trốn tiết, bỏ giờ', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Vua', ghim: false, thuTu: 3 },
-  { maNoiQuy: 'NQ04', nhomHanhVi: 'Chuyên cần', tenHanhVi: 'Vào lớp trễ sau ra chơi', loaiDiem: 'Tru', diemSo: 1, mucDo: 'Nhe', ghim: false, thuTu: 4 },
+  { maNoiQuy: 'NQ29', nhomHanhVi: 'Chuyên cần', tenHanhVi: 'Nghỉ học có phép', loaiDiem: 'Tru', diemSo: 1, mucDo: 'Nhe', ghim: true, thuTu: 2 },
+  { maNoiQuy: 'NQ02', nhomHanhVi: 'Chuyên cần', tenHanhVi: 'Nghỉ học không phép', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Vua', ghim: true, thuTu: 3 },
+  { maNoiQuy: 'NQ03', nhomHanhVi: 'Chuyên cần', tenHanhVi: 'Trốn tiết, bỏ giờ', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Vua', ghim: false, thuTu: 4 },
+  { maNoiQuy: 'NQ04', nhomHanhVi: 'Chuyên cần', tenHanhVi: 'Vào lớp trễ sau ra chơi', loaiDiem: 'Tru', diemSo: 1, mucDo: 'Nhe', ghim: false, thuTu: 5 },
 
   // Học tập
-  { maNoiQuy: 'NQ05', nhomHanhVi: 'Học tập', tenHanhVi: 'Không làm bài tập', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: true, thuTu: 5 },
-  { maNoiQuy: 'NQ06', nhomHanhVi: 'Học tập', tenHanhVi: 'Quên mang sách vở, dụng cụ', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: true, thuTu: 6 },
-  { maNoiQuy: 'NQ07', nhomHanhVi: 'Học tập', tenHanhVi: 'Nói chuyện riêng trong giờ học', loaiDiem: 'Tru', diemSo: 1, mucDo: 'Nhe', ghim: true, thuTu: 7 },
-  { maNoiQuy: 'NQ08', nhomHanhVi: 'Học tập', tenHanhVi: 'Không ghi chép bài', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 8 },
-  { maNoiQuy: 'NQ09', nhomHanhVi: 'Học tập', tenHanhVi: 'Gian lận trong thi, kiểm tra', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Nang', ghim: false, thuTu: 9 },
-  { maNoiQuy: 'NQ10', nhomHanhVi: 'Học tập', tenHanhVi: 'Không chuẩn bị bài mới', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 10 },
+  { maNoiQuy: 'NQ05', nhomHanhVi: 'Học tập', tenHanhVi: 'Không làm bài tập', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: true, thuTu: 6 },
+  { maNoiQuy: 'NQ06', nhomHanhVi: 'Học tập', tenHanhVi: 'Quên mang sách vở, dụng cụ', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: true, thuTu: 7 },
+  { maNoiQuy: 'NQ07', nhomHanhVi: 'Học tập', tenHanhVi: 'Nói chuyện riêng trong giờ học', loaiDiem: 'Tru', diemSo: 1, mucDo: 'Nhe', ghim: true, thuTu: 8 },
+  { maNoiQuy: 'NQ08', nhomHanhVi: 'Học tập', tenHanhVi: 'Không ghi chép bài', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 9 },
+  { maNoiQuy: 'NQ09', nhomHanhVi: 'Học tập', tenHanhVi: 'Gian lận trong thi, kiểm tra', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Nang', ghim: false, thuTu: 10 },
+  { maNoiQuy: 'NQ10', nhomHanhVi: 'Học tập', tenHanhVi: 'Không chuẩn bị bài mới', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 11 },
+  { maNoiQuy: 'NQ30', nhomHanhVi: 'Học tập', tenHanhVi: 'Vắng tiết học / phụ đạo có phép', loaiDiem: 'Tru', diemSo: 1, mucDo: 'Nhe', ghim: false, thuTu: 12 },
+  { maNoiQuy: 'NQ31', nhomHanhVi: 'Học tập', tenHanhVi: 'Vắng tiết học / phụ đạo không phép', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: false, thuTu: 13 },
 
   // Nề nếp
-  { maNoiQuy: 'NQ11', nhomHanhVi: 'Nề nếp', tenHanhVi: 'Không đúng đồng phục', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: true, thuTu: 11 },
-  { maNoiQuy: 'NQ12', nhomHanhVi: 'Nề nếp', tenHanhVi: 'Không đeo phù hiệu / thẻ học sinh', loaiDiem: 'Tru', diemSo: 1, mucDo: 'Nhe', ghim: true, thuTu: 12 },
-  { maNoiQuy: 'NQ13', nhomHanhVi: 'Nề nếp', tenHanhVi: 'Dùng điện thoại không phép trong lớp', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Nang', ghim: true, thuTu: 13 },
-  { maNoiQuy: 'NQ14', nhomHanhVi: 'Nề nếp', tenHanhVi: 'Nói tục, chửi thề, mất lịch sự', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: false, thuTu: 14 },
-  { maNoiQuy: 'NQ15', nhomHanhVi: 'Nề nếp', tenHanhVi: 'Nhuộm tóc, móng tay, trang điểm đậm', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: false, thuTu: 15 },
-  { maNoiQuy: 'NQ16', nhomHanhVi: 'Nề nếp', tenHanhVi: 'Gây gổ, đánh nhau', loaiDiem: 'Tru', diemSo: 10, mucDo: 'Nang', ghim: false, thuTu: 16 },
+  { maNoiQuy: 'NQ11', nhomHanhVi: 'Nề nếp', tenHanhVi: 'Không đúng đồng phục', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: true, thuTu: 14 },
+  { maNoiQuy: 'NQ12', nhomHanhVi: 'Nề nếp', tenHanhVi: 'Không đeo phù hiệu / thẻ học sinh', loaiDiem: 'Tru', diemSo: 1, mucDo: 'Nhe', ghim: true, thuTu: 15 },
+  { maNoiQuy: 'NQ13', nhomHanhVi: 'Nề nếp', tenHanhVi: 'Dùng điện thoại không phép trong lớp', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Nang', ghim: true, thuTu: 16 },
+  { maNoiQuy: 'NQ14', nhomHanhVi: 'Nề nếp', tenHanhVi: 'Nói tục, chửi thề, mất lịch sự', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: false, thuTu: 17 },
+  { maNoiQuy: 'NQ15', nhomHanhVi: 'Nề nếp', tenHanhVi: 'Nhuộm tóc, móng tay, trang điểm đậm', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: false, thuTu: 18 },
+  { maNoiQuy: 'NQ16', nhomHanhVi: 'Nề nếp', tenHanhVi: 'Gây gổ, đánh nhau', loaiDiem: 'Tru', diemSo: 10, mucDo: 'Nang', ghim: false, thuTu: 19 },
 
-  // Phong trào
-  { maNoiQuy: 'NQ17', nhomHanhVi: 'Phong trào', tenHanhVi: 'Không tham gia sinh hoạt chi đoàn / lớp', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: false, thuTu: 17 },
-  { maNoiQuy: 'NQ18', nhomHanhVi: 'Phong trào', tenHanhVi: 'Đến muộn giờ chào cờ / sinh hoạt', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 18 },
-  { maNoiQuy: 'NQ19', nhomHanhVi: 'Phong trào', tenHanhVi: 'Thiếu nghiêm túc khi hát Quốc ca', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 19 },
+  // Phong trào & Hoạt động tập thể
+  { maNoiQuy: 'NQ34', nhomHanhVi: 'Phong trào', tenHanhVi: 'Vắng hoạt động / phong trào có phép', loaiDiem: 'Tru', diemSo: 1, mucDo: 'Nhe', ghim: true, thuTu: 20 },
+  { maNoiQuy: 'NQ35', nhomHanhVi: 'Phong trào', tenHanhVi: 'Vắng hoạt động / phong trào không phép', loaiDiem: 'Tru', diemSo: 4, mucDo: 'Vua', ghim: true, thuTu: 21 },
+  { maNoiQuy: 'NQ17', nhomHanhVi: 'Phong trào', tenHanhVi: 'Không tham gia sinh hoạt chi đoàn / lớp', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: false, thuTu: 22 },
+  { maNoiQuy: 'NQ18', nhomHanhVi: 'Phong trào', tenHanhVi: 'Đến muộn giờ chào cờ / sinh hoạt', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 23 },
+  { maNoiQuy: 'NQ19', nhomHanhVi: 'Phong trào', tenHanhVi: 'Thiếu nghiêm túc khi hát Quốc ca', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 24 },
 
   // Lao động - Vệ sinh
-  { maNoiQuy: 'NQ20', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Trực nhật bẩn hoặc trễ giờ', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: true, thuTu: 20 },
-  { maNoiQuy: 'NQ21', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Vứt rác bừa bãi trong lớp', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: true, thuTu: 21 },
-  { maNoiQuy: 'NQ22', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Ăn quà vặt trong phòng học', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 22 },
-  { maNoiQuy: 'NQ23', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Không tắt quạt, đèn khi ra khỏi lớp', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 23 },
-  { maNoiQuy: 'NQ24', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Viết vẽ bậy lên bàn hoặc tường', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: false, thuTu: 24 },
+  { maNoiQuy: 'NQ32', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Vắng buổi lao động có phép', loaiDiem: 'Tru', diemSo: 1, mucDo: 'Nhe', ghim: true, thuTu: 25 },
+  { maNoiQuy: 'NQ33', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Vắng buổi lao động không phép', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Vua', ghim: true, thuTu: 26 },
+  { maNoiQuy: 'NQ20', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Trực nhật bẩn hoặc trễ giờ', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: true, thuTu: 27 },
+  { maNoiQuy: 'NQ21', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Vứt rác bừa bãi trong lớp', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: true, thuTu: 28 },
+  { maNoiQuy: 'NQ22', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Ăn quà vặt trong phòng học', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 29 },
+  { maNoiQuy: 'NQ23', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Không tắt quạt, đèn khi ra khỏi lớp', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 30 },
+  { maNoiQuy: 'NQ24', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Viết vẽ bậy lên bàn hoặc tường', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: false, thuTu: 31 },
 
   // Điểm cộng (chỉ hiển thị khi GV kích hoạt tuỳ chọn)
-  { maNoiQuy: 'NQ25', nhomHanhVi: 'Điểm cộng', tenHanhVi: 'Đạt điểm 9-10 bài kiểm tra', loaiDiem: 'Cong', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 25 },
-  { maNoiQuy: 'NQ26', nhomHanhVi: 'Điểm cộng', tenHanhVi: 'Phát biểu xây dựng bài tích cực', loaiDiem: 'Cong', diemSo: 1, mucDo: 'Nhe', ghim: false, thuTu: 26 },
-  { maNoiQuy: 'NQ27', nhomHanhVi: 'Điểm cộng', tenHanhVi: 'Nhặt được của rơi trả lại', loaiDiem: 'Cong', diemSo: 3, mucDo: 'Nhe', ghim: false, thuTu: 27 },
-  { maNoiQuy: 'NQ28', nhomHanhVi: 'Điểm cộng', tenHanhVi: 'Đạt giải cuộc thi / phong trào trường', loaiDiem: 'Cong', diemSo: 5, mucDo: 'Nhe', ghim: false, thuTu: 28 },
+  { maNoiQuy: 'NQ25', nhomHanhVi: 'Điểm cộng', tenHanhVi: 'Đạt điểm 9-10 bài kiểm tra', loaiDiem: 'Cong', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 32 },
+  { maNoiQuy: 'NQ26', nhomHanhVi: 'Điểm cộng', tenHanhVi: 'Phát biểu xây dựng bài tích cực', loaiDiem: 'Cong', diemSo: 1, mucDo: 'Nhe', ghim: false, thuTu: 33 },
+  { maNoiQuy: 'NQ27', nhomHanhVi: 'Điểm cộng', tenHanhVi: 'Nhặt được của rơi trả lại', loaiDiem: 'Cong', diemSo: 3, mucDo: 'Nhe', ghim: false, thuTu: 34 },
+  { maNoiQuy: 'NQ28', nhomHanhVi: 'Điểm cộng', tenHanhVi: 'Đạt giải cuộc thi / phong trào trường', loaiDiem: 'Cong', diemSo: 5, mucDo: 'Nhe', ghim: false, thuTu: 35 },
 ];
 
 // Layout sơ đồ lớp học chuẩn: 4 DÃY BÀN = 4 TỔ, MỖI DÃY 6 BÀN, MỖI BÀN 2 HỌC SINH

@@ -22,7 +22,7 @@ import {
   INITIAL_SETTINGS,
   getDefaultStudentAvatar
 } from './data/mockData';
-import { calculateStudentWeekSummary } from './utils/emulation';
+import { calculateStudentWeekSummary, calculateDenseRankings } from './utils/emulation';
 import { Header } from './components/common/Header';
 import { Footer } from './components/common/Footer';
 import { Toast, ToastData } from './components/common/Toast';
@@ -98,7 +98,21 @@ export default function App() {
   });
   const [rules, setRules] = useState<RuleItem[]>(() => {
     const saved = localStorage.getItem('app_rules_10a5');
-    return saved ? JSON.parse(saved) : MOCK_RULES;
+    if (!saved) return MOCK_RULES;
+    try {
+      const parsed: RuleItem[] = JSON.parse(saved);
+      // Tự động bổ sung các nội quy mới nếu chưa có trong bộ lưu trữ
+      const existingIds = new Set(parsed.map(r => r.maNoiQuy));
+      const missing = MOCK_RULES.filter(r => !existingIds.has(r.maNoiQuy));
+      if (missing.length > 0) {
+        const merged = [...parsed, ...missing];
+        localStorage.setItem('app_rules_10a5', JSON.stringify(merged));
+        return merged;
+      }
+      return parsed;
+    } catch {
+      return MOCK_RULES;
+    }
   });
   const [settings, setSettings] = useState<TeacherSettings>(() => {
     const saved = localStorage.getItem('app_settings_10a5');
@@ -677,21 +691,29 @@ export default function App() {
     });
   }, []);
 
-  // Teacher auto awards frames according to ranking
+  // Teacher auto awards frames according to ranking (cùng điểm thì cùng hạng, cùng nhận khung xứng đáng)
   const handleBatchAutoAssignByRank = useCallback(() => {
-    const sorted = [...students].sort((a, b) => {
-      const sA = studentSummaries[a.maHS]?.diemHienTai ?? 100;
-      const sB = studentSummaries[b.maHS]?.diemHienTai ?? 100;
-      return sB - sA;
-    });
+    const studentList = students.map(st => ({
+      student: st,
+      score: studentSummaries[st.maHS]?.diemHienTai ?? 100,
+      deductions: studentSummaries[st.maHS]?.tongDiemTru ?? 0,
+      bonuses: studentSummaries[st.maHS]?.tongDiemCong ?? 0,
+    }));
 
-    const updated = sorted.map((st, idx) => {
-      const rank = idx + 1;
+    const ranked = calculateDenseRankings(
+      studentList,
+      item => item.score,
+      item => item.deductions,
+      item => item.bonuses
+    );
+
+    const updated = ranked.map(item => {
+      const rank = item.officialRank;
       let frameId: string | undefined = undefined;
       if (rank === 1) frameId = 'diamond_champion';
       else if (rank <= 3) frameId = 'platinum_elite';
       else if (rank <= 10) frameId = 'gold_royal';
-      return { ...st, customFrameId: frameId };
+      return { ...item.student, customFrameId: frameId };
     });
 
     setStudents(updated);
@@ -699,7 +721,7 @@ export default function App() {
     setToast({
       id: Date.now().toString(),
       message: 'Đã tự động phong tặng khung vinh danh ✨',
-      subMessage: 'Top 1 (Kim Cương), Top 2-3 (Bạch Kim), Top 4-10 (Hoàng Kim) đã được trao!',
+      subMessage: 'Top 1 (Kim Cương), Top 2-3 (Bạch Kim), Top 4-10 (Hoàng Kim) theo chuẩn đồng hạng đã được trao!',
     });
   }, [students, studentSummaries]);
 

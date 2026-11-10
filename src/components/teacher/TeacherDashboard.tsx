@@ -44,7 +44,7 @@ import { getAcademicRecords, saveAcademicRecords } from '../../data/academicCata
 import { StudentPicker } from '../student-picker/StudentPicker';
 import { RecordBottomSheet } from '../record/RecordBottomSheet';
 import { DuplicateWarningModal } from '../record/DuplicateWarningModal';
-import { checkDuplicateRecord } from '../../utils/emulation';
+import { checkDuplicateRecord, calculateDenseRankings } from '../../utils/emulation';
 import { ClassroomLayoutEditor } from './ClassroomLayoutEditor';
 import { CadreHonorsModal } from '../common/CadreHonorsModal';
 import { PeriodHierarchyFilter as PeriodFilterComponent } from '../common/PeriodHierarchyFilter';
@@ -305,7 +305,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     return map;
   }, [students, records, periodFilter, settings]);
 
-  // Official Emulation Rankings (Fixed official rank by score descending)
+  // Official Emulation Rankings (Thuật toán xếp hạng chuẩn: cùng điểm thì cùng xếp hạng)
   const teacherOfficialRankings = useMemo(() => {
     const list = students.map(student => {
       const summary = teacherPeriodSummaries[student.maHS] || {
@@ -323,15 +323,12 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       };
     });
 
-    list.sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      return a.student.hoTen.localeCompare(b.student.hoTen, 'vi');
-    });
-
-    return list.map((item, idx) => ({
-      ...item,
-      officialRank: idx + 1,
-    }));
+    return calculateDenseRankings(
+      list,
+      item => item.score,
+      item => item.deductions,
+      item => item.bonuses
+    );
   }, [students, teacherPeriodSummaries, settings.diemKhoiDau]);
 
   // Filtered & Sorted Rankings for Teacher View
@@ -1157,23 +1154,31 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                 officialRank <= 3 ? 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30' :
                                 'bg-surface-2 text-muted border border-token'
                               }`}>
-                                {officialRank === 1 ? '🥇 Hạng 1' : officialRank === 2 ? '🥈 Hạng 2' : officialRank === 3 ? '🥉 Hạng 3' : `Hạng #${officialRank}`}
+                                {officialRank === 1 ? (item.isTied ? '🥇 Đồng hạng 1' : '🥇 Hạng 1') :
+                                 officialRank === 2 ? (item.isTied ? '🥈 Đồng hạng 2' : '🥈 Hạng 2') :
+                                 officialRank === 3 ? (item.isTied ? '🥉 Đồng hạng 3' : '🥉 Hạng 3') :
+                                 (item.isTied ? `Đồng hạng #${officialRank}` : `Hạng #${officialRank}`)}
                               </span>
                             )}
 
                             {officialRank === 1 && rankingSortBy === 'score_desc' && (
                               <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
-                                TOP 1
+                                {item.isTied ? 'ĐỒNG HẠNG 1' : 'TOP 1'}
                               </span>
                             )}
                             {(officialRank === 2 || officialRank === 3) && rankingSortBy === 'score_desc' && (
                               <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30">
-                                TOP 2-3
+                                {item.isTied ? `ĐỒNG HẠNG ${officialRank}` : 'TOP 2-3'}
                               </span>
                             )}
                             {officialRank >= 4 && officialRank <= 10 && rankingSortBy === 'score_desc' && (
                               <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                                TOP 10
+                                {item.isTied ? `ĐỒNG HẠNG ${officialRank}` : 'TOP 10'}
+                              </span>
+                            )}
+                            {officialRank > 10 && item.isTied && rankingSortBy === 'score_desc' && (
+                              <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/30">
+                                ĐỒNG HẠNG #{officialRank}
                               </span>
                             )}
                           </div>
@@ -2632,10 +2637,10 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         onClose={() => setShowFrameModal(false)}
         students={students}
         studentRanks={Object.fromEntries(
-          students.map((s, idx) => {
-            const sum = studentSummaries[s.maHS];
-            return [s.maHS, { rank: idx + 1, score: sum?.diemHienTai ?? 100 }];
-          })
+          teacherOfficialRankings.map(item => [
+            item.student.maHS,
+            { rank: item.officialRank, score: item.score }
+          ])
         )}
         onAssignFrame={(sId, fId) => onAssignFrame && onAssignFrame(sId, fId)}
         onBatchAutoAssignByRank={() => onBatchAutoAssignByRank && onBatchAutoAssignByRank()}
