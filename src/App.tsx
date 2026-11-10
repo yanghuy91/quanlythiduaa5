@@ -705,18 +705,18 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-app text-main antialiased selection:bg-accent/20">
-      {/* Header (Rendered for Teacher & Cadre; For Students, the Banner is the Integrated Header) */}
-      {currentUser && currentRole !== 'HS' && (
+      {/* Header (Rendered for Guests, Teacher & Cadre; For Students, the Banner is the Integrated Header) */}
+      {(!currentUser || currentRole !== 'HS') && (
         <Header
-        currentUser={currentUser}
-        currentRole={currentRole}
-        onLogout={handleLogout}
-        currentWeek={currentWeek}
-        onChangeCurrentWeek={handleSetCurrentWeek}
-        onOpenCallingGames={currentRole === 'GV' ? () => setShowCallingGamesModal(true) : undefined}
-        onOpenTeacherAvatar={() => setIsTeacherAvatarModalOpen(true)}
-        onOpenTeacherProfile={() => setIsTeacherProfileModalOpen(true)}
-        onOpenStudentAvatar={() => setIsStudentAvatarModalOpen(true)}
+          currentUser={currentUser}
+          currentRole={currentRole}
+          onLogout={handleLogout}
+          currentWeek={currentWeek}
+          onChangeCurrentWeek={handleSetCurrentWeek}
+          onOpenCallingGames={currentRole === 'GV' ? () => setShowCallingGamesModal(true) : undefined}
+          onOpenTeacherAvatar={() => setIsTeacherAvatarModalOpen(true)}
+          onOpenTeacherProfile={() => setIsTeacherProfileModalOpen(true)}
+          onOpenStudentAvatar={() => setIsStudentAvatarModalOpen(true)}
         />
       )}
 

@@ -31,7 +31,8 @@ import {
   TrendingDown,
   TrendingUp,
   Sparkle,
-  GraduationCap
+  GraduationCap,
+  Settings
 } from 'lucide-react';
 import { 
   Student, 
