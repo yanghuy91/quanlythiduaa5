@@ -1,0 +1,6 @@
+{
+  "summary":  "Kế hoạch khắc phục triệt để lỗi vượt hạn mức Cloud Firestore (Quota Exceeded) bằng cách chuyển hoàn toàn sang đồng bộ qua Firebase Realtime Database kết hợp máy chủ cục bộ, đồng thời tối ưu hóa tần suất ghi và khử trùng lặp dữ liệu tự động lưu.",
+  "updatedAt":  "2026-11-10T05:35:48.289066449Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

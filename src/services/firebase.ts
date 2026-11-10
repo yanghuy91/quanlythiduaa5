@@ -10,13 +10,6 @@ import {
   onAuthStateChanged,
   User 
 } from 'firebase/auth';
-import { 
-  getFirestore, 
-  doc, 
-  getDoc, 
-  setDoc, 
-  onSnapshot 
-} from 'firebase/firestore';
 import {
   getDatabase,
   ref as rtdbRef,
@@ -38,10 +31,9 @@ export const firebaseConfig = {
   measurementId: "G-L0JNVPS481"
 };
 
-// Initialize Firebase App & Services
+// Initialize Firebase App & Services (Realtime Database & Auth only — Firestore disabled to prevent quota errors)
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
 export const rtdb = getDatabase(app);
 
 // Google Auth Provider setup
@@ -129,7 +121,7 @@ function sanitizeForFirebase<T>(data: T): T {
 }
 
 /**
- * Save Gemini Keys Pool to Cloud Firestore & Realtime Database
+ * Save Gemini Keys Pool to Firebase Realtime Database
  */
 export async function saveCloudGeminiKeys(keys: any[], autoRotate: boolean = true, activeModel?: string): Promise<boolean> {
   const payload = sanitizeForFirebase({
@@ -139,35 +131,34 @@ export async function saveCloudGeminiKeys(keys: any[], autoRotate: boolean = tru
     geminiUpdatedAt: new Date().toISOString(),
   });
 
-  let rtdbSuccess = false;
-  let firestoreSuccess = false;
-
-  // Realtime Database
+  // 1. Primary: Realtime Database SDK
   try {
     const keyRef = rtdbRef(rtdb, 'gemini_pool/10a5');
     await rtdbSet(keyRef, payload);
-    rtdbSuccess = true;
+    return true;
   } catch (err: any) {
-    console.warn('[Firebase RTDB] Lỗi lưu Gemini Keys:', err?.message || err);
+    console.warn('[Firebase RTDB SDK] Lỗi lưu Gemini Keys, thử qua REST:', err?.message || err);
   }
 
-  // Cloud Firestore (if quota allows)
+  // 2. Fallback: Realtime Database REST
   try {
-    const docRef = doc(db, 'classes', '10a5');
-    await setDoc(docRef, payload, { merge: true });
-    firestoreSuccess = true;
+    const res = await fetch('https://thiduaa5-default-rtdb.firebaseio.com/gemini_pool/10a5.json', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    return res.ok;
   } catch (err: any) {
-    console.warn('[Firebase Firestore] Lỗi lưu Gemini Keys:', err?.message || err);
+    console.warn('[Firebase RTDB REST] Lỗi lưu Gemini Keys:', err?.message || err);
+    return false;
   }
-
-  return rtdbSuccess || firestoreSuccess;
 }
 
 /**
- * Fetch Gemini Keys Pool from Cloud Storage (RTDB first, fallback to Firestore)
+ * Fetch Gemini Keys Pool from Firebase Realtime Database
  */
 export async function fetchCloudGeminiKeys(): Promise<{ keys: any[]; autoRotate: boolean; activeModel?: string } | null> {
-  // 1. Try Realtime Database
+  // 1. Try Realtime Database SDK
   try {
     const snap = await rtdbGet(rtdbRef(rtdb, 'gemini_pool/10a5'));
     if (snap.exists()) {
@@ -181,16 +172,18 @@ export async function fetchCloudGeminiKeys(): Promise<{ keys: any[]; autoRotate:
       }
     }
   } catch (err) {
-    console.warn('[Firebase RTDB] Lỗi đọc Gemini Keys:', err);
+    console.warn('[Firebase RTDB SDK] Lỗi đọc Gemini Keys, thử qua REST:', err);
   }
 
-  // 2. Fallback to Cloud Firestore
+  // 2. Fallback to Realtime Database REST
   try {
-    const docRef = doc(db, 'classes', '10a5');
-    const snap = await getDoc(docRef);
-    if (snap.exists()) {
-      const data = snap.data();
-      if (data && Array.isArray(data.geminiKeys)) {
+    const res = await fetch('https://thiduaa5-default-rtdb.firebaseio.com/gemini_pool/10a5.json', {
+      cache: 'no-store',
+      headers: { 'Accept': 'application/json' },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && Array.isArray(data.geminiKeys) && data.geminiKeys.length > 0) {
         return {
           keys: data.geminiKeys,
           autoRotate: data.geminiAutoRotate !== false,
@@ -199,7 +192,7 @@ export async function fetchCloudGeminiKeys(): Promise<{ keys: any[]; autoRotate:
       }
     }
   } catch (err) {
-    console.warn('[Firebase Firestore] Lỗi đọc Gemini Keys:', err);
+    console.warn('[Firebase RTDB REST] Lỗi đọc Gemini Keys:', err);
   }
   return null;
 }
@@ -217,10 +210,10 @@ export function onFirebaseAuthStateChanged(callback: (user: User | null) => void
 let lastSavedUpdatedAt = '';
 
 /**
- * Fetch full classroom state from Cloud (RTDB REST primary, RTDB SDK secondary, Firestore fallback)
+ * Fetch full classroom state from Cloud (RTDB REST primary, RTDB SDK fallback)
  */
 export async function fetchCloudClassState(): Promise<ClassroomFullState | null> {
-  // 1. Fetch from Firebase Realtime Database via REST (fastest, guaranteed, no socket handshake delays)
+  // 1. Fetch from Firebase Realtime Database via REST (fastest, no socket handshake delays)
   try {
     const res = await fetch('https://thiduaa5-default-rtdb.firebaseio.com/classes/10a5.json', {
       cache: 'no-store',
@@ -236,7 +229,7 @@ export async function fetchCloudClassState(): Promise<ClassroomFullState | null>
     console.warn('[Firebase RTDB REST] Lỗi đọc qua REST:', err?.message || err);
   }
 
-  // 2. Fetch from Firebase Realtime Database via SDK
+  // 2. Fallback to Firebase Realtime Database via SDK
   try {
     const snap = await rtdbGet(rtdbRef(rtdb, 'classes/10a5'));
     if (snap.exists()) {
@@ -249,25 +242,11 @@ export async function fetchCloudClassState(): Promise<ClassroomFullState | null>
     console.warn('[Firebase RTDB SDK] Lỗi đọc Realtime Database:', err?.message || err);
   }
 
-  // 3. Fallback to Cloud Firestore
-  try {
-    const docRef = doc(db, 'classes', '10a5');
-    const snap = await getDoc(docRef);
-    if (snap.exists()) {
-      const val = snap.data();
-      if (val && Array.isArray(val.students) && val.students.length > 0) {
-        return val as ClassroomFullState;
-      }
-    }
-  } catch (err: any) {
-    console.warn('[Firebase Firestore] Lỗi đọc Firestore:', err?.message || err);
-  }
-
   return null;
 }
 
 /**
- * Save full classroom state directly to Firebase Realtime Database
+ * Save full classroom state to Firebase Realtime Database (Single-channel write with fallback)
  */
 export async function saveCloudClassState(state: ClassroomFullState): Promise<boolean> {
   const updatedAt = state.updatedAt || new Date().toISOString();
@@ -278,9 +257,7 @@ export async function saveCloudClassState(state: ClassroomFullState): Promise<bo
     updatedAt,
   });
 
-  let rtdbSuccess = false;
-
-  // 1. Direct REST PUT to Firebase Realtime Database (guaranteed, instant, works on all mobile & desktop browsers)
+  // 1. Primary: Direct REST PUT to Firebase Realtime Database
   try {
     const res = await fetch('https://thiduaa5-default-rtdb.firebaseio.com/classes/10a5.json', {
       method: 'PUT',
@@ -288,28 +265,21 @@ export async function saveCloudClassState(state: ClassroomFullState): Promise<bo
       body: JSON.stringify(cleanState),
     });
     if (res.ok) {
-      rtdbSuccess = true;
+      return true;
     }
   } catch (err: any) {
-    console.warn('[Firebase RTDB REST] Lỗi ghi qua REST:', err?.message || err);
+    console.warn('[Firebase RTDB REST] Lỗi ghi qua REST, chuyển sang SDK:', err?.message || err);
   }
 
-  // 2. Realtime Database SDK write
+  // 2. Fallback: Realtime Database SDK write (only executed if REST failed)
   try {
     const classRef = rtdbRef(rtdb, 'classes/10a5');
     await rtdbSet(classRef, cleanState);
-    rtdbSuccess = true;
+    return true;
   } catch (err: any) {
     console.warn('[Firebase RTDB SDK] Lỗi ghi qua SDK:', err?.message || err);
+    return false;
   }
-
-  // 3. Firestore write (fire-and-forget in background without blocking)
-  try {
-    const docRef = doc(db, 'classes', '10a5');
-    setDoc(docRef, cleanState, { merge: true }).catch(() => {});
-  } catch (err) {}
-
-  return rtdbSuccess;
 }
 
 /**

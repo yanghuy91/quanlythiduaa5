@@ -98,7 +98,7 @@ const RAW_MOCK_STUDENTS: Student[] = [
 
 export const MOCK_STUDENTS: Student[] = RAW_MOCK_STUDENTS.map(s => ({
   ...s,
-  avatarUrl: s.avatarUrl || getDefaultStudentAvatar(s.maHS, s.gioiTinh),
+  avatarUrl: s.avatarUrl || getDefaultStudentAvatar(s.maHS, s.gioiTinh || 'Nam'),
 }));
 
 // Danh mục nội quy nề nếp thi đua

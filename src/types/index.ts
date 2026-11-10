@@ -25,6 +25,8 @@ export interface Student {
   avatarSeed?: string;
   avatarUrl?: string; // Base64 data URL or custom image URL
   gioiTinh?: 'Nam' | 'Nu'; // Male or Female
+  ngaySinh?: string;
+  activeFrameId?: string;
   customFrameId?: string; // Optional custom avatar frame ID
   customBadgeIds?: string[]; // Optional custom honor badge IDs
 }
@@ -218,3 +220,9 @@ export interface StudentAcademicRecord {
   nhanXetGVCN?: string;
   ngayCapNhat: string;
 }
+
+export type ViolationRecord = DisciplineRecord;
+export type AcademicRecord = StudentAcademicRecord;
+export type ClassSettings = TeacherSettings;
+export type ViolationRule = RuleItem;
+

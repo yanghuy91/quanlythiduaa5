@@ -366,7 +366,7 @@ export const ClassroomLayoutEditor: React.FC<ClassroomLayoutEditorProps> = ({
           hoTen: cleanName,
           tenRutGon: generateShortName(cleanName),
           gioiTinh: formGender,
-          vaiTro: formRole === 'HS' ? ['HS'] : [formRole, 'HS'],
+          vaiTro: (formRole === 'HS' ? ['HS'] : [formRole, 'HS']) as RoleCode[],
           toTruongTo: formRole === 'TT' ? s.to : undefined,
         };
       }

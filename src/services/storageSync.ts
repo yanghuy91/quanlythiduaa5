@@ -22,22 +22,56 @@ export interface ClassroomFullState {
   version: number;
 }
 
-let syncTimeout: any = null;
+let syncTimeout: ReturnType<typeof setTimeout> | null = null;
 let lastSyncTimestamp = 0;
+let lastSyncedFingerprint = '';
 
 /**
- * Fetch state: Prioritizes Cloud Firestore, falls back to /api/state or null
+ * Compute deterministic content fingerprint (ignoring volatile updatedAt & version fields)
+ * so we only write to Cloud when classroom data has genuinely changed.
+ */
+export function computeStateFingerprint(state: ClassroomFullState): string {
+  try {
+    return JSON.stringify({
+      students: state.students,
+      records: state.records,
+      academicRecords: state.academicRecords,
+      settings: state.settings,
+      layout: state.layout,
+      rules: state.rules,
+      teacherAvatar: state.teacherAvatar,
+      studentBadgesMap: state.studentBadgesMap,
+      studentActiveBadges: state.studentActiveBadges,
+    });
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Record the fingerprint of a remote state update so we don't echo-save it back to Cloud
+ */
+export function markRemoteStateApplied(state: ClassroomFullState): void {
+  const fp = computeStateFingerprint(state);
+  if (fp) {
+    lastSyncedFingerprint = fp;
+  }
+}
+
+/**
+ * Fetch state: Prioritizes Firebase Realtime Database, falls back to /api/state or null
  */
 export async function fetchServerState(): Promise<ClassroomFullState | null> {
-  // 1. Try Cloud Firestore first
+  // 1. Try Firebase Realtime Database first
   try {
     const cloudState = await fetchCloudClassState();
     if (cloudState && Array.isArray(cloudState.students) && cloudState.students.length > 0) {
       lastSyncTimestamp = Date.now();
+      markRemoteStateApplied(cloudState);
       return cloudState;
     }
   } catch (err) {
-    console.warn('[StorageSync] Không thể kết nối Cloud Firestore, kiểm tra máy chủ nội bộ:', err);
+    console.warn('[StorageSync] Không thể kết nối Realtime Database, kiểm tra máy chủ nội bộ:', err);
   }
 
   // 2. Fall back to local endpoint /api/state
@@ -48,7 +82,9 @@ export async function fetchServerState(): Promise<ClassroomFullState | null> {
     if (!res.ok) return null;
     const data = await res.json();
     if (!data || data.initialized === false) return null;
-    return data as ClassroomFullState;
+    const parsed = data as ClassroomFullState;
+    markRemoteStateApplied(parsed);
+    return parsed;
   } catch (err) {
     console.warn('[StorageSync] Không thể kết nối máy chủ nội bộ:', err);
     return null;
@@ -56,19 +92,33 @@ export async function fetchServerState(): Promise<ClassroomFullState | null> {
 }
 
 /**
- * Save state: Saves to Cloud Firestore AND local /api/state
+ * Save state: Saves to Firebase Realtime Database AND local /api/state
+ * Skips redundant network writes if content fingerprint is identical unless force=true.
  */
-export async function saveServerState(state: ClassroomFullState): Promise<boolean> {
+export async function saveServerState(state: ClassroomFullState, force: boolean = false): Promise<boolean> {
+  if (syncTimeout) {
+    clearTimeout(syncTimeout);
+    syncTimeout = null;
+  }
+
+  const currentFingerprint = computeStateFingerprint(state);
+  if (!force && currentFingerprint && currentFingerprint === lastSyncedFingerprint) {
+    return true;
+  }
+
   let cloudSuccess = false;
 
-  // 1. Save to Cloud Firestore
+  // 1. Save to Firebase Realtime Database
   try {
     cloudSuccess = await saveCloudClassState(state);
     if (cloudSuccess) {
       lastSyncTimestamp = Date.now();
+      if (currentFingerprint) {
+        lastSyncedFingerprint = currentFingerprint;
+      }
     }
   } catch (err) {
-    console.warn('[StorageSync] Lưu Cloud Firestore thất bại:', err);
+    console.warn('[StorageSync] Lưu Realtime Database thất bại:', err);
   }
 
   // 2. Save to local /api/state if available
@@ -88,15 +138,21 @@ export async function saveServerState(state: ClassroomFullState): Promise<boolea
 }
 
 /**
- * Debounced sync to Cloud & local server
+ * Debounced sync to Cloud & local server (1500ms coalescing window + diff check)
  */
 export function scheduleServerSync(state: ClassroomFullState): void {
+  const candidateFingerprint = computeStateFingerprint(state);
+  if (candidateFingerprint && candidateFingerprint === lastSyncedFingerprint) {
+    return;
+  }
+
   if (syncTimeout) {
     clearTimeout(syncTimeout);
   }
   syncTimeout = setTimeout(() => {
+    syncTimeout = null;
     saveServerState(state);
-  }, 600);
+  }, 1500);
 }
 
 /**

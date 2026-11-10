@@ -410,10 +410,10 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                   let statusBorderColor: string | undefined = undefined;
                   let statusIcon: React.ReactNode = null;
 
-                  if (showStatusColors && summary && (summary.tongLoi > 0 || summary.mucMau === 'bad' || summary.mucMau === 'warn')) {
+                  if (showStatusColors && summary && (summary.soLoiTrongTuan > 0 || summary.mucMau === 'bad' || summary.mucMau === 'warn')) {
                     statusBorderColor = summary.mucMau === 'bad' ? 'var(--st-bad)' : 'var(--st-warn)';
                     statusIcon = (
-                      <span title={`Có ${summary.tongLoi} vi phạm nề nếp`} className="inline-flex items-center">
+                      <span title={`Có ${summary.soLoiTrongTuan} vi phạm nề nếp`} className="inline-flex items-center">
                         <AlertTriangle className="w-3.5 h-3.5 text-amber-500 fill-amber-400/25 stroke-[2.5]" />
                       </span>
                     );

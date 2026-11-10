@@ -360,6 +360,12 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
 
     let finalStudents: Student[] = [];
 
+    const makeShortName = (fullName: string) => {
+      const parts = fullName.trim().split(/\s+/);
+      if (parts.length <= 1) return fullName.trim();
+      return parts.map((w, i) => (i < parts.length - 1 ? `${w[0]?.toUpperCase() || ''}.` : w)).join('');
+    };
+
     if (importMode === 'replace') {
       // Create fresh students list from draft
       finalStudents = parsedStudents.map((draft, idx) => {
@@ -369,8 +375,11 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
         return {
           maHS,
           hoTen: draft.hoTen,
+          tenRutGon: makeShortName(draft.hoTen),
           gioiTinh: draft.gioiTinh,
           to: draft.to,
+          dayBan: draft.to,
+          soBan: Math.min(6, Math.floor(idx / 8) + 1),
           viTriGhe: studentNumber,
           vaiTro: (idx === 0 ? ['LT', 'HS'] : idx === 1 ? ['LP_HT', 'HS'] : ['HS']) as RoleCode[],
           avatarUrl: undefined,
@@ -380,15 +389,18 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
     } else {
       // Append to current students
       const startNum = currentStudents.length + 1;
-      const appended = parsedStudents.map((draft, idx) => {
+      const appended: Student[] = parsedStudents.map((draft, idx) => {
         const studentNumber = startNum + idx;
         const maHS = `HS${studentNumber < 10 ? '0' + studentNumber : studentNumber}`;
 
         return {
           maHS,
           hoTen: draft.hoTen,
+          tenRutGon: makeShortName(draft.hoTen),
           gioiTinh: draft.gioiTinh,
           to: draft.to,
+          dayBan: draft.to,
+          soBan: Math.min(6, Math.floor((studentNumber - 1) / 8) + 1),
           viTriGhe: studentNumber,
           vaiTro: ['HS'] as RoleCode[],
           avatarUrl: undefined,

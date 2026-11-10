@@ -70,7 +70,8 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
 
   if (!isOpen || !student) return null;
 
-  const frameConfig = student.activeFrameId ? getFrameById(student.activeFrameId) : undefined;
+  const frameId = student.customFrameId || student.activeFrameId;
+  const frameConfig = frameId ? getFrameById(frameId) : undefined;
   const currentScore = summary ? summary.diemHienTai : 100;
   const totalDeductions = studentRecords
     .filter(r => r.trangThai === 'HieuLuc' && r.loaiDiem === 'Tru')

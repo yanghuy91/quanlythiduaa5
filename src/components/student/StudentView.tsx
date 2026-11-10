@@ -685,7 +685,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
   const handleSubmitExplanation = () => {
     if (!selectedRecordForExplanation || !explanationText.trim()) return;
-    onSubmitExplanation(selectedRecordForExplanation.maGhiNhan, explanationText.trim());
+    onSubmitExplanation?.(selectedRecordForExplanation.maGhiNhan, explanationText.trim());
     setSelectedRecordForExplanation(null);
     setExplanationText('');
   };

@@ -460,34 +460,34 @@ export const TeacherGradeManager: React.FC<TeacherGradeManagerProps> = ({
 
                       {/* Subject Averages */}
                       <td className="py-2.5 px-2 text-center font-mono font-medium">
-                        {toanTb !== undefined ? toanTb.toFixed(1) : '--'}
+                        {toanTb != null ? toanTb.toFixed(1) : '--'}
                       </td>
                       <td className="py-2.5 px-2 text-center font-mono font-medium">
-                        {vanTb !== undefined ? vanTb.toFixed(1) : '--'}
+                        {vanTb != null ? vanTb.toFixed(1) : '--'}
                       </td>
                       <td className="py-2.5 px-2 text-center font-mono font-medium">
-                        {anhTb !== undefined ? anhTb.toFixed(1) : '--'}
+                        {anhTb != null ? anhTb.toFixed(1) : '--'}
                       </td>
                       <td className="py-2.5 px-2 text-center font-mono font-medium">
-                        {lyTb !== undefined ? lyTb.toFixed(1) : '--'}
+                        {lyTb != null ? lyTb.toFixed(1) : '--'}
                       </td>
                       <td className="py-2.5 px-2 text-center font-mono font-medium">
-                        {hoaTb !== undefined ? hoaTb.toFixed(1) : '--'}
+                        {hoaTb != null ? hoaTb.toFixed(1) : '--'}
                       </td>
                       <td className="py-2.5 px-2 text-center font-mono font-medium">
-                        {sinhTb !== undefined ? sinhTb.toFixed(1) : '--'}
+                        {sinhTb != null ? sinhTb.toFixed(1) : '--'}
                       </td>
                       <td className="py-2.5 px-2 text-center font-mono font-medium">
-                        {suTb !== undefined ? suTb.toFixed(1) : '--'}
+                        {suTb != null ? suTb.toFixed(1) : '--'}
                       </td>
                       <td className="py-2.5 px-2 text-center font-mono font-medium">
-                        {diaTb !== undefined ? diaTb.toFixed(1) : '--'}
+                        {diaTb != null ? diaTb.toFixed(1) : '--'}
                       </td>
                       <td className="py-2.5 px-2 text-center font-mono font-medium">
-                        {gdcdTb !== undefined ? gdcdTb.toFixed(1) : '--'}
+                        {gdcdTb != null ? gdcdTb.toFixed(1) : '--'}
                       </td>
                       <td className="py-2.5 px-2 text-center font-mono font-medium">
-                        {tinTb !== undefined ? tinTb.toFixed(1) : '--'}
+                        {tinTb != null ? tinTb.toFixed(1) : '--'}
                       </td>
                       <td className="py-2.5 px-2 text-center font-bold text-xs text-emerald-600 dark:text-emerald-400">
                         {tdeval}

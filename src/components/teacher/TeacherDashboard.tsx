@@ -348,7 +348,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
     if (rankingRatingFilter !== 'all') {
       if (rankingRatingFilter === 'CanCoGang') {
-        list = list.filter(item => item.xepLoai === 'ChuaDat' || item.xepLoai === 'KhongDat' || item.score < settings.nguongDat);
+        list = list.filter(item => item.xepLoai === 'ChuaDat' || item.score < settings.nguongDat);
       } else {
         list = list.filter(item => item.xepLoai === rankingRatingFilter);
       }
@@ -412,7 +412,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     const totCount = displayedTeacherRankings.filter(item => item.xepLoai === 'Tot').length;
     const khaCount = displayedTeacherRankings.filter(item => item.xepLoai === 'Kha').length;
     const datCount = displayedTeacherRankings.filter(item => item.xepLoai === 'Dat').length;
-    const canCoGangCount = displayedTeacherRankings.filter(item => item.xepLoai === 'KhongDat').length;
+    const canCoGangCount = displayedTeacherRankings.filter(item => item.xepLoai === 'ChuaDat').length;
     return { avgScore, totCount, khaCount, datCount, canCoGangCount };
   }, [displayedTeacherRankings]);
 
@@ -1362,9 +1362,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                         <button
                           type="button"
                           onClick={() => handleSelectStudent(item.student)}
-                          className="px-2 py-1 rounded-lg bg-accent/15 hover:bg-accent text-accent hover:text-on-accent text-[11px] font-bold transition-all cursor-pointer shadow-xs"
                           title="Ghi nhận vi phạm cho học sinh này"
-                        className="px-2 py-1 rounded-lg bg-accent/15 hover:bg-accent text-accent hover:text-on-accent text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                          className="px-2 py-1 rounded-lg bg-accent/15 hover:bg-accent text-accent hover:text-on-accent text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer shadow-xs whitespace-nowrap"
                         >
                           + Ghi nhận
                         </button>
@@ -1917,7 +1916,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   const fullState = {
                     students,
                     records,
-                    academicRecords,
+                    academicRecords: academicRecords || [],
                     settings,
                     layout,
                     rules,

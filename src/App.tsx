@@ -46,6 +46,7 @@ import {
   fetchServerState, 
   scheduleServerSync, 
   saveServerState, 
+  markRemoteStateApplied,
   ClassroomFullState 
 } from './services/storageSync';
 import { 
@@ -278,7 +279,10 @@ export default function App() {
     localStorage.setItem('app_settings_10a5', JSON.stringify(settings));
   }, [settings]);
 
-  // Persistent Server State: Initial fetch & hydration from server disk (/api/state)
+  // Realtime Cloud Firebase Realtime Database sync listener across all devices
+  const isApplyingRemoteUpdate = useRef(false);
+
+  // Persistent Server State: Initial fetch & hydration from server/cloud
   useEffect(() => {
     let isMounted = true;
     (async () => {
@@ -286,6 +290,8 @@ export default function App() {
         const serverState = await fetchServerState();
         if (!isMounted) return;
         if (serverState) {
+          isApplyingRemoteUpdate.current = true;
+          markRemoteStateApplied(serverState);
           if (Array.isArray(serverState.students) && serverState.students.length > 0) {
             setStudents(serverState.students);
             localStorage.setItem('app_students_10a5_v4', JSON.stringify(serverState.students));
@@ -319,6 +325,9 @@ export default function App() {
           if (serverState.studentBadgesMap || serverState.studentActiveBadges) {
             setAllStudentBadgesState(serverState.studentBadgesMap, serverState.studentActiveBadges);
           }
+          setTimeout(() => {
+            isApplyingRemoteUpdate.current = false;
+          }, 600);
         } else {
           // If server file doesn't exist yet, save current state to server
           const badges = getAllStudentBadgesState();
@@ -344,12 +353,11 @@ export default function App() {
     return () => { isMounted = false; };
   }, []);
 
-  // Realtime Cloud Firebase Realtime Database sync listener across all devices
-  const isApplyingRemoteUpdate = useRef(false);
   useEffect(() => {
     const unsubscribe = subscribeToCloudClassState((cloudState) => {
       if (!cloudState) return;
       isApplyingRemoteUpdate.current = true;
+      markRemoteStateApplied(cloudState);
       if (Array.isArray(cloudState.students) && cloudState.students.length > 0) {
         setStudents(cloudState.students);
         localStorage.setItem('app_students_10a5_v4', JSON.stringify(cloudState.students));
