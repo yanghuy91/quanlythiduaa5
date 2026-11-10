@@ -20,6 +20,7 @@ interface CadreViewProps {
   records: DisciplineRecord[];
   studentSummaries: Record<string, StudentWeekSummary>;
   currentWeek: number;
+  onChangeCurrentWeek?: (week: number) => void;
   settings: TeacherSettings;
   academicRecords?: StudentAcademicRecord[];
   onAddRecord: (record: Omit<DisciplineRecord, 'maGhiNhan' | 'thoiGianMayChu' | 'thoiGianMay'>) => void;
@@ -43,6 +44,7 @@ export const CadreView: React.FC<CadreViewProps> = ({
   records,
   studentSummaries,
   currentWeek,
+  onChangeCurrentWeek,
   settings,
   academicRecords,
   onAddRecord,
@@ -61,6 +63,7 @@ export const CadreView: React.FC<CadreViewProps> = ({
       records={records}
       studentSummaries={studentSummaries}
       currentWeek={currentWeek}
+      onChangeCurrentWeek={onChangeCurrentWeek}
       settings={settings}
       academicRecords={academicRecords}
       onAddRecord={onAddRecord}

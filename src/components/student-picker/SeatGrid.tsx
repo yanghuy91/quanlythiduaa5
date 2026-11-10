@@ -453,21 +453,18 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                         ? 'rounded-r-2xl sm:rounded-r-3xl rounded-l-none border-t-2 border-b-2 border-r-2 border-l-0 border-sky-300 dark:border-sky-500/70'
                         : 'rounded-2xl sm:rounded-3xl border-2 border-sky-300 dark:border-sky-500/70';
 
-                  // Determine status border
+                  // Determine status border & violation warning mark
+                  // Thống nhất 1 kiểu: hình tam giác có dấu than (AlertTriangle) cho tất cả vi phạm
                   let statusBorderColor: string | undefined = undefined;
                   let statusIcon: React.ReactNode = null;
 
-                  if (showStatusColors && summary) {
-                    if (summary.mucMau === 'bad') {
-                      statusBorderColor = 'var(--st-bad)';
-                      statusIcon = <AlertCircle className="w-3 h-3 text-[var(--st-bad)]" />;
-                    } else if (summary.mucMau === 'warn') {
-                      statusBorderColor = 'var(--st-warn)';
-                      statusIcon = <AlertTriangle className="w-3 h-3 text-[var(--st-warn)]" />;
-                    } else if (summary.mucMau === 'ok') {
-                      statusBorderColor = 'var(--st-ok)';
-                      statusIcon = <CheckCircle className="w-3 h-3 text-[var(--st-ok)]" />;
-                    }
+                  if (showStatusColors && summary && (summary.tongLoi > 0 || summary.mucMau === 'bad' || summary.mucMau === 'warn')) {
+                    statusBorderColor = summary.mucMau === 'bad' ? 'var(--st-bad)' : 'var(--st-warn)';
+                    statusIcon = (
+                      <span title={`Có ${summary.tongLoi} vi phạm nề nếp`} className="inline-flex items-center">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500 fill-amber-400/25 stroke-[2.5]" />
+                      </span>
+                    );
                   }
 
                   // Top priority role badge & STT

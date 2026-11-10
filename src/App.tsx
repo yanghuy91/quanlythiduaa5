@@ -705,8 +705,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-app text-main antialiased selection:bg-accent/20">
-      {/* Header (Rendered for Guests, Teacher & Cadre; For Students, the Banner is the Integrated Header) */}
-      {(!currentUser || currentRole !== 'HS') && (
+      {/* Header (Rendered for Guests & Teacher; For ALL Students & Cadres, the Banner is the Integrated Header) */}
+      {(!currentUser || currentRole === 'GV') && (
         <Header
           currentUser={currentUser}
           currentRole={currentRole}
@@ -763,6 +763,7 @@ export default function App() {
             records={records}
             studentSummaries={studentSummaries}
             currentWeek={currentWeek}
+            onChangeCurrentWeek={handleSetCurrentWeek}
             settings={settings}
             academicRecords={academicRecords}
             onAddRecord={handleAddRecord}
@@ -781,6 +782,7 @@ export default function App() {
             records={records}
             studentSummaries={studentSummaries}
             currentWeek={currentWeek}
+            onChangeCurrentWeek={handleSetCurrentWeek}
             settings={settings}
             academicRecords={academicRecords}
             onSubmitExplanation={handleSubmitExplanation}

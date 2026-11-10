@@ -1960,26 +1960,26 @@ export const StudentView: React.FC<StudentViewProps> = ({
       {/* Cài đặt tài khoản Modal (Unified Settings for ALL students) */}
       {showSettingsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="w-full max-w-sm bg-surface border border-token rounded-3xl shadow-2xl p-5 space-y-4 animate-scale-up">
-            <div className="flex items-center justify-between border-b border-token pb-3">
+          <div className="w-full max-w-sm bg-white border border-slate-200 rounded-3xl shadow-2xl p-5 space-y-4 animate-scale-up text-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-accent/15 text-accent flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
                   <Settings className="w-4 h-4" />
                 </div>
-                <h3 className="text-sm font-bold text-main">Cài đặt tài khoản</h3>
+                <h3 className="text-sm font-extrabold text-slate-900">Cài đặt tài khoản</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowSettingsModal(false)}
-                className="p-1.5 rounded-full hover:bg-surface-2 text-muted hover:text-main cursor-pointer"
+                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-800 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Quick profile preview */}
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-surface-2/60 border border-token/60">
-              <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-token">
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">
+              <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-slate-200">
                 {currentStudent.avatarUrl ? (
                   <img src={currentStudent.avatarUrl} alt={currentStudent.hoTen} className="w-full h-full object-cover" />
                 ) : (
@@ -1991,8 +1991,8 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 )}
               </div>
               <div className="min-w-0">
-                <div className="text-sm font-extrabold text-main truncate">{currentStudent.hoTen}</div>
-                <div className="text-[11px] text-muted font-medium">Tổ {currentStudent.to} · STT #{currentStudent.viTriGhe || currentStudent.maHS}</div>
+                <div className="text-sm font-extrabold text-slate-900 truncate">{currentStudent.hoTen}</div>
+                <div className="text-[11px] text-slate-500 font-medium">Tổ {currentStudent.to} · STT #{currentStudent.viTriGhe || currentStudent.maHS}</div>
               </div>
             </div>
 
@@ -2004,18 +2004,18 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   setShowSettingsModal(false);
                   setShowAvatarModal(true);
                 }}
-                className="w-full p-3 rounded-2xl bg-surface hover:bg-surface-2 border border-token hover:border-token-hover transition-all flex items-center justify-between text-left cursor-pointer group"
+                className="w-full p-3 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-indigo-300 transition-all flex items-center justify-between text-left cursor-pointer group shadow-2xs"
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
                     <Camera className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-main group-hover:text-accent">Đổi ảnh đại diện</div>
-                    <div className="text-[10.5px] text-muted">Chọn từ kho 40 avatar hoặc tải ảnh lên</div>
+                    <div className="text-xs font-extrabold text-slate-900 group-hover:text-indigo-600">Đổi ảnh đại diện</div>
+                    <div className="text-[10.5px] text-slate-500">Chọn từ kho 40 avatar hoặc tải ảnh lên</div>
                   </div>
                 </div>
-                <span className="text-muted text-xs">→</span>
+                <span className="text-slate-400 group-hover:text-indigo-600 text-xs">→</span>
               </button>
 
               <button
@@ -2024,18 +2024,18 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   setShowSettingsModal(false);
                   setActiveTab('badges');
                 }}
-                className="w-full p-3 rounded-2xl bg-surface hover:bg-surface-2 border border-token hover:border-token-hover transition-all flex items-center justify-between text-left cursor-pointer group"
+                className="w-full p-3 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-amber-300 transition-all flex items-center justify-between text-left cursor-pointer group shadow-2xs"
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
                     <Award className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-main group-hover:text-amber-600">Đổi huy hiệu danh dự</div>
-                    <div className="text-[10.5px] text-muted">Mang vào / tháo ra huy hiệu thi đua</div>
+                    <div className="text-xs font-extrabold text-slate-900 group-hover:text-amber-600">Đổi huy hiệu danh dự</div>
+                    <div className="text-[10.5px] text-slate-500">Mang vào / tháo ra huy hiệu thi đua</div>
                   </div>
                 </div>
-                <span className="text-muted text-xs">→</span>
+                <span className="text-slate-400 group-hover:text-amber-600 text-xs">→</span>
               </button>
 
               <button
@@ -2044,18 +2044,18 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   setShowSettingsModal(false);
                   setShowPasswordModal(true);
                 }}
-                className="w-full p-3 rounded-2xl bg-surface hover:bg-surface-2 border border-token hover:border-token-hover transition-all flex items-center justify-between text-left cursor-pointer group"
+                className="w-full p-3 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-300 transition-all flex items-center justify-between text-left cursor-pointer group shadow-2xs"
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                     <KeyRound className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-main group-hover:text-emerald-600">Đổi mật khẩu</div>
-                    <div className="text-[10.5px] text-muted">Cập nhật mật khẩu bảo mật cá nhân (Mặc định: 123456)</div>
+                    <div className="text-xs font-extrabold text-slate-900 group-hover:text-emerald-600">Đổi mật khẩu</div>
+                    <div className="text-[10.5px] text-slate-500">Cập nhật mật khẩu bảo mật cá nhân (Mặc định: 123456)</div>
                   </div>
                 </div>
-                <span className="text-muted text-xs">→</span>
+                <span className="text-slate-400 group-hover:text-emerald-600 text-xs">→</span>
               </button>
 
               {onLogout && (
@@ -2065,18 +2065,18 @@ export const StudentView: React.FC<StudentViewProps> = ({
                     setShowSettingsModal(false);
                     onLogout();
                   }}
-                  className="w-full p-3 rounded-2xl bg-rose-500/5 hover:bg-rose-500/15 border border-rose-500/20 transition-all flex items-center justify-between text-left cursor-pointer group"
+                  className="w-full p-3 rounded-2xl bg-rose-50/70 hover:bg-rose-100/70 border border-rose-200 transition-all flex items-center justify-between text-left cursor-pointer group shadow-2xs"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
                       <LogOut className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-rose-600 dark:text-rose-400">Đăng xuất tài khoản</div>
-                      <div className="text-[10.5px] text-muted">Thoát khỏi phiên làm việc hiện tại</div>
+                      <div className="text-xs font-extrabold text-rose-700">Đăng xuất tài khoản</div>
+                      <div className="text-[10.5px] text-rose-500">Thoát khỏi phiên làm việc hiện tại</div>
                     </div>
                   </div>
-                  <span className="text-rose-500 text-xs">→</span>
+                  <span className="text-rose-600 text-xs">→</span>
                 </button>
               )}
             </div>

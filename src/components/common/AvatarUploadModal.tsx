@@ -150,40 +150,40 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/75 animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs animate-fade-in">
       <div 
-        className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-scale-up"
+        className="w-full max-w-lg bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-scale-up text-slate-900"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-4 bg-gradient-to-r from-accent/15 via-blue-500/10 to-purple-500/15 border-b border-token flex items-center justify-between shrink-0">
+        <div className="p-4 bg-gradient-to-r from-sky-50 via-indigo-50/70 to-purple-50 border-b border-slate-200 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-accent text-on-accent flex items-center justify-center shadow-xs">
+            <div className="w-9 h-9 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
               <Camera className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-main leading-tight">
+              <h3 className="text-base font-extrabold text-slate-900 leading-tight">
                 Chọn Ảnh Đại Diện Học Sinh
               </h3>
-              <p className="text-xs text-muted">
+              <p className="text-xs font-semibold text-slate-600">
                 {student.hoTen} · Tổ {student.to}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-muted hover:text-main hover:bg-surface-2 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-4 sm:p-5 space-y-4 overflow-y-auto">
+        <div className="p-4 sm:p-5 space-y-4 overflow-y-auto bg-white">
           {/* Avatar Preview */}
           <div className="flex flex-col items-center justify-center">
             <div className="relative group">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl overflow-hidden border-3 border-accent/40 shadow-lg bg-surface-2 flex items-center justify-center">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl overflow-hidden border-3 border-sky-400 shadow-md bg-slate-100 flex items-center justify-center">
                 {previewUrl ? (
                   <img
                     src={previewUrl}
@@ -191,7 +191,7 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
                     className="w-full h-full object-cover object-center"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-tr from-accent to-blue-500 text-white flex items-center justify-center text-3xl font-extrabold select-none">
+                  <div className="w-full h-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white flex items-center justify-center text-3xl font-extrabold select-none">
                     {getStudentAvatarInitial(student.hoTen)}
                   </div>
                 )}
@@ -199,7 +199,7 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-0 right-0 p-2 rounded-xl bg-accent text-on-accent shadow-md hover:scale-105 transition-transform cursor-pointer"
+                className="absolute bottom-0 right-0 p-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:scale-105 transition-all cursor-pointer"
                 title="Tải ảnh riêng từ thiết bị"
               >
                 <Camera className="w-4 h-4" />
@@ -208,9 +208,9 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
           </div>
 
           {/* 50 Curated High Quality Student Avatars (All in one unified list, no category tabs) */}
-          <div className="space-y-2.5 pt-2 border-t border-token">
+          <div className="space-y-2.5 pt-2 border-t border-slate-200">
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-main">
+              <div className="flex items-center gap-1.5 text-xs font-black text-slate-900">
                 <Sparkles className="w-4 h-4 text-amber-500" />
                 <span>Kho Avatar ({genderMatchedPresets.length} ảnh):</span>
               </div>
@@ -220,8 +220,8 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
                 {/* Duplicate Policy Badge */}
                 <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl border text-[11px] font-bold shadow-2xs ${
                   allowDuplicate
-                    ? 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400'
-                    : 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
+                    ? 'bg-blue-50 border-blue-200 text-blue-700'
+                    : 'bg-amber-50 border-amber-200 text-amber-800'
                 }`}>
                   {allowDuplicate ? (
                     <>
@@ -239,8 +239,8 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
                 {/* Gender badge fixed from school records / teacher */}
                 <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-black shadow-2xs ${
                   studentGender === 'Nu' 
-                    ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400' 
-                    : 'bg-sky-500/10 border-sky-500/30 text-sky-600 dark:text-sky-400'
+                    ? 'bg-rose-50 border-rose-200 text-rose-700' 
+                    : 'bg-sky-50 border-sky-200 text-sky-700'
                 }`}>
                   <Lock className="w-3.5 h-3.5 shrink-0" />
                   <span>Giới tính: {studentGender === 'Nu' ? 'Nữ ♀' : 'Nam ♂'}</span>
@@ -249,7 +249,7 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
             </div>
 
             {/* Clean Avatar Grid without text descriptions or category tabs */}
-            <div className="max-h-64 sm:max-h-80 overflow-y-auto grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 gap-2.5 p-2.5 border border-token rounded-2xl bg-surface-2/40">
+            <div className="max-h-64 sm:max-h-80 overflow-y-auto grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 gap-2.5 p-2.5 border border-slate-200 rounded-2xl bg-slate-50/80">
               {genderMatchedPresets.map((preset: StudentAvatarPreset) => {
                 const isSelected = previewUrl === preset.imageSrc;
                 const takenBy = !allowDuplicate ? (takenAvatarMap.get(preset.imageSrc) || takenAvatarMap.get(preset.id)) : null;
@@ -269,10 +269,10 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
                     }}
                     className={`relative aspect-square rounded-2xl overflow-hidden border-2 transition-all cursor-pointer shadow-xs ${
                       isSelected
-                        ? 'border-accent ring-2 ring-accent/60 scale-105 shadow-md z-10'
+                        ? 'border-indigo-600 ring-2 ring-indigo-500 scale-105 shadow-md z-10'
                         : takenBy
-                        ? 'opacity-40 border-token/60 cursor-not-allowed filter grayscale-[30%]'
-                        : 'border-token hover:border-accent/60 hover:scale-105'
+                        ? 'opacity-40 border-slate-200 cursor-not-allowed filter grayscale-[30%]'
+                        : 'border-slate-200 hover:border-indigo-400 hover:scale-105 bg-white'
                     }`}
                   >
                     <img
@@ -289,8 +289,8 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
                       </div>
                     )}
                     {isSelected && !takenBy && (
-                      <div className="absolute inset-0 bg-accent/35 backdrop-blur-[0.5px] flex items-center justify-center">
-                        <span className="w-6 h-6 rounded-full bg-accent text-on-accent flex items-center justify-center shadow-md">
+                      <div className="absolute inset-0 bg-indigo-600/40 backdrop-blur-[0.5px] flex items-center justify-center">
+                        <span className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-md">
                           <Check className="w-3.5 h-3.5 stroke-[3]" />
                         </span>
                       </div>
@@ -315,31 +315,31 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
             onDragOver={e => e.preventDefault()}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className="p-3 rounded-2xl border-2 border-dashed border-token/80 hover:border-accent bg-surface-2/30 hover:bg-accent/5 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer text-center"
+            className="p-3 rounded-2xl border-2 border-dashed border-sky-300 hover:border-indigo-500 bg-sky-50/40 hover:bg-sky-50/80 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer text-center"
           >
-            <Upload className="w-5 h-5 text-accent" />
-            <span className="text-xs font-bold text-main">
+            <Upload className="w-5 h-5 text-indigo-600" />
+            <span className="text-xs font-bold text-slate-900">
               Hoặc tải ảnh chân dung từ thiết bị của bạn
             </span>
-            <span className="text-[10px] text-muted">
+            <span className="text-[10px] font-medium text-slate-500">
               Hỗ trợ PNG, JPG, WebP (Tự động canh vuông chuẩn đẹp)
             </span>
           </div>
 
           {errorMsg && (
-            <div className="p-2.5 rounded-xl bg-[var(--st-bad)]/10 text-[var(--st-bad)] text-xs font-semibold text-center">
+            <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold text-center">
               {errorMsg}
             </div>
           )}
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-surface-2 border-t border-token flex items-center justify-between gap-2 shrink-0">
+        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2 shrink-0">
           {student.avatarUrl ? (
             <button
               type="button"
               onClick={handleRemove}
-              className="px-3 py-2 rounded-xl text-xs font-semibold text-red-500 hover:bg-red-500/10 flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-3 py-2 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Gỡ ảnh</span>
@@ -352,7 +352,7 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-2 rounded-xl border border-token text-xs font-semibold text-muted hover:text-main cursor-pointer"
+              className="px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               Hủy
             </button>
@@ -360,7 +360,7 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
               type="button"
               disabled={isProcessing}
               onClick={handleSave}
-              className="px-4 py-2 rounded-xl bg-primary text-on-primary text-xs font-bold hover:opacity-95 shadow-md flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold shadow-md flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
             >
               <Check className="w-4 h-4" />
               <span>{isProcessing ? 'Đang nén ảnh...' : 'Lưu ảnh đại diện'}</span>
