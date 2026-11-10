@@ -809,7 +809,7 @@ export const ClassroomLayoutEditor: React.FC<ClassroomLayoutEditorProps> = ({
                                 title={roleConfig.label}
                               >
                                 <span>
-                                  {topRole === 'LT' ? '👑' :
+                                  {topRole === 'LT' ? '⭐' :
                                    topRole === 'BT' ? '🚩' :
                                    topRole === 'LP_HT' ? '📖' :
                                    topRole === 'LP_LD' ? '⚡' : '🛡️'}
@@ -1184,7 +1184,7 @@ export const ClassroomLayoutEditor: React.FC<ClassroomLayoutEditorProps> = ({
                   className="w-full px-3 py-2 bg-surface-2 border border-token rounded-xl text-xs text-main font-semibold focus:outline-none focus:ring-2 focus:ring-accent/40"
                 >
                   <option value="HS">Học sinh bình thường</option>
-                  <option value="LT">👑 Lớp trưởng</option>
+                  <option value="LT">⭐ Lớp trưởng</option>
                   <option value="BT">🚩 Bí thư chi đoàn</option>
                   <option value="LP_HT">📖 Lớp phó Học tập</option>
                   <option value="LP_LD">⚡ Lớp phó Lao động</option>
@@ -1301,7 +1301,7 @@ export const ClassroomLayoutEditor: React.FC<ClassroomLayoutEditorProps> = ({
                   className="w-full px-3 py-2 bg-surface-2 border border-token rounded-xl text-xs text-main font-semibold focus:outline-none focus:ring-2 focus:ring-accent/40"
                 >
                   <option value="HS">Học sinh bình thường</option>
-                  <option value="LT">👑 Lớp trưởng</option>
+                  <option value="LT">⭐ Lớp trưởng</option>
                   <option value="BT">🚩 Bí thư chi đoàn</option>
                   <option value="LP_HT">📖 Lớp phó Học tập</option>
                   <option value="LP_LD">⚡ Lớp phó Lao động</option>

@@ -33,6 +33,7 @@ import {
   GraduationCap,
   Settings,
   ClipboardList,
+  AlertTriangle,
   Trash2
 } from 'lucide-react';
 import { 
@@ -114,6 +115,13 @@ export const StudentView: React.FC<StudentViewProps> = ({
   const isCadre = primaryCadreRole !== 'HS';
 
   const [activeTab, setActiveTab] = useState<'my_score' | 'grades' | 'badges' | 'seating' | 'ranking' | 'record' | 'my_log'>('my_score');
+
+  // Quyền chuyển tuần hiện tại: Chỉ có Lớp trưởng (LT), Bí thư (BT), Lớp phó học tập (LP_HT)
+  const canChangeCurrentWeek = useMemo(() => {
+    return currentStudent.vaiTro.some(r => r === 'LT' || r === 'BT' || r === 'LP_HT') ||
+      primaryCadreRole === 'LT' || primaryCadreRole === 'BT' || primaryCadreRole === 'LP_HT';
+  }, [currentStudent.vaiTro, primaryCadreRole]);
+  const [pendingWeekChange, setPendingWeekChange] = useState<number | null>(null);
 
   // Cadre specific state
   const [fastSaveEnabled, setFastSaveEnabled] = useState(false);
@@ -738,15 +746,20 @@ export const StudentView: React.FC<StudentViewProps> = ({
           {/* Bottom Area: Week Selector (ép sang trái) + Role Badge & Slogan */}
           <div className="relative z-10 pt-2 flex flex-col gap-1.5">
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Interactive Week Capsule Selector ép sang trái */}
-              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-black/50 hover:bg-black/70 border border-white/25 text-amber-300 font-extrabold text-[11px] shadow-xs backdrop-blur-md transition-all">
-                <Calendar className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                {onChangeCurrentWeek ? (
+              {/* Interactive Week Capsule Selector: Chỉ có Lớp trưởng, Bí thư, Lớp phó học tập mới có quyền đổi tuần */}
+              {canChangeCurrentWeek && onChangeCurrentWeek ? (
+                <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-black/50 hover:bg-black/70 border border-white/25 text-amber-300 font-extrabold text-[11px] shadow-xs backdrop-blur-md transition-all">
+                  <Calendar className="w-3.5 h-3.5 text-amber-300 shrink-0" />
                   <select
                     value={currentWeek}
-                    onChange={e => onChangeCurrentWeek(Number(e.target.value))}
+                    onChange={e => {
+                      const newW = Number(e.target.value);
+                      if (newW !== currentWeek) {
+                        setPendingWeekChange(newW);
+                      }
+                    }}
                     className="bg-transparent text-white font-bold cursor-pointer focus:outline-none pr-0.5 text-[11px]"
-                    title="Chạm để chuyển tuần học"
+                    title="Chạm để chuyển tuần học (Chỉ dành cho Lớp trưởng, Bí thư, LP Học tập)"
                   >
                     {Array.from({ length: 38 }, (_, i) => i + 1).map(w => (
                       <option key={w} value={w} className="bg-slate-900 text-white font-semibold">
@@ -754,25 +767,17 @@ export const StudentView: React.FC<StudentViewProps> = ({
                       </option>
                     ))}
                   </select>
-                ) : (
-                  <span>Tuần {currentWeek}</span>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-black/40 border border-white/20 text-amber-300 font-extrabold text-[11px] shadow-xs backdrop-blur-md">
+                  <Calendar className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                  <span>Tuần {currentWeek} {currentWeek <= 19 ? '(HK1)' : '(HK2)'}</span>
+                </div>
+              )}
 
               <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border backdrop-blur-md shadow-xs ${studentBanner.accentBadge}`}>
                 {studentBanner.roleName}
               </span>
-
-              {isCadre && (
-                <button
-                  type="button"
-                  onClick={() => setShowCadreModal(true)}
-                  className="shrink-0 px-2.5 py-0.5 rounded-xl bg-white/20 hover:bg-white/35 text-white text-[10px] font-bold backdrop-blur-md transition-all cursor-pointer border border-white/20 shadow-xs"
-                  title="Danh hiệu danh dự do Giáo viên chủ nhiệm trao tặng"
-                >
-                  👑 Vinh danh cán sự (Do GVCN trao)
-                </button>
-              )}
             </div>
 
             {/* Slogan with customizable text, icon, color, style */}
@@ -791,101 +796,167 @@ export const StudentView: React.FC<StudentViewProps> = ({
         </div>
       </div>
 
-      {/* Student Nav Tabs - Ultra Compact 1-Line (No Wrapping, No Text Cutting) */}
-      <div className="flex items-center gap-1 p-1 bg-surface-2 rounded-2xl border border-token w-full max-w-xl mx-auto overflow-x-auto scrollbar-none justify-between">
-        <button
-          onClick={() => setActiveTab('my_score')}
-          className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-            activeTab === 'my_score' 
-              ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black' 
-              : 'text-muted hover:text-main'
-          }`}
-        >
-          <User className="w-3.5 h-3.5 text-accent shrink-0" />
-          <span>Của tôi</span>
-        </button>
+      {/* Student Nav Tabs: Đối với Ban cán sự chia làm 2 hàng gọn gàng trên điện thoại */}
+      {isCadre ? (
+        <div className="flex flex-col gap-1.5 p-1.5 bg-surface-2 rounded-2xl border border-token w-full max-w-xl mx-auto shadow-2xs">
+          {/* HÀNG 1 (Cán sự & Cá nhân): Ghi vi phạm | Sổ ghi | Của tôi */}
+          <div className="grid grid-cols-3 gap-1.5 w-full">
+            <button
+              onClick={() => setActiveTab('record')}
+              className={`py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shadow-xs ${
+                activeTab === 'record'
+                  ? 'bg-rose-500 text-white shadow-sm font-black'
+                  : 'bg-surface text-rose-600 dark:text-rose-400 hover:bg-surface-2 border border-rose-200 dark:border-rose-900/50'
+              }`}
+            >
+              <ClipboardList className="w-3.5 h-3.5 shrink-0" />
+              <span>Ghi vi phạm</span>
+            </button>
 
-        {/* CADRE TABS (Only for class cadres) */}
-        {isCadre && (
+            <button
+              onClick={() => setActiveTab('my_log')}
+              className={`py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shadow-xs ${
+                activeTab === 'my_log'
+                  ? 'bg-sky-600 text-white shadow-sm font-black'
+                  : 'bg-surface text-sky-600 dark:text-sky-400 hover:bg-surface-2 border border-sky-200 dark:border-sky-900/50'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5 shrink-0" />
+              <span>Sổ ghi ({filteredMyRecords.length})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('my_score')}
+              className={`py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shadow-xs ${
+                activeTab === 'my_score'
+                  ? 'bg-surface text-main shadow-xs ring-2 ring-accent font-black'
+                  : 'bg-surface/80 text-muted hover:text-main'
+              }`}
+            >
+              <User className="w-3.5 h-3.5 text-accent shrink-0" />
+              <span>Của tôi</span>
+            </button>
+          </div>
+
+          {/* HÀNG 2 (Xem chung lớp học): Điểm | Huy hiệu | Sơ đồ | Thi đua */}
+          <div className="grid grid-cols-4 gap-1 w-full pt-1 border-t border-token/50">
+            <button
+              onClick={() => setActiveTab('grades')}
+              className={`py-1.5 px-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'grades'
+                  ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-accent'
+                  : 'text-muted hover:text-main'
+              }`}
+            >
+              <GraduationCap className="w-3.5 h-3.5 text-accent shrink-0" />
+              <span>Điểm</span>
+              {!settings.choPhepXemDiemMon && <Lock className="w-2.5 h-2.5 text-amber-500 shrink-0" />}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('badges')}
+              className={`py-1.5 px-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'badges'
+                  ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-amber-600 dark:text-amber-400'
+                  : 'text-muted hover:text-main'
+              }`}
+            >
+              <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <span>Huy hiệu</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('seating')}
+              className={`py-1.5 px-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'seating'
+                  ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-purple-600 dark:text-purple-400'
+                  : 'text-muted hover:text-main'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5 text-accent shrink-0" />
+              <span>Sơ đồ</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('ranking')}
+              className={`py-1.5 px-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'ranking'
+                  ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-emerald-600 dark:text-emerald-400'
+                  : 'text-muted hover:text-main'
+              }`}
+            >
+              <Trophy className="w-3.5 h-3.5 text-accent shrink-0" />
+              <span>Thi đua</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* Regular Student Nav Tabs (5 tabs 1 hàng gọn gàng) */
+        <div className="flex items-center gap-1 p-1 bg-surface-2 rounded-2xl border border-token w-full max-w-xl mx-auto overflow-x-auto scrollbar-none justify-between">
           <button
-            onClick={() => setActiveTab('record')}
+            onClick={() => setActiveTab('my_score')}
             className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-              activeTab === 'record' 
-                ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-rose-600 dark:text-rose-400' 
+              activeTab === 'my_score' 
+                ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black' 
                 : 'text-muted hover:text-main'
             }`}
           >
-            <ClipboardList className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-            <span>Ghi vi phạm</span>
+            <User className="w-3.5 h-3.5 text-accent shrink-0" />
+            <span>Của tôi</span>
           </button>
-        )}
 
-        {isCadre && (
           <button
-            onClick={() => setActiveTab('my_log')}
+            onClick={() => setActiveTab('grades')}
             className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-              activeTab === 'my_log' 
-                ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-sky-600 dark:text-sky-400' 
+              activeTab === 'grades' 
+                ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-accent' 
                 : 'text-muted hover:text-main'
             }`}
           >
-            <Clock className="w-3.5 h-3.5 text-sky-500 shrink-0" />
-            <span>Sổ ghi ({filteredMyRecords.length})</span>
+            <GraduationCap className="w-3.5 h-3.5 text-accent shrink-0" />
+            <span>Điểm</span>
+            {!settings.choPhepXemDiemMon && (
+              <Lock className="w-2.5 h-2.5 text-amber-500 shrink-0" />
+            )}
           </button>
-        )}
 
-        <button
-          onClick={() => setActiveTab('grades')}
-          className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-            activeTab === 'grades' 
-              ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-accent' 
-              : 'text-muted hover:text-main'
-          }`}
-          title="Xem bảng điểm các môn học (Toán, Văn, Anh...)"
-        >
-          <GraduationCap className="w-3.5 h-3.5 text-accent shrink-0" />
-          <span>Điểm</span>
-          {!settings.choPhepXemDiemMon && (
-            <Lock className="w-2.5 h-2.5 text-amber-500 shrink-0" />
-          )}
-        </button>
+          <button
+            onClick={() => setActiveTab('badges')}
+            className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              activeTab === 'badges' 
+                ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-amber-600 dark:text-amber-400' 
+                : 'text-muted hover:text-main'
+            }`}
+          >
+            <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span>Huy hiệu</span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('badges')}
-          className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-            activeTab === 'badges' 
-              ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-amber-600 dark:text-amber-400' 
-              : 'text-muted hover:text-main'
-          }`}
-        >
-          <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-          <span>Huy hiệu</span>
-        </button>
+          <button
+            onClick={() => setActiveTab('seating')}
+            className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              activeTab === 'seating' 
+                ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-purple-600 dark:text-purple-400' 
+                : 'text-muted hover:text-main'
+            }`}
+          >
+            <LayoutGrid className="w-3.5 h-3.5 text-accent shrink-0" />
+            <span>Sơ đồ</span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('seating')}
-          className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-            activeTab === 'seating' 
-              ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-purple-600 dark:text-purple-400' 
-              : 'text-muted hover:text-main'
-          }`}
-        >
-          <LayoutGrid className="w-3.5 h-3.5 text-accent shrink-0" />
-          <span>Sơ đồ</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('ranking')}
-          className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-            activeTab === 'ranking' 
-              ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-emerald-600 dark:text-emerald-400' 
-              : 'text-muted hover:text-main'
-          }`}
-        >
-          <Trophy className="w-3.5 h-3.5 text-accent shrink-0" />
-          <span>Thi đua</span>
-        </button>
-      </div>
+          <button
+            onClick={() => setActiveTab('ranking')}
+            className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              activeTab === 'ranking' 
+                ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-emerald-600 dark:text-emerald-400' 
+                : 'text-muted hover:text-main'
+            }`}
+          >
+            <Trophy className="w-3.5 h-3.5 text-accent shrink-0" />
+            <span>Thi đua</span>
+          </button>
+        </div>
+      )}
 
       {/* TAB 1: CỦA TÔI */}
       {activeTab === 'my_score' && (
@@ -1455,7 +1526,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                     : 'text-muted hover:text-main'
                 }`}
               >
-                👑 Cán sự & Lớp (7)
+                ⭐ Cán sự & Lớp (7)
               </button>
             </div>
 
@@ -1873,6 +1944,52 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 );
               })
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Week Change Warning Modal (Cảnh báo chuyển tuần học cho LT, BT, LP HT) */}
+      {pendingWeekChange !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-sm bg-surface border border-token rounded-3xl p-5 shadow-2xl space-y-4 animate-scale-up">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 stroke-[2.5]" />
+              </div>
+              <div>
+                <h4 className="text-sm font-extrabold text-main">Xác nhận chuyển tuần</h4>
+                <p className="text-[11px] text-muted">Quyền hạn Cán sự cốt cán (LT, BT, LP Học tập)</p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
+              Bạn có chắc chắn muốn chuyển tuần hiện tại của cả lớp từ <strong>Tuần {currentWeek}</strong> sang <strong>Tuần {pendingWeekChange}</strong> ({pendingWeekChange <= 19 ? 'Học kỳ 1' : 'Học kỳ 2'})?
+              <div className="mt-1 text-[11px] opacity-80">
+                ⚠️ Việc chuyển tuần sẽ cập nhật tuần làm việc hiện tại, ảnh hưởng đến việc ghi nhận nề nếp và thống kê thi đua của toàn bộ học sinh.
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setPendingWeekChange(null)}
+                className="px-3.5 py-2 rounded-xl bg-surface-2 text-muted hover:text-main text-xs font-bold transition-colors cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onChangeCurrentWeek && pendingWeekChange !== null) {
+                    onChangeCurrentWeek(pendingWeekChange);
+                  }
+                  setPendingWeekChange(null);
+                }}
+                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
+              >
+                Xác nhận chuyển
+              </button>
+            </div>
           </div>
         </div>
       )}

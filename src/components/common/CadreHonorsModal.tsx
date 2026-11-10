@@ -59,7 +59,7 @@ export const CadreHonorsModal: React.FC<CadreHonorsModalProps> = ({
                 <span>VINH DANH BAN CÁN SỰ LỚP (DO GVCN TRAO)</span>
               </div>
               <h3 className="text-base sm:text-lg font-extrabold text-main leading-tight mt-0.5">
-                Đội Ngũ Đầu Tàu Thi Đua 👑
+                Đội Ngũ Đầu Tàu Thi Đua ⭐
               </h3>
               <p className="text-xs text-muted mt-0.5">
                 Danh hiệu danh dự do Giáo viên chủ nhiệm trao tặng · THPT Số 2 Đức Phổ · Năm học 2026-2027

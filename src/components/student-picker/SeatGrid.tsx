@@ -422,7 +422,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                   // Top priority role badge & STT
                   const topRole = student.vaiTro[0] || 'HS';
                   const roleConfig = ROLE_CONFIG[topRole];
-                  const roleIcon = topRole === 'LT' ? '👑' :
+                  const roleIcon = topRole === 'LT' ? '⭐' :
                                    topRole === 'BT' ? '🚩' :
                                    topRole === 'LP_HT' ? '📖' :
                                    topRole === 'LP_LD' ? '⚡' : '🛡️';

@@ -238,7 +238,7 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
                   : 'text-muted hover:text-main'
               }`}
             >
-              👑 Cán sự & Lớp (7)
+              ⭐ Cán sự & Lớp (7)
             </button>
           </div>
 

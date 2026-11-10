@@ -360,7 +360,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       <span className="font-semibold text-main">Tổ {selectedStudent.to}</span>
                       {selectedStudent.vaiTro[0] !== 'HS' && (
                         <span className="font-bold text-accent">
-                          ({selectedStudent.vaiTro[0] === 'LT' ? '👑 Lớp trưởng' :
+                          ({selectedStudent.vaiTro[0] === 'LT' ? '⭐ Lớp trưởng' :
                             selectedStudent.vaiTro[0] === 'BT' ? '🚩 Bí thư' :
                             selectedStudent.vaiTro[0] === 'LP_HT' ? '📖 LP Học tập' :
                             selectedStudent.vaiTro[0] === 'LP_LD' ? '⚡ LP Lao động' : '🛡️ Tổ trưởng'})

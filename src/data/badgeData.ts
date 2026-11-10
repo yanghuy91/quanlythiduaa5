@@ -19,8 +19,8 @@ export const CADRE_ROLES_INFO: Record<RoleCode, CadreRoleInfo> = {
     role: 'LT',
     title: 'Lớp trưởng',
     badgeName: 'Chỉ Huy Trưởng 10A5',
-    emoji: '👑',
-    shortEmoji: '👑',
+    emoji: '⭐',
+    shortEmoji: '⭐',
     accentColor: '#D97706', // Gold / Amber
     gradientBg: 'from-amber-500/20 via-amber-500/10 to-transparent',
     borderTone: 'border-amber-500/40',

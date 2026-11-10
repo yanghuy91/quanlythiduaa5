@@ -34,7 +34,7 @@ export const CADRE_BANNERS: Record<string, CadreBannerConfig> = {
     imageSrc: bannerLt,
     gradientFallback: 'from-amber-900 via-yellow-950 to-slate-900',
     accentBadge: 'bg-amber-500/20 text-amber-300 border-amber-400/40',
-    tagline: 'Gương mẫu - Quyết đoán - Đồng hành cùng tập thể 👑',
+    tagline: 'Gương mẫu - Quyết đoán - Đồng hành cùng tập thể ⭐',
   },
   BT: {
     roleKey: 'BT',

@@ -17,7 +17,7 @@ export const RecorderBadge: React.FC<RecorderBadgeProps> = ({
 
   const icon = 
     vaiTro === 'GV' ? '👨‍🏫' :
-    vaiTro === 'LT' ? '👑' :
+    vaiTro === 'LT' ? '⭐' :
     vaiTro === 'BT' ? '🚩' :
     vaiTro === 'LP_HT' ? '📖' :
     vaiTro === 'LP_LD' ? '⚡' :

@@ -120,7 +120,7 @@ export const CADRE_EMBLEMS: Record<string, CadreEmblemConfig> = {
     code: 'LT',
     name: 'Lớp Trưởng Toàn Năng',
     shortLabel: 'Lớp Trưởng',
-    icon: '👑',
+    icon: '⭐',
     imageSrc: cadreCrestImg,
     badgeClass: 'bg-gradient-to-r from-amber-500 to-yellow-600 text-white border-amber-300 shadow-amber-500/30',
     haloClass: 'ring-2 ring-amber-400',
