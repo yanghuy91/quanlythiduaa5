@@ -48,7 +48,6 @@ import { StudentGradeCard } from '../grades/StudentGradeCard';
 import { SeatGrid } from '../student-picker/SeatGrid';
 import { CadreBadge } from '../common/CadreBadge';
 import { CadreHonorsModal } from '../common/CadreHonorsModal';
-import { PeriodHierarchyFilter as PeriodFilterComponent } from '../common/PeriodHierarchyFilter';
 import { filterRecordsByHierarchy, calculateStudentPeriodSummary, CURRENT_SCHOOL_YEAR } from '../../utils/hierarchy';
 import { 
   AchievementBadge, 
@@ -511,18 +510,14 @@ export const StudentView: React.FC<StudentViewProps> = ({
             <div className="flex items-center gap-2.5 min-w-0">
               <Logo10A5 size="sm" animate={false} />
               <div className="flex flex-col min-w-0 leading-tight">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-sm sm:text-base font-black tracking-tight text-white drop-shadow-md">
-                    LỚP 10A5
-                  </span>
-                  <span className="text-white/60 text-xs hidden xs:inline">•</span>
-                  <span className="text-xs font-bold text-white/90 drop-shadow-xs hidden xs:inline">
-                    THPT Số 2 Đức Phổ
-                  </span>
-                </div>
-                <span className="text-[10px] text-white/80 font-medium drop-shadow-xs">
-                  Năm học 2026-2027
+                <span className="text-xs sm:text-sm font-black tracking-tight text-white drop-shadow-md uppercase">
+                  TRƯỜNG THPT SỐ 2 ĐỨC PHỔ
                 </span>
+                <div className="flex items-center gap-1 text-[10px] text-white/85 font-semibold drop-shadow-xs mt-0.5">
+                  <span className="text-amber-300 font-extrabold">Lớp 10A5</span>
+                  <span>•</span>
+                  <span>Năm học 2026-2027</span>
+                </div>
               </div>
             </div>
 
@@ -818,12 +813,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
             </div>
           </div>
 
-          {/* Time Hierarchy Period Filter */}
-          <PeriodFilterComponent
-            filter={periodFilter}
-            onChangeFilter={setPeriodFilter}
-            compact={true}
-          />
+          
 
           {/* Period Summary Statistics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1078,7 +1068,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   <span>Bộ Sưu Tập Huy Hiệu Danh Dự (30 Danh Hiệu)</span>
                 </h3>
                 <p className="text-xs text-muted mt-0.5">
-                  Đã mở khóa: <strong>{myBadges.filter(b => b.unlocked).length}</strong> / {myBadges.length} huy hiệu · Bấm "Đeo cạnh Avatar" để hiển thị huy hiệu của bạn!
+                  Đã mở khóa: <strong>{myBadges.filter(b => b.unlocked).length}</strong> / {myBadges.length} huy hiệu · Bấm "Mang vào" hoặc "Tháo ra" để chọn huy hiệu của bạn!
                 </p>
               </div>
 
@@ -1193,7 +1183,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                             )}
                             {isSelected && (
                               <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-500 text-white font-extrabold uppercase tracking-wide">
-                                Đang đeo cạnh Avatar
+                                Đang mang
                               </span>
                             )}
                           </div>
@@ -1219,13 +1209,13 @@ export const StudentView: React.FC<StudentViewProps> = ({
                           >
                             {isSelected ? (
                               <>
-                                <Check className="w-3 h-3 stroke-[3]" />
-                                <span>Gỡ khỏi Avatar</span>
+                                <X className="w-3 h-3 stroke-[3]" />
+                                <span>Tháo ra</span>
                               </>
                             ) : (
                               <>
-                                <span>✨</span>
-                                <span>Đeo cạnh Avatar</span>
+                                <Check className="w-3 h-3 stroke-[3]" />
+                                <span>Mang vào</span>
                               </>
                             )}
                           </button>
@@ -1286,9 +1276,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   Bảng tổng quan thi đua lớp 10A5
                 </h3>
               </div>
-              <p className="text-[11px] text-muted mt-1">
-                Khởi đầu 100 điểm · Xếp loại: Tốt (≥90đ), Khá (≥75đ), Đạt (≥60đ), Cần cố gắng (&lt;60đ)
-              </p>
+              
             </div>
 
             <div className="flex items-center gap-2 flex-wrap shrink-0">
@@ -1315,11 +1303,9 @@ export const StudentView: React.FC<StudentViewProps> = ({
             </div>
           </div>
 
-          {/* Sắp xếp & Bộ lọc Thanh công cụ (Sorting & Filter Toolbar) */}
-          <div className="p-4 border-b border-token bg-surface space-y-3">
-            {/* Hàng 1: Dropdown Sắp xếp + Ô Tìm kiếm */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-              {/* Dropdown Sắp xếp */}
+          {/* Sắp xếp Toolbar (Gọn gàng 1 dòng dropdown) */}
+          <div className="p-3 sm:p-4 border-b border-token bg-surface space-y-2.5">
+            <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <span className="text-xs font-bold text-main flex items-center gap-1 shrink-0">
                   <ArrowUpDown className="w-3.5 h-3.5 text-accent" />
@@ -1338,87 +1324,6 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   <option value="to">👥 Gom theo Tổ (Tổ 1 → 4)</option>
                 </select>
               </div>
-
-              {/* Ô Tìm kiếm nhanh */}
-              <div className="relative sm:w-64 shrink-0">
-                <Search className="w-3.5 h-3.5 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  value={rankingSearchQuery}
-                  onChange={e => setRankingSearchQuery(e.target.value)}
-                  placeholder="Tìm bạn theo tên, STT, mã HS..."
-                  className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-surface-2 border border-token text-xs text-main placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
-                />
-                {rankingSearchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setRankingSearchQuery('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-main p-0.5"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Hàng 2: Nút bấm Sắp xếp nhanh (Quick sort pills) */}
-            <div className="flex items-center gap-1.5 flex-wrap text-xs">
-              <span className="text-[11px] font-semibold text-muted mr-1">Nhanh:</span>
-              <button
-                type="button"
-                onClick={() => setRankingSortBy('score_desc')}
-                className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
-                  rankingSortBy === 'score_desc'
-                    ? 'bg-amber-500 text-white shadow-xs'
-                    : 'bg-surface-2 hover:bg-surface border border-token text-muted hover:text-main'
-                }`}
-              >
-                🏆 Điểm cao nhất
-              </button>
-              <button
-                type="button"
-                onClick={() => setRankingSortBy('score_asc')}
-                className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
-                  rankingSortBy === 'score_asc'
-                    ? 'bg-rose-500 text-white shadow-xs'
-                    : 'bg-surface-2 hover:bg-surface border border-token text-muted hover:text-main'
-                }`}
-              >
-                📉 Cần cố gắng
-              </button>
-              <button
-                type="button"
-                onClick={() => setRankingSortBy('stt')}
-                className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
-                  rankingSortBy === 'stt'
-                    ? 'bg-accent text-on-accent shadow-xs'
-                    : 'bg-surface-2 hover:bg-surface border border-token text-muted hover:text-main'
-                }`}
-              >
-                🔢 STT danh sách
-              </button>
-              <button
-                type="button"
-                onClick={() => setRankingSortBy('name_asc')}
-                className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
-                  rankingSortBy === 'name_asc'
-                    ? 'bg-sky-500 text-white shadow-xs'
-                    : 'bg-surface-2 hover:bg-surface border border-token text-muted hover:text-main'
-                }`}
-              >
-                🔤 Tên A → Z
-              </button>
-              <button
-                type="button"
-                onClick={() => setRankingSortBy('to')}
-                className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
-                  rankingSortBy === 'to'
-                    ? 'bg-purple-500 text-white shadow-xs'
-                    : 'bg-surface-2 hover:bg-surface border border-token text-muted hover:text-main'
-                }`}
-              >
-                👥 Theo Tổ (1→4)
-              </button>
             </div>
 
             {/* Hàng 3: Lọc theo Tổ */}

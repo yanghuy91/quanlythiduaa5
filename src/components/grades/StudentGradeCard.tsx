@@ -71,157 +71,50 @@ export const StudentGradeCard: React.FC<StudentGradeCardProps> = ({
     );
   }
 
-  const { subjects, diemTBChung, hocLuc, danhHieu, nhanXetGVCN } = academicRecord;
-
-  // Compute statistics
-  const scoredSubjects = DEFAULT_SUBJECTS.filter(s => s.type === 'score');
-  const validScores = scoredSubjects
-    .map(s => subjects[s.id]?.tb)
-    .filter((v): v is number => typeof v === 'number');
-
-  const highestScore = validScores.length > 0 ? Math.max(...validScores) : null;
-  const lowestScore = validScores.length > 0 ? Math.min(...validScores) : null;
-  const excellentSubjectsCount = validScores.filter(v => v >= 8.0).length;
+  const { subjects } = academicRecord;
 
   return (
     <div className="w-full flex flex-col gap-4">
-      {/* Top Banner: Academic Summary Card */}
-      <div className="w-full bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 text-white rounded-2xl p-5 sm:p-6 shadow-md relative overflow-hidden border border-indigo-800/40">
-        {/* Decorative background glow */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-500/10 rounded-full blur-2xl pointer-events-none -ml-12 -mb-12" />
-
-        <div className="relative z-10 flex flex-col gap-4">
-          {/* Header row: Semester info & Read-only badge */}
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
-            <div className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-amber-300">
-                <GraduationCap className="w-5 h-5" />
-              </span>
-              <div>
-                <h2 className="text-sm sm:text-base font-black tracking-tight text-white flex items-center gap-2">
-                  <span>KẾT QUẢ HỌC TẬP THEO MÔN</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold uppercase tracking-wider">
-                    Chính thức
-                  </span>
-                </h2>
-                <p className="text-[11px] text-white/70">
-                  Lớp 10A5 · Năm học 2026-2027 · THPT Số 2 Đức Phổ
-                </p>
-              </div>
-            </div>
-
-            {/* Semester selector */}
-            <div className="flex items-center gap-1 bg-white/10 p-1 rounded-xl text-xs font-bold">
-              <button
-                type="button"
-                onClick={() => setSelectedSemester(1)}
-                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                  selectedSemester === 1 
-                    ? 'bg-white text-indigo-950 shadow-xs' 
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                Học kỳ 1
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedSemester(2)}
-                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                  selectedSemester === 2 
-                    ? 'bg-white text-indigo-950 shadow-xs' 
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                Học kỳ 2
-              </button>
-            </div>
+      {/* Top Header: Academic Grades Only */}
+      <div className="w-full bg-surface rounded-2xl p-4 sm:p-5 border border-token shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-accent/15 text-accent flex items-center justify-center shrink-0">
+            <GraduationCap className="w-5 h-5" />
           </div>
-
-          {/* Core Score Highlights */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {/* GPA */}
-            <div className="bg-white/5 backdrop-blur-xs rounded-xl p-3 border border-white/10 flex flex-col justify-between">
-              <span className="text-[11px] font-bold text-white/70 uppercase tracking-wider">
-                Điểm TB Chung
-              </span>
-              <div className="flex items-baseline gap-1.5 my-1">
-                <span className="text-2xl sm:text-3xl font-black text-amber-300">
-                  {diemTBChung !== null ? diemTBChung.toFixed(1) : '--'}
-                </span>
-                <span className="text-xs text-white/60">/ 10</span>
-              </div>
-              <span className="text-[10px] text-white/60">
-                12 môn tính điểm
-              </span>
-            </div>
-
-            {/* Academic Standing */}
-            <div className="bg-white/5 backdrop-blur-xs rounded-xl p-3 border border-white/10 flex flex-col justify-between">
-              <span className="text-[11px] font-bold text-white/70 uppercase tracking-wider">
-                Học Lực
-              </span>
-              <div className="my-1">
-                <span className={`inline-block px-2.5 py-1 rounded-lg font-black text-xs sm:text-sm ${
-                  hocLuc === 'Xuất sắc' 
-                    ? 'bg-purple-500/30 text-purple-200 border border-purple-400/40' 
-                    : hocLuc === 'Giỏi'
-                      ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-400/40'
-                      : hocLuc === 'Khá'
-                        ? 'bg-blue-500/30 text-blue-200 border border-blue-400/40'
-                        : 'bg-amber-500/30 text-amber-200 border border-amber-400/40'
-                }`}>
-                  {hocLuc || 'Đang cập nhật'}
-                </span>
-              </div>
-              <span className="text-[10px] text-white/60">
-                Theo TT 22/2021/BGDĐT
-              </span>
-            </div>
-
-            {/* Honors Title */}
-            <div className="bg-white/5 backdrop-blur-xs rounded-xl p-3 border border-white/10 flex flex-col justify-between">
-              <span className="text-[11px] font-bold text-white/70 uppercase tracking-wider">
-                Danh Hiệu
-              </span>
-              <div className="my-1 flex items-center gap-1.5">
-                <Award className="w-4 h-4 text-amber-300 shrink-0" />
-                <span className="font-extrabold text-xs sm:text-sm text-white truncate">
-                  {danhHieu || 'Chưa xét'}
-                </span>
-              </div>
-              <span className="text-[10px] text-white/60">
-                Thi đua học kỳ 1
-              </span>
-            </div>
-
-            {/* High Performance Subjects */}
-            <div className="bg-white/5 backdrop-blur-xs rounded-xl p-3 border border-white/10 flex flex-col justify-between">
-              <span className="text-[11px] font-bold text-white/70 uppercase tracking-wider">
-                Môn Điểm Giỏi
-              </span>
-              <div className="flex items-baseline gap-1.5 my-1">
-                <span className="text-2xl sm:text-3xl font-black text-emerald-300">
-                  {excellentSubjectsCount}
-                </span>
-                <span className="text-xs text-white/60">/ 12 môn</span>
-              </div>
-              <span className="text-[10px] text-white/60">
-                Điểm TB môn ≥ 8.0
-              </span>
-            </div>
+          <div>
+            <h2 className="text-sm sm:text-base font-black text-main uppercase tracking-tight">
+              Bảng Điểm Các Môn Học
+            </h2>
+            <p className="text-[11px] text-muted">
+              Lớp 10A5 · THPT Số 2 Đức Phổ · Điểm thành phần các môn
+            </p>
           </div>
+        </div>
 
-          {/* Teacher's Note */}
-          {nhanXetGVCN && (
-            <div className="p-3 bg-white/5 rounded-xl border border-white/10 text-xs text-white/90 flex items-start gap-2.5">
-              <Sparkles className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <strong className="text-amber-200">Nhận xét của Giáo viên chủ nhiệm: </strong>
-                <span>{nhanXetGVCN}</span>
-              </div>
-            </div>
-          )}
+        {/* Semester selector */}
+        <div className="flex items-center gap-1 bg-surface-2 p-1 rounded-xl text-xs font-bold border border-token">
+          <button
+            type="button"
+            onClick={() => setSelectedSemester(1)}
+            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+              selectedSemester === 1 
+                ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black' 
+                : 'text-muted hover:text-main'
+            }`}
+          >
+            Học kỳ 1
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedSemester(2)}
+            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+              selectedSemester === 2 
+                ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black' 
+                : 'text-muted hover:text-main'
+            }`}
+          >
+            Học kỳ 2
+          </button>
         </div>
       </div>
 
@@ -247,9 +140,7 @@ export const StudentGradeCard: React.FC<StudentGradeCardProps> = ({
                 <th className="py-2.5 px-3 rounded-l-lg">Môn học</th>
                 <th className="py-2.5 px-2 text-center">ĐĐG thường xuyên</th>
                 <th className="py-2.5 px-2 text-center">Giữa kỳ (x2)</th>
-                <th className="py-2.5 px-2 text-center">Cuối kỳ (x3)</th>
-                <th className="py-2.5 px-2 text-center font-extrabold text-main">ĐTB môn</th>
-                <th className="py-2.5 px-3 text-center rounded-r-lg">Đánh giá / Ghi chú</th>
+                <th className="py-2.5 px-3 text-center rounded-r-lg">Cuối kỳ (x3)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-token/60">
@@ -270,10 +161,7 @@ export const StudentGradeCard: React.FC<StudentGradeCardProps> = ({
                           <span>{subj.name}</span>
                         </div>
                       </td>
-                      <td colSpan={3} className="py-3 px-2 text-center text-muted italic text-[11px]">
-                        Môn đánh giá bằng nhận xét
-                      </td>
-                      <td className="py-3 px-2 text-center">
+                      <td colSpan={3} className="py-3 px-2 text-center">
                         <span className={`inline-block px-2.5 py-0.5 rounded font-black text-xs ${
                           evalResult === 'Đ' 
                             ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' 
@@ -281,9 +169,6 @@ export const StudentGradeCard: React.FC<StudentGradeCardProps> = ({
                         }`}>
                           {evalResult === 'Đ' ? 'ĐẠT' : 'CHƯA ĐẠT'}
                         </span>
-                      </td>
-                      <td className="py-3 px-3 text-center text-[11px] text-muted">
-                        {score?.note || 'Hoàn thành tốt nhiệm vụ'}
                       </td>
                     </tr>
                   );
@@ -295,11 +180,6 @@ export const StudentGradeCard: React.FC<StudentGradeCardProps> = ({
                   : '--';
                 const gkFormatted = score?.gk !== null && score?.gk !== undefined ? Number(score.gk).toFixed(1) : '--';
                 const ckFormatted = score?.ck !== null && score?.ck !== undefined ? Number(score.ck).toFixed(1) : '--';
-                const tbFormatted = score?.tb !== null && score?.tb !== undefined ? Number(score.tb).toFixed(1) : '--';
-
-                const isGood = typeof score?.tb === 'number' && score.tb >= 8.0;
-                const isMedium = typeof score?.tb === 'number' && score.tb >= 6.5 && score.tb < 8.0;
-                const isLow = typeof score?.tb === 'number' && score.tb < 5.0;
 
                 return (
                   <tr 
@@ -325,71 +205,19 @@ export const StudentGradeCard: React.FC<StudentGradeCardProps> = ({
                     </td>
 
                     {/* GK */}
-                    <td className="py-3 px-2 text-center font-mono font-medium text-main">
+                    <td className="py-3 px-2 text-center font-mono font-semibold text-main">
                       {gkFormatted}
                     </td>
 
                     {/* CK */}
-                    <td className="py-3 px-2 text-center font-mono font-medium text-main">
+                    <td className="py-3 px-3 text-center font-mono font-bold text-main">
                       {ckFormatted}
-                    </td>
-
-                    {/* ĐTB */}
-                    <td className="py-3 px-2 text-center">
-                      <span className={`inline-block font-mono font-black text-sm px-2 py-0.5 rounded-lg ${
-                        isGood 
-                          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' 
-                          : isMedium
-                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
-                            : isLow
-                              ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
-                              : 'bg-surface-2 text-main'
-                      }`}>
-                        {tbFormatted}
-                      </span>
-                    </td>
-
-                    {/* Nhận xét / Ghi chú */}
-                    <td className="py-3 px-3 text-center text-[11px] text-muted">
-                      {score?.note ? (
-                        <span className="italic truncate max-w-[200px] block mx-auto">
-                          {score.note}
-                        </span>
-                      ) : isGood ? (
-                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Tốt</span>
-                      ) : isMedium ? (
-                        <span className="text-blue-600 dark:text-blue-400 font-semibold">Khá</span>
-                      ) : (
-                        <span className="text-muted">Đạt</span>
-                      )}
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-        </div>
-
-        {/* Legend & Guide */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-token/60 text-[11px] text-muted">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>ĐTB ≥ 8.0: Giỏi</span>
-            </span>
-            <span className="flex items-center gap-1 font-semibold text-blue-600 dark:text-blue-400">
-              <span className="w-2 h-2 rounded-full bg-blue-500" />
-              <span>6.5 ≤ ĐTB &lt; 8.0: Khá</span>
-            </span>
-            <span className="flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
-              <span>5.0 ≤ ĐTB &lt; 6.5: Đạt</span>
-            </span>
-          </div>
-
-          <span className="text-[10px] text-muted italic">
-            Công thức tính: ĐTB = (Tổng điểm TX + GK×2 + CK×3) / (Số cột TX + 5)
-          </span>
         </div>
       </div>
     </div>

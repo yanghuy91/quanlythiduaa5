@@ -248,14 +248,14 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
       <div className="w-full flex items-center justify-between px-3 py-1.5 bg-surface-2/60 rounded-xl border border-token/60 text-xs">
         <span className="flex items-center gap-1.5 font-bold text-[var(--role-gv-fg)]">
           <Armchair className="w-4 h-4 shrink-0" />
-          <span>Bàn GV (Bên trái)</span>
+          <span>Bàn GV</span>
         </span>
         <span className="font-extrabold tracking-widest text-[11px] uppercase text-main opacity-85">
-          — BẢNG LỚP 10A5 —
+          — BẢNG —
         </span>
         <span className="flex items-center gap-1.5 font-bold text-muted">
           <DoorOpen className="w-4 h-4 shrink-0" />
-          <span>Cửa chính (Tổ 1)</span>
+          <span>Cửa chính</span>
         </span>
       </div>
 
@@ -282,7 +282,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
           </div>
           <div className="col-span-1 flex items-center justify-center opacity-30 select-none">·</div>
           <div className="col-span-2 bg-amber-50/50 dark:bg-amber-950/20 py-1 rounded-lg border border-amber-200/50 dark:border-amber-900/30 text-amber-600 dark:text-amber-400">
-            Tổ 1 (Cửa)
+            Tổ 1
           </div>
         </div>
       )}
@@ -542,7 +542,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
 
                           {/* Tên học sinh đặt ngay phía dưới ảnh avatar (không khung bao quanh) */}
                           <div className="w-full mt-1 sm:mt-1.5 px-0.5 min-w-0 text-center">
-                            <span className={`text-[11px] sm:text-xs font-black tracking-tight truncate block leading-tight ${
+                            <span className={`text-[10px] sm:text-xs font-extrabold tracking-tight truncate block leading-tight ${
                               isSelected ? 'text-accent' : 'text-main'
                             }`}>
                               {getSeatingMapDisplayName(student, students)}
@@ -605,7 +605,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
 
                           {/* Bottom line: Only Given Name */}
                           <div className="w-full text-center min-w-0">
-                            <span className="text-xs sm:text-[13px] font-black text-main tracking-tight truncate block leading-tight">
+                            <span className="text-[10px] sm:text-xs font-extrabold text-main tracking-tight truncate block leading-tight px-0.5">
                               {getSeatingMapDisplayName(student, students)}
                             </span>
                           </div>
@@ -620,19 +620,6 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
         </div>
       </div>
 
-      {/* Gender & Layout Summary Footer */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-2 py-1 text-[11px] text-muted border-t border-token/50 select-none">
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1 font-semibold text-sky-600 dark:text-sky-400">
-            <span className="w-2.5 h-2.5 rounded-full bg-sky-400" />
-            <span>Nam</span>
-          </span>
-          <span className="flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-400" />
-            <span>Nữ</span>
-          </span>
-        </div>
-      </div>
-    </div>
+          </div>
   );
 };
