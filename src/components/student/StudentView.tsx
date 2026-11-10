@@ -31,7 +31,9 @@ import {
   TrendingUp,
   Sparkle,
   GraduationCap,
-  Settings
+  Settings,
+  ClipboardList,
+  Trash2
 } from 'lucide-react';
 import { 
   Student, 
@@ -40,11 +42,18 @@ import {
   StudentWeekSummary, 
   TeacherSettings,
   HierarchyPeriodFilter,
-  StudentAcademicRecord
+  StudentAcademicRecord,
+  RoleCode,
+  RuleItem
 } from '../../types';
 import { Logo10A5 } from '../common/Logo10A5';
 import { StudentGradeCard } from '../grades/StudentGradeCard';
 import { SeatGrid } from '../student-picker/SeatGrid';
+import { StudentPicker } from '../student-picker/StudentPicker';
+import { RecordBottomSheet } from '../record/RecordBottomSheet';
+import { DuplicateWarningModal } from '../record/DuplicateWarningModal';
+import { PeriodHierarchyFilter as PeriodFilterComponent } from '../common/PeriodHierarchyFilter';
+import { checkDuplicateRecord } from '../../utils/emulation';
 import { CadreBadge } from '../common/CadreBadge';
 import { CadreHonorsModal } from '../common/CadreHonorsModal';
 import { filterRecordsByHierarchy, calculateStudentPeriodSummary, CURRENT_SCHOOL_YEAR } from '../../utils/hierarchy';
@@ -73,7 +82,11 @@ interface StudentViewProps {
   currentWeek: number;
   settings: TeacherSettings;
   academicRecords?: StudentAcademicRecord[];
-  onSubmitExplanation: (recordId: string, explanation: string) => void;
+  cadreRole?: RoleCode;
+  rules?: RuleItem[];
+  onAddRecord?: (record: Omit<DisciplineRecord, 'maGhiNhan' | 'thoiGianMayChu' | 'thoiGianMay'>) => void;
+  onVoidRecord?: (recordId: string, reason: string) => void;
+  onSubmitExplanation?: (recordId: string, explanation: string) => void;
   onUpdateStudentAvatar?: (studentId: string, avatarUrl: string) => void;
   onLogout?: () => void;
   onChangeCurrentWeek?: (week: number) => void;
@@ -88,12 +101,173 @@ export const StudentView: React.FC<StudentViewProps> = ({
   currentWeek,
   settings,
   academicRecords,
+  cadreRole,
+  rules = [],
+  onAddRecord,
+  onVoidRecord,
   onSubmitExplanation,
   onUpdateStudentAvatar,
   onLogout,
   onChangeCurrentWeek,
 }) => {
-  const [activeTab, setActiveTab] = useState<'my_score' | 'grades' | 'badges' | 'seating' | 'ranking'>('my_score');
+  const primaryCadreRole = cadreRole || currentStudent.vaiTro.find(r => r !== 'HS') || 'HS';
+  const isCadre = primaryCadreRole !== 'HS';
+
+  const [activeTab, setActiveTab] = useState<'my_score' | 'grades' | 'badges' | 'seating' | 'ranking' | 'record' | 'my_log'>('my_score');
+
+  // Cadre specific state
+  const [fastSaveEnabled, setFastSaveEnabled] = useState(false);
+  const [isMultiSelect, setIsMultiSelect] = useState(false);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
+  const [duplicateWarningData, setDuplicateWarningData] = useState<{
+    pendingRule: RuleItem;
+    duplicateStudents: { student: Student; existingRecords: DisciplineRecord[] }[];
+    safeStudentIds: string[];
+  } | null>(null);
+  const [voidModalRecord, setVoidModalRecord] = useState<DisciplineRecord | null>(null);
+  const [voidReason, setVoidReason] = useState('');
+
+  const [logPeriodFilter, setLogPeriodFilter] = useState<HierarchyPeriodFilter>({
+    namHoc: CURRENT_SCHOOL_YEAR,
+    hocKi: 1,
+    thang: 'all',
+    tuanHoc: currentWeek,
+    ngayHoc: 'all',
+    buoi: 'all',
+  });
+
+  const selectedStudents = useMemo(() => {
+    return allStudents.filter(s => selectedStudentIds.includes(s.maHS));
+  }, [allStudents, selectedStudentIds]);
+
+  const singleSelectedStudent = selectedStudents.length > 0 ? selectedStudents[0] : null;
+
+  const filteredMyRecords = useMemo(() => {
+    const list = filterRecordsByHierarchy(records, logPeriodFilter);
+    return list.filter(r => r.nguoiGhi === currentStudent.hoTen);
+  }, [records, logPeriodFilter, currentStudent.hoTen]);
+
+  const handleSelectStudent = (student: Student) => {
+    if (isMultiSelect) {
+      setSelectedStudentIds(prev => {
+        if (prev.includes(student.maHS)) {
+          return prev.filter(id => id !== student.maHS);
+        } else {
+          return [...prev, student.maHS];
+        }
+      });
+    } else {
+      setSelectedStudentIds([student.maHS]);
+      setIsBottomSheetOpen(true);
+    }
+  };
+
+  const commitRecords = (
+    targets: Student[],
+    rule: RuleItem,
+    extraNote?: string,
+    date?: string,
+    buoi?: 'Sang' | 'Chieu',
+    confirmedDuplicate = false,
+    hocKi: 1 | 2 = 1,
+    tuanHoc: number = currentWeek
+  ) => {
+    if (!onAddRecord) return;
+    const targetDate = date || new Date().toISOString().split('T')[0];
+    const targetBuoi = buoi || (new Date().getHours() < 12 ? 'Sang' : 'Chieu');
+
+    targets.forEach(student => {
+      onAddRecord({
+        namHoc: CURRENT_SCHOOL_YEAR,
+        hocKi: hocKi,
+        thang: new Date(targetDate).getMonth() + 1,
+        tuanHoc: tuanHoc,
+        ngayHoc: targetDate,
+        buoi: targetBuoi,
+        doiTuong: 'HocSinh',
+        maHS: student.maHS,
+        hoTen: student.hoTen,
+        to: student.to,
+        maNoiQuy: rule.maNoiQuy,
+        nhomHanhVi: rule.nhomHanhVi,
+        tenHanhVi: rule.tenHanhVi,
+        mucDo: rule.mucDo,
+        diemSo: rule.diemSo,
+        loaiDiem: rule.loaiDiem,
+        ghiChu: extraNote,
+        nguoiGhi: currentStudent.hoTen,
+        vaiTroNguoiGhi: primaryCadreRole,
+        nguonGhi: 'TrucTiep',
+        lanThuTrongBuoi: 1,
+        daXacNhanTrung: confirmedDuplicate,
+        trangThai: 'HieuLuc',
+      });
+    });
+
+    setSelectedStudentIds([]);
+    setIsBottomSheetOpen(false);
+    setDuplicateWarningData(null);
+  };
+
+  const handleAttemptSubmitRule = (
+    rule: RuleItem, 
+    extraNote?: string, 
+    date?: string, 
+    buoi?: 'Sang' | 'Chieu',
+    hocKi: 1 | 2 = 1,
+    tuanHoc: number = currentWeek
+  ) => {
+    const targetStudents = isMultiSelect ? selectedStudents : (singleSelectedStudent ? [singleSelectedStudent] : []);
+    if (targetStudents.length === 0) return;
+
+    const duplicates: { student: Student; existingRecords: DisciplineRecord[] }[] = [];
+    const safeIds: string[] = [];
+    const targetDate = date || new Date().toISOString().split('T')[0];
+    const targetBuoi = buoi || (new Date().getHours() < 12 ? 'Sang' : 'Chieu');
+
+    targetStudents.forEach(st => {
+      const dupCheck = checkDuplicateRecord(
+        records,
+        st.maHS,
+        targetDate,
+        targetBuoi,
+        rule.maNoiQuy
+      );
+
+      if (dupCheck.isDuplicate) {
+        duplicates.push({ student: st, existingRecords: dupCheck.existingRecords });
+      } else {
+        safeIds.push(st.maHS);
+      }
+    });
+
+    if (duplicates.length > 0) {
+      setDuplicateWarningData({
+        pendingRule: rule,
+        duplicateStudents: duplicates,
+        safeStudentIds: safeIds,
+      });
+      return;
+    }
+
+    commitRecords(targetStudents, rule, extraNote, date, buoi, false, hocKi, tuanHoc);
+  };
+
+  const handleConfirmVoid = () => {
+    if (!voidModalRecord || !voidReason.trim() || !onVoidRecord) return;
+    onVoidRecord(voidModalRecord.maGhiNhan, voidReason.trim());
+    setVoidModalRecord(null);
+    setVoidReason('');
+  };
+
+  const getRemainingHours = (isoTime: string) => {
+    const recordTime = new Date(isoTime).getTime();
+    const now = new Date().getTime();
+    const limitMs = settings.thoiHanSuaHuyPhut * 60 * 1000;
+    const diff = (recordTime + limitMs) - now;
+    return Math.max(0, Math.floor(diff / (1000 * 60 * 60)));
+  };
 
   const myAcademicRecord = useMemo(() => {
     return (academicRecords || []).find(r => r.maHS === currentStudent.maHS);
@@ -510,13 +684,9 @@ export const StudentView: React.FC<StudentViewProps> = ({
     setExplanationText('');
   };
 
-  const isCadre = currentStudent.vaiTro.some(r => r !== 'HS');
-  const cadreRole = currentStudent.vaiTro.find(r => r !== 'HS');
-
   const studentBanner = useMemo(() => {
-    const primaryRole = currentStudent.vaiTro.find(r => r !== 'HS') || 'HS';
-    return getCadreBanner(primaryRole, currentStudent.toTruongTo || currentStudent.to);
-  }, [currentStudent]);
+    return getCadreBanner(primaryCadreRole, currentStudent.toTruongTo || currentStudent.to);
+  }, [primaryCadreRole, currentStudent]);
 
   return (
     <div className="w-full flex flex-col gap-4 animate-fadeIn">
@@ -635,6 +805,35 @@ export const StudentView: React.FC<StudentViewProps> = ({
           <User className="w-3.5 h-3.5 text-accent shrink-0" />
           <span>Của tôi</span>
         </button>
+
+        {/* CADRE TABS (Only for class cadres) */}
+        {isCadre && (
+          <button
+            onClick={() => setActiveTab('record')}
+            className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              activeTab === 'record' 
+                ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-rose-600 dark:text-rose-400' 
+                : 'text-muted hover:text-main'
+            }`}
+          >
+            <ClipboardList className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+            <span>Ghi vi phạm</span>
+          </button>
+        )}
+
+        {isCadre && (
+          <button
+            onClick={() => setActiveTab('my_log')}
+            className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              activeTab === 'my_log' 
+                ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-sky-600 dark:text-sky-400' 
+                : 'text-muted hover:text-main'
+            }`}
+          >
+            <Clock className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+            <span>Sổ ghi ({filteredMyRecords.length})</span>
+          </button>
+        )}
 
         <button
           onClick={() => setActiveTab('grades')}
@@ -1037,6 +1236,159 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CADRE TAB 1: GHI NHẬN VI PHẠM */}
+      {isCadre && activeTab === 'record' && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-end px-1">
+            <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-muted hover:text-main select-none">
+              <span>Lưu nhanh 1 chạm:</span>
+              <input
+                type="checkbox"
+                checked={fastSaveEnabled}
+                onChange={e => setFastSaveEnabled(e.target.checked)}
+                className="w-4 h-4 accent-accent rounded"
+              />
+            </label>
+          </div>
+
+          <StudentPicker
+            students={allStudents}
+            layout={layout}
+            studentSummaries={studentSummaries}
+            selectedStudentIds={selectedStudentIds}
+            onSelectStudent={handleSelectStudent}
+            viewerRole={primaryCadreRole}
+            viewerTo={primaryCadreRole === 'TT' ? (currentStudent.toTruongTo || currentStudent.to) : undefined}
+            showStatusColors={true}
+            isMultiSelect={isMultiSelect}
+            onToggleMultiSelect={() => {
+              setIsMultiSelect(!isMultiSelect);
+              if (isMultiSelect) setSelectedStudentIds([]);
+            }}
+          />
+
+          {isMultiSelect && selectedStudentIds.length > 0 && (
+            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 w-11/12 max-w-md bg-primary text-on-primary rounded-2xl shadow-2xl p-3 border border-token flex items-center justify-between animate-slide-up">
+              <div className="text-xs font-semibold">
+                Đã chọn <strong className="text-accent underline">{selectedStudentIds.length}</strong> học sinh
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsBottomSheetOpen(true)}
+                className="px-4 py-2 rounded-xl bg-accent text-on-accent text-xs font-bold shadow-xs hover:opacity-95 transition-opacity cursor-pointer flex items-center gap-1.5"
+              >
+                <span>Tiếp tục chọn lỗi</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* CADRE TAB 2: SỔ GHI CỦA TÔI */}
+      {isCadre && activeTab === 'my_log' && (
+        <div className="space-y-3">
+          <PeriodFilterComponent
+            filter={logPeriodFilter}
+            onChangeFilter={setLogPeriodFilter}
+            compact={true}
+          />
+
+          <div className="bg-surface rounded-3xl border border-token overflow-hidden shadow-xs">
+            <div className="px-4 py-3.5 border-b border-token flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-bold text-main uppercase tracking-wider">
+                  Sổ ghi nhận nề nếp của bạn
+                </h3>
+                <p className="text-[11px] text-muted mt-0.5">
+                  Có thể sửa hoặc hủy trong thời hạn 24 giờ kể từ thời điểm ghi
+                </p>
+              </div>
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-surface-2 text-muted">
+                {filteredMyRecords.length} lượt
+              </span>
+            </div>
+
+            <div className="divide-y divide-token">
+              {filteredMyRecords.length === 0 ? (
+                <div className="p-8 text-center text-xs text-muted space-y-2">
+                  <CheckCircle2 className="w-8 h-8 text-[var(--st-ok)] mx-auto" />
+                  <p>Không có lượt ghi nhận nào trong khoảng thời gian đã chọn.</p>
+                </div>
+              ) : (
+                filteredMyRecords.map(rec => {
+                  const isVoided = rec.trangThai === 'DaHuy';
+                  const remainingHours = getRemainingHours(rec.thoiGianMayChu);
+                  const canModify = !isVoided && remainingHours > 0;
+
+                  return (
+                    <div key={rec.maGhiNhan} className="p-3.5 space-y-2 hover:bg-surface-2/40 transition-colors">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-main">
+                              {rec.hoTen}
+                            </span>
+                            <span className="text-[11px] text-muted">
+                              (Tổ {rec.to})
+                            </span>
+                            <span className="text-xs font-bold text-[var(--st-bad)]">
+                              -{rec.diemSo}đ
+                            </span>
+                          </div>
+                          <div className="text-xs font-medium text-main mt-0.5">
+                            {rec.tenHanhVi}
+                          </div>
+                          <div className="text-[11px] text-muted flex items-center gap-2 mt-0.5">
+                            <span>{rec.ngayHoc} ({rec.buoi === 'Sang' ? 'Sáng' : 'Chiều'})</span>
+                            <span>·</span>
+                            <span>Lần {rec.lanThuTrongBuoi} trong buổi</span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          {isVoided ? (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-2 text-muted">
+                              Đã hủy
+                            </span>
+                          ) : canModify ? (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-muted flex items-center gap-1">
+                                <Clock className="w-3 h-3 text-accent" />
+                                <span>Còn {remainingHours}h</span>
+                              </span>
+                              {onVoidRecord && (
+                                <button
+                                  type="button"
+                                  onClick={() => setVoidModalRecord(rec)}
+                                  className="p-1.5 rounded-lg text-[var(--st-bad)] hover:bg-[var(--st-bad)]/10 transition-colors cursor-pointer"
+                                  title="Hủy bản ghi này"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-muted">
+                              Đã hết hạn 24h
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {rec.lyDoHuy && (
+                        <div className="text-[10px] text-[var(--st-bad)] italic bg-[var(--st-bad)]/5 p-2 rounded-xl border border-[var(--st-bad)]/20">
+                          <strong>Lý do hủy:</strong> {rec.lyDoHuy}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
@@ -1599,6 +1951,238 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 className="px-4 py-1.5 rounded-xl bg-accent text-on-accent text-xs font-bold hover:opacity-90 disabled:opacity-50 cursor-pointer shadow-xs"
               >
                 Gửi đơn giải trình
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cài đặt tài khoản Modal (Unified Settings for ALL students) */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="w-full max-w-sm bg-surface border border-token rounded-3xl shadow-2xl p-5 space-y-4 animate-scale-up">
+            <div className="flex items-center justify-between border-b border-token pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-accent/15 text-accent flex items-center justify-center">
+                  <Settings className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-main">Cài đặt tài khoản</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSettingsModal(false)}
+                className="p-1.5 rounded-full hover:bg-surface-2 text-muted hover:text-main cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Quick profile preview */}
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-surface-2/60 border border-token/60">
+              <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-token">
+                {currentStudent.avatarUrl ? (
+                  <img src={currentStudent.avatarUrl} alt={currentStudent.hoTen} className="w-full h-full object-cover" />
+                ) : (
+                  <div className={`w-full h-full flex items-center justify-center font-bold text-sm ${
+                    currentStudent.gioiTinh === 'Nu' ? 'bg-rose-100 text-rose-700' : 'bg-sky-100 text-sky-700'
+                  }`}>
+                    {getStudentAvatarInitial(currentStudent.hoTen)}
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-extrabold text-main truncate">{currentStudent.hoTen}</div>
+                <div className="text-[11px] text-muted font-medium">Tổ {currentStudent.to} · STT #{currentStudent.viTriGhe || currentStudent.maHS}</div>
+              </div>
+            </div>
+
+            {/* Menu options */}
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSettingsModal(false);
+                  setShowAvatarModal(true);
+                }}
+                className="w-full p-3 rounded-2xl bg-surface hover:bg-surface-2 border border-token hover:border-token-hover transition-all flex items-center justify-between text-left cursor-pointer group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+                    <Camera className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-main group-hover:text-accent">Đổi ảnh đại diện</div>
+                    <div className="text-[10.5px] text-muted">Chọn từ kho 40 avatar hoặc tải ảnh lên</div>
+                  </div>
+                </div>
+                <span className="text-muted text-xs">→</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSettingsModal(false);
+                  setActiveTab('badges');
+                }}
+                className="w-full p-3 rounded-2xl bg-surface hover:bg-surface-2 border border-token hover:border-token-hover transition-all flex items-center justify-between text-left cursor-pointer group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <Award className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-main group-hover:text-amber-600">Đổi huy hiệu danh dự</div>
+                    <div className="text-[10.5px] text-muted">Mang vào / tháo ra huy hiệu thi đua</div>
+                  </div>
+                </div>
+                <span className="text-muted text-xs">→</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSettingsModal(false);
+                  setShowPasswordModal(true);
+                }}
+                className="w-full p-3 rounded-2xl bg-surface hover:bg-surface-2 border border-token hover:border-token-hover transition-all flex items-center justify-between text-left cursor-pointer group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <KeyRound className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-main group-hover:text-emerald-600">Đổi mật khẩu</div>
+                    <div className="text-[10.5px] text-muted">Cập nhật mật khẩu bảo mật cá nhân (Mặc định: 123456)</div>
+                  </div>
+                </div>
+                <span className="text-muted text-xs">→</span>
+              </button>
+
+              {onLogout && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSettingsModal(false);
+                    onLogout();
+                  }}
+                  className="w-full p-3 rounded-2xl bg-rose-500/5 hover:bg-rose-500/15 border border-rose-500/20 transition-all flex items-center justify-between text-left cursor-pointer group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                      <LogOut className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-rose-600 dark:text-rose-400">Đăng xuất tài khoản</div>
+                      <div className="text-[10.5px] text-muted">Thoát khỏi phiên làm việc hiện tại</div>
+                    </div>
+                  </div>
+                  <span className="text-rose-500 text-xs">→</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cadre Record Bottom Sheet */}
+      <RecordBottomSheet
+        isOpen={isBottomSheetOpen}
+        onClose={() => {
+          setIsBottomSheetOpen(false);
+          if (!isMultiSelect) setSelectedStudentIds([]);
+        }}
+        students={isMultiSelect ? selectedStudents : (singleSelectedStudent ? [singleSelectedStudent] : [])}
+        rules={rules}
+        allowBonus={settings.batDiemCong}
+        initialWeek={currentWeek}
+        onSave={(payload) => {
+          handleAttemptSubmitRule(
+            payload.rule, 
+            payload.note, 
+            payload.date, 
+            payload.session, 
+            payload.hocKi, 
+            payload.tuanHoc
+          );
+        }}
+        currentUserRole={primaryCadreRole}
+        existingRecords={records}
+      />
+
+      {/* Cadre Duplicate Warning Modal */}
+      {duplicateWarningData && (
+        <DuplicateWarningModal
+          isOpen={true}
+          onClose={() => setDuplicateWarningData(null)}
+          onConfirm={(confirmedStudents) => {
+            commitRecords(
+              confirmedStudents,
+              duplicateWarningData.pendingRule,
+              undefined,
+              undefined,
+              undefined,
+              true
+            );
+          }}
+          selectedStudents={isMultiSelect ? selectedStudents : (singleSelectedStudent ? [singleSelectedStudent] : [])}
+          selectedRule={duplicateWarningData.pendingRule}
+          existingRecordsByStudent={
+            duplicateWarningData.duplicateStudents.reduce((acc, item) => {
+              acc[item.student.maHS] = item.existingRecords;
+              return acc;
+            }, {} as Record<string, DisciplineRecord[]>)
+          }
+        />
+      )}
+
+      {/* Cadre Void Record Confirmation Modal */}
+      {voidModalRecord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-sm bg-surface border border-token rounded-3xl shadow-2xl p-4 sm:p-5 space-y-3.5 animate-scale-up">
+            <div className="flex items-center justify-between border-b border-token pb-2.5">
+              <h4 className="text-sm font-bold text-main">
+                Hủy bản ghi vi phạm 🗑️
+              </h4>
+              <button
+                onClick={() => setVoidModalRecord(null)}
+                className="p-1 rounded-md text-muted hover:text-main cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-muted">
+              Bạn đang hủy ghi nhận lỗi của <strong>{voidModalRecord.hoTen}</strong> ({voidModalRecord.tenHanhVi}).
+            </p>
+
+            <div>
+              <label className="block text-xs font-semibold text-main mb-1">
+                Lý do hủy (bắt buộc):
+              </label>
+              <textarea
+                value={voidReason}
+                onChange={e => setVoidReason(e.target.value)}
+                rows={2}
+                placeholder="Ghi nhầm tên học sinh, bạn đã giải thích đúng..."
+                className="w-full p-2.5 bg-surface-2 border border-token rounded-xl text-xs text-main placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-token">
+              <button
+                type="button"
+                onClick={() => setVoidModalRecord(null)}
+                className="px-3 py-1.5 rounded-xl border border-token text-xs text-muted hover:text-main cursor-pointer"
+              >
+                Quay lại
+              </button>
+              <button
+                type="button"
+                disabled={!voidReason.trim()}
+                onClick={handleConfirmVoid}
+                className="px-4 py-1.5 rounded-xl bg-[var(--st-bad)] text-white text-xs font-bold hover:opacity-90 disabled:opacity-50 cursor-pointer shadow-xs"
+              >
+                Xác nhận hủy
               </button>
             </div>
           </div>
