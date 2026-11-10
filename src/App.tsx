@@ -78,7 +78,7 @@ export default function App() {
         const hasValidUrl = s.avatarUrl && !s.avatarUrl.startsWith('HS') && s.avatarUrl.length > 5;
         return {
           ...s,
-          avatarUrl: hasValidUrl ? s.avatarUrl : getDefaultStudentAvatar(s.maHS, s.gioiTinh)
+          avatarUrl: hasValidUrl ? s.avatarUrl : getDefaultStudentAvatar(s.maHS, s.gioiTinh || 'Nam')
         };
       });
     } catch {
@@ -156,7 +156,7 @@ export default function App() {
           ...session.user,
           hoTen: prof.hoTen,
           statusText: prof.statusText,
-          avatarUrl: resolveTeacherAvatar(session.user.avatarUrl || getTeacherAvatar()),
+          avatarUrl: resolveTeacherAvatar((session.user as any).avatarUrl || getTeacherAvatar()),
         };
       }
       return session.user;

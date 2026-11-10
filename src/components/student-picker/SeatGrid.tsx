@@ -469,8 +469,8 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                               }
                             `}
                             style={
-                              showStatusColors && summary && summary.mucMau !== 'ok'
-                                ? { borderColor: borderColor, borderWidth: '2.5px' }
+                              showStatusColors && summary && summary.mucMau !== 'ok' && statusBorderColor
+                                ? { borderColor: statusBorderColor, borderWidth: '2.5px' }
                                 : undefined
                             }
                           >

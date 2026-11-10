@@ -289,10 +289,6 @@ export const StudentView: React.FC<StudentViewProps> = ({
         setShowAvatarModal(false);
         return;
       }
-      if (showBadgeModal) {
-        setShowBadgeModal(false);
-        return;
-      }
       if (showPasswordModal) {
         setShowPasswordModal(false);
         return;
@@ -309,7 +305,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [activeTab, showSettingsModal, showAvatarModal, showBadgeModal, showPasswordModal, showCadreModal]);
+  }, [activeTab, showSettingsModal, showAvatarModal, showPasswordModal, showCadreModal]);
 
   // Pre-calculate weekly stats for each of the 4 rows
   const fourWeeksData = useMemo(() => {
@@ -433,11 +429,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
     }
 
     if (rankingRatingFilter !== 'all') {
-      if (rankingRatingFilter === 'CanCoGang') {
-        list = list.filter(item => item.xepLoai === 'KhongDat');
-      } else {
-        list = list.filter(item => item.xepLoai === rankingRatingFilter);
-      }
+      list = list.filter(item => item.xepLoai === rankingRatingFilter);
     }
 
     if (rankingSearchQuery.trim()) {
@@ -498,7 +490,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
     const totCount = displayedRankings.filter(item => item.xepLoai === 'Tot').length;
     const khaCount = displayedRankings.filter(item => item.xepLoai === 'Kha').length;
     const datCount = displayedRankings.filter(item => item.xepLoai === 'Dat').length;
-    const canCoGangCount = displayedRankings.filter(item => item.xepLoai === 'KhongDat').length;
+    const canCoGangCount = displayedRankings.filter(item => item.xepLoai === 'ChuaDat').length;
     return { avgScore, totCount, khaCount, datCount, canCoGangCount };
   }, [displayedRankings]);
 
