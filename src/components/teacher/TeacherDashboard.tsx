@@ -23,8 +23,11 @@ import {
   Download,
   LogOut,
   Edit3,
-  FileText
+  FileText,
+  Calendar
 } from 'lucide-react';
+import { Logo10A5 } from '../common/Logo10A5';
+import { resolveTeacherAvatar, DEFAULT_TEACHER_AVATAR } from '../../data/teacherAvatars';
 import { StudentImportModal } from './StudentImportModal';
 import { UniversalSmartImportSection } from './UniversalSmartImportSection';
 import { AiDataBridgeSection } from './AiDataBridgeSection';
@@ -509,177 +512,287 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   return (
     <div className="w-full flex flex-col gap-4">
-      {/* Integrated Hero Banner with Top Utilities & Embedded Navigation Tabs */}
-      <div className="relative overflow-hidden rounded-3xl border border-token shadow-xs bg-surface">
-        <div className="relative min-h-[135px] sm:min-h-[145px] w-full overflow-hidden flex flex-col justify-between p-3 sm:p-3.5">
+      {/* Integrated Hero Banner Header (Synchronized with Student/Cadre Banner Style) */}
+      <div className="relative overflow-hidden rounded-3xl border border-token shadow-md bg-surface">
+        <div className="relative min-h-[145px] sm:min-h-[155px] w-full overflow-hidden flex flex-col justify-between p-3.5 sm:p-4">
           <img
             src={bannerGv}
-            alt="Tập thể Lớp 10A5 - THPT Số 2 Đức Phổ"
+            alt="Giáo viên Chủ nhiệm - Lớp 10A5"
             className="absolute inset-0 w-full h-full object-cover object-center"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
+          {/* Deep dark gradient overlay ensures all text is crisp and never sunken */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/40" />
 
-          {/* Top Row: Utility buttons on the right (Left descriptions completely removed as requested) */}
-          <div className="relative z-10 flex items-center justify-end gap-1 sm:gap-1.5 flex-nowrap overflow-x-auto scrollbar-none py-0.5">
-            <button
-              type="button"
-              onClick={() => setShowFrameModal(true)}
-              className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-black/40 hover:bg-black/60 border border-white/20 hover:border-amber-400 text-white text-[10px] sm:text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-xs shrink-0"
-              title="Quản lý khung vinh danh & hào quang học sinh"
+          {/* Top Row: School Logo + Name + School Year on the Left; Teacher Utilities & Logout on the Right */}
+          <div className="relative z-10 flex items-center justify-between gap-2">
+            <div 
+              className="flex items-center gap-2 min-w-0 cursor-pointer group select-none"
+              onClick={() => setActiveTab('overview')}
+              title="Bấm vào logo để về màn hình Tổng quan"
             >
-              <Crown className="w-3 h-3 text-amber-300" />
-              <span className="hidden xs:inline">Khung</span>
-              <span className="hidden sm:inline">vinh danh</span>
-            </button>
+              <Logo10A5 size="sm" animate={false} />
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs sm:text-sm font-black tracking-tight text-white drop-shadow-md uppercase whitespace-nowrap truncate group-hover:text-amber-300 transition-colors">
+                  TRƯỜNG THPT SỐ 2 ĐỨC PHỔ
+                </span>
+                <span className="text-[9.5px] sm:text-[10px] font-semibold text-slate-300 drop-shadow leading-none">
+                  Năm học 2026-2027
+                </span>
+              </div>
+            </div>
 
-            <button
-              type="button"
-              onClick={() => setShowBadgeModal(true)}
-              className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-black/40 hover:bg-black/60 border border-white/20 hover:border-amber-400 text-white text-[10px] sm:text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-xs shrink-0"
-              title="Kho 30 huy hiệu thi đua cá nhân"
-            >
-              <Award className="w-3 h-3 text-amber-300" />
-              <span>30 Huy hiệu</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowCadreModal(true)}
-              className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-amber-500/20 hover:bg-amber-500/35 border border-amber-300/40 text-amber-200 text-[10px] sm:text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-xs shrink-0"
-              title="Chức năng GVCN: Vinh danh Ban cán sự lớp"
-            >
-              <Award className="w-3.5 h-3.5 text-amber-300" />
-              <span>Vinh danh cán sự</span>
-            </button>
-
-            {onLogout && (
+            {/* Teacher Utilities (10 Trò Gọi Bảng, Khung, 30 Huy hiệu, Vinh danh cán sự, Avatar GV, Thoát) */}
+            <div className="flex items-center gap-1 sm:gap-1.5 flex-nowrap overflow-x-auto scrollbar-none py-0.5 shrink-0">
               <button
                 type="button"
-                onClick={onLogout}
-                className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-rose-500/40 hover:bg-rose-600/70 border border-rose-300/40 text-white text-[10px] sm:text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-xs shrink-0"
-                title="Đăng xuất khỏi Bảng điều khiển Giáo viên"
+                onClick={() => setActiveTab('apps')}
+                className={`px-2 sm:px-2.5 py-1 rounded-xl text-white text-[10px] sm:text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0 border ${
+                  activeTab === 'apps'
+                    ? 'bg-gradient-to-r from-orange-500 to-rose-500 border-amber-300 shadow-orange-500/30'
+                    : 'bg-black/40 hover:bg-black/60 border-white/20 hover:border-amber-400'
+                }`}
+                title="Mở 10 trò chơi gọi học sinh lên bảng"
               >
-                <LogOut className="w-3 h-3 text-rose-200" />
-                <span>Thoát</span>
+                <span>🎲</span>
+                <span className="hidden sm:inline">10 Trò Gọi Bảng</span>
+                <span className="sm:hidden">Trò chơi</span>
               </button>
-            )}
+
+              <button
+                type="button"
+                onClick={() => setShowFrameModal(true)}
+                className="px-2 sm:px-2.5 py-1 rounded-xl bg-black/40 hover:bg-black/60 border border-white/20 hover:border-amber-400 text-white text-[10px] sm:text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0"
+                title="Quản lý khung vinh danh & hào quang học sinh"
+              >
+                <Crown className="w-3.5 h-3.5 text-amber-300" />
+                <span className="hidden sm:inline">Khung vinh danh</span>
+                <span className="sm:hidden">Khung</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowBadgeModal(true)}
+                className="px-2 sm:px-2.5 py-1 rounded-xl bg-black/40 hover:bg-black/60 border border-white/20 hover:border-amber-400 text-white text-[10px] sm:text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0"
+                title="Kho 30 huy hiệu thi đua cá nhân"
+              >
+                <Award className="w-3.5 h-3.5 text-amber-300" />
+                <span className="hidden sm:inline">30 Huy hiệu</span>
+                <span className="sm:hidden">Huy hiệu</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowCadreModal(true)}
+                className="px-2.5 sm:px-3 py-1 rounded-xl bg-amber-500/25 hover:bg-amber-500/40 border border-amber-300/50 text-amber-200 text-[10px] sm:text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0"
+                title="Chức năng GVCN: Vinh danh Ban cán sự lớp"
+              >
+                <Award className="w-3.5 h-3.5 text-amber-300" />
+                <span>Vinh danh cán sự</span>
+              </button>
+
+              {/* Teacher Avatar Thumbnail (Click to open teacher profile/avatar modal) */}
+              {(onOpenTeacherAvatar || onOpenTeacherProfile) && (
+                <button
+                  type="button"
+                  onClick={() => onOpenTeacherProfile ? onOpenTeacherProfile() : onOpenTeacherAvatar?.()}
+                  className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden border border-white/40 hover:border-amber-300 bg-surface-2 flex items-center justify-center shrink-0 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  title="Bấm để đổi ảnh đại diện và hồ sơ Giáo viên"
+                >
+                  <img
+                    src={resolveTeacherAvatar(teacherAvatarUrl)}
+                    alt="Giáo viên"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = DEFAULT_TEACHER_AVATAR;
+                    }}
+                  />
+                </button>
+              )}
+
+              {onLogout && (
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="px-2.5 py-1 rounded-xl bg-rose-500/50 hover:bg-rose-600/80 border border-rose-300/40 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0"
+                  title="Đăng xuất khỏi Bảng điều khiển Giáo viên"
+                >
+                  <LogOut className="w-3.5 h-3.5 text-rose-200" />
+                  <span>Thoát</span>
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Bottom Row: Navigation Tabs directly on the Banner */}
-          <div className="relative z-10 pt-2">
-            <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto p-1.5 rounded-2xl bg-black/40 backdrop-blur-md border border-white/20 text-xs font-semibold scrollbar-none">
-              <button
-                type="button"
-                onClick={() => setActiveTab('overview')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-                  activeTab === 'overview'
-                    ? 'bg-white text-gray-900 font-extrabold shadow-sm'
-                    : 'text-white/85 hover:text-white hover:bg-white/15'
-                }`}
-              >
-                <BarChart3 className="w-3.5 h-3.5 text-accent" />
-                <span>Tổng quan</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('roster')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-                  activeTab === 'roster'
-                    ? 'bg-white text-gray-900 font-extrabold shadow-sm'
-                    : 'text-white/85 hover:text-white hover:bg-white/15'
-                }`}
-              >
-                <Users className="w-3.5 h-3.5 text-accent" />
-                <span>Sơ đồ lớp</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('explanations')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-                  activeTab === 'explanations'
-                    ? 'bg-white text-gray-900 font-extrabold shadow-sm'
-                    : 'text-white/85 hover:text-white hover:bg-white/15'
-                }`}
-              >
-                <CheckSquare className="w-3.5 h-3.5 text-accent" />
-                <span>Giải trình</span>
-                {pendingExplanations.length > 0 && (
-                  <span className="w-4 h-4 rounded-full bg-[var(--st-bad)] text-white text-[10px] flex items-center justify-center font-bold">
-                    {pendingExplanations.length}
-                  </span>
+          {/* Bottom Area: Week Selector Capsule + Role Badge & Slogan */}
+          <div className="relative z-10 pt-2 flex flex-col gap-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Interactive Week Capsule Selector for Teacher */}
+              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-black/50 hover:bg-black/70 border border-white/25 text-amber-300 font-extrabold text-[11px] shadow-xs backdrop-blur-md transition-all">
+                <Calendar className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                {onChangeCurrentWeek ? (
+                  <select
+                    value={currentWeek}
+                    onChange={e => onChangeCurrentWeek(Number(e.target.value))}
+                    className="bg-transparent text-white font-bold cursor-pointer focus:outline-none pr-0.5 text-[11px]"
+                    title="Chạm để chuyển tuần học"
+                  >
+                    {Array.from({ length: 38 }, (_, i) => i + 1).map(w => (
+                      <option key={w} value={w} className="bg-slate-900 text-white font-semibold">
+                        Tuần {w} {w <= 19 ? '(HK1)' : '(HK2)'}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span>Tuần {currentWeek} {currentWeek <= 19 ? '(HK1)' : '(HK2)'}</span>
                 )}
-              </button>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => setActiveTab('grades')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-                  activeTab === 'grades'
-                    ? 'bg-white text-gray-900 font-extrabold shadow-sm'
-                    : 'text-white/85 hover:text-white hover:bg-white/15'
-                }`}
-              >
-                <GraduationCap className="w-3.5 h-3.5 text-accent" />
-                <span>Bảng điểm</span>
-              </button>
+              {/* Role Badge */}
+              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full border backdrop-blur-md shadow-xs bg-purple-500/20 text-purple-300 border-purple-400/40">
+                Giáo viên Chủ nhiệm
+              </span>
+            </div>
 
-              <button
-                type="button"
-                onClick={() => setActiveTab('rules')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-                  activeTab === 'rules'
-                    ? 'bg-white text-gray-900 font-extrabold shadow-sm'
-                    : 'text-white/85 hover:text-white hover:bg-white/15'
-                }`}
+            {/* Slogan with customizable text, icon, color, style */}
+            <div className="flex items-center gap-1.5 text-[11px] text-white/95 font-semibold drop-shadow-md">
+              <span
+                style={{
+                  color: settings?.bannerSloganColor || '#ffffff',
+                  fontStyle: (settings?.bannerSloganStyle ?? 'italic') === 'italic' ? 'italic' : 'normal',
+                  fontWeight: (settings?.bannerSloganStyle ?? 'italic') === 'bold' ? 800 : 600,
+                }}
               >
-                <Layers className="w-3.5 h-3.5 text-accent" />
-                <span>Nội quy</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('ai_gemini')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-                  activeTab === 'ai_gemini'
-                    ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-extrabold shadow-sm ring-1 ring-purple-300'
-                    : 'text-purple-200 hover:text-white hover:bg-purple-500/20'
-                }`}
-              >
-                <Bot className="w-3.5 h-3.5 text-purple-300 animate-pulse" />
-                <span>Trợ lý AI</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('import_export')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-                  activeTab === 'import_export'
-                    ? 'bg-white text-gray-900 font-extrabold shadow-sm'
-                    : 'text-white/85 hover:text-white hover:bg-white/15'
-                }`}
-              >
-                <FileSpreadsheet className="w-3.5 h-3.5 text-accent" />
-                <span>Nhập / Xuất</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('settings')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-                  activeTab === 'settings'
-                    ? 'bg-white text-gray-900 font-extrabold shadow-sm'
-                    : 'text-white/85 hover:text-white hover:bg-white/15'
-                }`}
-              >
-                <Settings className="w-3.5 h-3.5 text-accent" />
-                <span>Cài đặt</span>
-              </button>
+                "{settings?.bannerSloganText || 'Tận tâm - Thấu hiểu - Định hướng tương lai'} {settings?.bannerSloganIcon || '🎓'}"
+              </span>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Navigation Tabs Bar: Placed cleanly under the banner */}
+      <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto p-1.5 rounded-2xl bg-surface-2 border border-token text-xs font-semibold scrollbar-none shadow-2xs">
+        <button
+          type="button"
+          onClick={() => setActiveTab('overview')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
+            activeTab === 'overview'
+              ? 'bg-surface text-main font-extrabold shadow-xs ring-1 ring-token text-accent'
+              : 'text-muted hover:text-main hover:bg-surface/50'
+          }`}
+        >
+          <BarChart3 className="w-3.5 h-3.5 text-accent" />
+          <span>Tổng quan</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('roster')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
+            activeTab === 'roster'
+              ? 'bg-surface text-main font-extrabold shadow-xs ring-1 ring-token text-accent'
+              : 'text-muted hover:text-main hover:bg-surface/50'
+          }`}
+        >
+          <Users className="w-3.5 h-3.5 text-accent" />
+          <span>Sơ đồ lớp</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('apps')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
+            activeTab === 'apps'
+              ? 'bg-gradient-to-r from-orange-500 to-rose-500 text-white font-extrabold shadow-sm'
+              : 'text-muted hover:text-main hover:bg-surface/50'
+          }`}
+        >
+          <span className="text-xs">🎲</span>
+          <span>10 Trò chơi</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('explanations')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
+            activeTab === 'explanations'
+              ? 'bg-surface text-main font-extrabold shadow-xs ring-1 ring-token text-accent'
+              : 'text-muted hover:text-main hover:bg-surface/50'
+          }`}
+        >
+          <CheckSquare className="w-3.5 h-3.5 text-accent" />
+          <span>Giải trình</span>
+          {pendingExplanations.length > 0 && (
+            <span className="w-4 h-4 rounded-full bg-[var(--st-bad)] text-white text-[10px] flex items-center justify-center font-bold">
+              {pendingExplanations.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('grades')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
+            activeTab === 'grades'
+              ? 'bg-surface text-main font-extrabold shadow-xs ring-1 ring-token text-accent'
+              : 'text-muted hover:text-main hover:bg-surface/50'
+          }`}
+        >
+          <GraduationCap className="w-3.5 h-3.5 text-accent" />
+          <span>Bảng điểm</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('rules')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
+            activeTab === 'rules'
+              ? 'bg-surface text-main font-extrabold shadow-xs ring-1 ring-token text-accent'
+              : 'text-muted hover:text-main hover:bg-surface/50'
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5 text-accent" />
+          <span>Nội quy</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('ai_gemini')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
+            activeTab === 'ai_gemini'
+              ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-extrabold shadow-sm ring-1 ring-purple-300'
+              : 'text-purple-600 dark:text-purple-300 hover:text-purple-700 hover:bg-purple-500/10'
+          }`}
+        >
+          <Bot className="w-3.5 h-3.5 text-purple-500 dark:text-purple-300 animate-pulse" />
+          <span>Trợ lý AI</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('import_export')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
+            activeTab === 'import_export'
+              ? 'bg-surface text-main font-extrabold shadow-xs ring-1 ring-token text-accent'
+              : 'text-muted hover:text-main hover:bg-surface/50'
+          }`}
+        >
+          <FileSpreadsheet className="w-3.5 h-3.5 text-accent" />
+          <span>Nhập / Xuất</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('settings')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
+            activeTab === 'settings'
+              ? 'bg-surface text-main font-extrabold shadow-xs ring-1 ring-token text-accent'
+              : 'text-muted hover:text-main hover:bg-surface/50'
+          }`}
+        >
+          <Settings className="w-3.5 h-3.5 text-accent" />
+          <span>Cài đặt</span>
+        </button>
       </div>
 
       {/* Sub-tab "Quay lại" (Back) button when in any secondary tab */}

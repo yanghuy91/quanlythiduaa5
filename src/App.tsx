@@ -780,8 +780,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-app text-main antialiased selection:bg-accent/20">
-      {/* Header (Rendered for Guests & Teacher; For ALL Students & Cadres, the Banner is the Integrated Header) */}
-      {(!currentUser || currentRole === 'GV') && (
+      {/* Header (Chỉ hiển thị khi là Khách chưa đăng nhập; Với GV và HS, Banner đóng vai trò Header tích hợp) */}
+      {!currentUser && (
         <Header
           currentUser={currentUser}
           currentRole={currentRole}
