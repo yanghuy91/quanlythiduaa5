@@ -3,6 +3,7 @@ import { Student } from '../../types';
 import { AVATAR_FRAMES, CADRE_EMBLEMS, getFrameForStudent } from '../../data/frameData';
 import { AvatarFrame } from '../common/AvatarFrame';
 import { getStudentAvatarInitial } from '../../utils/vietnamese';
+import { resolveStudentAvatar } from '../../data/avatarPresets';
 
 interface FrameManagementModalProps {
   isOpen: boolean;
@@ -154,7 +155,7 @@ export const FrameManagementModal: React.FC<FrameManagementModalProps> = ({
           <section className="space-y-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <span>👥</span> Danh Sách 42 Học Sinh & Quản Lý Khung
+                <span>👥</span> Danh Sách {students.length} Học Sinh & Quản Lý Khung
               </h3>
               <span className="text-xs text-slate-500 font-medium">
                 Hiển thị: <b>{filteredStudents.length}</b> / {students.length} học sinh
@@ -243,7 +244,7 @@ export const FrameManagementModal: React.FC<FrameManagementModalProps> = ({
                           <AvatarFrame frame={activeFrame} cadreRole={cadreRoleKey} size="sm">
                             {s.avatarUrl ? (
                               <img
-                                src={s.avatarUrl}
+                                src={resolveStudentAvatar(s.avatarUrl)}
                                 alt={s.hoTen}
                                 className="w-full h-full object-cover rounded-full"
                               />

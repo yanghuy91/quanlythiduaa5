@@ -16,6 +16,7 @@ import { getStudentAvatarInitial } from '../../utils/vietnamese';
 import { RecorderBadge } from '../common/RecorderBadge';
 import { AvatarFrame } from '../common/AvatarFrame';
 import { getFrameById } from '../../data/frameData';
+import { resolveStudentAvatar } from '../../data/avatarPresets';
 
 interface StudentInfractionDetailModalProps {
   isOpen: boolean;
@@ -90,7 +91,7 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
               <AvatarFrame frame={frameConfig} size="md">
                 {student.avatarUrl ? (
                   <img
-                    src={student.avatarUrl}
+                    src={resolveStudentAvatar(student.avatarUrl)}
                     alt={student.hoTen}
                     className="w-full h-full object-cover rounded-full"
                   />

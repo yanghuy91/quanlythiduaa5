@@ -17,6 +17,7 @@ import { ROLE_CONFIG } from '../../data/mockData';
 import { getSeatingMapDisplayName, getStudentAvatarInitial } from '../../utils/vietnamese';
 import { getBadgeCatalog, getStudentActiveBadge, getStudentBadgesMap } from '../../data/badgeCatalog';
 import { BadgeEmblem } from '../common/BadgeEmblem';
+import { resolveStudentAvatar } from '../../data/avatarPresets';
 
 interface SeatGridProps {
   layout: SeatLayoutNode[];
@@ -173,14 +174,14 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
         <div className="flex items-center gap-2 text-[11px] font-semibold text-muted">
           <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-sky-700 dark:text-sky-300 border-2 border-sky-400 dark:border-sky-500 shadow-2xs font-bold">
             <span className="w-2 h-2 rounded-full bg-sky-500" />
-            <span>Nam: 25</span>
+            <span>Nam: {students.filter(s => s.gioiTinh !== 'Nu').length}</span>
           </span>
           <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-rose-700 dark:text-rose-300 border-2 border-rose-400 dark:border-rose-500 shadow-2xs font-bold">
             <span className="w-2 h-2 rounded-full bg-rose-500" />
-            <span>Nữ: 17</span>
+            <span>Nữ: {students.filter(s => s.gioiTinh === 'Nu').length}</span>
           </span>
           <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-muted">
-            Tổng: <strong className="text-main">42</strong> ghế
+            Tổng: <strong className="text-main">{students.length}</strong> ghế
           </span>
         </div>
       </div>
@@ -480,7 +481,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                             {/* Ảnh Avatar 3D chất lượng cao hiển thị to bản */}
                             {student.avatarUrl ? (
                               <img
-                                src={student.avatarUrl}
+                                src={resolveStudentAvatar(student.avatarUrl)}
                                 alt={student.hoTen}
                                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                 loading="lazy"

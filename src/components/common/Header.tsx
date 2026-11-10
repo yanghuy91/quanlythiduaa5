@@ -17,6 +17,7 @@ import { ROLE_CONFIG } from '../../data/mockData';
 import { getStudentAvatarInitial } from '../../utils/vietnamese';
 import { Logo10A5 } from './Logo10A5';
 import { resolveTeacherAvatar, DEFAULT_TEACHER_AVATAR } from '../../data/teacherAvatars';
+import { resolveStudentAvatar } from '../../data/avatarPresets';
 
 interface HeaderProps {
   currentUser: Student | { hoTen: string; vaiTro: RoleCode[]; avatarUrl?: string; statusText?: string } | null;
@@ -148,7 +149,7 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 {'avatarUrl' in currentUser && (currentUser as any).avatarUrl ? (
                   <img
-                    src={currentRole === 'GV' ? resolveTeacherAvatar((currentUser as any).avatarUrl) : (currentUser as Student).avatarUrl}
+                    src={currentRole === 'GV' ? resolveTeacherAvatar((currentUser as any).avatarUrl) : resolveStudentAvatar((currentUser as Student).avatarUrl)}
                     alt={currentUser.hoTen}
                     className="w-full h-full object-cover"
                     onError={(e) => {

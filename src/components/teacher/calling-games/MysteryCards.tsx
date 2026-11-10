@@ -3,6 +3,7 @@ import { ArrowLeft, Sparkles, Gift, RotateCcw } from 'lucide-react';
 import { Student } from '../../../types';
 import { soundEffects } from '../../../utils/soundEffects';
 import { getStudentAvatarInitial } from '../../../utils/vietnamese';
+import { resolveStudentAvatar } from '../../../data/avatarPresets';
 
 interface MysteryCardsProps {
   candidates: Student[];
@@ -119,7 +120,7 @@ export const MysteryCards: React.FC<MysteryCardsProps> = ({
 
                   <div className="w-12 h-12 rounded-xl overflow-hidden border border-amber-400/50 bg-surface-2 flex items-center justify-center">
                     {st?.avatarUrl ? (
-                      <img src={st.avatarUrl} alt={st.hoTen} className="w-full h-full object-cover" />
+                      <img src={resolveStudentAvatar(st.avatarUrl)} alt={st.hoTen} className="w-full h-full object-cover" />
                     ) : (
                       <span className="text-sm font-extrabold text-accent">
                         {st ? getStudentAvatarInitial(st.hoTen) : '?'}

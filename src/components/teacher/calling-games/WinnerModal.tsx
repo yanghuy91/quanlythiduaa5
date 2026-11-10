@@ -4,6 +4,7 @@ import { Student, RoleCode } from '../../../types';
 import { ROLE_CONFIG } from '../../../data/mockData';
 import { soundEffects } from '../../../utils/soundEffects';
 import { getStudentAvatarInitial } from '../../../utils/vietnamese';
+import { resolveStudentAvatar } from '../../../data/avatarPresets';
 
 interface WinnerModalProps {
   student: Student | null;
@@ -74,7 +75,7 @@ export const WinnerModal: React.FC<WinnerModalProps> = ({
             <div className="w-24 h-24 rounded-3xl overflow-hidden border-4 border-amber-500 shadow-xl bg-surface-2 flex items-center justify-center ring-4 ring-amber-500/20">
               {student.avatarUrl ? (
                 <img
-                  src={student.avatarUrl}
+                  src={resolveStudentAvatar(student.avatarUrl)}
                   alt={student.hoTen}
                   className="w-full h-full object-cover object-center"
                 />

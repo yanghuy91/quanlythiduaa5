@@ -14,6 +14,7 @@ import { Student, SeatLayoutNode, StudentWeekSummary, RoleCode } from '../../typ
 import { searchStudents, sortVietnameseNames, getStudentAvatarInitial } from '../../utils/vietnamese';
 import { SeatGrid } from './SeatGrid';
 import { ROLE_CONFIG } from '../../data/mockData';
+import { resolveStudentAvatar } from '../../data/avatarPresets';
 
 interface StudentPickerProps {
   students: Student[];
@@ -211,7 +212,7 @@ export const StudentPicker: React.FC<StudentPickerProps> = ({
                       <div className="relative w-9 h-9 rounded-xl overflow-hidden border border-token/70 shrink-0 bg-surface-2 shadow-2xs">
                         {student.avatarUrl ? (
                           <img 
-                            src={student.avatarUrl} 
+                            src={resolveStudentAvatar(student.avatarUrl)} 
                             alt={student.hoTen} 
                             className="w-full h-full object-cover" 
                             loading="lazy" 

@@ -73,6 +73,8 @@ import { AvatarUploadModal } from '../common/AvatarUploadModal';
 import { ChangePasswordModal } from '../auth/ChangePasswordModal';
 import { getCadreBanner } from '../../data/cadreBanners';
 import { getStudentAvatarInitial, removeVietnameseAccents } from '../../utils/vietnamese';
+import { resolveStudentAvatar } from '../../data/avatarPresets';
+import honorStudentTrophy from '../../assets/images/honor_student_trophy_1794145975161.jpg';
 
 interface StudentViewProps {
   currentStudent: Student;
@@ -698,7 +700,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
     <div className="w-full flex flex-col gap-4 animate-fadeIn">
       {/* Integrated Banner Header (Replaces separate top header on mobile & desktop) */}
       <div className="relative overflow-hidden rounded-3xl border border-token shadow-md bg-surface">
-        <div className="relative min-h-[145px] sm:min-h-[155px] w-full overflow-hidden flex flex-col justify-between p-3.5 sm:p-4">
+        <div className="relative min-h-[155px] sm:min-h-[165px] w-full overflow-hidden flex flex-col justify-between p-3.5 sm:p-4 gap-3">
           {studentBanner.imageSrc ? (
             <img
               src={studentBanner.imageSrc}
@@ -709,7 +711,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
             <div className={`absolute inset-0 w-full h-full bg-gradient-to-r ${studentBanner.gradientFallback}`} />
           )}
           {/* Deep dark gradient overlay ensures all text is crisp and never sunken */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/65 to-black/45" />
 
           {/* Top Row: Logo, Title horizontal, and Logout button */}
           <div className="relative z-10 flex items-center justify-between gap-2">
@@ -720,35 +722,87 @@ export const StudentView: React.FC<StudentViewProps> = ({
             >
               <Logo10A5 size="sm" animate={false} />
               <div className="flex flex-col min-w-0">
-                <span className="text-xs sm:text-sm font-black tracking-tight text-white drop-shadow-md uppercase whitespace-nowrap truncate group-hover:text-amber-300 transition-colors">
+                <span className="text-xs sm:text-sm font-black tracking-tight text-white drop-shadow-md uppercase truncate group-hover:text-amber-300 transition-colors">
                   TRƯỜNG THPT SỐ 2 ĐỨC PHỔ
                 </span>
                 <span className="text-[9.5px] sm:text-[10px] font-semibold text-slate-300 drop-shadow leading-none">
-                  Năm học 2026-2027
+                  Năm học 2026-2027 · Lớp 10A5
                 </span>
               </div>
             </div>
 
-            {/* Quick Logout Button */}
-            {onLogout && (
+            {/* Quick Settings & Logout Buttons */}
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
-                onClick={onLogout}
-                className="px-2.5 py-1 rounded-xl bg-rose-500/50 hover:bg-rose-600/80 border border-rose-300/40 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0"
-                title="Đăng xuất khỏi tài khoản"
+                onClick={() => setShowSettingsModal(true)}
+                className="px-2.5 py-1 rounded-xl bg-black/45 hover:bg-black/70 border border-white/25 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0"
+                title="Cài đặt tài khoản & đổi ảnh đại diện"
               >
-                <LogOut className="w-3.5 h-3.5 text-rose-200" />
-                <span>Thoát</span>
+                <Settings className="w-3.5 h-3.5 text-amber-300" />
+                <span className="hidden xs:inline">Tài khoản</span>
               </button>
-            )}
+
+              {onLogout && (
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="px-2.5 py-1 rounded-xl bg-rose-500/60 hover:bg-rose-600/85 border border-rose-300/40 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0"
+                  title="Đăng xuất khỏi tài khoản"
+                >
+                  <LogOut className="w-3.5 h-3.5 text-rose-100" />
+                  <span>Thoát</span>
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Bottom Area: Week Selector (ép sang trái) + Role Badge & Slogan */}
-          <div className="relative z-10 pt-2 flex flex-col gap-1.5">
-            <div className="flex items-center gap-2 flex-wrap">
+          {/* Middle & Bottom Area: Student/Cadre Identity Pill + Week Selector + Slogan */}
+          <div className="relative z-10 flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2.5 flex-wrap">
+              {/* Student / Cadre Identity Pill on Banner */}
+              <div
+                onClick={() => setShowAvatarModal(true)}
+                className="flex items-center gap-2.5 min-w-0 cursor-pointer group bg-black/45 hover:bg-black/65 border border-white/20 hover:border-amber-300/70 rounded-2xl p-1.5 pr-3 backdrop-blur-md transition-all shadow-sm"
+                title="Bấm để đổi ảnh đại diện"
+              >
+                <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden border-2 border-amber-300/80 bg-slate-800 shrink-0 shadow-xs flex items-center justify-center">
+                  {currentStudent.avatarUrl ? (
+                    <img
+                      src={resolveStudentAvatar(currentStudent.avatarUrl)}
+                      alt={currentStudent.hoTen}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-xs font-black text-amber-300">
+                      {getStudentAvatarInitial(currentStudent.hoTen)}
+                    </span>
+                  )}
+                  <div className="absolute bottom-0 right-0 w-4 h-4 rounded-tl-md bg-amber-400 text-slate-950 flex items-center justify-center">
+                    <Camera className="w-2.5 h-2.5" />
+                  </div>
+                </div>
+
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs sm:text-sm font-black text-white group-hover:text-amber-300 transition-colors truncate max-w-[175px] sm:max-w-[260px]">
+                      {currentStudent.hoTen}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                    <span className={`text-[10px] font-black px-2 py-0.2 rounded-full border backdrop-blur-md shadow-xs ${studentBanner.accentBadge}`}>
+                      {studentBanner.roleName}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-200">
+                      · Tổ {currentStudent.to}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               {/* Interactive Week Capsule Selector: Chỉ có Lớp trưởng, Bí thư, Lớp phó học tập mới có quyền đổi tuần */}
               {canChangeCurrentWeek && onChangeCurrentWeek ? (
-                <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-black/50 hover:bg-black/70 border border-white/25 text-amber-300 font-extrabold text-[11px] shadow-xs backdrop-blur-md transition-all">
+                <div className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-black/55 hover:bg-black/75 border border-amber-300/40 text-amber-300 font-extrabold text-[11px] shadow-xs backdrop-blur-md transition-all shrink-0">
                   <Calendar className="w-3.5 h-3.5 text-amber-300 shrink-0" />
                   <select
                     value={currentWeek}
@@ -769,15 +823,11 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   </select>
                 </div>
               ) : (
-                <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-black/40 border border-white/20 text-amber-300 font-extrabold text-[11px] shadow-xs backdrop-blur-md">
+                <div className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-black/50 border border-white/25 text-amber-300 font-extrabold text-[11px] shadow-xs backdrop-blur-md shrink-0">
                   <Calendar className="w-3.5 h-3.5 text-amber-300 shrink-0" />
                   <span>Tuần {currentWeek} {currentWeek <= 19 ? '(HK1)' : '(HK2)'}</span>
                 </div>
               )}
-
-              <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border backdrop-blur-md shadow-xs ${studentBanner.accentBadge}`}>
-                {studentBanner.roleName}
-              </span>
             </div>
 
             {/* Slogan with customizable text, icon, color, style */}
@@ -891,70 +941,99 @@ export const StudentView: React.FC<StudentViewProps> = ({
           </div>
         </div>
       ) : (
-        /* Regular Student Nav Tabs (5 tabs 1 hàng gọn gàng) */
-        <div className="flex items-center gap-1 p-1 bg-surface-2 rounded-2xl border border-token w-full max-w-xl mx-auto overflow-x-auto scrollbar-none justify-between">
-          <button
-            onClick={() => setActiveTab('my_score')}
-            className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-              activeTab === 'my_score' 
-                ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black' 
-                : 'text-muted hover:text-main'
-            }`}
-          >
-            <User className="w-3.5 h-3.5 text-accent shrink-0" />
-            <span>Của tôi</span>
-          </button>
+        /* Regular Student Nav Tabs: Chia thành lưới gọn gàng trên điện thoại (3 nút hàng 1 + 2 nút hàng 2, hoặc 5 cột trên máy tính) */
+        <div className="flex flex-col gap-1.5 p-1.5 bg-surface-2 rounded-2xl border border-token w-full max-w-xl mx-auto shadow-2xs">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 w-full">
+            <button
+              onClick={() => setActiveTab('my_score')}
+              className={`py-2 px-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'my_score' 
+                  ? 'bg-surface text-main shadow-xs ring-2 ring-accent font-black' 
+                  : 'bg-surface/75 text-muted hover:text-main'
+              }`}
+            >
+              <User className="w-3.5 h-3.5 text-accent shrink-0" />
+              <span>Của tôi</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('grades')}
-            className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-              activeTab === 'grades' 
-                ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-accent' 
-                : 'text-muted hover:text-main'
-            }`}
-          >
-            <GraduationCap className="w-3.5 h-3.5 text-accent shrink-0" />
-            <span>Điểm</span>
-            {!settings.choPhepXemDiemMon && (
-              <Lock className="w-2.5 h-2.5 text-amber-500 shrink-0" />
-            )}
-          </button>
+            <button
+              onClick={() => setActiveTab('grades')}
+              className={`py-2 px-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'grades' 
+                  ? 'bg-surface text-accent shadow-xs ring-2 ring-accent font-black' 
+                  : 'bg-surface/75 text-muted hover:text-main'
+              }`}
+            >
+              <GraduationCap className="w-3.5 h-3.5 text-accent shrink-0" />
+              <span>Điểm</span>
+              {!settings.choPhepXemDiemMon && (
+                <Lock className="w-2.5 h-2.5 text-amber-500 shrink-0" />
+              )}
+            </button>
 
-          <button
-            onClick={() => setActiveTab('badges')}
-            className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-              activeTab === 'badges' 
-                ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-amber-600 dark:text-amber-400' 
-                : 'text-muted hover:text-main'
-            }`}
-          >
-            <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-            <span>Huy hiệu</span>
-          </button>
+            <button
+              onClick={() => setActiveTab('seating')}
+              className={`py-2 px-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'seating' 
+                  ? 'bg-surface text-purple-600 shadow-xs ring-2 ring-purple-500 font-black' 
+                  : 'bg-surface/75 text-muted hover:text-main'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5 text-accent shrink-0" />
+              <span>Sơ đồ</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('seating')}
-            className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-              activeTab === 'seating' 
-                ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-purple-600 dark:text-purple-400' 
-                : 'text-muted hover:text-main'
-            }`}
-          >
-            <LayoutGrid className="w-3.5 h-3.5 text-accent shrink-0" />
-            <span>Sơ đồ</span>
-          </button>
+            <button
+              onClick={() => setActiveTab('badges')}
+              className={`hidden sm:flex py-2 px-1.5 rounded-xl text-[11px] sm:text-xs font-bold items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'badges' 
+                  ? 'bg-surface text-amber-600 shadow-xs ring-2 ring-amber-500 font-black' 
+                  : 'bg-surface/75 text-muted hover:text-main'
+              }`}
+            >
+              <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <span>Huy hiệu</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('ranking')}
-            className={`flex-1 py-1.5 sm:py-2 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-              activeTab === 'ranking' 
-                ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-emerald-600 dark:text-emerald-400' 
-                : 'text-muted hover:text-main'
-            }`}
-          >
-            <Trophy className="w-3.5 h-3.5 text-accent shrink-0" />
-            <span>Thi đua</span>
-          </button>
+            <button
+              onClick={() => setActiveTab('ranking')}
+              className={`hidden sm:flex py-2 px-1.5 rounded-xl text-[11px] sm:text-xs font-bold items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'ranking' 
+                  ? 'bg-surface text-emerald-600 shadow-xs ring-2 ring-emerald-500 font-black' 
+                  : 'bg-surface/75 text-muted hover:text-main'
+              }`}
+            >
+              <Trophy className="w-3.5 h-3.5 text-accent shrink-0" />
+              <span>Thi đua</span>
+            </button>
+          </div>
+
+          {/* Hàng 2 trên điện thoại cho học sinh */}
+          <div className="grid grid-cols-2 gap-1.5 w-full pt-1 border-t border-token/50 sm:hidden">
+            <button
+              onClick={() => setActiveTab('badges')}
+              className={`py-1.5 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'badges' 
+                  ? 'bg-surface text-amber-600 shadow-xs ring-1 ring-amber-500 font-black' 
+                  : 'text-muted hover:text-main'
+              }`}
+            >
+              <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <span>Kho Huy hiệu</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('ranking')}
+              className={`py-1.5 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'ranking' 
+                  ? 'bg-surface text-emerald-600 shadow-xs ring-1 ring-emerald-500 font-black' 
+                  : 'text-muted hover:text-main'
+              }`}
+            >
+              <Trophy className="w-3.5 h-3.5 text-accent shrink-0" />
+              <span>Bảng Thi đua</span>
+            </button>
+          </div>
         </div>
       )}
 
@@ -986,7 +1065,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 >
                   {currentStudent.avatarUrl ? (
                     <img
-                      src={currentStudent.avatarUrl}
+                      src={resolveStudentAvatar(currentStudent.avatarUrl)}
                       alt={currentStudent.hoTen}
                       className="w-full h-full object-cover rounded-full group-hover:scale-105 transition-transform"
                       onClick={() => setShowAvatarModal(true)}
@@ -1064,7 +1143,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
               {myWeekSummary.diemHienTai >= 90 && (
                 <div className="w-12 h-12 rounded-2xl overflow-hidden border border-amber-500/30 shadow-xs hidden sm:block shrink-0">
                   <img
-                    src="/src/assets/images/honor_student_trophy_1794145975161.jpg"
+                    src={honorStudentTrophy}
                     alt="Cúp vinh danh"
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
@@ -1832,7 +1911,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                       <AvatarFrame frame={frameConfig} size="sm">
                         {item.student.avatarUrl ? (
                           <img
-                            src={item.student.avatarUrl}
+                            src={resolveStudentAvatar(item.student.avatarUrl)}
                             alt={item.student.hoTen}
                             className="w-full h-full object-cover rounded-full"
                           />
@@ -2087,7 +2166,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
             <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">
               <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-slate-200">
                 {currentStudent.avatarUrl ? (
-                  <img src={currentStudent.avatarUrl} alt={currentStudent.hoTen} className="w-full h-full object-cover" />
+                  <img src={resolveStudentAvatar(currentStudent.avatarUrl)} alt={currentStudent.hoTen} className="w-full h-full object-cover" />
                 ) : (
                   <div className={`w-full h-full flex items-center justify-center font-bold text-xs text-center px-0.5 leading-tight truncate ${
                     currentStudent.gioiTinh === 'Nu' ? 'bg-rose-100 text-rose-700' : 'bg-sky-100 text-sky-700'

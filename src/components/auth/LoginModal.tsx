@@ -134,7 +134,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const googleBtnContainerRef = useRef<HTMLDivElement>(null);
 
-  // Initialize Google Identity Services (GSI - Native, Instant, No Cookie/Storage issues)
+  // Initialize Google Identity Services (GSI - with FedCM disabled for iframe compatibility)
   useEffect(() => {
     if (!teacherLoginMode) return;
 
@@ -145,7 +145,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         try {
           google.accounts.id.initialize({
             client_id: GOOGLE_CLIENT_ID,
-            auto_select: true,
+            auto_select: false,
+            use_fedcm_for_prompt: false,
+            use_fedcm_for_button: false,
+            itp_support: false,
             callback: async (response: any) => {
               if (!isSubscribed) return;
               try {
@@ -202,9 +205,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               width: 320,
             });
           }
-
-          // Trigger One Tap prompt if supported by browser
-          google.accounts.id.prompt();
         } catch (e) {
           console.error('Failed to init GSI:', e);
         }

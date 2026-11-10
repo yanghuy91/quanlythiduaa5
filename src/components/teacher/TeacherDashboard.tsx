@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { Logo10A5 } from '../common/Logo10A5';
 import { resolveTeacherAvatar, DEFAULT_TEACHER_AVATAR } from '../../data/teacherAvatars';
+import { resolveStudentAvatar } from '../../data/avatarPresets';
 import { StudentImportModal } from './StudentImportModal';
 import { UniversalSmartImportSection } from './UniversalSmartImportSection';
 import { AiDataBridgeSection } from './AiDataBridgeSection';
@@ -512,9 +513,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   return (
     <div className="w-full flex flex-col gap-4">
-      {/* Integrated Hero Banner Header (Synchronized with Student/Cadre Banner Style) */}
+      {/* Integrated Hero Banner Header (Synchronized with Student/Cadre Banner Style & Mobile Friendly) */}
       <div className="relative overflow-hidden rounded-3xl border border-token shadow-md bg-surface">
-        <div className="relative min-h-[145px] sm:min-h-[155px] w-full overflow-hidden flex flex-col justify-between p-3.5 sm:p-4">
+        <div className="relative min-h-[155px] sm:min-h-[165px] w-full overflow-hidden flex flex-col justify-between p-3.5 sm:p-4 gap-3">
           <img
             src={bannerGv}
             alt="Giáo viên Chủ nhiệm - Lớp 10A5"
@@ -522,9 +523,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             referrerPolicy="no-referrer"
           />
           {/* Deep dark gradient overlay ensures all text is crisp and never sunken */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/65 to-black/45" />
 
-          {/* Top Row: School Logo + Name + School Year on the Left; Teacher Utilities & Logout on the Right */}
+          {/* Top Row: School Logo + Name on the Left; Logout on the Right (Clean, never overflows on mobile) */}
           <div className="relative z-10 flex items-center justify-between gap-2">
             <div 
               className="flex items-center gap-2 min-w-0 cursor-pointer group select-none"
@@ -533,102 +534,73 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             >
               <Logo10A5 size="sm" animate={false} />
               <div className="flex flex-col min-w-0">
-                <span className="text-xs sm:text-sm font-black tracking-tight text-white drop-shadow-md uppercase whitespace-nowrap truncate group-hover:text-amber-300 transition-colors">
+                <span className="text-xs sm:text-sm font-black tracking-tight text-white drop-shadow-md uppercase truncate group-hover:text-amber-300 transition-colors">
                   TRƯỜNG THPT SỐ 2 ĐỨC PHỔ
                 </span>
                 <span className="text-[9.5px] sm:text-[10px] font-semibold text-slate-300 drop-shadow leading-none">
-                  Năm học 2026-2027
+                  Năm học 2026-2027 · Lớp 10A5
                 </span>
               </div>
             </div>
 
-            {/* Teacher Utilities (10 Trò Gọi Bảng, Khung, 30 Huy hiệu, Vinh danh cán sự, Avatar GV, Thoát) */}
-            <div className="flex items-center gap-1 sm:gap-1.5 flex-nowrap overflow-x-auto scrollbar-none py-0.5 shrink-0">
+            {onLogout && (
               <button
                 type="button"
-                onClick={() => setActiveTab('apps')}
-                className={`px-2 sm:px-2.5 py-1 rounded-xl text-white text-[10px] sm:text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0 border ${
-                  activeTab === 'apps'
-                    ? 'bg-gradient-to-r from-orange-500 to-rose-500 border-amber-300 shadow-orange-500/30'
-                    : 'bg-black/40 hover:bg-black/60 border-white/20 hover:border-amber-400'
-                }`}
-                title="Mở 10 trò chơi gọi học sinh lên bảng"
+                onClick={onLogout}
+                className="px-2.5 py-1 rounded-xl bg-rose-500/60 hover:bg-rose-600/85 border border-rose-300/40 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0"
+                title="Đăng xuất khỏi Bảng điều khiển Giáo viên"
               >
-                <span>🎲</span>
-                <span className="hidden sm:inline">10 Trò Gọi Bảng</span>
-                <span className="sm:hidden">Trò chơi</span>
+                <LogOut className="w-3.5 h-3.5 text-rose-100" />
+                <span>Thoát</span>
               </button>
+            )}
+          </div>
 
-              <button
-                type="button"
-                onClick={() => setShowFrameModal(true)}
-                className="px-2 sm:px-2.5 py-1 rounded-xl bg-black/40 hover:bg-black/60 border border-white/20 hover:border-amber-400 text-white text-[10px] sm:text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0"
-                title="Quản lý khung vinh danh & hào quang học sinh"
+          {/* Middle & Bottom Area: Teacher Avatar + Name + Week Selector + Slogan */}
+          <div className="relative z-10 flex flex-col gap-2">
+            {/* Teacher Identity Bar on Banner */}
+            <div className="flex items-center justify-between gap-2.5 flex-wrap">
+              <div
+                onClick={() => setIsTeacherProfileModalOpen(true)}
+                className="flex items-center gap-2.5 min-w-0 cursor-pointer group bg-black/45 hover:bg-black/65 border border-white/20 hover:border-amber-300/70 rounded-2xl p-1.5 pr-3 backdrop-blur-md transition-all shadow-sm"
+                title="Bấm để đổi ảnh đại diện và thông tin hồ sơ Giáo viên"
               >
-                <Crown className="w-3.5 h-3.5 text-amber-300" />
-                <span className="hidden sm:inline">Khung vinh danh</span>
-                <span className="sm:hidden">Khung</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowBadgeModal(true)}
-                className="px-2 sm:px-2.5 py-1 rounded-xl bg-black/40 hover:bg-black/60 border border-white/20 hover:border-amber-400 text-white text-[10px] sm:text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0"
-                title="Kho 30 huy hiệu thi đua cá nhân"
-              >
-                <Award className="w-3.5 h-3.5 text-amber-300" />
-                <span className="hidden sm:inline">30 Huy hiệu</span>
-                <span className="sm:hidden">Huy hiệu</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowCadreModal(true)}
-                className="px-2.5 sm:px-3 py-1 rounded-xl bg-amber-500/25 hover:bg-amber-500/40 border border-amber-300/50 text-amber-200 text-[10px] sm:text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0"
-                title="Chức năng GVCN: Vinh danh Ban cán sự lớp"
-              >
-                <Award className="w-3.5 h-3.5 text-amber-300" />
-                <span>Vinh danh cán sự</span>
-              </button>
-
-              {/* Teacher Avatar Thumbnail (Click to open teacher profile/avatar modal) */}
-              {(onOpenTeacherAvatar || onOpenTeacherProfile) && (
-                <button
-                  type="button"
-                  onClick={() => onOpenTeacherProfile ? onOpenTeacherProfile() : onOpenTeacherAvatar?.()}
-                  className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden border border-white/40 hover:border-amber-300 bg-surface-2 flex items-center justify-center shrink-0 shadow-xs cursor-pointer active:scale-95 transition-all"
-                  title="Bấm để đổi ảnh đại diện và hồ sơ Giáo viên"
-                >
+                <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden border-2 border-amber-300/80 bg-slate-800 shrink-0 shadow-xs">
                   <img
                     src={resolveTeacherAvatar(teacherAvatarUrl)}
-                    alt="Giáo viên"
+                    alt={internalTeacherProfile.hoTen || 'Giáo viên Chủ nhiệm'}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = DEFAULT_TEACHER_AVATAR;
                     }}
                   />
-                </button>
-              )}
+                  <div className="absolute bottom-0 right-0 w-4 h-4 rounded-tl-md bg-amber-400 text-slate-950 flex items-center justify-center">
+                    <Camera className="w-2.5 h-2.5" />
+                  </div>
+                </div>
 
-              {onLogout && (
-                <button
-                  type="button"
-                  onClick={onLogout}
-                  className="px-2.5 py-1 rounded-xl bg-rose-500/50 hover:bg-rose-600/80 border border-rose-300/40 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0"
-                  title="Đăng xuất khỏi Bảng điều khiển Giáo viên"
-                >
-                  <LogOut className="w-3.5 h-3.5 text-rose-200" />
-                  <span>Thoát</span>
-                </button>
-              )}
-            </div>
-          </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs sm:text-sm font-black text-white group-hover:text-amber-300 transition-colors truncate max-w-[175px] sm:max-w-[260px]">
+                      {internalTeacherProfile.hoTen || 'Thầy Dương Văn Huy'}
+                    </span>
+                    <Edit3 className="w-3 h-3 text-amber-300 shrink-0 opacity-85 group-hover:opacity-100" />
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                    <span className="text-[10px] font-extrabold px-2 py-0.2 rounded-full bg-purple-500/35 text-purple-200 border border-purple-300/40">
+                      GV Chủ nhiệm 10A5
+                    </span>
+                    {internalTeacherProfile.statusText && (
+                      <span className="text-[10px] text-slate-300 truncate max-w-[140px] sm:max-w-[220px] hidden xs:inline">
+                        · {internalTeacherProfile.statusText}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-          {/* Bottom Area: Week Selector Capsule + Role Badge & Slogan */}
-          <div className="relative z-10 pt-2 flex flex-col gap-1.5">
-            <div className="flex items-center gap-2 flex-wrap">
               {/* Interactive Week Capsule Selector for Teacher */}
-              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-black/50 hover:bg-black/70 border border-white/25 text-amber-300 font-extrabold text-[11px] shadow-xs backdrop-blur-md transition-all">
+              <div className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-black/55 hover:bg-black/75 border border-amber-300/40 text-amber-300 font-extrabold text-[11px] shadow-xs backdrop-blur-md transition-all shrink-0">
                 <Calendar className="w-3.5 h-3.5 text-amber-300 shrink-0" />
                 {onChangeCurrentWeek ? (
                   <select
@@ -647,11 +619,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   <span>Tuần {currentWeek} {currentWeek <= 19 ? '(HK1)' : '(HK2)'}</span>
                 )}
               </div>
-
-              {/* Role Badge */}
-              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full border backdrop-blur-md shadow-xs bg-purple-500/20 text-purple-300 border-purple-400/40">
-                Giáo viên Chủ nhiệm
-              </span>
             </div>
 
             {/* Slogan with customizable text, icon, color, style */}
@@ -670,134 +637,170 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         </div>
       </div>
 
-      {/* Navigation Tabs Bar: Placed cleanly under the banner */}
-      <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto p-1.5 rounded-2xl bg-surface-2 border border-token text-xs font-semibold scrollbar-none shadow-2xs">
-        <button
-          type="button"
-          onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === 'overview'
-              ? 'bg-surface text-main font-extrabold shadow-xs ring-1 ring-token text-accent'
-              : 'text-muted hover:text-main hover:bg-surface/50'
-          }`}
-        >
-          <BarChart3 className="w-3.5 h-3.5 text-accent" />
-          <span>Tổng quan</span>
-        </button>
+      {/* THANH CHỨC NĂNG GIÁO VIÊN: Bố trí thành 3 hàng gọn gàng giống Ban Cán Sự Lớp (Hiển thị đủ 100% trên điện thoại) */}
+      <div className="flex flex-col gap-1.5 p-1.5 sm:p-2 bg-surface-2 rounded-2xl border border-token w-full shadow-2xs">
+        {/* HÀNG 1 (Quản lý & Theo dõi chính): Tổng quan | Sơ đồ lớp | Bảng điểm | Giải trình */}
+        <div className="grid grid-cols-4 gap-1 sm:gap-1.5 w-full">
+          <button
+            type="button"
+            onClick={() => setActiveTab('overview')}
+            className={`py-2 px-1 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'overview'
+                ? 'bg-surface text-accent font-black shadow-xs ring-2 ring-accent'
+                : 'bg-surface/80 text-main hover:bg-surface'
+            }`}
+          >
+            <BarChart3 className="w-3.5 h-3.5 text-accent shrink-0" />
+            <span className="truncate">Tổng quan</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('roster')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === 'roster'
-              ? 'bg-surface text-main font-extrabold shadow-xs ring-1 ring-token text-accent'
-              : 'text-muted hover:text-main hover:bg-surface/50'
-          }`}
-        >
-          <Users className="w-3.5 h-3.5 text-accent" />
-          <span>Sơ đồ lớp</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('roster')}
+            className={`py-2 px-1 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'roster'
+                ? 'bg-rose-600 text-white font-black shadow-xs'
+                : 'bg-surface/80 text-rose-600 hover:bg-surface border border-rose-200/70'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Sơ đồ &amp; Chấm</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('apps')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === 'apps'
-              ? 'bg-gradient-to-r from-orange-500 to-rose-500 text-white font-extrabold shadow-sm'
-              : 'text-muted hover:text-main hover:bg-surface/50'
-          }`}
-        >
-          <span className="text-xs">🎲</span>
-          <span>10 Trò chơi</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('grades')}
+            className={`py-2 px-1 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'grades'
+                ? 'bg-surface text-accent font-black shadow-xs ring-2 ring-accent'
+                : 'bg-surface/80 text-main hover:bg-surface'
+            }`}
+          >
+            <GraduationCap className="w-3.5 h-3.5 text-accent shrink-0" />
+            <span className="truncate">Bảng điểm</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('explanations')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === 'explanations'
-              ? 'bg-surface text-main font-extrabold shadow-xs ring-1 ring-token text-accent'
-              : 'text-muted hover:text-main hover:bg-surface/50'
-          }`}
-        >
-          <CheckSquare className="w-3.5 h-3.5 text-accent" />
-          <span>Giải trình</span>
-          {pendingExplanations.length > 0 && (
-            <span className="w-4 h-4 rounded-full bg-[var(--st-bad)] text-white text-[10px] flex items-center justify-center font-bold">
-              {pendingExplanations.length}
-            </span>
-          )}
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('explanations')}
+            className={`py-2 px-1 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'explanations'
+                ? 'bg-surface text-accent font-black shadow-xs ring-2 ring-accent'
+                : 'bg-surface/80 text-main hover:bg-surface'
+            }`}
+          >
+            <CheckSquare className="w-3.5 h-3.5 text-accent shrink-0" />
+            <span className="truncate">Giải trình</span>
+            {pendingExplanations.length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full bg-[var(--st-bad)] text-white text-[9px] font-black shrink-0">
+                {pendingExplanations.length}
+              </span>
+            )}
+          </button>
+        </div>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('grades')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === 'grades'
-              ? 'bg-surface text-main font-extrabold shadow-xs ring-1 ring-token text-accent'
-              : 'text-muted hover:text-main hover:bg-surface/50'
-          }`}
-        >
-          <GraduationCap className="w-3.5 h-3.5 text-accent" />
-          <span>Bảng điểm</span>
-        </button>
+        {/* HÀNG 2 (Công cụ Giảng dạy & Dữ liệu): 10 Trò chơi | Nhập / Xuất | Trợ lý AI | Nội quy */}
+        <div className="grid grid-cols-4 gap-1 sm:gap-1.5 w-full pt-1 border-t border-token/50">
+          <button
+            type="button"
+            onClick={() => setActiveTab('apps')}
+            className={`py-1.5 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'apps'
+                ? 'bg-gradient-to-r from-orange-500 to-rose-500 text-white font-black shadow-xs'
+                : 'text-orange-700 bg-orange-500/10 hover:bg-orange-500/20'
+            }`}
+          >
+            <span className="text-xs shrink-0">🎲</span>
+            <span className="truncate">10 Trò chơi</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('rules')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === 'rules'
-              ? 'bg-surface text-main font-extrabold shadow-xs ring-1 ring-token text-accent'
-              : 'text-muted hover:text-main hover:bg-surface/50'
-          }`}
-        >
-          <Layers className="w-3.5 h-3.5 text-accent" />
-          <span>Nội quy</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('import_export')}
+            className={`py-1.5 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'import_export'
+                ? 'bg-surface text-accent font-black shadow-xs ring-1 ring-token'
+                : 'text-muted hover:text-main hover:bg-surface/60'
+            }`}
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span className="truncate">Nhập / Xuất</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('ai_gemini')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === 'ai_gemini'
-              ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-extrabold shadow-sm ring-1 ring-purple-300'
-              : 'text-purple-600 dark:text-purple-300 hover:text-purple-700 hover:bg-purple-500/10'
-          }`}
-        >
-          <Bot className="w-3.5 h-3.5 text-purple-500 dark:text-purple-300 animate-pulse" />
-          <span>Trợ lý AI</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('ai_gemini')}
+            className={`py-1.5 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'ai_gemini'
+                ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-black shadow-xs'
+                : 'text-purple-700 bg-purple-500/10 hover:bg-purple-500/20'
+            }`}
+          >
+            <Bot className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+            <span className="truncate">Trợ lý AI</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('import_export')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === 'import_export'
-              ? 'bg-surface text-main font-extrabold shadow-xs ring-1 ring-token text-accent'
-              : 'text-muted hover:text-main hover:bg-surface/50'
-          }`}
-        >
-          <FileSpreadsheet className="w-3.5 h-3.5 text-accent" />
-          <span>Nhập / Xuất</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('rules')}
+            className={`py-1.5 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'rules'
+                ? 'bg-surface text-accent font-black shadow-xs ring-1 ring-token'
+                : 'text-muted hover:text-main hover:bg-surface/60'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 text-accent shrink-0" />
+            <span className="truncate">Nội quy</span>
+          </button>
+        </div>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('settings')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === 'settings'
-              ? 'bg-surface text-main font-extrabold shadow-xs ring-1 ring-token text-accent'
-              : 'text-muted hover:text-main hover:bg-surface/50'
-          }`}
-        >
-          <Settings className="w-3.5 h-3.5 text-accent" />
-          <span>Cài đặt</span>
-        </button>
+        {/* HÀNG 3 (Vinh danh & Cấu hình): Khung vinh danh | 30 Huy hiệu | Vinh danh BCS | Cài đặt */}
+        <div className="grid grid-cols-4 gap-1 sm:gap-1.5 w-full pt-1 border-t border-token/50">
+          <button
+            type="button"
+            onClick={() => setShowFrameModal(true)}
+            className="py-1.5 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 text-muted hover:text-main hover:bg-surface/60 transition-all cursor-pointer whitespace-nowrap"
+          >
+            <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span className="truncate">Khung Top</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowBadgeModal(true)}
+            className="py-1.5 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 text-muted hover:text-main hover:bg-surface/60 transition-all cursor-pointer whitespace-nowrap"
+          >
+            <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span className="truncate">30 Huy hiệu</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowCadreModal(true)}
+            className="py-1.5 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 transition-all cursor-pointer whitespace-nowrap"
+          >
+            <Trophy className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span className="truncate">Cán sự lớp</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('settings')}
+            className={`py-1.5 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'settings'
+                ? 'bg-surface text-accent font-black shadow-xs ring-1 ring-token'
+                : 'text-muted hover:text-main hover:bg-surface/60'
+            }`}
+          >
+            <Settings className="w-3.5 h-3.5 text-accent shrink-0" />
+            <span className="truncate">Cài đặt</span>
+          </button>
+        </div>
       </div>
 
       {/* Sub-tab "Quay lại" (Back) button when in any secondary tab */}
       {activeTab !== 'overview' && (
-        <div className="flex items-center justify-between px-1">
+        <div className="flex items-center justify-between px-1 gap-2 flex-wrap">
           <button
             type="button"
             onClick={() => setActiveTab('overview')}
@@ -827,14 +830,14 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div 
               onClick={() => setOverviewViewMode(overviewViewMode === 'list' ? 'grid' : 'list')}
-              className="p-2 sm:p-3 rounded-2xl bg-surface border border-token hover:border-accent/40 cursor-pointer transition-all shadow-2xs group"
+              className="p-2.5 sm:p-3 rounded-2xl bg-surface border border-token hover:border-accent/40 cursor-pointer transition-all shadow-2xs group"
               title="Bấm để chuyển đổi giữa Danh sách và Sơ đồ lớp"
             >
               <div className="text-[11px] text-muted font-medium flex items-center justify-between">
                 <span>Học sinh lớp</span>
                 <Move className="w-3 h-3 text-muted group-hover:text-accent transition-colors" />
               </div>
-              <div className="text-base sm:text-xl font-black text-main mt-0.5">42 em</div>
+              <div className="text-base sm:text-xl font-black text-main mt-0.5">{students.length} em</div>
               <div className="text-[10px] text-muted mt-1">4 dãy bàn (= 4 tổ) · 6 bàn/dãy</div>
             </div>
 
@@ -1206,11 +1209,11 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   return (
                     <div
                       key={item.student.maHS}
-                      className="px-4 py-3 flex items-center justify-between hover:bg-surface-2 transition-colors gap-2"
+                      className="px-3 sm:px-4 py-2.5 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-surface-2 transition-colors gap-2"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                         {/* Order indicator */}
-                        <span className={`w-8 text-center text-xs font-bold shrink-0 ${
+                        <span className={`w-7 sm:w-8 text-center text-xs font-bold shrink-0 ${
                           rankingSortBy === 'score_desc' && officialRank === 1 ? 'text-amber-500 font-extrabold text-base' :
                           rankingSortBy === 'score_desc' && officialRank === 2 ? 'text-slate-400 font-bold text-sm' :
                           rankingSortBy === 'score_desc' && officialRank === 3 ? 'text-amber-700 font-bold text-sm' :
@@ -1222,13 +1225,13 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                         <button
                           type="button"
                           onClick={() => setEditingStudentForAvatar(item.student)}
-                          className="cursor-pointer group relative active:scale-95 transition-transform"
+                          className="cursor-pointer group relative active:scale-95 transition-transform shrink-0"
                           title={`Bấm để đổi avatar cho ${item.student.hoTen}`}
                         >
                           <AvatarFrame frame={frameConfig} size="sm">
                             {item.student.avatarUrl ? (
                               <img
-                                src={item.student.avatarUrl}
+                                src={resolveStudentAvatar(item.student.avatarUrl)}
                                 alt={item.student.hoTen}
                                 className="w-full h-full object-cover rounded-full"
                               />
@@ -1249,12 +1252,12 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                           </div>
                         </button>
 
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <button
                               type="button"
                               onClick={() => setInspectingStudent(item.student)}
-                              className="text-xs font-bold text-main hover:text-accent truncate transition-colors text-left flex items-center gap-1 cursor-pointer"
+                              className="text-xs sm:text-sm font-bold text-main hover:text-accent transition-colors text-left flex items-center gap-1 cursor-pointer"
                               title="Bấm để xem lịch sử vi phạm & người ghi nhận"
                             >
                               <span>{item.student.hoTen}</span>
@@ -1314,26 +1317,26 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0 pl-9 sm:pl-0 flex-wrap">
                         {item.deductions > 0 && (
                           <button
                             type="button"
                             onClick={() => setInspectingStudent(item.student)}
-                            className="text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1 rounded-xl border border-rose-500/25 flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-2xs"
+                            className="text-[10.5px] sm:text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-xl border border-rose-500/25 flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-2xs"
                             title="Bấm để xem chi tiết các lỗi vi phạm & cán sự ghi nhận"
                           >
-                            <ShieldAlert className="w-3.5 h-3.5 text-rose-500" />
+                            <ShieldAlert className="w-3 h-3 text-rose-500" />
                             <span>-{item.deductions}đ</span>
-                            <span className="text-[10px] opacity-75 font-normal underline">Chi tiết</span>
+                            <span className="text-[10px] opacity-75 font-normal underline hidden xs:inline">Chi tiết</span>
                           </button>
                         )}
                         {item.bonuses > 0 && (
-                          <span className="text-[10px] font-bold text-[var(--st-ok)] hidden sm:inline-block">
+                          <span className="text-[10px] font-bold text-[var(--st-ok)]">
                             +{item.bonuses}đ
                           </span>
                         )}
 
-                        <span className="text-[11px] sm:text-xs font-black tabular-nums text-main">
+                        <span className="text-xs font-black tabular-nums text-main">
                           {item.score} đ
                         </span>
 
@@ -1363,7 +1366,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                           type="button"
                           onClick={() => handleSelectStudent(item.student)}
                           title="Ghi nhận vi phạm cho học sinh này"
-                          className="px-2 py-1 rounded-lg bg-accent/15 hover:bg-accent text-accent hover:text-on-accent text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                          className="px-2.5 py-1 rounded-lg bg-accent/15 hover:bg-accent text-accent hover:text-on-accent text-[10.5px] sm:text-[11px] font-bold transition-all cursor-pointer shadow-xs whitespace-nowrap"
                         >
                           + Ghi nhận
                         </button>
