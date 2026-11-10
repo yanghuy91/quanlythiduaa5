@@ -143,28 +143,28 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
             <button
               type="button"
               onClick={() => handleToggleDisplayMode('avatar_badge')}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                 displayMode === 'avatar_badge'
                   ? 'bg-accent text-on-accent shadow-xs'
                   : 'text-muted hover:text-main'
               }`}
-              title="Hiển thị ảnh đại diện và huy hiệu thi đua của học sinh"
+              title="Hiển thị chế độ Ảnh"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>Avatar & Huy hiệu</span>
+              <span>Ảnh</span>
             </button>
             <button
               type="button"
               onClick={() => handleToggleDisplayMode('compact')}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                 displayMode === 'compact'
                   ? 'bg-accent text-on-accent shadow-xs'
                   : 'text-muted hover:text-main'
               }`}
-              title="Hiển thị chế độ gọn với số thứ tự và tên"
+              title="Hiển thị chế độ Gọn"
             >
               <Tag className="w-3.5 h-3.5" />
-              <span>Gọn (Tên & STT)</span>
+              <span>Gọn</span>
             </button>
           </div>
         )}
@@ -262,28 +262,28 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
       {/* Group / Dãy Column Titles (Desktop) */}
       {activeDãyTab === 'all' && (
         <div 
-          className="hidden sm:grid gap-1 sm:gap-1.5 text-center text-[11px] font-extrabold text-muted uppercase tracking-wider px-0.5"
+          className="hidden sm:grid gap-x-0 text-center text-[11px] font-extrabold text-muted uppercase tracking-wider px-0.5 mb-0.5"
           style={{
             gridTemplateColumns: displayMode === 'compact'
-              ? 'repeat(2, minmax(0, 1fr)) 2px repeat(2, minmax(0, 1fr)) 6px repeat(2, minmax(0, 1fr)) 2px repeat(2, minmax(0, 1fr))'
-              : 'repeat(2, minmax(0, 1fr)) 8px repeat(2, minmax(0, 1fr)) 16px repeat(2, minmax(0, 1fr)) 8px repeat(2, minmax(0, 1fr))',
+              ? 'minmax(0, 1fr) minmax(0, 1fr) 10px minmax(0, 1fr) minmax(0, 1fr) 18px minmax(0, 1fr) minmax(0, 1fr) 10px minmax(0, 1fr) minmax(0, 1fr)'
+              : 'minmax(0, 1fr) minmax(0, 1fr) 12px minmax(0, 1fr) minmax(0, 1fr) 22px minmax(0, 1fr) minmax(0, 1fr) 12px minmax(0, 1fr) minmax(0, 1fr)',
           }}
         >
-          <div className="col-span-2 bg-blue-50/50 dark:bg-blue-950/20 py-1 rounded-lg border border-blue-200/50 dark:border-blue-900/30 text-blue-600 dark:text-blue-400">
+          <div className="col-span-2 bg-blue-50/70 dark:bg-blue-950/30 py-1 rounded-lg border border-blue-200/60 dark:border-blue-900/40 text-blue-700 dark:text-blue-300">
             Tổ 4
           </div>
-          <div className="col-span-1 flex items-center justify-center opacity-30 select-none">·</div>
-          <div className="col-span-2 bg-purple-50/50 dark:bg-purple-950/20 py-1 rounded-lg border border-purple-200/50 dark:border-purple-900/30 text-purple-600 dark:text-purple-400">
+          <div className="col-span-1 flex items-center justify-center opacity-30 select-none text-[9px]">·</div>
+          <div className="col-span-2 bg-purple-50/70 dark:bg-purple-950/30 py-1 rounded-lg border border-purple-200/60 dark:border-purple-900/40 text-purple-700 dark:text-purple-300">
             Tổ 3
           </div>
-          <div className="col-span-1 flex items-center justify-center text-[9px] font-bold text-muted opacity-60 select-none">
+          <div className="col-span-1 flex items-center justify-center text-[9px] font-bold text-muted opacity-70 select-none">
             Lối đi
           </div>
-          <div className="col-span-2 bg-emerald-50/50 dark:bg-emerald-950/20 py-1 rounded-lg border border-emerald-200/50 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+          <div className="col-span-2 bg-emerald-50/70 dark:bg-emerald-950/30 py-1 rounded-lg border border-emerald-200/60 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-300">
             Tổ 2
           </div>
-          <div className="col-span-1 flex items-center justify-center opacity-30 select-none">·</div>
-          <div className="col-span-2 bg-amber-50/50 dark:bg-amber-950/20 py-1 rounded-lg border border-amber-200/50 dark:border-amber-900/30 text-amber-600 dark:text-amber-400">
+          <div className="col-span-1 flex items-center justify-center opacity-30 select-none text-[9px]">·</div>
+          <div className="col-span-2 bg-amber-50/70 dark:bg-amber-950/30 py-1 rounded-lg border border-amber-200/60 dark:border-amber-900/40 text-amber-700 dark:text-amber-300">
             Tổ 1
           </div>
         </div>
@@ -313,16 +313,16 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
             const rowGridStyle = activeDãyTab === 'all' ? {
               display: 'grid',
               gridTemplateColumns: displayMode === 'compact'
-                ? 'repeat(2, minmax(0, 1fr)) 2px repeat(2, minmax(0, 1fr)) 6px repeat(2, minmax(0, 1fr)) 2px repeat(2, minmax(0, 1fr))'
-                : 'repeat(2, minmax(0, 1fr)) 8px repeat(2, minmax(0, 1fr)) 16px repeat(2, minmax(0, 1fr)) 8px repeat(2, minmax(0, 1fr))',
+                ? 'minmax(0, 1fr) minmax(0, 1fr) 10px minmax(0, 1fr) minmax(0, 1fr) 18px minmax(0, 1fr) minmax(0, 1fr) 10px minmax(0, 1fr) minmax(0, 1fr)'
+                : 'minmax(0, 1fr) minmax(0, 1fr) 12px minmax(0, 1fr) minmax(0, 1fr) 22px minmax(0, 1fr) minmax(0, 1fr) 12px minmax(0, 1fr) minmax(0, 1fr)',
             } : undefined;
 
             return (
               <div 
                 key={rowKey}
                 className={activeDãyTab === 'all' 
-                  ? (displayMode === 'compact' ? "gap-0.5 sm:gap-1 items-start" : "gap-1 sm:gap-1.5 items-start") 
-                  : "grid grid-cols-2 gap-2.5 items-start max-w-xs mx-auto"
+                  ? (displayMode === 'compact' ? "gap-x-0 gap-y-1.5 sm:gap-y-2 items-start" : "gap-x-0 gap-y-2.5 sm:gap-y-3.5 items-start") 
+                  : "grid grid-cols-2 gap-x-0 gap-y-2.5 items-start max-w-xs mx-auto"
                 }
                 style={rowGridStyle}
               >
@@ -330,6 +330,10 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                   if (!shouldRenderCol(node.cot)) {
                     return null;
                   }
+
+                  // Check if node is left or right seat in a 2-person desk
+                  const isDeskLeft = node.cot === 0 || node.cot === 3 || node.cot === 6 || node.cot === 9;
+                  const isDeskRight = node.cot === 1 || node.cot === 4 || node.cot === 7 || node.cot === 10;
 
                   // Non-seat special nodes
                   if (node.loaiO === 'loidi') {
@@ -348,23 +352,29 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                   }
 
                   if (node.loaiO === 'trong') {
+                    const emptyCornerClass = isDeskLeft
+                      ? 'rounded-l-2xl rounded-r-none border-t-2 border-b-2 border-l-2 border-r border-dashed border-token/60'
+                      : isDeskRight
+                        ? 'rounded-r-2xl rounded-l-none border-t-2 border-b-2 border-r-2 border-l-0 border-dashed border-token/60'
+                        : 'rounded-2xl border-2 border-dashed border-token/60';
+
                     return (
                       <div 
                         key={`${node.hang}-${node.cot}`}
                         className={`w-full flex flex-col items-center select-none ${
-                          displayMode === 'avatar_badge' ? '' : 'h-12 sm:h-13'
+                          displayMode === 'avatar_badge' ? '' : 'h-13 sm:h-14'
                         }`}
                         title={node.ghiChu || 'Chỗ trống'}
                       >
                         {displayMode === 'avatar_badge' ? (
                           <>
-                            <div className="w-full aspect-square rounded-xl sm:rounded-2xl border-2 border-dashed border-token/60 bg-surface-2/30 flex items-center justify-center text-[10px] font-semibold text-muted/60">
+                            <div className={`w-full aspect-square bg-surface-2/30 flex items-center justify-center text-[10px] font-semibold text-muted/60 ${emptyCornerClass}`}>
                               Trống
                             </div>
                             <span className="text-[10px] font-medium text-muted/40 mt-1">Trống</span>
                           </>
                         ) : (
-                          <div className="w-full h-full rounded-xl border border-dashed border-token bg-transparent flex items-center justify-center text-[10px] font-medium text-muted opacity-40">
+                          <div className={`w-full h-full bg-surface-2/20 flex items-center justify-center text-[10px] font-medium text-muted opacity-40 ${emptyCornerClass}`}>
                             Trống
                           </div>
                         )}
@@ -375,17 +385,23 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                   // Student Seat
                   const student = node.maHS ? studentMap.get(node.maHS) : undefined;
                   if (!student) {
+                    const emptyCornerClass = isDeskLeft
+                      ? 'rounded-l-2xl rounded-r-none border-t border-b border-l border-r border-dashed border-token/50'
+                      : isDeskRight
+                        ? 'rounded-r-2xl rounded-l-none border-t border-b border-r border-l-0 border-dashed border-token/50'
+                        : 'rounded-2xl border border-dashed border-token/50';
+
                     return (
                       <div 
                         key={`${node.hang}-${node.cot}`}
                         className={`w-full flex flex-col items-center select-none ${
-                          displayMode === 'avatar_badge' ? '' : 'h-12 sm:h-13'
+                          displayMode === 'avatar_badge' ? '' : 'h-13 sm:h-14'
                         }`}
                       >
                         {displayMode === 'avatar_badge' ? (
-                          <div className="w-full aspect-square rounded-xl sm:rounded-2xl border border-dashed border-token bg-surface-2 opacity-50" />
+                          <div className={`w-full aspect-square bg-surface-2 opacity-50 ${emptyCornerClass}`} />
                         ) : (
-                          <div className="w-full h-full rounded-xl border border-dashed border-token bg-surface-2 opacity-50" />
+                          <div className={`w-full h-full bg-surface-2 opacity-50 ${emptyCornerClass}`} />
                         )}
                       </div>
                     );
@@ -399,15 +415,43 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                   const activeBadgeId = getStudentActiveBadge(student.maHS) || (studentBadgesMap[student.maHS]?.[0] ?? null);
                   const badgeDef = activeBadgeId ? badgeCatalogMap.get(activeBadgeId) : undefined;
 
-                  // Gender color tint: Nam (border sky blue) vs Nữ (border rose pink)
+                  // Gender color tint: Nam (sky) vs Nữ (rose)
                   const isNu = student.gioiTinh 
                     ? student.gioiTinh === 'Nu' 
                     : /Thị|Duyên|Trang|Hằng|Uyên|Linh|My|Tiên|Quỳnh|Huyền|Ánh/i.test(student.hoTen);
                   
-                  // Compact mode: pure white background, black text, gender distinguished ONLY by border (Nam: sky-400, Nữ: rose-400)!
-                  const compactBorderClass = isNu
-                    ? 'border-2 border-rose-400 hover:border-rose-500'
-                    : 'border-2 border-sky-400 hover:border-sky-500';
+                  // Desk border logic: 2 students in the same desk stick together!
+                  // Left seat has rounded-l-2xl, border top/bottom/left in gender color, right border is subtle 1px divider.
+                  // Right seat has rounded-r-2xl, border top/bottom/right in gender color, left border is 0 so it aligns seamlessly!
+                  const compactDeskBorderClass = isNu
+                    ? isDeskLeft
+                      ? 'rounded-l-2xl rounded-r-none border-t-2 border-b-2 border-l-2 border-r border-rose-400 dark:border-rose-500 border-r-slate-200/90 dark:border-r-slate-700/80'
+                      : isDeskRight
+                        ? 'rounded-r-2xl rounded-l-none border-t-2 border-b-2 border-r-2 border-l-0 border-rose-400 dark:border-rose-500'
+                        : 'rounded-2xl border-2 border-rose-400 dark:border-rose-500'
+                    : isDeskLeft
+                      ? 'rounded-l-2xl rounded-r-none border-t-2 border-b-2 border-l-2 border-r border-sky-400 dark:border-sky-500 border-r-slate-200/90 dark:border-r-slate-700/80'
+                      : isDeskRight
+                        ? 'rounded-r-2xl rounded-l-none border-t-2 border-b-2 border-r-2 border-l-0 border-sky-400 dark:border-sky-500'
+                        : 'rounded-2xl border-2 border-sky-400 dark:border-sky-500';
+
+                  // Modern lively light theme background (sinh động, hiện đại, vẫn giữ theme sáng):
+                  const compactBgClass = isNu
+                    ? 'bg-gradient-to-b from-rose-50/80 via-white to-rose-50/40 hover:from-rose-100/70 hover:to-white'
+                    : 'bg-gradient-to-b from-sky-50/80 via-white to-sky-50/40 hover:from-sky-100/70 hover:to-white';
+
+                  // Avatar mode desk border: 2 avatars in the same desk stick together!
+                  const avatarDeskBorderClass = isNu
+                    ? isDeskLeft
+                      ? 'rounded-l-2xl sm:rounded-l-3xl rounded-r-none border-t-2 border-b-2 border-l-2 border-r border-rose-300 dark:border-rose-500/70 border-r-slate-200/90 dark:border-r-slate-700'
+                      : isDeskRight
+                        ? 'rounded-r-2xl sm:rounded-r-3xl rounded-l-none border-t-2 border-b-2 border-r-2 border-l-0 border-rose-300 dark:border-rose-500/70'
+                        : 'rounded-2xl sm:rounded-3xl border-2 border-rose-300 dark:border-rose-500/70'
+                    : isDeskLeft
+                      ? 'rounded-l-2xl sm:rounded-l-3xl rounded-r-none border-t-2 border-b-2 border-l-2 border-r border-sky-300 dark:border-sky-500/70 border-r-slate-200/90 dark:border-r-slate-700'
+                      : isDeskRight
+                        ? 'rounded-r-2xl sm:rounded-r-3xl rounded-l-none border-t-2 border-b-2 border-r-2 border-l-0 border-sky-300 dark:border-sky-500/70'
+                        : 'rounded-2xl sm:rounded-3xl border-2 border-sky-300 dark:border-sky-500/70';
 
                   // Determine status border
                   let statusBorderColor: string | undefined = undefined;
@@ -433,11 +477,11 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                                    topRole === 'BT' ? '🚩' :
                                    topRole === 'LP_HT' ? '📖' :
                                    topRole === 'LP_LD' ? '⚡' : '🛡️';
-                  const roleTitleShort = topRole === 'TT' && student.toTruongTo ? `TT${student.toTruongTo}` :
-                                         topRole === 'LT' ? 'Lớp trưởng' :
-                                         topRole === 'BT' ? 'Bí thư' :
-                                         topRole === 'LP_HT' ? 'LP Học tập' :
-                                         topRole === 'LP_LD' ? 'LP Lao động' : roleConfig.label;
+                  const roleCodeShort = topRole === 'TT' && student.toTruongTo ? `TT${student.toTruongTo}` :
+                                         topRole === 'LT' ? 'LT' :
+                                         topRole === 'BT' ? 'BT' :
+                                         topRole === 'LP_HT' ? 'HT' :
+                                         topRole === 'LP_LD' ? 'LĐ' : 'TT';
                   const stt = student.viTriGhe || parseInt(student.maHS.replace(/\D/g, ''), 10);
 
                   return (
@@ -448,8 +492,11 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                       onClick={() => onSelectStudent(student)}
                       className={`
                         group relative w-full flex flex-col items-center transition-all cursor-pointer select-none
-                        ${displayMode === 'avatar_badge' ? '' : `px-0.5 py-1 sm:p-1.5 rounded-xl justify-between shadow-xs min-h-[56px] sm:min-h-[62px] bg-white dark:bg-white text-black dark:text-black ${compactBorderClass}`}
-                        ${displayMode === 'compact' && isSelected ? 'ring-2 ring-indigo-500 shadow-md scale-[1.02] z-10' : ''}
+                        ${displayMode === 'avatar_badge' 
+                          ? 'px-0' 
+                          : `px-0.5 py-1 sm:p-1.5 justify-between min-h-[58px] sm:min-h-[64px] shadow-2xs ${compactDeskBorderClass} ${compactBgClass}`
+                        }
+                        ${isSelected ? 'ring-2 ring-indigo-500 shadow-md scale-[1.03] z-20' : 'z-1 hover:z-10'}
                         ${isLocked ? 'opacity-30 cursor-not-allowed' : 'active:scale-95'}
                       `}
                       style={
@@ -461,18 +508,17 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                     >
                       {displayMode === 'avatar_badge' ? (
                         /* ======================================================== */
-                        /* CHẾ ĐỘ AVATAR: KHUNG VUÔNG LỚN, KHÔNG STT, KHÔNG KHUNG NGOÀI */
+                        /* CHẾ ĐỘ ẢNH (AVATAR & HUY HIỆU): 2 GHẾ CHUNG BÀN DÍNH LIỀN */
                         /* ======================================================== */
                         <>
-                          {/* Khung ảnh vuông tràn viền rộng, viền mảnh theo giới tính/trạng thái */}
+                          {/* Khung ảnh vuông tràn viền rộng, dính liền mép bàn */}
                           <div 
                             className={`
-                              relative w-full aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-surface transition-all
+                              relative w-full aspect-square overflow-hidden bg-surface transition-all
+                              ${avatarDeskBorderClass}
                               ${isSelected 
-                                ? 'ring-3 ring-accent shadow-lg scale-[1.03] z-10' 
-                                : isNu 
-                                  ? 'border-2 border-rose-300 dark:border-rose-500/70 shadow-xs group-hover:border-rose-400 group-hover:shadow-md' 
-                                  : 'border-2 border-sky-300 dark:border-sky-500/70 shadow-xs group-hover:border-sky-400 group-hover:shadow-md'
+                                ? 'ring-3 ring-accent shadow-lg scale-[1.03] z-20' 
+                                : 'shadow-2xs group-hover:shadow-md'
                               }
                             `}
                             style={
@@ -549,7 +595,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                             )}
                           </div>
 
-                          {/* Tên học sinh đặt ngay phía dưới ảnh avatar (không khung bao quanh) */}
+                          {/* Tên học sinh đặt ngay phía dưới ảnh avatar */}
                           <div className="w-full mt-1 sm:mt-1.5 px-0.5 min-w-0 text-center">
                             <span className={`text-[10px] sm:text-xs font-extrabold tracking-tight truncate block leading-tight ${
                               isSelected ? 'text-accent' : 'text-main'
@@ -579,12 +625,16 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                         </>
                       ) : (
                         /* ======================================================== */
-                        /* CHẾ ĐỘ GỌN (3 TẦNG: STT TRÊN, TÊN GIỮA, CHỨC VỤ/HUY HIỆU DƯỚI) */
+                        /* CHẾ ĐỘ GỌN: 2 GHẾ CHUNG BÀN DÍNH LIỀN, 3 TẦNG THÔNG TIN */
                         /* ======================================================== */
                         <div className="w-full h-full flex flex-col justify-between items-center text-center">
                           {/* TẦNG 1: TRÊN LÀ SỐ THỨ TỰ TRONG DS LỚP */}
                           <div className="w-full flex items-center justify-between px-0.5 leading-none">
-                            <span className="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-400 tabular-nums">
+                            <span className={`px-1 py-0.5 rounded font-black text-[8.5px] sm:text-[9.5px] tabular-nums shadow-2xs ${
+                              isNu 
+                                ? 'text-rose-700 bg-rose-100/90 dark:text-rose-300 dark:bg-rose-950/60' 
+                                : 'text-sky-700 bg-sky-100/90 dark:text-sky-300 dark:bg-sky-950/60'
+                            }`}>
                               #{stt}
                             </span>
 
@@ -598,39 +648,46 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                             </div>
                           </div>
 
-                          {/* TẦNG 2: GIỮA LÀ TÊN HỌC SINH (CHỮ ĐEN, KHÔNG BỊ CẮT) */}
+                          {/* TẦNG 2: GIỮA LÀ TÊN HỌC SINH (CHỮ ĐEN, KHÔNG BỊ CẮT, HIỂN THỊ ĐỦ) */}
                           <div className="w-full text-center min-w-0 flex items-center justify-center flex-1 my-0.5 px-0.5">
-                            <span className="text-[9px] sm:text-[10.5px] font-black text-black dark:text-black leading-[1.1] block break-words text-center tracking-tighter">
+                            <span className="text-[9.5px] sm:text-[11px] font-black text-slate-900 dark:text-slate-900 leading-[1.12] block break-words text-center tracking-tight">
                               {getSeatingMapDisplayName(student, students)}
                             </span>
                           </div>
 
-                          {/* TẦNG 3: DƯỚI LÀ CHỨC VỤ NẾU CÓ, KO THÌ ĐỂ HUY HIỆU ĐÃ MANG */}
+                          {/* TẦNG 3: DƯỚI LÀ CHỨC VỤ (CÓ BIỂU TƯỢNG Ở ĐẦU + HUY HIỆU SAU), HOẶC HUY HIỆU ĐÃ MANG, HOẶC BIỂU TƯỢNG GIỚI TÍNH SINH ĐỘNG */}
                           <div className="w-full flex items-center justify-center min-h-[14px] leading-none px-0.5 overflow-hidden">
                             {topRole !== 'HS' ? (
                               <div 
-                                className="flex items-center justify-center gap-0.5 text-[8px] sm:text-[8.5px] font-black text-black dark:text-black truncate max-w-full"
+                                className="inline-flex items-center justify-center gap-0.5 px-1 py-0.2 rounded-md font-black text-[8px] sm:text-[8.5px] shadow-2xs leading-tight max-w-full"
+                                style={{ 
+                                  backgroundColor: roleConfig.bg, 
+                                  color: roleConfig.fg 
+                                }}
                                 title={`${roleConfig.label}${badgeDef ? ` · Huy hiệu: ${badgeDef.name}` : ''}`}
                               >
                                 <span>{roleIcon}</span>
-                                {badgeDef ? (
-                                  <span className="shrink-0 inline-flex items-center" title={`Huy hiệu: ${badgeDef.name}`}>
+                                <span className="font-extrabold">{roleCodeShort}</span>
+                                {badgeDef && (
+                                  <span className="shrink-0 inline-flex items-center ml-0.5" title={`Huy hiệu: ${badgeDef.name}`}>
                                     <BadgeEmblem type={badgeDef.iconType} size="2xs" />
                                   </span>
-                                ) : (
-                                  <span className="truncate">{roleTitleShort}</span>
                                 )}
                               </div>
                             ) : badgeDef ? (
                               <div 
-                                className="flex items-center justify-center gap-0.5 text-[8px] sm:text-[8.5px] font-bold text-amber-700 dark:text-amber-700 truncate max-w-full" 
+                                className="inline-flex items-center justify-center gap-0.5 px-1 py-0.2 rounded-md bg-amber-100/90 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700/60 text-[8px] sm:text-[8.5px] font-black shadow-2xs max-w-full" 
                                 title={`Huy hiệu: ${badgeDef.name}`}
                               >
                                 <BadgeEmblem type={badgeDef.iconType} size="2xs" />
-                                <span className="truncate hidden sm:inline">{badgeDef.name}</span>
+                                <span className="truncate max-w-[36px] hidden sm:inline">{badgeDef.name}</span>
                               </div>
                             ) : (
-                              <span className="text-[8px] text-slate-300 dark:text-slate-300 select-none">-</span>
+                              <span className={`text-[9px] font-black select-none leading-none ${
+                                isNu ? 'text-rose-400 dark:text-rose-400' : 'text-sky-400 dark:text-sky-400'
+                              }`}>
+                                {isNu ? '♀' : '♂'}
+                              </span>
                             )}
                           </div>
                         </div>
