@@ -38,12 +38,13 @@ export type BadgeIconType =
 
 interface BadgeEmblemProps {
   type: BadgeIconType | string;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  size?: '2xs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
   isUnlocked?: boolean;
 }
 
 const SIZE_MAP = {
+  '2xs': 'w-3.5 h-3.5',
   xs: 'w-5 h-5',
   sm: 'w-7 h-7',
   md: 'w-10 h-10',

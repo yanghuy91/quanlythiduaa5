@@ -400,13 +400,10 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                     ? student.gioiTinh === 'Nu' 
                     : /Thị|Duyên|Trang|Hằng|Uyên|Linh|My|Tiên|Quỳnh|Huyền|Ánh/i.test(student.hoTen);
                   
-                  // Compact mode: pure white/dark background, gender distinguished ONLY by border!
+                  // Compact mode: pure white background, black text, gender distinguished ONLY by border (Nam: sky-400, Nữ: rose-400)!
                   const compactBorderClass = isNu
-                    ? 'border-2 border-rose-400 dark:border-rose-500 hover:border-rose-500'
-                    : 'border-2 border-sky-400 dark:border-sky-500 hover:border-sky-500';
-                  const compactBgClass = isSelected
-                    ? 'bg-accent/10 dark:bg-accent/20 border-accent ring-2 ring-accent/40'
-                    : 'bg-white dark:bg-slate-900';
+                    ? 'border-2 border-rose-400 hover:border-rose-500'
+                    : 'border-2 border-sky-400 hover:border-sky-500';
 
                   // Determine status border
                   let statusBorderColor: string | undefined = undefined;
@@ -425,13 +422,19 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                     }
                   }
 
-                  // Top priority role badge
+                  // Top priority role badge & STT
                   const topRole = student.vaiTro[0] || 'HS';
                   const roleConfig = ROLE_CONFIG[topRole];
                   const roleIcon = topRole === 'LT' ? '👑' :
                                    topRole === 'BT' ? '🚩' :
                                    topRole === 'LP_HT' ? '📖' :
                                    topRole === 'LP_LD' ? '⚡' : '🛡️';
+                  const roleTitleShort = topRole === 'TT' && student.toTruongTo ? `TT${student.toTruongTo}` :
+                                         topRole === 'LT' ? 'Lớp trưởng' :
+                                         topRole === 'BT' ? 'Bí thư' :
+                                         topRole === 'LP_HT' ? 'LP Học tập' :
+                                         topRole === 'LP_LD' ? 'LP Lao động' : roleConfig.label;
+                  const stt = student.viTriGhe || parseInt(student.maHS.replace(/\D/g, ''), 10);
 
                   return (
                     <button
@@ -441,16 +444,16 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                       onClick={() => onSelectStudent(student)}
                       className={`
                         group relative w-full flex flex-col items-center transition-all cursor-pointer select-none
-                        ${displayMode === 'avatar_badge' ? '' : `p-1 sm:p-1.5 rounded-xl justify-between text-left shadow-xs min-h-[50px] sm:min-h-[54px] ${compactBgClass} ${compactBorderClass}`}
-                        ${displayMode === 'compact' && isSelected ? 'scale-[1.02] shadow-md z-10' : ''}
+                        ${displayMode === 'avatar_badge' ? '' : `p-1 sm:p-1.5 rounded-xl justify-between shadow-xs min-h-[58px] sm:min-h-[64px] bg-white dark:bg-white text-black dark:text-black ${compactBorderClass}`}
+                        ${displayMode === 'compact' && isSelected ? 'ring-2 ring-indigo-500 shadow-md scale-[1.02] z-10' : ''}
                         ${isLocked ? 'opacity-30 cursor-not-allowed' : 'active:scale-95'}
                       `}
                       style={
-                        displayMode === 'compact' && statusBorderColor
-                          ? { borderColor: isSelected ? 'var(--accent)' : statusBorderColor }
+                        displayMode === 'avatar_badge' && statusBorderColor
+                          ? { borderColor: statusBorderColor }
                           : undefined
                       }
-                      title={`${student.hoTen} · Tổ ${student.to} · STT #${student.viTriGhe}${badgeDef ? ` · Huy hiệu: ${badgeDef.name}` : ''}`}
+                      title={`${student.hoTen} · Tổ ${student.to} · STT #${stt}${topRole !== 'HS' ? ` · ${roleConfig.label}` : ''}${badgeDef ? ` · Huy hiệu: ${badgeDef.name}` : ''}`}
                     >
                       {displayMode === 'avatar_badge' ? (
                         /* ======================================================== */
@@ -572,46 +575,60 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                         </>
                       ) : (
                         /* ======================================================== */
-                        /* CHẾ ĐỘ GỌN (TÊN & STT TRONG CARD) */
+                        /* CHẾ ĐỘ GỌN (3 TẦNG: STT TRÊN, TÊN GIỮA, CHỨC VỤ/HUY HIỆU DƯỚI) */
                         /* ======================================================== */
-                        <>
-                          {/* Top bar: STT on left, Status + Role badge + Multi-check on right */}
-                          <div className="flex items-center justify-between w-full leading-none">
-                            <span className="text-[10px] sm:text-[11px] font-extrabold text-slate-400 dark:text-slate-500 tabular-nums">
-                              #{student.viTriGhe}
+                        <div className="w-full h-full flex flex-col justify-between items-center text-center">
+                          {/* TẦNG 1: TRÊN LÀ SỐ THỨ TỰ TRONG DS LỚP */}
+                          <div className="w-full flex items-center justify-between px-0.5 leading-none">
+                            <span className="text-[10px] sm:text-[11px] font-black text-slate-400 dark:text-slate-400 tabular-nums">
+                              #{stt}
                             </span>
 
-                            <div className="flex items-center gap-0.5">
+                            <div className="flex items-center gap-0.5 ml-auto">
                               {statusIcon}
-                              {topRole !== 'HS' && (
-                                <span 
-                                  className="text-[9px] font-bold px-1 py-0.2 rounded flex items-center gap-0.5"
-                                  style={{ 
-                                    color: roleConfig.fg, 
-                                    backgroundColor: roleConfig.bg 
-                                  }}
-                                  title={roleConfig.label}
-                                >
-                                  <span>{roleIcon}</span>
-                                  <span>{topRole === 'TT' && student.toTruongTo ? `T${student.toTruongTo}` : roleConfig.short}</span>
-                                </span>
-                              )}
-
                               {isSelected && (
-                                <span className="w-3.5 h-3.5 rounded bg-accent text-on-accent flex items-center justify-center shadow-xs">
+                                <span className="w-3.5 h-3.5 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xs">
                                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                                 </span>
                               )}
                             </div>
                           </div>
 
-                          {/* Bottom line: Given Name - optimized for readability, no truncation clipping */}
-                          <div className="w-full text-center min-w-0 flex items-center justify-center flex-1 py-0.5">
-                            <span className="text-[10px] sm:text-[11px] font-black text-slate-900 dark:text-slate-100 tracking-tight leading-[1.15] block break-words text-center px-0.5 max-h-[28px] overflow-hidden">
+                          {/* TẦNG 2: GIỮA LÀ TÊN HỌC SINH (CHỮ ĐEN, KHÔNG BỊ CẮT) */}
+                          <div className="w-full text-center min-w-0 flex items-center justify-center flex-1 my-0.5">
+                            <span className="text-[11px] sm:text-xs font-black text-black dark:text-black leading-tight block truncate px-0.5">
                               {getSeatingMapDisplayName(student, students)}
                             </span>
                           </div>
-                        </>
+
+                          {/* TẦNG 3: DƯỚI LÀ CHỨC VỤ NẾU CÓ, KO THÌ ĐỂ HUY HIỆU ĐÃ MANG */}
+                          <div className="w-full flex items-center justify-center min-h-[14px] leading-none px-0.5 overflow-hidden">
+                            {topRole !== 'HS' ? (
+                              <div 
+                                className="flex items-center justify-center gap-0.5 text-[9px] font-black text-black dark:text-black truncate max-w-full"
+                                title={`${roleConfig.label}${badgeDef ? ` · Huy hiệu: ${badgeDef.name}` : ''}`}
+                              >
+                                <span>{roleIcon}</span>
+                                <span className="truncate">{roleTitleShort}</span>
+                                {badgeDef && (
+                                  <span className="shrink-0 inline-flex items-center ml-0.5" title={`Huy hiệu: ${badgeDef.name}`}>
+                                    <BadgeEmblem type={badgeDef.iconType} size="2xs" />
+                                  </span>
+                                )}
+                              </div>
+                            ) : badgeDef ? (
+                              <div 
+                                className="flex items-center justify-center gap-1 text-[9px] font-bold text-amber-700 dark:text-amber-700 truncate max-w-full" 
+                                title={`Huy hiệu: ${badgeDef.name}`}
+                              >
+                                <BadgeEmblem type={badgeDef.iconType} size="2xs" />
+                                <span className="truncate">{badgeDef.name}</span>
+                              </div>
+                            ) : (
+                              <span className="text-[8px] text-slate-300 dark:text-slate-300 select-none">-</span>
+                            )}
+                          </div>
+                        </div>
                       )}
                     </button>
                   );

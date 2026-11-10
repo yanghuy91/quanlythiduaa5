@@ -1080,10 +1080,10 @@ export const StudentView: React.FC<StudentViewProps> = ({
               <div>
                 <h3 className="text-sm font-bold text-main uppercase tracking-wider flex items-center gap-2">
                   <Award className="w-4 h-4 text-amber-500" />
-                  <span>Bộ Sưu Tập Huy Hiệu Danh Dự (30 Danh Hiệu)</span>
+                  <span>Bộ sưu tập huy hiệu</span>
                 </h3>
                 <p className="text-xs text-muted mt-0.5">
-                  Đã mở khóa: <strong>{myBadges.filter(b => b.unlocked).length}</strong> / {myBadges.length} huy hiệu · Bấm "Mang vào" hoặc "Tháo ra" để chọn huy hiệu của bạn!
+                  Đã mở khóa: <strong>{myBadges.filter(b => b.unlocked).length}</strong> / {myBadges.length} huy hiệu
                 </p>
               </div>
 
