@@ -20,7 +20,6 @@ import {
   ChevronDown,
   ChevronUp,
   Camera,
-  ChevronLeft,
   Check,
   Lock,
   KeyRound,
@@ -273,6 +272,45 @@ export const StudentView: React.FC<StudentViewProps> = ({
     setExpandedWeeks(new Set());
   };
 
+  // Hỗ trợ nút quay lại trên điện thoại (Hardware/Browser Back Button)
+  useEffect(() => {
+    // Đẩy lịch sử khi mở tab phụ hoặc mở popup/modal để nút Back bắt được
+    if (activeTab !== 'my_score') {
+      window.history.pushState({ studentTab: activeTab }, '', '');
+    }
+
+    const handlePopState = () => {
+      // Đóng các popup cài đặt / vinh danh trước nếu đang mở
+      if (showSettingsModal) {
+        setShowSettingsModal(false);
+        return;
+      }
+      if (showAvatarModal) {
+        setShowAvatarModal(false);
+        return;
+      }
+      if (showBadgeModal) {
+        setShowBadgeModal(false);
+        return;
+      }
+      if (showPasswordModal) {
+        setShowPasswordModal(false);
+        return;
+      }
+      if (showCadreModal) {
+        setShowCadreModal(false);
+        return;
+      }
+      // Quay về màn hình chính của học sinh
+      setActiveTab('my_score');
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [activeTab, showSettingsModal, showAvatarModal, showBadgeModal, showPasswordModal, showCadreModal]);
+
   // Pre-calculate weekly stats for each of the 4 rows
   const fourWeeksData = useMemo(() => {
     return fourRecentWeeks.map(item => {
@@ -505,26 +543,39 @@ export const StudentView: React.FC<StudentViewProps> = ({
           {/* Deep dark gradient overlay ensures all text is crisp and never sunken */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/40" />
 
-          {/* Top Row: Logo, Title, Week Selector & Logout */}
+          {/* Top Row: Logo, Title horizontal, and Logout button */}
           <div className="relative z-10 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5 min-w-0">
+            <div 
+              className="flex items-center gap-2 min-w-0 cursor-pointer group select-none"
+              onClick={() => setActiveTab('my_score')}
+              title="Bấm vào logo để về màn hình chính"
+            >
               <Logo10A5 size="sm" animate={false} />
-              <div className="flex flex-col min-w-0 leading-tight">
-                <span className="text-xs sm:text-sm font-black tracking-tight text-white drop-shadow-md uppercase">
-                  TRƯỜNG THPT SỐ 2 ĐỨC PHỔ
-                </span>
-                <div className="flex items-center gap-1 text-[10px] text-white/85 font-semibold drop-shadow-xs mt-0.5">
-                  <span className="text-amber-300 font-extrabold">Lớp 10A5</span>
-                  <span>•</span>
-                  <span>Năm học 2026-2027</span>
-                </div>
-              </div>
+              <span className="text-xs sm:text-sm font-black tracking-tight text-white drop-shadow-md uppercase whitespace-nowrap truncate group-hover:text-amber-300 transition-colors">
+                TRƯỜNG THPT SỐ 2 ĐỨC PHỔ
+              </span>
             </div>
 
-            <div className="flex items-center gap-1.5 shrink-0">
-              {/* Interactive Week Capsule Selector */}
-              <div className="flex items-center gap-1 px-2 py-1 rounded-xl bg-black/50 hover:bg-black/70 border border-white/25 text-amber-300 font-extrabold text-[11px] shadow-xs backdrop-blur-md transition-all">
-                <Calendar className="w-3 h-3 text-amber-300 shrink-0" />
+            {/* Quick Logout Button */}
+            {onLogout && (
+              <button
+                type="button"
+                onClick={onLogout}
+                className="px-2.5 py-1 rounded-xl bg-rose-500/50 hover:bg-rose-600/80 border border-rose-300/40 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md shrink-0"
+                title="Đăng xuất khỏi tài khoản"
+              >
+                <LogOut className="w-3.5 h-3.5 text-rose-200" />
+                <span>Thoát</span>
+              </button>
+            )}
+          </div>
+
+          {/* Bottom Area: Week Selector (ép sang trái) + Role Badge & Slogan */}
+          <div className="relative z-10 pt-2 flex flex-col gap-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Interactive Week Capsule Selector ép sang trái */}
+              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-black/50 hover:bg-black/70 border border-white/25 text-amber-300 font-extrabold text-[11px] shadow-xs backdrop-blur-md transition-all">
+                <Calendar className="w-3.5 h-3.5 text-amber-300 shrink-0" />
                 {onChangeCurrentWeek ? (
                   <select
                     value={currentWeek}
@@ -543,61 +594,36 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 )}
               </div>
 
-              {/* Quick Logout Button */}
-              {onLogout && (
-                <button
-                  type="button"
-                  onClick={onLogout}
-                  className="px-2.5 py-1 rounded-xl bg-rose-500/50 hover:bg-rose-600/80 border border-rose-300/40 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 backdrop-blur-md"
-                  title="Đăng xuất khỏi tài khoản"
-                >
-                  <LogOut className="w-3 h-3 text-rose-200" />
-                  <span>Thoát</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Bottom Row: Role Badge & Motto */}
-          <div className="relative z-10 pt-2 flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex items-center gap-2 flex-wrap">
               <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border backdrop-blur-md shadow-xs ${studentBanner.accentBadge}`}>
                 {studentBanner.roleName}
               </span>
-              <span className="text-[11px] text-white/95 italic font-semibold drop-shadow-md">
-                "{studentBanner.tagline}"
-              </span>
+
+              {isCadre && (
+                <button
+                  type="button"
+                  onClick={() => setShowCadreModal(true)}
+                  className="shrink-0 px-2 py-0.5 rounded-xl bg-white/20 hover:bg-white/35 text-white text-[10px] font-bold backdrop-blur-md transition-all cursor-pointer border border-white/20 shadow-xs"
+                >
+                  👑 Vinh danh cán sự
+                </button>
+              )}
             </div>
 
-            {isCadre && (
-              <button
-                type="button"
-                onClick={() => setShowCadreModal(true)}
-                className="shrink-0 px-2.5 py-0.5 rounded-xl bg-white/20 hover:bg-white/35 text-white text-[10px] font-bold backdrop-blur-md transition-all cursor-pointer border border-white/20 shadow-xs"
+            {/* Slogan with customizable text, icon, color, style */}
+            <div className="flex items-center gap-1.5 text-[11px] text-white/95 font-semibold drop-shadow-md">
+              <span
+                style={{
+                  color: settings?.bannerSloganColor || '#ffffff',
+                  fontStyle: (settings?.bannerSloganStyle ?? 'italic') === 'italic' ? 'italic' : 'normal',
+                  fontWeight: (settings?.bannerSloganStyle ?? 'italic') === 'bold' ? 800 : 600,
+                }}
               >
-                👑 Vinh danh cán sự
-              </button>
-            )}
+                "{settings?.bannerSloganText || 'Chăm ngoan - Sáng tạo - Đoàn kết vững bước tương lai'} {settings?.bannerSloganIcon || '🌟'}"
+              </span>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Sub-tab "Quay lại" (Back) button when viewing secondary tabs */}
-      {activeTab !== 'my_score' && (
-        <div className="flex items-center justify-between px-1">
-          <button
-            type="button"
-            onClick={() => setActiveTab('my_score')}
-            className="px-3.5 py-1.5 rounded-xl bg-surface hover:bg-surface-2 border border-token text-main text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 hover:border-accent"
-          >
-            <ChevronLeft className="w-3.5 h-3.5 text-accent" />
-            <span>← Quay lại Hồ sơ Của tôi</span>
-          </button>
-          <span className="text-xs font-bold text-muted">
-            {activeTab === 'grades' ? 'Bảng điểm môn học' : activeTab === 'badges' ? 'Huy hiệu thành tích' : activeTab === 'seating' ? 'Sơ đồ lớp học' : 'Bảng xếp hạng thi đua'}
-          </span>
-        </div>
-      )}
 
       {/* Student Nav Tabs - Ultra Compact 1-Line (No Wrapping, No Text Cutting) */}
       <div className="flex items-center gap-1 p-1 bg-surface-2 rounded-2xl border border-token w-full max-w-xl mx-auto overflow-x-auto scrollbar-none justify-between">
@@ -846,10 +872,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   <Clock className="w-4 h-4 text-accent" />
                   <span>Nhật ký nề nếp cá nhân (4 tuần gần nhất)</span>
                 </h3>
-                <p className="text-[11px] text-muted mt-0.5">
-                  Hiển thị 4 dòng: Tuần hiện tại (Tuần {currentWeek}) và 3 tuần liền kề gần nhất
-                </p>
-              </div>
+                </div>
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
@@ -1072,14 +1095,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setActiveTab('my_score')}
-                className="px-3 py-1 rounded-xl bg-surface-2 border border-token text-xs font-bold text-main cursor-pointer hover:bg-surface"
-              >
-                ← Quay lại điểm số
-              </button>
-            </div>
+              </div>
 
             {/* Category Filter Tabs */}
             <div className="flex items-center gap-1 p-1 bg-surface-2 rounded-2xl border border-token text-xs overflow-x-auto">
@@ -1240,14 +1256,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
           <div className="bg-surface p-3 sm:p-4 rounded-3xl border border-token space-y-3">
             <div className="text-xs text-muted flex items-center justify-between">
               <span>Sơ đồ vị trí 42 học sinh &amp; Trạng thái nề nếp</span>
-              <button
-                type="button"
-                onClick={() => setActiveTab('my_score')}
-                className="px-3 py-1 rounded-xl bg-surface-2 border border-token text-xs font-bold text-main cursor-pointer"
-              >
-                ← Quay lại
-              </button>
-            </div>
+              </div>
 
             <SeatGrid
               layout={layout}
@@ -1293,14 +1302,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 <span>⭐ Vị trí của bạn: Hạng #{myRank} ({myPeriodSummary.diemTrungBinh}đ)</span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => setActiveTab('my_score')}
-                className="px-3.5 py-1.5 rounded-xl bg-surface hover:bg-surface-2 border border-token text-xs font-bold text-main cursor-pointer transition-colors shadow-xs"
-              >
-                ← Quay lại
-              </button>
-            </div>
+              </div>
           </div>
 
           {/* Sắp xếp Toolbar (Gọn gàng 1 dòng dropdown) */}

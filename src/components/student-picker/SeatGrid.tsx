@@ -171,11 +171,11 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
 
         {/* Quick Gender and Seat Counter */}
         <div className="flex items-center gap-2 text-[11px] font-semibold text-muted">
-          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300 border border-sky-200/80 dark:border-sky-900/40">
+          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-sky-700 dark:text-sky-300 border-2 border-sky-400 dark:border-sky-500 shadow-2xs font-bold">
             <span className="w-2 h-2 rounded-full bg-sky-500" />
             <span>Nam: 25</span>
           </span>
-          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-900/40">
+          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-rose-700 dark:text-rose-300 border-2 border-rose-400 dark:border-rose-500 shadow-2xs font-bold">
             <span className="w-2 h-2 rounded-full bg-rose-500" />
             <span>Nữ: 17</span>
           </span>
@@ -289,7 +289,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
 
       {/* Seating Container */}
       <div className="w-full overflow-x-auto no-scrollbar pb-2 pt-0.5">
-        <div className={`min-w-[420px] max-w-full mx-auto flex flex-col ${displayMode === 'avatar_badge' ? 'gap-3 sm:gap-4' : 'gap-2'}`}>
+        <div className={`min-w-[450px] sm:min-w-[500px] max-w-full mx-auto flex flex-col ${displayMode === 'avatar_badge' ? 'gap-3 sm:gap-4' : 'gap-2'}`}>
           {Object.entries(rows).map(([rowKey, nodes]) => {
             const rowIndex = Number(rowKey);
 
@@ -395,27 +395,32 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                   const activeBadgeId = getStudentActiveBadge(student.maHS) || (studentBadgesMap[student.maHS]?.[0] ?? null);
                   const badgeDef = activeBadgeId ? badgeCatalogMap.get(activeBadgeId) : undefined;
 
-                  // Gender color tint: Nam (soft sky blue) vs Nữ (soft rose pink)
+                  // Gender color tint: Nam (border sky blue) vs Nữ (border rose pink)
                   const isNu = student.gioiTinh 
                     ? student.gioiTinh === 'Nu' 
                     : /Thị|Duyên|Trang|Hằng|Uyên|Linh|My|Tiên|Quỳnh|Huyền|Ánh/i.test(student.hoTen);
-                  const genderBgClass = isNu 
-                    ? 'bg-rose-50/80 dark:bg-rose-950/25 border-rose-300 dark:border-rose-800/40 text-rose-900 dark:text-rose-100' 
-                    : 'bg-sky-50/80 dark:bg-sky-950/25 border-sky-300 dark:border-sky-800/40 text-sky-900 dark:text-sky-100';
+                  
+                  // Compact mode: pure white/dark background, gender distinguished ONLY by border!
+                  const compactBorderClass = isNu
+                    ? 'border-2 border-rose-400 dark:border-rose-500 hover:border-rose-500'
+                    : 'border-2 border-sky-400 dark:border-sky-500 hover:border-sky-500';
+                  const compactBgClass = isSelected
+                    ? 'bg-accent/10 dark:bg-accent/20 border-accent ring-2 ring-accent/40'
+                    : 'bg-white dark:bg-slate-900';
 
                   // Determine status border
-                  let borderColor = isNu ? 'rgba(244, 63, 94, 0.45)' : 'rgba(56, 189, 248, 0.45)';
+                  let statusBorderColor: string | undefined = undefined;
                   let statusIcon: React.ReactNode = null;
 
                   if (showStatusColors && summary) {
                     if (summary.mucMau === 'bad') {
-                      borderColor = 'var(--st-bad)';
+                      statusBorderColor = 'var(--st-bad)';
                       statusIcon = <AlertCircle className="w-3 h-3 text-[var(--st-bad)]" />;
                     } else if (summary.mucMau === 'warn') {
-                      borderColor = 'var(--st-warn)';
+                      statusBorderColor = 'var(--st-warn)';
                       statusIcon = <AlertTriangle className="w-3 h-3 text-[var(--st-warn)]" />;
                     } else if (summary.mucMau === 'ok') {
-                      borderColor = 'var(--st-ok)';
+                      statusBorderColor = 'var(--st-ok)';
                       statusIcon = <CheckCircle className="w-3 h-3 text-[var(--st-ok)]" />;
                     }
                   }
@@ -436,16 +441,13 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                       onClick={() => onSelectStudent(student)}
                       className={`
                         group relative w-full flex flex-col items-center transition-all cursor-pointer select-none
-                        ${displayMode === 'avatar_badge' ? '' : 'p-1.5 rounded-xl justify-between text-left shadow-xs h-12 sm:h-13 ' + genderBgClass}
-                        ${displayMode === 'compact' && isSelected ? 'ring-2 ring-accent/40 scale-[1.02] shadow-md z-10' : ''}
+                        ${displayMode === 'avatar_badge' ? '' : `p-1 sm:p-1.5 rounded-xl justify-between text-left shadow-xs min-h-[50px] sm:min-h-[54px] ${compactBgClass} ${compactBorderClass}`}
+                        ${displayMode === 'compact' && isSelected ? 'scale-[1.02] shadow-md z-10' : ''}
                         ${isLocked ? 'opacity-30 cursor-not-allowed' : 'active:scale-95'}
                       `}
                       style={
-                        displayMode === 'compact'
-                          ? {
-                              borderColor: isSelected ? 'var(--accent)' : borderColor,
-                              borderWidth: isSelected ? '2.5px' : '1.5px',
-                            }
+                        displayMode === 'compact' && statusBorderColor
+                          ? { borderColor: isSelected ? 'var(--accent)' : statusBorderColor }
                           : undefined
                       }
                       title={`${student.hoTen} · Tổ ${student.to} · STT #${student.viTriGhe}${badgeDef ? ` · Huy hiệu: ${badgeDef.name}` : ''}`}
@@ -575,7 +577,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                         <>
                           {/* Top bar: STT on left, Status + Role badge + Multi-check on right */}
                           <div className="flex items-center justify-between w-full leading-none">
-                            <span className="text-[11px] sm:text-xs font-black opacity-85 tabular-nums">
+                            <span className="text-[10px] sm:text-[11px] font-extrabold text-slate-400 dark:text-slate-500 tabular-nums">
                               #{student.viTriGhe}
                             </span>
 
@@ -603,9 +605,9 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                             </div>
                           </div>
 
-                          {/* Bottom line: Only Given Name */}
-                          <div className="w-full text-center min-w-0">
-                            <span className="text-[10px] sm:text-xs font-extrabold text-main tracking-tight truncate block leading-tight px-0.5">
+                          {/* Bottom line: Given Name - optimized for readability, no truncation clipping */}
+                          <div className="w-full text-center min-w-0 flex items-center justify-center flex-1 py-0.5">
+                            <span className="text-[10px] sm:text-[11px] font-black text-slate-900 dark:text-slate-100 tracking-tight leading-[1.15] block break-words text-center px-0.5 max-h-[28px] overflow-hidden">
                               {getSeatingMapDisplayName(student, students)}
                             </span>
                           </div>

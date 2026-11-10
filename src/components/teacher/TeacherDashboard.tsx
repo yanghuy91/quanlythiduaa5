@@ -1644,6 +1644,130 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </div>
           </div>
 
+          {/* Cài đặt Slogan / Khẩu hiệu trên Banner lớp học */}
+          <div className="p-4 rounded-2xl bg-surface border border-token shadow-2xs space-y-3.5 max-w-xl mx-auto">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center font-bold text-base shrink-0">
+                📢
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-main uppercase tracking-wider">
+                  Khẩu hiệu / Slogan trên Banner Lớp
+                </h4>
+                <p className="text-[11px] text-muted">
+                  Tùy chỉnh thông điệp truyền cảm hứng hiển thị trên đầu trang học sinh và ban cán sự
+                </p>
+              </div>
+            </div>
+
+            {/* Ô nhập nội dung */}
+            <div className="space-y-1">
+              <label className="block text-[11px] font-bold text-main">
+                Nội dung khẩu hiệu:
+              </label>
+              <input
+                type="text"
+                value={settings.bannerSloganText ?? 'Chăm ngoan - Sáng tạo - Đoàn kết vững bước tương lai'}
+                onChange={e => onUpdateSettings({ bannerSloganText: e.target.value })}
+                placeholder="Nhập khẩu hiệu của lớp..."
+                className="w-full px-3 py-2 bg-surface-2 border border-token rounded-xl text-xs font-semibold text-main focus:outline-none focus:ring-2 focus:ring-accent/40"
+              />
+            </div>
+
+            {/* Chọn biểu tượng sinh động */}
+            <div className="space-y-1">
+              <label className="block text-[11px] font-bold text-main">
+                Biểu tượng sinh động:
+              </label>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {['🌟', '🚀', '🔥', '📚', '🎯', '✨', '🏆', '💪', '🎓', '🌱', '⚡', '💎'].map(icon => (
+                  <button
+                    key={icon}
+                    type="button"
+                    onClick={() => onUpdateSettings({ bannerSloganIcon: icon })}
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm transition-all cursor-pointer ${
+                      (settings.bannerSloganIcon ?? '🌟') === icon
+                        ? 'bg-accent text-on-accent scale-110 shadow-xs ring-2 ring-accent/30'
+                        : 'bg-surface-2 hover:bg-surface border border-token'
+                    }`}
+                  >
+                    {icon}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Màu sắc & Kiểu chữ */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div className="space-y-1">
+                <label className="block text-[11px] font-bold text-main">Màu chữ khẩu hiệu:</label>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {[
+                    { label: 'Trắng', color: '#ffffff' },
+                    { label: 'Vàng kim', color: '#fef08a' },
+                    { label: 'Xanh ngọc', color: '#67e8f9' },
+                    { label: 'Xanh lá', color: '#a7f3d0' },
+                    { label: 'Hồng phấn', color: '#f472b6' },
+                    { label: 'Cam tươi', color: '#fed7aa' },
+                  ].map(c => (
+                    <button
+                      key={c.color}
+                      type="button"
+                      onClick={() => onUpdateSettings({ bannerSloganColor: c.color })}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 border ${
+                        (settings.bannerSloganColor ?? '#ffffff') === c.color
+                          ? 'border-accent ring-2 ring-accent/40 bg-surface'
+                          : 'border-token bg-surface-2 hover:bg-surface'
+                      }`}
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full border border-black/20" style={{ backgroundColor: c.color }} />
+                      <span className="text-main">{c.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[11px] font-bold text-main">Định dạng kiểu chữ:</label>
+                <div className="flex items-center gap-1.5">
+                  {[
+                    { label: 'In nghiêng', value: 'italic' },
+                    { label: 'Chữ chuẩn', value: 'normal' },
+                    { label: 'Chữ đậm', value: 'bold' },
+                  ].map(s => (
+                    <button
+                      key={s.value}
+                      type="button"
+                      onClick={() => onUpdateSettings({ bannerSloganStyle: s.value as any })}
+                      className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                        (settings.bannerSloganStyle ?? 'italic') === s.value
+                          ? 'bg-accent text-on-accent shadow-xs'
+                          : 'bg-surface-2 hover:bg-surface border border-token text-main'
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Xem trước trực tiếp */}
+            <div className="p-3 rounded-xl bg-slate-900 border border-slate-700/80 text-center shadow-inner">
+              <span className="text-[10px] text-white/50 block mb-0.5 uppercase tracking-wider font-extrabold">Xem trước hiển thị:</span>
+              <span
+                style={{
+                  color: settings.bannerSloganColor ?? '#ffffff',
+                  fontStyle: (settings.bannerSloganStyle ?? 'italic') === 'italic' ? 'italic' : 'normal',
+                  fontWeight: (settings.bannerSloganStyle ?? 'italic') === 'bold' ? 800 : 600,
+                }}
+                className="text-xs sm:text-sm drop-shadow-md"
+              >
+                "{settings.bannerSloganText ?? 'Chăm ngoan - Sáng tạo - Đoàn kết vững bước tương lai'} {settings.bannerSloganIcon ?? '🌟'}"
+              </span>
+            </div>
+          </div>
+
           {/* Card Sao lưu dự phòng ngoại tuyến (Tùy chọn) */}
           <div className="p-4 rounded-2xl bg-surface border border-token shadow-2xs space-y-3 max-w-xl mx-auto">
             <div className="flex items-center justify-between flex-wrap gap-2">

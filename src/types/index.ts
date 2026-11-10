@@ -174,6 +174,10 @@ export interface TeacherSettings {
   maLop: string; // '10A5DP'
   choPhepXemDiemMon: boolean; // Bật / tắt cho học sinh xem điểm môn học
   choPhepTrungAvatar: boolean; // Bật / tắt cho phép học sinh dùng chung / trùng Avatar trong lớp
+  bannerSloganText?: string; // Tùy chỉnh câu khẩu hiệu lớp trên Banner
+  bannerSloganIcon?: string; // Biểu tượng sinh động
+  bannerSloganColor?: string; // Màu sắc chữ khẩu hiệu
+  bannerSloganStyle?: 'italic' | 'normal' | 'bold'; // Định dạng kiểu chữ
 }
 
 export type ActiveTab = 'my_page' | 'seating' | 'personal_log' | 'overview' | 'rules' | 'settings' | 'import_export' | 'audit_log' | 'apps' | 'grades';

@@ -35,6 +35,10 @@ export const INITIAL_SETTINGS: TeacherSettings = {
   maLop: '10A5DP',
   choPhepXemDiemMon: true, // Cho phép học sinh xem điểm môn học
   choPhepTrungAvatar: true, // Cho phép dùng chung Avatar (GV có thể tắt để bắt buộc mỗi HS 1 Avatar)
+  bannerSloganText: 'Chăm ngoan - Sáng tạo - Đoàn kết vững bước tương lai',
+  bannerSloganIcon: '🌟',
+  bannerSloganColor: '#ffffff',
+  bannerSloganStyle: 'italic',
 };
 
 // 42 học sinh lớp 10A5 - THPT Số 2 Đức Phổ
