@@ -543,9 +543,14 @@ export const StudentView: React.FC<StudentViewProps> = ({
               title="Bấm vào logo để về màn hình chính"
             >
               <Logo10A5 size="sm" animate={false} />
-              <span className="text-xs sm:text-sm font-black tracking-tight text-white drop-shadow-md uppercase whitespace-nowrap truncate group-hover:text-amber-300 transition-colors">
-                TRƯỜNG THPT SỐ 2 ĐỨC PHỔ
-              </span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs sm:text-sm font-black tracking-tight text-white drop-shadow-md uppercase whitespace-nowrap truncate group-hover:text-amber-300 transition-colors">
+                  TRƯỜNG THPT SỐ 2 ĐỨC PHỔ
+                </span>
+                <span className="text-[9.5px] sm:text-[10px] font-semibold text-slate-300 drop-shadow leading-none">
+                  Năm học 2026-2027
+                </span>
+              </div>
             </div>
 
             {/* Quick Logout Button */}
@@ -641,7 +646,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
           title="Xem bảng điểm các môn học (Toán, Văn, Anh...)"
         >
           <GraduationCap className="w-3.5 h-3.5 text-accent shrink-0" />
-          <span>Điểm môn</span>
+          <span>Điểm</span>
           {!settings.choPhepXemDiemMon && (
             <Lock className="w-2.5 h-2.5 text-amber-500 shrink-0" />
           )}
@@ -834,54 +839,30 @@ export const StudentView: React.FC<StudentViewProps> = ({
           
 
           {/* Period Summary Statistics */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3 rounded-2xl bg-surface border border-token">
-              <span className="text-[11px] text-muted font-medium">Khởi đầu</span>
-              <div className="text-lg font-bold text-main mt-0.5">{settings.diemKhoiDau} điểm</div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-surface border border-token">
+              <span className="text-[10.5px] sm:text-[11px] text-muted font-medium">Tổng điểm trừ</span>
+              <div className="text-base sm:text-lg font-bold text-[var(--st-bad)] mt-0.5">-{myPeriodSummary.tongDiemTru}đ</div>
             </div>
 
-            <div className="p-3 rounded-2xl bg-surface border border-token">
-              <span className="text-[11px] text-muted font-medium">Tổng điểm trừ</span>
-              <div className="text-lg font-bold text-[var(--st-bad)] mt-0.5">-{myPeriodSummary.tongDiemTru}đ</div>
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-surface border border-token">
+              <span className="text-[10.5px] sm:text-[11px] text-muted font-medium">Điểm cộng bù</span>
+              <div className="text-base sm:text-lg font-bold text-[var(--st-ok)] mt-0.5">+{myPeriodSummary.tongDiemCong}đ</div>
             </div>
 
-            <div className="p-3 rounded-2xl bg-surface border border-token">
-              <span className="text-[11px] text-muted font-medium">Điểm cộng bù</span>
-              <div className="text-lg font-bold text-[var(--st-ok)] mt-0.5">+{myPeriodSummary.tongDiemCong}đ</div>
-            </div>
-
-            <div className="p-3 rounded-2xl bg-surface border border-token">
-              <span className="text-[11px] text-muted font-medium">Tổng số lỗi</span>
-              <div className="text-lg font-bold text-main mt-0.5">{myPeriodSummary.soLoi} lỗi</div>
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-surface border border-token">
+              <span className="text-[10.5px] sm:text-[11px] text-muted font-medium">Tổng số lỗi</span>
+              <div className="text-base sm:text-lg font-bold text-main mt-0.5">{myPeriodSummary.soLoi} lỗi</div>
             </div>
           </div>
 
           {/* 4-Row Weekly Discipline Log: Tuần hiện tại & 3 tuần liền kề gần nhất */}
           <div className="bg-surface rounded-3xl border border-token overflow-hidden shadow-xs">
-            <div className="px-4 py-3.5 border-b border-token flex items-center justify-between flex-wrap gap-2 bg-surface-2/40">
-              <div>
-                <h3 className="text-xs font-bold text-main uppercase tracking-wider flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-accent" />
-                  <span>Nhật ký nề nếp cá nhân (4 tuần gần nhất)</span>
-                </h3>
-                </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={handleExpandAllWeeks}
-                  className="px-2.5 py-1 text-[11px] font-semibold text-muted hover:text-main hover:bg-surface-2 rounded-xl border border-transparent hover:border-token transition-all cursor-pointer"
-                >
-                  Mở tất cả
-                </button>
-                <span className="text-muted/40 text-[11px]">·</span>
-                <button
-                  type="button"
-                  onClick={handleCollapseAllWeeks}
-                  className="px-2.5 py-1 text-[11px] font-semibold text-muted hover:text-main hover:bg-surface-2 rounded-xl border border-transparent hover:border-token transition-all cursor-pointer"
-                >
-                  Thu gọn
-                </button>
-              </div>
+            <div className="px-4 py-3 border-b border-token flex items-center justify-between flex-wrap gap-2 bg-surface-2/40">
+              <h3 className="text-xs font-bold text-main uppercase tracking-wider flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-accent" />
+                <span>Nhật ký nề nếp cá nhân (4 tuần gần nhất)</span>
+              </h3>
             </div>
 
             <div className="divide-y divide-token">
@@ -934,7 +915,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                           <div className="text-[11px] text-muted flex items-center gap-2 mt-0.5 flex-wrap">
                             {weekData.records.length === 0 ? (
                               <span className="text-[var(--st-ok)] font-medium flex items-center gap-1">
-                                <Check className="w-3 h-3" /> Không có vi phạm · Điểm 100 tuyệt đối ⭐
+                                <Check className="w-3 h-3" /> Chưa có ghi nhận vi phạm
                               </span>
                             ) : (
                               <span>
@@ -976,9 +957,8 @@ export const StudentView: React.FC<StudentViewProps> = ({
                           <div className="py-4 px-3 rounded-2xl bg-surface border border-token text-center">
                             <p className="text-xs text-[var(--st-ok)] font-semibold flex items-center justify-center gap-1.5">
                               <CheckCircle2 className="w-4 h-4 text-[var(--st-ok)]" />
-                              <span>Tuần {weekData.week} em chấp hành nề nếp xuất sắc, không có ghi nhận vi phạm nào!</span>
+                              <span>Chưa có ghi nhận vi phạm</span>
                             </p>
-                            <p className="text-[11px] text-muted mt-0.5">Điểm thi đua đạt mức tối đa 100/100 ⭐</p>
                           </div>
                         ) : (
                           <div className="space-y-2">
@@ -1245,11 +1225,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
       {/* TAB 3: SƠ ĐỒ LỚP */}
       {activeTab === 'seating' && (
         <div className="space-y-3">
-          <div className="bg-surface p-3 sm:p-4 rounded-3xl border border-token space-y-3">
-            <div className="text-xs text-muted flex items-center justify-between">
-              <span>Sơ đồ vị trí 42 học sinh &amp; Trạng thái nề nếp</span>
-              </div>
-
+          <div className="bg-surface p-1 sm:p-4 rounded-3xl border border-token space-y-3">
             <SeatGrid
               layout={layout}
               students={allStudents}

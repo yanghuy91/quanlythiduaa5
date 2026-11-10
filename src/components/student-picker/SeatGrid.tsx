@@ -196,7 +196,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
               : 'text-muted hover:text-main'
           }`}
         >
-          Cả lớp (4 Tổ)
+          Cả lớp
         </button>
         <button
           type="button"
@@ -264,7 +264,9 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
         <div 
           className="hidden sm:grid gap-1 sm:gap-1.5 text-center text-[11px] font-extrabold text-muted uppercase tracking-wider px-0.5"
           style={{
-            gridTemplateColumns: 'repeat(2, minmax(0, 1fr)) 8px repeat(2, minmax(0, 1fr)) 16px repeat(2, minmax(0, 1fr)) 8px repeat(2, minmax(0, 1fr))',
+            gridTemplateColumns: displayMode === 'compact'
+              ? 'repeat(2, minmax(0, 1fr)) 2px repeat(2, minmax(0, 1fr)) 6px repeat(2, minmax(0, 1fr)) 2px repeat(2, minmax(0, 1fr))'
+              : 'repeat(2, minmax(0, 1fr)) 8px repeat(2, minmax(0, 1fr)) 16px repeat(2, minmax(0, 1fr)) 8px repeat(2, minmax(0, 1fr))',
           }}
         >
           <div className="col-span-2 bg-blue-50/50 dark:bg-blue-950/20 py-1 rounded-lg border border-blue-200/50 dark:border-blue-900/30 text-blue-600 dark:text-blue-400">
@@ -289,7 +291,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
 
       {/* Seating Container */}
       <div className="w-full overflow-x-auto no-scrollbar pb-2 pt-0.5">
-        <div className={`min-w-[450px] sm:min-w-[500px] max-w-full mx-auto flex flex-col ${displayMode === 'avatar_badge' ? 'gap-3 sm:gap-4' : 'gap-2'}`}>
+        <div className={`w-full max-w-full mx-auto flex flex-col ${displayMode === 'avatar_badge' ? 'gap-3 sm:gap-4' : 'gap-1.5'}`}>
           {Object.entries(rows).map(([rowKey, nodes]) => {
             const rowIndex = Number(rowKey);
 
@@ -310,14 +312,16 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
 
             const rowGridStyle = activeDãyTab === 'all' ? {
               display: 'grid',
-              gridTemplateColumns: 'repeat(2, minmax(0, 1fr)) 8px repeat(2, minmax(0, 1fr)) 16px repeat(2, minmax(0, 1fr)) 8px repeat(2, minmax(0, 1fr))',
+              gridTemplateColumns: displayMode === 'compact'
+                ? 'repeat(2, minmax(0, 1fr)) 2px repeat(2, minmax(0, 1fr)) 6px repeat(2, minmax(0, 1fr)) 2px repeat(2, minmax(0, 1fr))'
+                : 'repeat(2, minmax(0, 1fr)) 8px repeat(2, minmax(0, 1fr)) 16px repeat(2, minmax(0, 1fr)) 8px repeat(2, minmax(0, 1fr))',
             } : undefined;
 
             return (
               <div 
                 key={rowKey}
                 className={activeDãyTab === 'all' 
-                  ? "gap-1 sm:gap-1.5 items-start" 
+                  ? (displayMode === 'compact' ? "gap-0.5 sm:gap-1 items-start" : "gap-1 sm:gap-1.5 items-start") 
                   : "grid grid-cols-2 gap-2.5 items-start max-w-xs mx-auto"
                 }
                 style={rowGridStyle}
@@ -444,7 +448,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                       onClick={() => onSelectStudent(student)}
                       className={`
                         group relative w-full flex flex-col items-center transition-all cursor-pointer select-none
-                        ${displayMode === 'avatar_badge' ? '' : `p-1 sm:p-1.5 rounded-xl justify-between shadow-xs min-h-[58px] sm:min-h-[64px] bg-white dark:bg-white text-black dark:text-black ${compactBorderClass}`}
+                        ${displayMode === 'avatar_badge' ? '' : `px-0.5 py-1 sm:p-1.5 rounded-xl justify-between shadow-xs min-h-[56px] sm:min-h-[62px] bg-white dark:bg-white text-black dark:text-black ${compactBorderClass}`}
                         ${displayMode === 'compact' && isSelected ? 'ring-2 ring-indigo-500 shadow-md scale-[1.02] z-10' : ''}
                         ${isLocked ? 'opacity-30 cursor-not-allowed' : 'active:scale-95'}
                       `}
@@ -580,7 +584,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                         <div className="w-full h-full flex flex-col justify-between items-center text-center">
                           {/* TẦNG 1: TRÊN LÀ SỐ THỨ TỰ TRONG DS LỚP */}
                           <div className="w-full flex items-center justify-between px-0.5 leading-none">
-                            <span className="text-[10px] sm:text-[11px] font-black text-slate-400 dark:text-slate-400 tabular-nums">
+                            <span className="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-400 tabular-nums">
                               #{stt}
                             </span>
 
@@ -595,8 +599,8 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                           </div>
 
                           {/* TẦNG 2: GIỮA LÀ TÊN HỌC SINH (CHỮ ĐEN, KHÔNG BỊ CẮT) */}
-                          <div className="w-full text-center min-w-0 flex items-center justify-center flex-1 my-0.5">
-                            <span className="text-[11px] sm:text-xs font-black text-black dark:text-black leading-tight block truncate px-0.5">
+                          <div className="w-full text-center min-w-0 flex items-center justify-center flex-1 my-0.5 px-0.5">
+                            <span className="text-[9px] sm:text-[10.5px] font-black text-black dark:text-black leading-[1.1] block break-words text-center tracking-tighter">
                               {getSeatingMapDisplayName(student, students)}
                             </span>
                           </div>
@@ -605,24 +609,25 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                           <div className="w-full flex items-center justify-center min-h-[14px] leading-none px-0.5 overflow-hidden">
                             {topRole !== 'HS' ? (
                               <div 
-                                className="flex items-center justify-center gap-0.5 text-[9px] font-black text-black dark:text-black truncate max-w-full"
+                                className="flex items-center justify-center gap-0.5 text-[8px] sm:text-[8.5px] font-black text-black dark:text-black truncate max-w-full"
                                 title={`${roleConfig.label}${badgeDef ? ` · Huy hiệu: ${badgeDef.name}` : ''}`}
                               >
                                 <span>{roleIcon}</span>
-                                <span className="truncate">{roleTitleShort}</span>
-                                {badgeDef && (
-                                  <span className="shrink-0 inline-flex items-center ml-0.5" title={`Huy hiệu: ${badgeDef.name}`}>
+                                {badgeDef ? (
+                                  <span className="shrink-0 inline-flex items-center" title={`Huy hiệu: ${badgeDef.name}`}>
                                     <BadgeEmblem type={badgeDef.iconType} size="2xs" />
                                   </span>
+                                ) : (
+                                  <span className="truncate">{roleTitleShort}</span>
                                 )}
                               </div>
                             ) : badgeDef ? (
                               <div 
-                                className="flex items-center justify-center gap-1 text-[9px] font-bold text-amber-700 dark:text-amber-700 truncate max-w-full" 
+                                className="flex items-center justify-center gap-0.5 text-[8px] sm:text-[8.5px] font-bold text-amber-700 dark:text-amber-700 truncate max-w-full" 
                                 title={`Huy hiệu: ${badgeDef.name}`}
                               >
                                 <BadgeEmblem type={badgeDef.iconType} size="2xs" />
-                                <span className="truncate">{badgeDef.name}</span>
+                                <span className="truncate hidden sm:inline">{badgeDef.name}</span>
                               </div>
                             ) : (
                               <span className="text-[8px] text-slate-300 dark:text-slate-300 select-none">-</span>

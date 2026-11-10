@@ -85,9 +85,6 @@ export const StudentGradeCard: React.FC<StudentGradeCardProps> = ({
             <h2 className="text-sm sm:text-base font-black text-main uppercase tracking-tight">
               Bảng Điểm Các Môn Học
             </h2>
-            <p className="text-[11px] text-muted">
-              Lớp 10A5 · THPT Số 2 Đức Phổ · Điểm thành phần các môn
-            </p>
           </div>
         </div>
 
@@ -127,9 +124,6 @@ export const StudentGradeCard: React.FC<StudentGradeCardProps> = ({
               Chi tiết điểm các môn học (Học kỳ {selectedSemester})
             </h3>
           </div>
-          <span className="text-[11px] text-muted font-medium">
-            Học sinh chỉ có quyền xem, không chỉnh sửa
-          </span>
         </div>
 
         {/* Responsive Table */}
