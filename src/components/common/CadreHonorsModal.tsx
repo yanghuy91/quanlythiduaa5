@@ -3,6 +3,7 @@ import { X, ShieldCheck, Sparkles, MapPin, Check, KeyRound } from 'lucide-react'
 import { Student, CadreDelegatedPermission } from '../../types';
 import { CADRE_ROLES_INFO } from '../../data/badgeData';
 import { getCadreBanner } from '../../data/cadreBanners';
+import { BadgeEmblem, getCadreRoleEmblemType } from './BadgeEmblem';
 
 export const CADRE_DELEGATED_PERMISSION_LIST: Array<{
   id: CadreDelegatedPermission;
@@ -63,13 +64,16 @@ export const CadreHonorsModal: React.FC<CadreHonorsModalProps> = ({
   // Find all cadres
   const cadres = students.filter(s => s.vaiTro.some(r => r !== 'HS'));
 
-  // Sort by cadre hierarchy: LT -> BT -> LP_HT -> LP_LD -> TT 1..4
+  // Sort by cadre hierarchy: LT -> BT -> PBT -> LP_HT -> LP_LD -> LP_VT -> CD -> TT 1..4
   const rolePriority: Record<string, number> = {
     LT: 1,
     BT: 2,
-    LP_HT: 3,
-    LP_LD: 4,
-    TT: 5,
+    PBT: 3,
+    LP_HT: 4,
+    LP_LD: 5,
+    LP_VT: 6,
+    CD: 7,
+    TT: 8,
   };
 
   const sortedCadres = [...cadres].sort((a, b) => {
@@ -172,13 +176,13 @@ export const CadreHonorsModal: React.FC<CadreHonorsModalProps> = ({
                   <div className="p-3.5 flex-1 flex flex-col justify-between gap-2.5">
                     <div className="flex items-start gap-3">
                       <div 
-                        className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg shrink-0 shadow-inner"
+                        className="w-11 h-11 rounded-2xl flex items-center justify-center p-1 shrink-0 shadow-inner"
                         style={{ 
-                          backgroundColor: `${info.accentColor}25`, 
+                          backgroundColor: `${info.accentColor}20`, 
                           border: `1.5px solid ${info.accentColor}40` 
                         }}
                       >
-                        {info.emoji}
+                        <BadgeEmblem type={getCadreRoleEmblemType(primaryRole)} size="sm" />
                       </div>
 
                       <div className="min-w-0 flex-1">

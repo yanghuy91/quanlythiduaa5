@@ -254,8 +254,11 @@ export function exportClassroomHtmlReport(
             <td><strong>${r.nguoiGhi}</strong> <span style="font-size: 11px; color: #475569;">(${
               r.vaiTroNguoiGhi === 'LT' ? 'Lớp trưởng' :
               r.vaiTroNguoiGhi === 'BT' ? 'Bí thư' :
+              r.vaiTroNguoiGhi === 'PBT' ? 'Phó Bí thư' :
               r.vaiTroNguoiGhi === 'LP_HT' ? 'Lớp phó HT' :
               r.vaiTroNguoiGhi === 'LP_LD' ? 'Lớp phó LĐ' :
+              r.vaiTroNguoiGhi === 'LP_VT' ? 'Lớp phó VT' :
+              r.vaiTroNguoiGhi === 'CD' ? 'Cờ đỏ' :
               r.vaiTroNguoiGhi === 'TT' ? 'Tổ trưởng' :
               r.vaiTroNguoiGhi === 'GV' ? 'Giáo viên' : r.vaiTroNguoiGhi
             })</span></td>

@@ -41,6 +41,19 @@ export const CADRE_ROLES_INFO: Record<RoleCode, CadreRoleInfo> = {
     motto: 'Nhiệt huyết - Sáng tạo - Tiên phong hành động',
     duty: 'Phụ trách công tác Đoàn, phong trào thanh niên, thi đua 26/3, hoạt động ngoài giờ.'
   },
+  PBT: {
+    role: 'PBT',
+    title: 'Phó Bí thư',
+    badgeName: 'Ngọn Lửa Xung Kích',
+    emoji: '🔥',
+    shortEmoji: '🔥',
+    accentColor: '#E11D48', // Crimson / Rose-Red
+    gradientBg: 'from-rose-500/20 via-orange-500/10 to-transparent',
+    borderTone: 'border-rose-500/40',
+    badgeLevel: 'Huy hiệu Xung Kích 🔥',
+    motto: 'Năng nổ - Gắn kết - Tiếp lửa phong trào Đoàn',
+    duty: 'Phối hợp Bí thư tổ chức sinh hoạt Chi đoàn, đôn đốc đoàn viên thanh niên và hoạt động tình nguyện.'
+  },
   LP_HT: {
     role: 'LP_HT',
     title: 'Lớp phó Học tập',
@@ -66,6 +79,32 @@ export const CADRE_ROLES_INFO: Record<RoleCode, CadreRoleInfo> = {
     badgeLevel: 'Huy hiệu Ánh Tia Chớp ⚡',
     motto: 'Sạch đẹp - Chu đáo - Trách nhiệm vì lớp học xanh',
     duty: 'Phân công trực nhật, bảo quản bàn ghế, quạt đèn, cơ sở vật chất phòng học.'
+  },
+  LP_VT: {
+    role: 'LP_VT',
+    title: 'Lớp phó Văn thể',
+    badgeName: 'Đại Sứ Văn Thể Mỹ',
+    emoji: '🎭',
+    shortEmoji: '🎭',
+    accentColor: '#A21CAF', // Fuchsia / Purple
+    gradientBg: 'from-fuchsia-500/20 via-purple-500/10 to-transparent',
+    borderTone: 'border-fuchsia-500/40',
+    badgeLevel: 'Huy hiệu Nghệ Thuật 🎭',
+    motto: 'Sôi nổi - Tài năng - Lan tỏa năng lượng tích cực',
+    duty: 'Quản trò văn nghệ đầu giờ, thể dục giữa giờ, hội khỏe Phù Đổng và các hoạt động văn hóa nghệ thuật.'
+  },
+  CD: {
+    role: 'CD',
+    title: 'Cờ đỏ',
+    badgeName: 'Lá Chắn Cờ Đỏ 10A5',
+    emoji: '🏵️',
+    shortEmoji: '🚩',
+    accentColor: '#DC2626', // Ruby Red
+    gradientBg: 'from-red-500/20 via-rose-500/10 to-transparent',
+    borderTone: 'border-red-500/40',
+    badgeLevel: 'Huy hiệu Sao Đỏ 🏵️',
+    motto: 'Công tâm - Nghiêm túc - Giữ vững kỷ cương trường lớp',
+    duty: 'Kiểm tra chuyên cần, đồng phục, tác phong đầu giờ và phối hợp đội Cờ đỏ Đoàn trường theo dõi nề nếp.'
   },
   TT: {
     role: 'TT',

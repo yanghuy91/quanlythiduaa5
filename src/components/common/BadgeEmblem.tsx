@@ -27,14 +27,42 @@ export type BadgeIconType =
   | 'heart_volunteer'
   | 'fitness_warrior'
   | 'march_youth'
-  // Tập thể & Cán sự (7)
+  // Tập thể & Cán sự
   | 'cadre_leader'
   | 'loving_guide'
   | 'golden_hands'
   | 'rescue_knight'
   | 'team_spirit'
   | 'class_heart'
-  | 'star_10a5';
+  | 'star_10a5'
+  | 'deputy_union_sec'
+  | 'arts_sports_deputy'
+  | 'red_flag_warden';
+
+export function getCadreRoleEmblemType(role: string): BadgeIconType {
+  switch (role) {
+    case 'LT':
+      return 'cadre_leader';
+    case 'BT':
+      return 'union_torch';
+    case 'PBT':
+      return 'deputy_union_sec';
+    case 'LP_HT':
+      return 'all_rounder';
+    case 'LP_LD':
+      return 'green_classroom';
+    case 'LP_VT':
+      return 'arts_sports_deputy';
+    case 'CD':
+      return 'red_flag_warden';
+    case 'TT':
+      return 'iron_discipline';
+    case 'GV':
+      return 'loving_guide';
+    default:
+      return 'star_10a5';
+  }
+}
 
 interface BadgeEmblemProps {
   type: BadgeIconType | string;
@@ -630,6 +658,128 @@ export const BadgeEmblem: React.FC<BadgeEmblemProps> = ({
             <rect x="24" y="44" width="52" height="18" rx="4" fill="#BE123C" />
             <text x="50" y="58" textAnchor="middle" fill="#FFFFFF" fontSize="11" fontWeight="900" fontFamily="sans-serif">
               10A5 ❤️
+            </text>
+          </svg>
+        );
+
+      // 31. Phó Bí Thư Chi Đoàn (deputy_union_sec)
+      case 'deputy_union_sec':
+        return (
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
+            <defs>
+              <linearGradient id="g_pbt" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#F43F5E" />
+                <stop offset="55%" stopColor="#E11D48" />
+                <stop offset="100%" stopColor="#9F1239" />
+              </linearGradient>
+              <linearGradient id="g_pbt_flame" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#F97316" />
+                <stop offset="60%" stopColor="#FACC15" />
+                <stop offset="100%" stopColor="#FEF08A" />
+              </linearGradient>
+            </defs>
+            {/* Shield Crest */}
+            <path
+              d="M50,6 L86,20 L86,52 C86,74 68,89 50,95 C32,89 14,74 14,52 L14,20 Z"
+              fill="url(#g_pbt)"
+              stroke="#FFE4E6"
+              strokeWidth="3"
+            />
+            {/* Inner Gold Ring */}
+            <circle cx="50" cy="48" r="25" fill="#881337" stroke="#FDE047" strokeWidth="2.2" />
+            {/* Youth Union Flame */}
+            <path
+              d="M50,24 C56,34 65,39 62,51 C60,60 54,66 50,67 C46,66 40,60 38,51 C35,39 44,34 50,24 Z"
+              fill="url(#g_pbt_flame)"
+            />
+            {/* Bright Yellow Star at center of Flame */}
+            <polygon
+              points="50,36 53,44 61,44 55,49 57,57 50,52 43,57 45,49 39,44 47,44"
+              fill="#FFFFFF"
+            />
+            {/* Bottom Ribbon PBT */}
+            <rect x="28" y="72" width="44" height="14" rx="4" fill="#FDE047" stroke="#881337" strokeWidth="1.5" />
+            <text x="50" y="82" textAnchor="middle" fill="#881337" fontSize="9.5" fontWeight="900" fontFamily="sans-serif">
+              PHÓ BÍ THƯ
+            </text>
+          </svg>
+        );
+
+      // 32. Lớp Phó Văn Thể (arts_sports_deputy)
+      case 'arts_sports_deputy':
+        return (
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
+            <defs>
+              <linearGradient id="g_lpvt" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#D946EF" />
+                <stop offset="50%" stopColor="#A21CAF" />
+                <stop offset="100%" stopColor="#6B21A8" />
+              </linearGradient>
+            </defs>
+            {/* Octagonal Star Medal */}
+            <polygon
+              points="50,5 64,15 82,15 86,33 95,50 86,67 82,85 64,85 50,95 36,85 18,85 14,67 5,50 14,33 18,15 36,15"
+              fill="url(#g_lpvt)"
+              stroke="#FAE8FF"
+              strokeWidth="2.8"
+            />
+            <circle cx="50" cy="48" r="26" fill="#4A044E" stroke="#FDE047" strokeWidth="2.2" />
+            {/* Musical Note & Star */}
+            <path
+              d="M46,56 L46,31 L64,27 L64,51"
+              fill="none"
+              stroke="#FDE047"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle cx="41" cy="57" r="6" fill="#FDE047" />
+            <circle cx="59" cy="52" r="6" fill="#38BDF8" />
+            <polygon
+              points="35,29 37,34 42,34 38,37 39,42 35,39 31,42 32,37 28,34 33,34"
+              fill="#F472B6"
+            />
+            {/* Bottom Ribbon VĂN THỂ */}
+            <rect x="24" y="72" width="52" height="14" rx="4" fill="#FDE047" stroke="#4A044E" strokeWidth="1.5" />
+            <text x="50" y="82" textAnchor="middle" fill="#4A044E" fontSize="9.5" fontWeight="900" fontFamily="sans-serif">
+              LP VĂN THỂ
+            </text>
+          </svg>
+        );
+
+      // 33. Cờ Đỏ Nề Nếp (red_flag_warden)
+      case 'red_flag_warden':
+        return (
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
+            <defs>
+              <linearGradient id="g_cd" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#EF4444" />
+                <stop offset="55%" stopColor="#DC2626" />
+                <stop offset="100%" stopColor="#991B1B" />
+              </linearGradient>
+            </defs>
+            {/* Golden Rim Badge */}
+            <circle cx="50" cy="50" r="45" fill="url(#g_cd)" stroke="#FDE047" strokeWidth="3.5" />
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#FCA5A5" strokeWidth="1.5" strokeDasharray="4 3" />
+            {/* Flagpole */}
+            <line x1="32" y1="22" x2="32" y2="74" stroke="#FDE047" strokeWidth="3.8" strokeLinecap="round" />
+            <circle cx="32" cy="20" r="3.5" fill="#FEF08A" />
+            {/* Waving Red Flag with Golden Border */}
+            <path
+              d="M34,24 C46,20 58,29 72,24 L70,50 C56,55 46,46 34,50 Z"
+              fill="#B91C1C"
+              stroke="#FDE047"
+              strokeWidth="2.2"
+            />
+            {/* Golden Star on Flag */}
+            <polygon
+              points="52,30 54,35 60,35 55,39 57,44 52,41 47,44 49,39 44,35 50,35"
+              fill="#FDE047"
+            />
+            {/* Bottom Ribbon CỜ ĐỎ */}
+            <rect x="28" y="70" width="44" height="14" rx="4" fill="#FDE047" stroke="#7F1D1D" strokeWidth="1.5" />
+            <text x="50" y="80" textAnchor="middle" fill="#7F1D1D" fontSize="10" fontWeight="900" fontFamily="sans-serif">
+              CỜ ĐỎ 10A5
             </text>
           </svg>
         );

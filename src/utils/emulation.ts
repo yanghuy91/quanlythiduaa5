@@ -44,6 +44,26 @@ export function parseRecordPoints(rec: DisciplineRecord): { isBonus: boolean; po
   };
 }
 
+export function isRecordWithinScoringMilestone(
+  rec: DisciplineRecord,
+  settings?: TeacherSettings
+): boolean {
+  if (!rec) return false;
+  if (!settings) return true;
+
+  const startWeek = Number(settings.tuanBatDauTinhDiem || 1);
+  if (startWeek > 1 && Number(rec.tuanHoc) < startWeek) {
+    return false;
+  }
+
+  const startDate = String(settings.ngayBatDauTinhDiem || '').trim();
+  if (startDate && rec.ngayHoc && String(rec.ngayHoc).trim() < startDate) {
+    return false;
+  }
+
+  return true;
+}
+
 export function calculateStudentWeekSummary(
   maHS: string,
   hoTen: string,
@@ -55,8 +75,10 @@ export function calculateStudentWeekSummary(
 ): StudentWeekSummary {
   const targetWeek = Number(tuanHoc);
   const noDataWeeks = (settings.noDataWeeks || []).map(Number);
+  const startWeek = Number(settings.tuanBatDauTinhDiem || 1);
   const isFutureWeek = currentWeek !== undefined && targetWeek > Number(currentWeek);
-  const isNoDataWeek = noDataWeeks.includes(targetWeek);
+  const isBeforeStartWeek = startWeek > 1 && targetWeek < startWeek;
+  const isNoDataWeek = noDataWeeks.includes(targetWeek) || isBeforeStartWeek;
 
   if (isFutureWeek || isNoDataWeek) {
     return {
@@ -77,12 +99,13 @@ export function calculateStudentWeekSummary(
     };
   }
 
-  // Lọc bản ghi của học sinh trong tuần
+  // Lọc bản ghi của học sinh trong tuần (tuân thủ mốc thời gian bắt đầu tính điểm của GV)
   const studentRecords = records.filter(r => 
     isRecordMatchingStudent(r, maHS, hoTen) &&
     Number(r.tuanHoc) === targetWeek &&
     r.trangThai !== 'DaHuy' &&
-    r.trangThai !== 'DaChapNhan' // Bản ghi đã chấp nhận giải trình thì không tính điểm
+    r.trangThai !== 'DaChapNhan' && // Bản ghi đã chấp nhận giải trình thì không tính điểm
+    isRecordWithinScoringMilestone(r, settings)
   );
 
   let tongDiemTru = 0;

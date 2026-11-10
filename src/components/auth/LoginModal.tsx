@@ -362,8 +362,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                         <span className="font-bold text-accent">
                           ({selectedStudent.vaiTro[0] === 'LT' ? '⭐ Lớp trưởng' :
                             selectedStudent.vaiTro[0] === 'BT' ? '🚩 Bí thư' :
+                            selectedStudent.vaiTro[0] === 'PBT' ? '🔥 Phó Bí thư' :
                             selectedStudent.vaiTro[0] === 'LP_HT' ? '📖 LP Học tập' :
-                            selectedStudent.vaiTro[0] === 'LP_LD' ? '⚡ LP Lao động' : '🛡️ Tổ trưởng'})
+                            selectedStudent.vaiTro[0] === 'LP_LD' ? '⚡ LP Lao động' :
+                            selectedStudent.vaiTro[0] === 'LP_VT' ? '🎭 LP Văn thể' :
+                            selectedStudent.vaiTro[0] === 'CD' ? '🏵️ Cờ đỏ' : '🛡️ Tổ trưởng'})
                         </span>
                       )}
                     </div>

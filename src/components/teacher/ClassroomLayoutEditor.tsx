@@ -811,8 +811,11 @@ export const ClassroomLayoutEditor: React.FC<ClassroomLayoutEditorProps> = ({
                                 <span>
                                   {topRole === 'LT' ? '⭐' :
                                    topRole === 'BT' ? '🚩' :
+                                   topRole === 'PBT' ? '🔥' :
                                    topRole === 'LP_HT' ? '📖' :
-                                   topRole === 'LP_LD' ? '⚡' : '🛡️'}
+                                   topRole === 'LP_LD' ? '⚡' :
+                                   topRole === 'LP_VT' ? '🎭' :
+                                   topRole === 'CD' ? '🏵️' : '🛡️'}
                                 </span>
                                 <span>{topRole === 'TT' && student.toTruongTo ? `T${student.toTruongTo}` : roleConfig.short}</span>
                               </span>
@@ -1186,8 +1189,11 @@ export const ClassroomLayoutEditor: React.FC<ClassroomLayoutEditorProps> = ({
                   <option value="HS">Học sinh bình thường</option>
                   <option value="LT">⭐ Lớp trưởng</option>
                   <option value="BT">🚩 Bí thư chi đoàn</option>
+                  <option value="PBT">🔥 Phó Bí thư chi đoàn</option>
                   <option value="LP_HT">📖 Lớp phó Học tập</option>
                   <option value="LP_LD">⚡ Lớp phó Lao động</option>
+                  <option value="LP_VT">🎭 Lớp phó Văn thể</option>
+                  <option value="CD">🏵️ Cờ đỏ nề nếp</option>
                   <option value="TT">🛡️ Tổ trưởng</option>
                 </select>
               </div>
@@ -1303,8 +1309,11 @@ export const ClassroomLayoutEditor: React.FC<ClassroomLayoutEditorProps> = ({
                   <option value="HS">Học sinh bình thường</option>
                   <option value="LT">⭐ Lớp trưởng</option>
                   <option value="BT">🚩 Bí thư chi đoàn</option>
+                  <option value="PBT">🔥 Phó Bí thư chi đoàn</option>
                   <option value="LP_HT">📖 Lớp phó Học tập</option>
                   <option value="LP_LD">⚡ Lớp phó Lao động</option>
+                  <option value="LP_VT">🎭 Lớp phó Văn thể</option>
+                  <option value="CD">🏵️ Cờ đỏ nề nếp</option>
                   <option value="TT">🛡️ Tổ trưởng</option>
                 </select>
               </div>

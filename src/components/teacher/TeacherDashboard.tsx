@@ -88,7 +88,8 @@ import {
 import { saveCloudGeminiKeys, fetchCloudGeminiKeys } from '../../services/firebase';
 import { downloadStateAsJson, parseImportedJsonState, saveServerState } from '../../services/storageSync';
 import { getAllStudentBadgesState } from '../../data/badgeCatalog';
-import { exportDataSpecsWordDocument } from '../../utils/exportDataSpecsDoc';
+import * as XLSX from 'xlsx';
+import { exportDataSpecsWordDocument, downloadRulesExcelTemplate, parseRulesFromAoA } from '../../utils/exportDataSpecsDoc';
 import { Eye, EyeOff, Bot, Key, Copy, Check, ArrowLeft, Trash2, Plus, RefreshCw } from 'lucide-react';
 
 interface TeacherDashboardProps {
@@ -104,6 +105,7 @@ interface TeacherDashboardProps {
   onAddRecord: (record: Omit<DisciplineRecord, 'maGhiNhan' | 'thoiGianMayChu' | 'thoiGianMay'>) => void;
   onResolveExplanation: (recordId: string, result: 'ChapNhan' | 'TuChoi', reason: string) => void;
   onToggleRulePin: (ruleId: string) => void;
+  onUpdateRules?: (newRules: RuleItem[]) => void;
   onUpdateLayout: (newLayout: SeatLayoutNode[], updatedStudents: Student[]) => void;
   onImportRecords?: (importedRecords: DisciplineRecord[]) => void;
   onUpdateStudentAvatar?: (studentId: string, avatarUrl?: string) => void;
@@ -134,6 +136,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   onAddRecord,
   onResolveExplanation,
   onToggleRulePin,
+  onUpdateRules,
   onUpdateLayout,
   onImportRecords,
   onUpdateStudentAvatar,
@@ -155,6 +158,58 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   });
   const [isStudentImportModalOpen, setIsStudentImportModalOpen] = useState(false);
   const [isTeacherProfileModalOpen, setIsTeacherProfileModalOpen] = useState(false);
+  const rulesFileInputRef = React.useRef<HTMLInputElement>(null);
+  const [rulesUploadNotice, setRulesUploadNotice] = useState<string | null>(null);
+  const [showAddRuleForm, setShowAddRuleForm] = useState(false);
+  const [newRuleName, setNewRuleName] = useState('');
+  const [newRuleGroup, setNewRuleGroup] = useState('Chuyên cần');
+  const [newRuleType, setNewRuleType] = useState<'Tru' | 'Cong'>('Tru');
+  const [newRuleSeverity, setNewRuleSeverity] = useState<'Nhe' | 'Vua' | 'Nang'>('Nhe');
+  const [newRuleScore, setNewRuleScore] = useState<number>(2);
+
+  const handleRulesExcelUpload = async (file: File) => {
+    try {
+      const arrayBuf = await file.arrayBuffer();
+      const wb = XLSX.read(new Uint8Array(arrayBuf), { type: 'array' });
+      let extracted: RuleItem[] = [];
+      for (const sheetName of wb.SheetNames) {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1 }) as any[][];
+        const parsed = parseRulesFromAoA(rows);
+        if (parsed.length > 0) {
+          extracted = parsed;
+          break;
+        }
+      }
+      if (extracted.length === 0) {
+        setRulesUploadNotice('⚠️ Không tìm thấy dòng nội quy hợp lệ trong file. Vui lòng tải File Mẫu Nội Quy Lớp (.xlsx) để xem cấu trúc chuẩn.');
+        return;
+      }
+      onUpdateRules?.(extracted);
+      setRulesUploadNotice(`✅ Đã nạp thành công ${extracted.length} quy định Nội quy lớp từ file "${file.name}" làm cơ sở trừ/cộng điểm!`);
+      setTimeout(() => setRulesUploadNotice(null), 6000);
+    } catch (e: any) {
+      setRulesUploadNotice('⚠️ Lỗi đọc file Nội quy: ' + (e?.message || 'Định dạng không hợp lệ'));
+    }
+  };
+
+  const handleAddSingleRule = () => {
+    if (!newRuleName.trim()) return;
+    const newItem: RuleItem = {
+      maNoiQuy: `${newRuleType === 'Cong' ? 'CONG' : 'NQ'}_${Date.now().toString().slice(-4)}`,
+      nhomHanhVi: newRuleGroup.trim() || 'Nề nếp',
+      tenHanhVi: newRuleName.trim(),
+      loaiDiem: newRuleType,
+      mucDo: newRuleSeverity,
+      diemSo: Math.max(1, Math.abs(Number(newRuleScore) || 2)),
+      ghim: true,
+      thuTu: rules.length + 1,
+    };
+    onUpdateRules?.([newItem, ...rules]);
+    setNewRuleName('');
+    setShowAddRuleForm(false);
+    setRulesUploadNotice(`✅ Đã thêm quy định "${newItem.tenHanhVi}" (${newItem.loaiDiem === 'Cong' ? '+' : '-'}${newItem.diemSo}đ) vào Nội quy lớp!`);
+    setTimeout(() => setRulesUploadNotice(null), 5000);
+  };
 
   React.useEffect(() => {
     if (teacherProfile) {
@@ -1354,9 +1409,12 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                 <span className="text-amber-600 dark:text-amber-400 font-bold">
                                   {item.student.vaiTro.includes('LT') ? 'Lớp trưởng' :
                                    item.student.vaiTro.includes('BT') ? 'Bí thư' :
+                                   item.student.vaiTro.includes('PBT') ? 'Phó Bí thư' :
                                    item.student.vaiTro.includes('LP_HT') ? 'LP Học tập' :
+                                   item.student.vaiTro.includes('LP_VT') ? 'LP Văn thể' :
                                    item.student.vaiTro.includes('LP_LD') ? 'LP Lao động' :
-                                   item.student.vaiTro.includes('TT') ? `Tổ trưởng T${item.student.to}` : ''}
+                                   item.student.vaiTro.includes('TT') ? `Tổ trưởng T${item.student.to}` :
+                                   item.student.vaiTro.includes('CD') ? 'Cờ đỏ' : ''}
                                 </span>
                               </>
                             )}
@@ -1610,18 +1668,19 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       {/* 5. RULES & BONUS TOGGLE */}
       {activeTab === 'rules' && (
         <div className="bg-surface rounded-2xl border border-token p-4 space-y-4 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-token pb-3">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-token pb-3">
             <div>
-              <h3 className="text-xs font-bold text-main uppercase tracking-wider">
-                Danh mục nội quy nề nếp thi đua
+              <h3 className="text-xs sm:text-sm font-black text-main uppercase tracking-wider flex items-center gap-2">
+                <ClipboardList className="w-4 h-4 text-indigo-600" />
+                <span>Danh mục Nội quy lớp — Cơ sở trừ điểm &amp; cộng điểm ({rules.length} quy định)</span>
               </h3>
               <p className="text-[11px] text-muted mt-0.5">
-                Quy định mức trừ điểm, phân loại nhẹ/vừa/nặng và ghim hành vi hay dùng
+                Cho phép tải file mẫu Excel Nội quy lớp, chỉnh sửa mức trừ điểm theo thực tế của lớp và nạp lại để làm cơ sở trừ điểm.
               </p>
             </div>
 
             {/* Crucial User Requirement: Điểm cộng là tuỳ chọn của GV, mặc định TẮT */}
-            <div className="flex items-center gap-2 p-2 rounded-xl bg-surface-2 border border-token">
+            <div className="flex items-center gap-2 p-2 rounded-xl bg-surface-2 border border-token shrink-0">
               <Sparkles className="w-4 h-4 text-accent" />
               <div className="text-xs">
                 <span className="font-bold text-main block">Chế độ Điểm cộng:</span>
@@ -1643,13 +1702,127 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </div>
           </div>
 
+          {/* Thanh công cụ: Up file Nội quy lớp theo mẫu & Tải file mẫu */}
+          <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="text-xs text-indigo-950">
+              <span className="font-black block">📂 Up File Nội Quy Lớp Theo Mẫu (.xlsx) Để Có Cơ Sở Trừ Điểm:</span>
+              <span className="text-[11px] text-slate-600">
+                Bước 1: Tải file mẫu Nội quy lớp về máy • Bước 2: Chỉnh sửa nội dung lỗi &amp; số điểm trừ • Bước 3: Up file lên để áp dụng ngay.
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <input
+                ref={rulesFileInputRef}
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) handleRulesExcelUpload(file);
+                  e.target.value = '';
+                }}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => downloadRulesExcelTemplate(rules)}
+                className="px-3 py-2 rounded-xl bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-300 text-xs font-extrabold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>1. Tải File Mẫu Nội Quy (.xlsx)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => rulesFileInputRef.current?.click()}
+                className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>2. Up File Nội Quy Lớp (.xlsx)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAddRuleForm(prev => !prev)}
+                className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold flex items-center gap-1 shadow-xs transition-all cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Thêm quy định</span>
+              </button>
+            </div>
+          </div>
+
+          {rulesUploadNotice && (
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-950 text-xs font-bold flex items-center justify-between">
+              <span>{rulesUploadNotice}</span>
+              <button
+                type="button"
+                onClick={() => setRulesUploadNotice(null)}
+                className="text-[11px] underline ml-2 cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
+          )}
+
+          {showAddRuleForm && (
+            <div className="p-3.5 rounded-2xl bg-surface-2 border border-token space-y-3">
+              <div className="text-xs font-black text-main">➕ Thêm quy định Nội quy mới (Cơ sở trừ / cộng điểm)</div>
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5 text-xs">
+                <input
+                  type="text"
+                  value={newRuleGroup}
+                  onChange={e => setNewRuleGroup(e.target.value)}
+                  placeholder="Nhóm (VD: Chuyên cần, Tác phong)"
+                  className="px-2.5 py-2 rounded-xl bg-surface border border-token font-semibold text-main"
+                />
+                <input
+                  type="text"
+                  value={newRuleName}
+                  onChange={e => setNewRuleName(e.target.value)}
+                  placeholder="Nội dung hành vi (VD: Đi học muộn)"
+                  className="sm:col-span-2 px-2.5 py-2 rounded-xl bg-surface border border-token font-semibold text-main"
+                />
+                <select
+                  value={`${newRuleType}_${newRuleSeverity}`}
+                  onChange={e => {
+                    const [t, s] = e.target.value.split('_') as ['Tru' | 'Cong', 'Nhe' | 'Vua' | 'Nang'];
+                    setNewRuleType(t);
+                    setNewRuleSeverity(s);
+                  }}
+                  className="px-2.5 py-2 rounded-xl bg-surface border border-token font-bold text-main"
+                >
+                  <option value="Tru_Nhe">Điểm Trừ · Mức Nhẹ</option>
+                  <option value="Tru_Vua">Điểm Trừ · Mức Vừa</option>
+                  <option value="Tru_Nang">Điểm Trừ · Mức Nặng</option>
+                  <option value="Cong_Nhe">Điểm Cộng · Khuyến khích</option>
+                  <option value="Cong_Vua">Điểm Cộng · Tốt</option>
+                </select>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={newRuleScore}
+                    onChange={e => setNewRuleScore(Number(e.target.value))}
+                    className="w-16 px-2 py-2 rounded-xl bg-surface border border-token font-black text-center text-main"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddSingleRule}
+                    className="flex-1 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black cursor-pointer"
+                  >
+                    Lưu
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="divide-y divide-token max-h-[500px] overflow-y-auto">
             {rules.map(rule => {
               const isBonus = rule.loaiDiem === 'Cong';
               if (isBonus && !settings.batDiemCong) return null;
 
               return (
-                <div key={rule.maNoiQuy} className="py-2.5 flex items-center justify-between text-xs">
+                <div key={rule.maNoiQuy} className="py-2.5 flex items-center justify-between text-xs gap-2">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <button
                       type="button"
@@ -1665,6 +1838,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     <div className="min-w-0">
                       <span className="font-semibold text-main">{rule.tenHanhVi}</span>
                       <div className="text-[10px] text-muted flex items-center gap-1.5 mt-0.5">
+                        <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-surface-2 border border-token">{rule.maNoiQuy}</span>
                         <span>{rule.nhomHanhVi}</span>
                         {rule.mucDo === 'Nang' && (
                           <span className="font-bold text-[var(--st-bad)]">· Mức Nặng (Chuyển đỏ viền)</span>
@@ -1681,6 +1855,19 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     }`}>
                       {isBonus ? `+${rule.diemSo}` : `-${rule.diemSo}`}đ
                     </span>
+                    {onUpdateRules && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const filtered = rules.filter(r => r.maNoiQuy !== rule.maNoiQuy);
+                          onUpdateRules(filtered);
+                        }}
+                        className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                        title="Xóa quy định này"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -1713,6 +1900,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             }
           }}
           onUpdateAcademicRecords={handleUpdateAcademicRecords}
+          onUpdateRules={onUpdateRules}
           onRestoreFullBackup={(payload) => {
             if (payload.students && payload.layout) {
               if (onImportStudents) {
@@ -1723,6 +1911,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             }
             if (payload.records && onImportRecords) {
               onImportRecords(payload.records);
+            }
+            if (payload.rules && onUpdateRules) {
+              onUpdateRules(payload.rules);
             }
             if (payload.settings) {
               onUpdateSettings(payload.settings);
@@ -1776,6 +1967,97 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 })}
                 className="w-5 h-5 accent-emerald-600 rounded cursor-pointer shrink-0"
               />
+            </div>
+
+            {/* MỐC THỜI GIAN BẮT ĐẦU TÍNH ĐIỂM & XÉT TRAO HUY HIỆU TỰ ĐỘNG */}
+            <div className="p-3 rounded-xl bg-indigo-50/80 border border-indigo-200 space-y-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <span className="font-extrabold text-indigo-950 block">
+                    📅 Mốc thời gian bắt đầu tính điểm &amp; xét trao huy hiệu:
+                  </span>
+                  <span className="text-[11px] text-indigo-800">
+                    Các tuần/ngày trước mốc này sẽ không bị trừ điểm và chỉ xét trao huy hiệu tự động từ mốc thời gian đã chọn.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowBadgeModal(true)}
+                  className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold shrink-0 cursor-pointer shadow-2xs"
+                >
+                  🏅 Điều kiện Huy hiệu
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                <div>
+                  <label className="text-[11px] font-bold text-indigo-950 block mb-1">
+                    Tuần bắt đầu tính điểm &amp; xét huy hiệu:
+                  </label>
+                  <select
+                    value={settings.tuanBatDauTinhDiem || 1}
+                    onChange={e => {
+                      const w = Number(e.target.value);
+                      onUpdateSettings({
+                        tuanBatDauTinhDiem: w,
+                        tuanBatDauXetHuyHieu: w,
+                      });
+                    }}
+                    className="w-full p-1.5 bg-white border border-indigo-300 rounded-lg text-xs font-bold text-slate-900"
+                  >
+                    {Array.from({ length: 35 }, (_, i) => i + 1).map(w => (
+                      <option key={w} value={w}>
+                        Bắt đầu từ Tuần {w} {w === 1 ? '(Đầu năm học)' : `(Tuần 1 → ${w - 1} chưa tính)`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-indigo-950 block mb-1">
+                    Hoặc chọn Ngày bắt đầu cụ thể (tùy chọn):
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="date"
+                      value={settings.ngayBatDauTinhDiem || ''}
+                      onChange={e =>
+                        onUpdateSettings({
+                          ngayBatDauTinhDiem: e.target.value,
+                          ngayBatDauXetHuyHieu: e.target.value,
+                        })
+                      }
+                      className="flex-1 p-1.5 bg-white border border-indigo-300 rounded-lg text-xs font-bold text-slate-900"
+                    />
+                    {settings.ngayBatDauTinhDiem && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onUpdateSettings({
+                            ngayBatDauTinhDiem: '',
+                            ngayBatDauXetHuyHieu: '',
+                          })
+                        }
+                        className="px-2 py-1.5 rounded-lg bg-rose-100 text-rose-700 text-[10px] font-bold cursor-pointer"
+                      >
+                        Xóa
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-indigo-200/80">
+                <span className="text-[11px] font-bold text-indigo-950">
+                  🤖 Chế độ Tự động trao huy hiệu khi học sinh đạt điều kiện:
+                </span>
+                <input
+                  type="checkbox"
+                  checked={settings.tuDongTraoHuyHieu !== false}
+                  onChange={e => onUpdateSettings({ tuDongTraoHuyHieu: e.target.checked })}
+                  className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-between">
@@ -2862,11 +3144,16 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         onTogglePermission={handleToggleCadrePermission}
       />
 
-      {/* 30 Badges Management Modal */}
+      {/* 33 Badges Management Modal */}
       <BadgeManagementModal
         isOpen={showBadgeModal}
         onClose={() => setShowBadgeModal(false)}
         students={students}
+        records={records}
+        academicRecords={internalAcademicRecords}
+        settings={settings}
+        currentWeek={currentWeek}
+        onUpdateSettings={onUpdateSettings}
       />
 
       {/* Frame & Honor Management Modal */}

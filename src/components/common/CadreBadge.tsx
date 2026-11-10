@@ -1,6 +1,7 @@
 import React from 'react';
 import { RoleCode } from '../../types';
 import { CADRE_ROLES_INFO } from '../../data/badgeData';
+import { BadgeEmblem, getCadreRoleEmblemType } from './BadgeEmblem';
 
 interface CadreBadgeProps {
   role: RoleCode;
@@ -18,7 +19,7 @@ export const CadreBadge: React.FC<CadreBadgeProps> = ({
   onClick
 }) => {
   const info = CADRE_ROLES_INFO[role] || CADRE_ROLES_INFO.HS;
-  const isCadre = role !== 'HS';
+  const emblemType = getCadreRoleEmblemType(role);
 
   const title = role === 'TT' && toTruongTo ? `Tổ trưởng Tổ ${toTruongTo}` : info.title;
   const badgeName = role === 'TT' && toTruongTo ? `Thủ Lĩnh Tổ ${toTruongTo}` : info.badgeName;
@@ -37,7 +38,7 @@ export const CadreBadge: React.FC<CadreBadgeProps> = ({
         }}
         title={`${title} · ${badgeName}`}
       >
-        <span>{info.shortEmoji}</span>
+        <BadgeEmblem type={emblemType} size="2xs" />
         <span>{title}</span>
       </span>
     );
@@ -55,10 +56,10 @@ export const CadreBadge: React.FC<CadreBadgeProps> = ({
       >
         <div className="flex items-center gap-3">
           <div 
-            className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-inner shrink-0"
-            style={{ backgroundColor: `${info.accentColor}25`, border: `1.5px solid ${info.accentColor}50` }}
+            className="w-12 h-12 rounded-2xl flex items-center justify-center p-1 shadow-inner shrink-0"
+            style={{ backgroundColor: `${info.accentColor}20`, border: `1.5px solid ${info.accentColor}45` }}
           >
-            {info.emoji}
+            <BadgeEmblem type={emblemType} size="md" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -100,7 +101,7 @@ export const CadreBadge: React.FC<CadreBadgeProps> = ({
       }}
       title={`${title} - ${info.motto}`}
     >
-      <span className="text-sm">{info.shortEmoji}</span>
+      <BadgeEmblem type={emblemType} size="xs" />
       <span>{badgeName}</span>
       <span className="text-[10px] opacity-75 font-medium">({title})</span>
     </div>

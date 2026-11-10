@@ -41,7 +41,7 @@ export const FrameManagementModal: React.FC<FrameManagementModalProps> = ({
       s.viTriGhe.toString() === searchTerm;
     const matchesTo = selectedTo === 'all' || s.to === selectedTo;
 
-    const isCadre = s.vaiTro.some((r) => ['LT', 'BT', 'LP_HT', 'LP_LD', 'TT'].includes(r));
+    const isCadre = s.vaiTro.some((r) => ['LT', 'BT', 'PBT', 'LP_HT', 'LP_LD', 'LP_VT', 'CD', 'TT'].includes(r));
     const isFramed = Boolean(s.customFrameId || studentRanks[s.maHS]);
 
     if (selectedCategory === 'cadre') return matchesSearch && matchesTo && isCadre;
@@ -230,8 +230,11 @@ export const FrameManagementModal: React.FC<FrameManagementModalProps> = ({
                     let cadreRoleKey: string | undefined;
                     if (s.vaiTro.includes('LT')) cadreRoleKey = 'LT';
                     else if (s.vaiTro.includes('BT')) cadreRoleKey = 'BT';
+                    else if (s.vaiTro.includes('PBT')) cadreRoleKey = 'PBT';
                     else if (s.vaiTro.includes('LP_HT')) cadreRoleKey = 'LP_HT';
                     else if (s.vaiTro.includes('LP_LD')) cadreRoleKey = 'LP_LD';
+                    else if (s.vaiTro.includes('LP_VT')) cadreRoleKey = 'LP_VT';
+                    else if (s.vaiTro.includes('CD')) cadreRoleKey = 'CD';
                     else if (s.vaiTro.includes('TT')) cadreRoleKey = `TT_${s.to}`;
 
                     return (

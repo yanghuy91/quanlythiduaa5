@@ -633,9 +633,15 @@ function parseCellStudentInfo(rawCell: string): {
   const lower = cleaned.toLowerCase();
   const roles = new Set<RoleCode>(['HS']);
   if (lower.includes('lớp trưởng') || /\b(lt)\b/i.test(cleaned)) roles.add('LT');
-  if (lower.includes('lớp phó học tập') || /\b(lp_ht|lpht|lp)\b/i.test(cleaned)) roles.add('LP_HT');
-  if (lower.includes('lớp phó lao động') || /\b(lp_ld|lpld)\b/i.test(cleaned)) roles.add('LP_LD');
-  if (lower.includes('bí thư') || /\b(bt)\b/i.test(cleaned)) roles.add('BT');
+  if (lower.includes('phó bí thư') || /\b(pbt)\b/i.test(cleaned)) {
+    roles.add('PBT');
+  } else if (lower.includes('bí thư') || /\b(bt)\b/i.test(cleaned)) {
+    roles.add('BT');
+  }
+  if (lower.includes('lớp phó học tập') || lower.includes('lp học tập') || /\b(lp_ht|lpht)\b/i.test(cleaned)) roles.add('LP_HT');
+  if (lower.includes('lớp phó lao động') || lower.includes('lp lao động') || /\b(lp_ld|lpld)\b/i.test(cleaned)) roles.add('LP_LD');
+  if (lower.includes('lớp phó văn thể') || lower.includes('lp văn thể') || lower.includes('văn thể mỹ') || lower.includes('văn thể') || /\b(lp_vt|lpvt|vt)\b/i.test(cleaned)) roles.add('LP_VT');
+  if (lower.includes('cờ đỏ') || lower.includes('sao đỏ') || /\b(cd|cđ)\b/i.test(cleaned)) roles.add('CD');
   if (lower.includes('tổ trưởng') || /\b(tt)\b/i.test(cleaned)) roles.add('TT');
 
   const orderedRoles: RoleCode[] = [

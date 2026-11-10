@@ -40,6 +40,8 @@ import {
 import {
   exportDataSpecsWordDocument,
   downloadUnifiedExcelTemplate,
+  downloadRulesExcelTemplate,
+  parseRulesFromAoA,
   exportCurrentClassToUnifiedExcel,
   AI_MASTER_PROMPT_TEXT,
 } from '../../utils/exportDataSpecsDoc';
@@ -66,6 +68,7 @@ interface UniversalSmartImportSectionProps {
   onUpdateStudentsAndLayout: (newStudents: Student[], newLayout: SeatLayoutNode[], isReplace: boolean) => void;
   onAddRecords: (newRecords: DisciplineRecord[]) => void;
   onUpdateAcademicRecords?: (newRecords: StudentAcademicRecord[]) => void;
+  onUpdateRules?: (newRules: RuleItem[]) => void;
   onRestoreFullBackup: (payload: {
     students?: Student[];
     layout?: SeatLayoutNode[];
@@ -92,6 +95,7 @@ interface UnifiedParsedPackage {
   academicRecords: StudentAcademicRecord[];
   gradesCount: number;
   disciplineRecords: DisciplineRecord[];
+  rulesList: RuleItem[];
   summaryNotes: string[];
 }
 
@@ -151,11 +155,16 @@ function parseRoleCodes(rawRole: string, to: number): { vaiTro: RoleCode[]; toTr
   if (upper.includes('LT') || norm.includes('lop truong')) {
     roles.add('LT');
   }
-  if (upper.includes('BT') || norm.includes('bi thu')) {
+  if (upper.includes('PBT') || norm.includes('pho bi thu')) {
+    roles.add('PBT');
+  } else if (upper.includes('BT') || norm.includes('bi thu')) {
     roles.add('BT');
   }
   if (upper.includes('LP_HT') || norm.includes('lop pho hoc tap') || norm.includes('lp hoc tap')) {
     roles.add('LP_HT');
+  }
+  if (upper.includes('LP_VT') || norm.includes('lop pho van the') || norm.includes('lp van the') || norm.includes('van the my')) {
+    roles.add('LP_VT');
   }
   if (upper.includes('LP_LD') || norm.includes('lop pho lao dong') || norm.includes('lp lao dong')) {
     roles.add('LP_LD');
@@ -163,6 +172,9 @@ function parseRoleCodes(rawRole: string, to: number): { vaiTro: RoleCode[]; toTr
   if (upper.includes('TT') || norm.includes('to truong')) {
     roles.add('TT');
     toTruongTo = to;
+  }
+  if (/\bCD\b/.test(upper) || norm.includes('co do') || norm.includes('sao do')) {
+    roles.add('CD');
   }
 
   // Đặt vai trò cán bộ lên trước 'HS'
@@ -210,6 +222,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
   onUpdateStudentsAndLayout,
   onAddRecords,
   onUpdateAcademicRecords,
+  onUpdateRules,
   onRestoreFullBackup,
   onOpenStudentImportModal,
   onOpenLayoutEditor,
@@ -285,6 +298,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
     const extractedStudents: Student[] = [];
     const extractedAcademicMap = new Map<string, StudentAcademicRecord>();
     const extractedDiscipline: DisciplineRecord[] = [];
+    const extractedRules: RuleItem[] = [];
     const summaryNotes: string[] = [];
 
     let seatingLayoutFromFile: SeatLayoutNode[] | undefined = undefined;
@@ -332,6 +346,29 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
         r => Array.isArray(r) && r.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== '')
       );
       if (validRows.length === 0) continue;
+
+      // Kiểm tra nếu đây là Sheet Nội quy lớp (3_NoiQuy_Lop hoặc File_Mau_Noi_Quy_Lop)
+      const isRulesSheetByName =
+        normSheetName.includes('noiquy') ||
+        normSheetName.includes('noi quy') ||
+        normSheetName.includes('quy dinh');
+      const firstFewRowsText = validRows
+        .slice(0, 6)
+        .map(r => r.map(c => normalizeHeader(c)).join(' | '))
+        .join(' || ');
+      const hasRulesHeaderCols =
+        (firstFewRowsText.includes('ma noi quy') || firstFewRowsText.includes('muc do')) &&
+        (firstFewRowsText.includes('ten hanh vi') || firstFewRowsText.includes('noi dung hanh vi')) &&
+        !firstFewRowsText.includes('ho va ten') &&
+        !firstFewRowsText.includes('ma hoac ho ten hs');
+
+      if (isRulesSheetByName || hasRulesHeaderCols) {
+        const parsedSheetRules = parseRulesFromAoA(rows);
+        if (parsedSheetRules.length > 0) {
+          extractedRules.push(...parsedSheetRules);
+          continue;
+        }
+      }
 
       // Tìm dòng tiêu đề trong 12 dòng đầu
       let headerRowIdx = -1;
@@ -797,6 +834,11 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
         `Quy chiếu ${extractedDiscipline.length} lượt ghi nhận Nề nếp theo Sơ đồ lớp`
       );
     }
+    if (extractedRules.length > 0) {
+      summaryNotes.push(
+        `Cập nhật ${extractedRules.length} quy định Nội quy lớp (cơ sở trừ/cộng điểm)`
+      );
+    }
 
     return {
       sourceName,
@@ -809,6 +851,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
       academicRecords: Array.from(extractedAcademicMap.values()),
       gradesCount: extractedAcademicMap.size,
       disciplineRecords: extractedDiscipline,
+      rulesList: extractedRules,
       summaryNotes,
     };
   };
@@ -838,6 +881,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
             academicRecords: parsed.academicRecords || [],
             gradesCount: Array.isArray(parsed.academicRecords) ? parsed.academicRecords.length : 0,
             disciplineRecords: parsed.records || [],
+            rulesList: Array.isArray(parsed.rules) ? parsed.rules : [],
             summaryNotes: [
               `Bản sao lưu toàn diện hệ thống (${(parsed.students || []).length} học sinh, ${(parsed.records || []).length} ghi nhận nề nếp)`,
             ],
@@ -858,16 +902,21 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
         }));
 
         const pkg = parseSheetsToUnifiedPackage(sheetsData, file.name);
-        if (!pkg.hasStudentRoster && pkg.gradesCount === 0 && pkg.disciplineRecords.length === 0) {
+        if (
+          !pkg.hasStudentRoster &&
+          pkg.gradesCount === 0 &&
+          pkg.disciplineRecords.length === 0 &&
+          pkg.rulesList.length === 0
+        ) {
           setErrorMsg(
-            'Không tìm thấy dữ liệu hợp lệ trong file. Thầy vui lòng kiểm tra lại cột "Họ và tên" hoặc tải File Excel Mẫu Chuẩn (1 File) để đối chiếu.'
+            'Không tìm thấy dữ liệu hợp lệ trong file. Thầy vui lòng kiểm tra lại cột "Họ và tên" hoặc tải File Excel Mẫu Chuẩn để đối chiếu.'
           );
         } else {
           // Mặc định chọn chế độ Quy chiếu theo Sơ đồ lớp ('reconcile_seating') trừ khi file có Sheet Sơ đồ lớp 2D mới
           setRosterImportMode('reconcile_seating');
           setParsedPackage(pkg);
           onShowToast(
-            `Đã đọc & quy chiếu file "${file.name}" theo Sơ đồ lớp!`,
+            `Đã đọc & phân tích file "${file.name}" thành công!`,
             pkg.summaryNotes.join(' • ')
           );
         }
@@ -915,7 +964,12 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
     });
 
     const pkg = parseSheetsToUnifiedPackage([{ sheetName: 'Data', rows }], sourceLabel);
-    if (!pkg.hasStudentRoster && pkg.gradesCount === 0 && pkg.disciplineRecords.length === 0) {
+    if (
+      !pkg.hasStudentRoster &&
+      pkg.gradesCount === 0 &&
+      pkg.disciplineRecords.length === 0 &&
+      pkg.rulesList.length === 0
+    ) {
       setErrorMsg('Không nhận diện được học sinh hay dữ liệu nào. Thầy hãy kiểm tra lại văn bản vừa dán.');
       return;
     }
@@ -1081,6 +1135,11 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
       onAddRecords(syncedDiscipline);
     }
 
+    // 5. CẬP NHẬT DANH MỤC NỘI QUY LỚP (CƠ SỞ TRỪ / CỘNG ĐIỂM) NẾU FILE CÓ SHEET NỘI QUY
+    if (parsedPackage.rulesList && parsedPackage.rulesList.length > 0 && onUpdateRules) {
+      onUpdateRules(parsedPackage.rulesList);
+    }
+
     triggerToast(
       'Đã quy chiếu theo Sơ đồ lớp & lưu lên Đám mây thành công!',
       parsedPackage.summaryNotes.join(' • ')
@@ -1138,16 +1197,31 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
             <button
               type="button"
               onClick={() => {
-                downloadUnifiedExcelTemplate(currentSeatingMaster.students, currentSeatingMaster.layout);
+                downloadUnifiedExcelTemplate(currentSeatingMaster.students, currentSeatingMaster.layout, rules);
                 triggerToast(
                   'Đã tải File Excel Mẫu Chuẩn (Theo Sơ Đồ Lớp)!',
-                  'File đã có sẵn Sheet Sơ đồ lớp chuẩn và danh sách quy chiếu của lớp 10A5.'
+                  'File đã có sẵn Sheet Sơ đồ lớp chuẩn, Danh sách quy chiếu và Sheet Nội quy lớp 10A5.'
                 );
               }}
               className="px-3.5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
             >
               <FileSpreadsheet className="w-4 h-4" />
               <span>1. Tải File Excel Mẫu (Chuẩn Sơ Đồ Lớp)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                downloadRulesExcelTemplate(rules);
+                triggerToast(
+                  'Đã tải File Mẫu Nội Quy Lớp (.xlsx)!',
+                  'Thầy có thể chỉnh sửa mức điểm trừ/cộng rồi thả lại vào ô bên dưới để cập nhật cơ sở trừ điểm.'
+                );
+              }}
+              className="px-3.5 py-2.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+            >
+              <ClipboardList className="w-4 h-4" />
+              <span>Tải Mẫu Nội Quy Lớp (.xlsx)</span>
             </button>
 
             <button

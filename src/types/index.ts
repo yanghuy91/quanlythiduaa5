@@ -195,6 +195,11 @@ export interface TeacherSettings {
   tuDongChuyenTuan?: boolean; // Tự động chuyển sang tuần kế tiếp vào mỗi Thứ 2 hàng tuần theo thời gian thực
   tuanGocTuDong?: number; // Tuần mốc khi GV thiết lập tuần hiện tại
   ngayThietLapTuanGoc?: string; // Ngày Thứ 2 đầu tuần (YYYY-MM-DD) lúc GV thiết lập tuần mốc
+  tuanBatDauTinhDiem?: number; // Mốc tuần bắt đầu tính điểm nề nếp (mặc định: 1)
+  ngayBatDauTinhDiem?: string; // Mốc ngày cụ thể bắt đầu tính điểm nề nếp (YYYY-MM-DD, tùy chọn)
+  tuDongTraoHuyHieu?: boolean; // Chế độ tự động xét và trao huy hiệu theo điều kiện (mặc định: true)
+  tuanBatDauXetHuyHieu?: number; // Mốc tuần bắt đầu tính điều kiện trao huy hiệu tự động
+  ngayBatDauXetHuyHieu?: string; // Mốc ngày bắt đầu tính điều kiện trao huy hiệu tự động (YYYY-MM-DD)
   bannerSloganText?: string; // Tùy chỉnh câu khẩu hiệu lớp trên Banner
   bannerSloganIcon?: string; // Biểu tượng sinh động
   bannerSloganColor?: string; // Màu sắc chữ khẩu hiệu

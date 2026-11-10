@@ -1140,10 +1140,16 @@ export const StudentView: React.FC<StudentViewProps> = ({
                       ? 'LT'
                       : currentStudent.vaiTro.includes('BT')
                       ? 'BT'
+                      : currentStudent.vaiTro.includes('PBT')
+                      ? 'PBT'
                       : currentStudent.vaiTro.includes('LP_HT')
                       ? 'LP_HT'
                       : currentStudent.vaiTro.includes('LP_LD')
                       ? 'LP_LD'
+                      : currentStudent.vaiTro.includes('LP_VT')
+                      ? 'LP_VT'
+                      : currentStudent.vaiTro.includes('CD')
+                      ? 'CD'
                       : currentStudent.vaiTro.includes('TT')
                       ? `TT_${currentStudent.to}`
                       : undefined
@@ -2058,8 +2064,11 @@ export const StudentView: React.FC<StudentViewProps> = ({
                               <span className="text-amber-600 dark:text-amber-400 font-bold">
                                 {item.student.vaiTro.includes('LT') ? 'Lớp trưởng' :
                                  item.student.vaiTro.includes('BT') ? 'Bí thư' :
+                                 item.student.vaiTro.includes('PBT') ? 'Phó Bí thư' :
                                  item.student.vaiTro.includes('LP_HT') ? 'LP Học tập' :
                                  item.student.vaiTro.includes('LP_LD') ? 'LP Lao động' :
+                                 item.student.vaiTro.includes('LP_VT') ? 'LP Văn thể' :
+                                 item.student.vaiTro.includes('CD') ? 'Cờ đỏ' :
                                  item.student.vaiTro.includes('TT') ? `Tổ trưởng T${item.student.to}` : ''}
                               </span>
                             </>

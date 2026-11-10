@@ -19,8 +19,11 @@ export const RecorderBadge: React.FC<RecorderBadgeProps> = ({
     vaiTro === 'GV' ? '👨‍🏫' :
     vaiTro === 'LT' ? '⭐' :
     vaiTro === 'BT' ? '🚩' :
+    vaiTro === 'PBT' ? '🔥' :
     vaiTro === 'LP_HT' ? '📖' :
     vaiTro === 'LP_LD' ? '⚡' :
+    vaiTro === 'LP_VT' ? '🎭' :
+    vaiTro === 'CD' ? '🏵️' :
     vaiTro === 'TT' ? '🛡️' : '👤';
 
   if (size === 'xs') {

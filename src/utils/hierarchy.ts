@@ -8,7 +8,7 @@ import {
   WeekEvaluation, 
   StatusColorLevel 
 } from '../types';
-import { isRecordMatchingStudent, parseRecordPoints } from './emulation';
+import { isRecordMatchingStudent, parseRecordPoints, isRecordWithinScoringMilestone } from './emulation';
 
 export const CURRENT_SCHOOL_YEAR = '2026-2027';
 
@@ -94,13 +94,15 @@ export function calculateStudentPeriodSummary(
   currentWeek?: number
 ): StudentPeriodSummary {
   const noDataWeeks = (settings.noDataWeeks || []).map(Number);
+  const startWeek = Number(settings.tuanBatDauTinhDiem || 1);
   const maxActiveWeek = currentWeek !== undefined ? Number(currentWeek) : 38;
 
   // Trường hợp 1: Đang xem 1 tuần cụ thể
   if (filter.tuanHoc !== 'all') {
     const targetWeek = Number(filter.tuanHoc);
     const isFutureWeek = currentWeek !== undefined && targetWeek > maxActiveWeek;
-    const isNoDataWeek = noDataWeeks.includes(targetWeek);
+    const isBeforeStartWeek = startWeek > 1 && targetWeek < startWeek;
+    const isNoDataWeek = noDataWeeks.includes(targetWeek) || isBeforeStartWeek;
 
     if (isFutureWeek || isNoDataWeek) {
       return {
@@ -130,7 +132,8 @@ export function calculateStudentPeriodSummary(
       r =>
         isRecordMatchingStudent(r, student.maHS, student.hoTen) &&
         r.trangThai !== 'DaHuy' &&
-        r.trangThai !== 'DaChapNhan'
+        r.trangThai !== 'DaChapNhan' &&
+        isRecordWithinScoringMilestone(r, settings)
     );
 
     let tongDiemTru = 0;
@@ -196,9 +199,9 @@ export function calculateStudentPeriodSummary(
         ? SEMESTER_2_WEEKS
         : ALL_SCHOOL_WEEKS;
 
-  // Chỉ tính các tuần <= tuần hiện tại và không nằm trong danh sách tuần nghỉ/không có dữ liệu
+  // Chỉ tính các tuần >= tuần bắt đầu tính điểm, <= tuần hiện tại và không nằm trong danh sách tuần nghỉ/không có dữ liệu
   const validScoredWeeks = baseWeeks.filter(
-    w => w <= maxActiveWeek && !noDataWeeks.includes(w)
+    w => w >= startWeek && w <= maxActiveWeek && !noDataWeeks.includes(w)
   );
 
   if (validScoredWeeks.length === 0) {
@@ -224,7 +227,8 @@ export function calculateStudentPeriodSummary(
       isRecordMatchingStudent(r, student.maHS, student.hoTen) &&
       r.trangThai !== 'DaHuy' &&
       r.trangThai !== 'DaChapNhan' &&
-      validScoredWeeks.includes(Number(r.tuanHoc))
+      validScoredWeeks.includes(Number(r.tuanHoc)) &&
+      isRecordWithinScoringMilestone(r, settings)
   );
 
   let tongDiemTru = 0;

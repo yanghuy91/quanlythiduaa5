@@ -438,16 +438,22 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
 
                   // Top priority role badge & STT
                   const topRole = student.vaiTro[0] || 'HS';
-                  const roleConfig = ROLE_CONFIG[topRole];
+                  const roleConfig = ROLE_CONFIG[topRole] || ROLE_CONFIG.HS;
                   const roleIcon = topRole === 'LT' ? '⭐' :
                                    topRole === 'BT' ? '🚩' :
+                                   topRole === 'PBT' ? '🔥' :
                                    topRole === 'LP_HT' ? '📖' :
-                                   topRole === 'LP_LD' ? '⚡' : '🛡️';
+                                   topRole === 'LP_LD' ? '⚡' :
+                                   topRole === 'LP_VT' ? '🎭' :
+                                   topRole === 'CD' ? '🏵️' : '🛡️';
                   const roleTitleShort = topRole === 'TT' && student.toTruongTo ? `TT${student.toTruongTo}` :
                                          topRole === 'LT' ? 'Lớp trưởng' :
                                          topRole === 'BT' ? 'Bí thư' :
+                                         topRole === 'PBT' ? 'Phó Bí thư' :
                                          topRole === 'LP_HT' ? 'LP Học tập' :
-                                         topRole === 'LP_LD' ? 'LP Lao động' : roleConfig.label;
+                                         topRole === 'LP_LD' ? 'LP Lao động' :
+                                         topRole === 'LP_VT' ? 'LP Văn thể' :
+                                         topRole === 'CD' ? 'Cờ đỏ' : roleConfig.label;
                   const stt = student.viTriGhe || parseInt(student.maHS.replace(/\D/g, ''), 10);
 
                   return (

@@ -1,6 +1,44 @@
 import { BadgeIconType } from '../components/common/BadgeEmblem';
+import {
+  Student,
+  DisciplineRecord,
+  StudentAcademicRecord,
+  TeacherSettings,
+  RoleCode,
+} from '../types';
+import {
+  isRecordMatchingStudent,
+  parseRecordPoints,
+  calculateDenseRankings,
+} from '../utils/emulation';
 
 export type BadgeCategory = 'discipline' | 'academic' | 'movement' | 'cadre';
+
+export type BadgeAutoConditionType =
+  | 'min_week_score'        // Đạt điểm tuần >= X trong ít nhất N tuần (kể từ mốc tính điểm)
+  | 'zero_violations_weeks' // 0 lỗi vi phạm trong ít nhất N tuần (kể từ mốc tính điểm)
+  | 'no_group_violation'    // Không vi phạm nhóm/từ khóa lỗi cụ thể trong ít nhất N tuần
+  | 'min_avg_score'         // Điểm trung bình nề nếp các tuần >= X điểm
+  | 'top_rank'              // Đạt Top X Bảng xếp hạng thi đua lớp
+  | 'min_bonus_points'      // Tổng điểm cộng tích lũy >= X điểm (hoặc >= N lượt khen thưởng)
+  | 'min_gpa'               // Điểm trung bình các môn học (ĐTB học kỳ) >= X
+  | 'min_subject_score'     // Có ít nhất N môn học đạt điểm TB >= X
+  | 'is_cadre_role'         // Giữ chức vụ Cán sự / Cờ đỏ / Tổ trưởng & điểm TB nề nếp >= X
+  | 'manual_only';          // Chỉ trao thủ công bởi GVCN
+
+export interface BadgeAutoRule {
+  enabled: boolean;
+  conditionType: BadgeAutoConditionType;
+  minScore?: number;          // VD: 100, 95, 90
+  minWeeks?: number;          // Số tuần cần đạt kể từ mốc thời gian (VD: 1, 2, 4)
+  violationKeyword?: string;  // Từ khóa nhóm/hành vi không được vi phạm (VD: 'muộn', 'đồng phục', 'vệ sinh', 'trật tự', 'nghỉ')
+  maxRank?: number;           // Thứ hạng tối đa trên BXH (VD: 1, 3, 5, 10)
+  minBonusPoints?: number;    // Điểm cộng tối thiểu (VD: 5, 10)
+  minGpa?: number;            // ĐTB chung các môn (VD: 8.0, 8.5, 9.0)
+  minSubjectScore?: number;   // Điểm môn tối thiểu (VD: 9.0, 9.5, 10.0)
+  minSubjectCount?: number;   // Số môn đạt ngưỡng (VD: 1, 2, 3)
+  requiredRole?: RoleCode | 'ANY_CADRE';
+}
 
 export interface AchievementBadge {
   id: string;
@@ -9,26 +47,85 @@ export interface AchievementBadge {
   category: BadgeCategory;
   categoryLabel: string;
   description: string; // Mô tả ngắn
-  criteria: string; // Điều kiện trao (GV có thể sửa)
+  criteria: string; // Điều kiện trao hiển thị (GV có thể sửa hoặc tự sinh từ autoRule)
   accentColor: string;
   gradientBg: string;
   rarity: 'Phổ biến' | 'Hiếm' | 'Sử thi' | 'Huyền thoại';
   defaultAwarded?: boolean;
+  autoRule?: BadgeAutoRule;
+}
+
+export const BADGE_CONDITION_TYPE_LABELS: Record<BadgeAutoConditionType, string> = {
+  min_week_score: 'Điểm tuần đạt chuẩn (>= X điểm trong N tuần)',
+  zero_violations_weeks: 'Không vi phạm lỗi nào (0 lỗi trong N tuần)',
+  no_group_violation: 'Không vi phạm nhóm lỗi cụ thể trong N tuần',
+  min_avg_score: 'Điểm trung bình nề nếp từ mốc thời gian >= X điểm',
+  top_rank: 'Đạt Top Bảng xếp hạng thi đua (Top 1 / 3 / 5 / 10)',
+  min_bonus_points: 'Tích lũy Điểm cộng / Tuyên dương >= X điểm',
+  min_gpa: 'Điểm trung bình học tập (ĐTB các môn) >= X',
+  min_subject_score: 'Có môn học đạt điểm tổng kết cao (>= X điểm)',
+  is_cadre_role: 'Ban cán sự / Cờ đỏ / Tổ trưởng hoàn thành nhiệm vụ',
+  manual_only: 'Trao thủ công (GVCN trực tiếp xét chọn)',
+};
+
+export function describeBadgeAutoRule(rule?: BadgeAutoRule): string {
+  if (!rule || !rule.enabled || rule.conditionType === 'manual_only') {
+    return 'Do Giáo viên chủ nhiệm trực tiếp xét duyệt và trao tặng.';
+  }
+  const weeks = Math.max(1, rule.minWeeks || 1);
+  switch (rule.conditionType) {
+    case 'min_week_score':
+      return `Đạt từ ${rule.minScore ?? 100} điểm nề nếp/tuần trở lên trong ít nhất ${weeks} tuần (tính từ mốc thời gian GV chọn).`;
+    case 'zero_violations_weeks':
+      return `Không vi phạm bất kỳ lỗi nề nếp nào (0 lỗi) trong ít nhất ${weeks} tuần kể từ mốc tính điểm.`;
+    case 'no_group_violation':
+      return `Không vi phạm lỗi "${rule.violationKeyword || 'nội quy'}" trong ít nhất ${weeks} tuần kể từ mốc tính điểm.`;
+    case 'min_avg_score':
+      return `Điểm trung bình nề nếp các tuần đạt từ ${rule.minScore ?? 95} điểm trở lên (tính từ mốc thời gian GV chọn).`;
+    case 'top_rank':
+      return `Đạt Top ${rule.maxRank ?? 5} Bảng xếp hạng thi đua lớp (và đạt ít nhất ${rule.minScore ?? 90} điểm).`;
+    case 'min_bonus_points':
+      return `Tích lũy được từ +${rule.minBonusPoints ?? 5} điểm cộng tuyên dương trở lên kể từ mốc tính điểm.`;
+    case 'min_gpa':
+      return `Điểm trung bình chung các môn học (ĐTB) đạt từ ${(rule.minGpa ?? 8.0).toFixed(1)} trở lên.`;
+    case 'min_subject_score':
+      return `Có ít nhất ${rule.minSubjectCount ?? 1} môn học đạt điểm trung bình từ ${(rule.minSubjectScore ?? 9.0).toFixed(1)} trở lên.`;
+    case 'is_cadre_role': {
+      const roleName =
+        rule.requiredRole === 'LT' ? 'Lớp trưởng' :
+        rule.requiredRole === 'BT' ? 'Bí thư' :
+        rule.requiredRole === 'PBT' ? 'Phó Bí thư' :
+        rule.requiredRole === 'LP_HT' ? 'Lớp phó Học tập' :
+        rule.requiredRole === 'LP_LD' ? 'Lớp phó Lao động' :
+        rule.requiredRole === 'LP_VT' ? 'Lớp phó Văn thể' :
+        rule.requiredRole === 'CD' ? 'Cờ đỏ' :
+        rule.requiredRole === 'TT' ? 'Tổ trưởng' : 'Ban cán sự / Cờ đỏ / Tổ trưởng';
+      return `Giữ chức vụ ${roleName} và duy trì điểm trung bình nề nếp >= ${rule.minScore ?? 90} điểm.`;
+    }
+    default:
+      return 'Đạt tiêu chuẩn thi đua theo mốc thời gian do GVCN quy định.';
+  }
 }
 
 export const DEFAULT_30_BADGES: AchievementBadge[] = [
-  // --- NHÓM 1: KỶ LUẬT & CHUYÊN CẦN (8) ---
+  // --- NHÓM 1: KỶ LUẬT & CHUYÊN CẦN ---
   {
     id: 'b_iron_discipline',
     name: 'Kỷ Luật Thép',
     iconType: 'iron_discipline',
     category: 'discipline',
     categoryLabel: 'Kỷ luật & Chuyên cần',
-    description: 'Giữ vững nề nếp hoàn hảo, không một lỗi vi phạm suốt tháng.',
-    criteria: 'Điểm nề nếp đạt 100đ tuyệt đối trong tháng, gương mẫu tuyệt đối.',
+    description: 'Giữ vững nề nếp hoàn hảo, không một lỗi vi phạm.',
+    criteria: 'Đạt 100 điểm tuyệt đối trong ít nhất 2 tuần kể từ mốc tính điểm.',
     accentColor: '#10B981',
     gradientBg: 'from-emerald-500/15 via-teal-500/10 to-transparent',
     rarity: 'Huyền thoại',
+    autoRule: {
+      enabled: true,
+      conditionType: 'min_week_score',
+      minScore: 100,
+      minWeeks: 2,
+    },
   },
   {
     id: 'b_punctuality_hero',
@@ -36,11 +133,17 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     iconType: 'punctuality_hero',
     category: 'discipline',
     categoryLabel: 'Kỷ luật & Chuyên cần',
-    description: 'Tác phong nhanh nhẹn, luôn có mặt sớm trước 15 phút đầu giờ.',
-    criteria: 'Không đi muộn, không trễ tiết trong 4 tuần liên tục.',
+    description: 'Tác phong nhanh nhẹn, luôn có mặt đúng giờ đầu buổi học.',
+    criteria: 'Không vi phạm lỗi đi muộn / trễ giờ trong ít nhất 2 tuần kể từ mốc tính điểm.',
     accentColor: '#06B6D4',
     gradientBg: 'from-cyan-500/15 via-blue-500/10 to-transparent',
     rarity: 'Hiếm',
+    autoRule: {
+      enabled: true,
+      conditionType: 'no_group_violation',
+      violationKeyword: 'muộn',
+      minWeeks: 2,
+    },
   },
   {
     id: 'b_neat_attire',
@@ -49,10 +152,16 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'discipline',
     categoryLabel: 'Kỷ luật & Chuyên cần',
     description: 'Trang phục chuẩn nội quy, đầu tóc gọn gàng, phù hiệu đầy đủ.',
-    criteria: 'Đồng phục, sơ vin, phù hiệu THPT Số 2 Đức Phổ chuẩn 100% các buổi học.',
+    criteria: 'Không vi phạm lỗi đồng phục / tác phong trong ít nhất 1 tuần kể từ mốc tính điểm.',
     accentColor: '#3B82F6',
     gradientBg: 'from-blue-500/15 via-indigo-500/10 to-transparent',
     rarity: 'Phổ biến',
+    autoRule: {
+      enabled: true,
+      conditionType: 'no_group_violation',
+      violationKeyword: 'đồng phục',
+      minWeeks: 1,
+    },
   },
   {
     id: 'b_green_classroom',
@@ -60,11 +169,17 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     iconType: 'green_classroom',
     category: 'discipline',
     categoryLabel: 'Kỷ luật & Chuyên cần',
-    description: 'Bảo vệ môi trường lớp học, chăm sóc cây xanh, phân loại rác.',
-    criteria: 'Tích cực gom rác, giữ bồn hoa cây cảnh lớp tươi tốt, nhắc nhở bạn cùng lớp.',
+    description: 'Bảo vệ môi trường lớp học, giữ gìn vệ sinh chung sạch đẹp.',
+    criteria: 'Không vi phạm lỗi vệ sinh / trực nhật trong ít nhất 2 tuần kể từ mốc tính điểm.',
     accentColor: '#22C55E',
     gradientBg: 'from-green-500/15 via-emerald-500/10 to-transparent',
     rarity: 'Phổ biến',
+    autoRule: {
+      enabled: true,
+      conditionType: 'no_group_violation',
+      violationKeyword: 'vệ sinh',
+      minWeeks: 2,
+    },
   },
   {
     id: 'b_orderly_desk',
@@ -73,10 +188,15 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'discipline',
     categoryLabel: 'Kỷ luật & Chuyên cần',
     description: 'Khu vực chỗ ngồi sạch tinh tươm, bàn ghế thẳng hàng lối.',
-    criteria: 'Ngăn bàn không có rác thừa, cặp sách để đúng vị trí suốt tuần.',
+    criteria: 'Không vi phạm lỗi nào (0 lỗi) trong ít nhất 1 tuần kể từ mốc tính điểm.',
     accentColor: '#F59E0B',
     gradientBg: 'from-amber-500/15 via-yellow-500/10 to-transparent',
     rarity: 'Phổ biến',
+    autoRule: {
+      enabled: true,
+      conditionType: 'zero_violations_weeks',
+      minWeeks: 1,
+    },
   },
   {
     id: 'b_self_discipline',
@@ -84,11 +204,17 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     iconType: 'self_discipline',
     category: 'discipline',
     categoryLabel: 'Kỷ luật & Chuyên cần',
-    description: 'Tự giác học tập trong giờ tự quản, không làm phiền bạn xung quanh.',
-    criteria: 'Giữ trật tự tuyệt đối trong giờ tự quản 15 phút và tiết trống.',
+    description: 'Tự giác học tập trong giờ tự quản, giữ trật tự nghiêm túc.',
+    criteria: 'Không vi phạm lỗi mất trật tự / nói chuyện trong ít nhất 2 tuần.',
     accentColor: '#8B5CF6',
     gradientBg: 'from-purple-500/15 via-indigo-500/10 to-transparent',
     rarity: 'Hiếm',
+    autoRule: {
+      enabled: true,
+      conditionType: 'no_group_violation',
+      violationKeyword: 'trật tự',
+      minWeeks: 2,
+    },
   },
   {
     id: 'b_school_etiquette',
@@ -97,10 +223,16 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'discipline',
     categoryLabel: 'Kỷ luật & Chuyên cần',
     description: 'Lễ phép với thầy cô, hòa nhã với bạn bè, nói lời hay ý đẹp.',
-    criteria: 'Chào hỏi thầy cô đúng mực, giao tiếp văn hóa, không văng tục chửi bậy.',
+    criteria: 'Điểm trung bình nề nếp đạt từ 95 điểm trở lên kể từ mốc tính điểm.',
     accentColor: '#EC4899',
     gradientBg: 'from-pink-500/15 via-rose-500/10 to-transparent',
     rarity: 'Hiếm',
+    autoRule: {
+      enabled: true,
+      conditionType: 'min_avg_score',
+      minScore: 95,
+      minWeeks: 1,
+    },
   },
   {
     id: 'b_perfect_attendance',
@@ -109,24 +241,35 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'discipline',
     categoryLabel: 'Kỷ luật & Chuyên cần',
     description: 'Có mặt đầy đủ tất cả các buổi học chính khóa và ngoại khóa.',
-    criteria: 'Chuyên cần 100%, không nghỉ học (kể cả có phép) trong suốt tháng.',
+    criteria: 'Không vi phạm lỗi nghỉ học / bỏ tiết trong ít nhất 3 tuần kể từ mốc tính điểm.',
     accentColor: '#14B8A6',
     gradientBg: 'from-teal-500/15 via-cyan-500/10 to-transparent',
     rarity: 'Sử thi',
+    autoRule: {
+      enabled: true,
+      conditionType: 'no_group_violation',
+      violationKeyword: 'nghỉ',
+      minWeeks: 3,
+    },
   },
 
-  // --- NHÓM 2: HỌC TẬP & TRI THỨC (8) ---
+  // --- NHÓM 2: HỌC TẬP & TRI THỨC ---
   {
     id: 'b_all_rounder',
     name: 'Học Bá Toàn Năng',
     iconType: 'all_rounder',
     category: 'academic',
     categoryLabel: 'Học tập & Tri thức',
-    description: 'Dẫn đầu toàn diện về điểm kiểm tra và tinh thần học hỏi.',
-    criteria: 'Đạt danh hiệu Học sinh Giỏi / Xuất sắc tuần và tháng do GVCN bình chọn.',
+    description: 'Dẫn đầu toàn diện về điểm trung bình các môn học.',
+    criteria: 'Điểm trung bình chung các môn học (ĐTB) đạt từ 8.5 trở lên.',
     accentColor: '#F59E0B',
     gradientBg: 'from-amber-500/15 via-yellow-500/10 to-transparent',
     rarity: 'Huyền thoại',
+    autoRule: {
+      enabled: true,
+      conditionType: 'min_gpa',
+      minGpa: 8.5,
+    },
   },
   {
     id: 'b_resilient_climber',
@@ -134,11 +277,16 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     iconType: 'resilient_climber',
     category: 'academic',
     categoryLabel: 'Học tập & Tri thức',
-    description: 'Bứt phá vượt bậc, nỗ lực sửa sai và cải thiện kết quả rõ rệt.',
-    criteria: 'Nâng hạng thi đua ít nhất 10 bậc trong tuần hoặc tháng gần nhất.',
+    description: 'Bứt phá vượt bậc, nỗ lực cải thiện kết quả học tập và rèn luyện.',
+    criteria: 'Điểm trung bình chung các môn học (ĐTB) đạt từ 7.5 trở lên.',
     accentColor: '#6366F1',
     gradientBg: 'from-indigo-500/15 via-purple-500/10 to-transparent',
     rarity: 'Sử thi',
+    autoRule: {
+      enabled: true,
+      conditionType: 'min_gpa',
+      minGpa: 7.5,
+    },
   },
   {
     id: 'b_perfect_ten',
@@ -146,11 +294,17 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     iconType: 'perfect_ten',
     category: 'academic',
     categoryLabel: 'Học tập & Tri thức',
-    description: 'Đạt điểm số tuyệt đối trong các bài kiểm tra miệng, 15 phút, 1 tiết.',
-    criteria: 'Đạt từ 2 điểm 10 hoặc 3 điểm 9 trở lên trong tuần.',
+    description: 'Đạt điểm số xuất sắc trong các môn học.',
+    criteria: 'Có ít nhất 1 môn học đạt điểm trung bình từ 9.0 trở lên.',
     accentColor: '#D97706',
     gradientBg: 'from-amber-500/15 via-orange-500/10 to-transparent',
     rarity: 'Hiếm',
+    autoRule: {
+      enabled: true,
+      conditionType: 'min_subject_score',
+      minSubjectScore: 9.0,
+      minSubjectCount: 1,
+    },
   },
   {
     id: 'b_diligent_quill',
@@ -158,11 +312,17 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     iconType: 'diligent_quill',
     category: 'academic',
     categoryLabel: 'Học tập & Tri thức',
-    description: 'Vở sạch chữ đẹp, soạn bài và làm bài tập chu đáo 100%.',
-    criteria: 'Được Lớp phó Học tập và GV bộ môn khen ngợi về bài vở chu đáo.',
+    description: 'Vở sạch chữ đẹp, chuẩn bị bài và làm bài tập đầy đủ.',
+    criteria: 'Không vi phạm lỗi thiếu bài tập / quên sách vở trong ít nhất 2 tuần.',
     accentColor: '#0284C7',
     gradientBg: 'from-sky-500/15 via-blue-500/10 to-transparent',
     rarity: 'Phổ biến',
+    autoRule: {
+      enabled: true,
+      conditionType: 'no_group_violation',
+      violationKeyword: 'bài',
+      minWeeks: 2,
+    },
   },
   {
     id: 'b_creative_genius',
@@ -170,11 +330,17 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     iconType: 'creative_genius',
     category: 'academic',
     categoryLabel: 'Học tập & Tri thức',
-    description: 'Nhiều ý tưởng độc đáo, giải pháp thông minh trong bài tập nhóm.',
-    criteria: 'Đóng góp ý tưởng giải bài hoặc dự án môn học xuất sắc được GV biểu dương.',
+    description: 'Nhiều ý tưởng độc đáo, giải pháp thông minh trong học tập.',
+    criteria: 'Có ít nhất 2 môn học đạt điểm trung bình từ 8.5 trở lên.',
     accentColor: '#A855F7',
     gradientBg: 'from-purple-500/15 via-fuchsia-500/10 to-transparent',
     rarity: 'Hiếm',
+    autoRule: {
+      enabled: true,
+      conditionType: 'min_subject_score',
+      minSubjectScore: 8.5,
+      minSubjectCount: 2,
+    },
   },
   {
     id: 'b_study_buddies',
@@ -183,10 +349,15 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'academic',
     categoryLabel: 'Học tập & Tri thức',
     description: 'Tận tình kèm cặp, hỗ trợ bạn cùng bàn tiến bộ vượt bậc.',
-    criteria: 'Kèm bạn cùng tiến bộ ít nhất 1 bậc xếp loại trong đợt thi đua.',
+    criteria: 'ĐTB các môn >= 8.0 và điểm trung bình nề nếp >= 95đ.',
     accentColor: '#38BDF8',
     gradientBg: 'from-sky-500/15 via-cyan-500/10 to-transparent',
     rarity: 'Sử thi',
+    autoRule: {
+      enabled: true,
+      conditionType: 'min_gpa',
+      minGpa: 8.0,
+    },
   },
   {
     id: 'b_master_presenter',
@@ -194,11 +365,16 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     iconType: 'master_presenter',
     category: 'academic',
     categoryLabel: 'Học tập & Tri thức',
-    description: 'Hùng biện cuốn hút, tự tin trình bày thuyết phục trước đám đông.',
-    criteria: 'Đại diện tổ thuyết trình đạt điểm tối đa từ giáo viên bộ môn.',
+    description: 'Hùng biện cuốn hút, tự tin phát biểu xây dựng bài sôi nổi.',
+    criteria: 'Tích lũy từ +5 điểm cộng phát biểu / học tập trở lên.',
     accentColor: '#F97316',
     gradientBg: 'from-orange-500/15 via-amber-500/10 to-transparent',
     rarity: 'Hiếm',
+    autoRule: {
+      enabled: true,
+      conditionType: 'min_bonus_points',
+      minBonusPoints: 5,
+    },
   },
   {
     id: 'b_challenge_conqueror',
@@ -206,14 +382,20 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     iconType: 'challenge_conqueror',
     category: 'academic',
     categoryLabel: 'Học tập & Tri thức',
-    description: 'Dũng cảm nhận và hoàn thành xuất sắc các bài tập khó, dự án lớn.',
-    criteria: 'Xung phong lên bảng giải các bài toán, câu hỏi thử thách của GV.',
+    description: 'Dũng cảm nhận và hoàn thành xuất sắc các bài tập khó.',
+    criteria: 'Có ít nhất 3 môn học đạt điểm trung bình từ 8.5 trở lên.',
     accentColor: '#06B6D4',
     gradientBg: 'from-cyan-500/15 via-teal-500/10 to-transparent',
     rarity: 'Hiếm',
+    autoRule: {
+      enabled: true,
+      conditionType: 'min_subject_score',
+      minSubjectScore: 8.5,
+      minSubjectCount: 3,
+    },
   },
 
-  // --- NHÓM 3: PHONG TRÀO & ĐOÀN HỘI (7) ---
+  // --- NHÓM 3: PHONG TRÀO & ĐOÀN HỘI ---
   {
     id: 'b_union_torch',
     name: 'Ngọn Đuốc Đoàn Viên',
@@ -221,10 +403,16 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'movement',
     categoryLabel: 'Phong trào & Đoàn hội',
     description: 'Nhiệt huyết xung kích trong các hoạt động Đoàn trường và Chi đoàn.',
-    criteria: 'Được Bí thư Chi đoàn đề xuất khen thưởng phong trào thanh niên.',
+    criteria: 'Giữ chức vụ Bí thư Chi đoàn và đạt điểm nề nếp >= 90đ.',
     accentColor: '#EF4444',
     gradientBg: 'from-red-500/15 via-rose-500/10 to-transparent',
     rarity: 'Sử thi',
+    autoRule: {
+      enabled: true,
+      conditionType: 'is_cadre_role',
+      requiredRole: 'BT',
+      minScore: 90,
+    },
   },
   {
     id: 'b_arts_ambassador',
@@ -233,10 +421,15 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'movement',
     categoryLabel: 'Phong trào & Đoàn hội',
     description: 'Tài năng ca múa nhạc, khuấy động không khí sinh hoạt lớp.',
-    criteria: 'Tham gia biểu diễn văn nghệ chào mừng 20/11, 26/3 hoặc sinh hoạt đầu tuần.',
+    criteria: 'Tích lũy từ +5 điểm cộng phong trào hoặc do GVCN trao tặng.',
     accentColor: '#EC4899',
     gradientBg: 'from-pink-500/15 via-purple-500/10 to-transparent',
     rarity: 'Hiếm',
+    autoRule: {
+      enabled: true,
+      conditionType: 'min_bonus_points',
+      minBonusPoints: 5,
+    },
   },
   {
     id: 'b_sports_mvp',
@@ -245,10 +438,15 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'movement',
     categoryLabel: 'Phong trào & Đoàn hội',
     description: 'Thi đấu quật cường, mang vinh quang thể thao về cho tập thể 10A5.',
-    criteria: 'Đoạt giải trong các hội thao, giải bóng đá, bóng chuyền, điền kinh cấp trường.',
+    criteria: 'Tích lũy từ +10 điểm cộng phong trào hoặc do GVCN trao tặng.',
     accentColor: '#10B981',
     gradientBg: 'from-emerald-500/15 via-green-500/10 to-transparent',
     rarity: 'Sử thi',
+    autoRule: {
+      enabled: true,
+      conditionType: 'min_bonus_points',
+      minBonusPoints: 10,
+    },
   },
   {
     id: 'b_positive_energy',
@@ -257,10 +455,16 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'movement',
     categoryLabel: 'Phong trào & Đoàn hội',
     description: 'Nụ cười tỏa nắng, luôn mang đến sự vui vẻ, hòa đồng cho cả lớp.',
-    criteria: 'Được tập thể yêu mến, luôn động viên bạn bè trong các hoạt động.',
+    criteria: 'Điểm trung bình nề nếp đạt từ 98 điểm trở lên kể từ mốc tính điểm.',
     accentColor: '#FBBF24',
     gradientBg: 'from-amber-500/15 via-yellow-500/10 to-transparent',
     rarity: 'Phổ biến',
+    autoRule: {
+      enabled: true,
+      conditionType: 'min_avg_score',
+      minScore: 98,
+      minWeeks: 1,
+    },
   },
   {
     id: 'b_heart_volunteer',
@@ -269,10 +473,15 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'movement',
     categoryLabel: 'Phong trào & Đoàn hội',
     description: 'Xung phong trong các đợt quyên góp, lao động tình nguyện vì cộng đồng.',
-    criteria: 'Tham gia tích cực hoạt động đền ơn đáp nghĩa, kế hoạch nhỏ, nuôi heo đất.',
+    criteria: 'Tích lũy từ +8 điểm cộng tuyên dương trở lên.',
     accentColor: '#F43F5E',
     gradientBg: 'from-rose-500/15 via-red-500/10 to-transparent',
     rarity: 'Hiếm',
+    autoRule: {
+      enabled: true,
+      conditionType: 'min_bonus_points',
+      minBonusPoints: 8,
+    },
   },
   {
     id: 'b_fitness_warrior',
@@ -281,10 +490,16 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'movement',
     categoryLabel: 'Phong trào & Đoàn hội',
     description: 'Tập thể dục giữa giờ nghiêm túc, rèn luyện thân thể dẻo dai.',
-    criteria: 'Không vắng tập thể dục giữa giờ, động tác dứt khoát, đúng nhịp chuẩn.',
+    criteria: 'Không vi phạm lỗi thể dục giữa giờ trong ít nhất 2 tuần.',
     accentColor: '#6366F1',
     gradientBg: 'from-indigo-500/15 via-blue-500/10 to-transparent',
     rarity: 'Phổ biến',
+    autoRule: {
+      enabled: true,
+      conditionType: 'no_group_violation',
+      violationKeyword: 'thể dục',
+      minWeeks: 2,
+    },
   },
   {
     id: 'b_march_youth',
@@ -292,14 +507,20 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     iconType: 'march_youth',
     category: 'movement',
     categoryLabel: 'Phong trào & Đoàn hội',
-    description: 'Huy hiệu kỷ niệm thành tích xuất sắc trong đợt thi đua Tháng Ba Đoàn.',
-    criteria: 'Đóng góp lớn giúp lớp đạt giải cao trong Hội trại / Tuần lễ 26/3.',
+    description: 'Huy hiệu kỷ niệm thành tích xuất sắc trong đợt thi đua Đoàn.',
+    criteria: 'Đạt Top 5 Bảng xếp hạng thi đua toàn lớp.',
     accentColor: '#EF4444',
     gradientBg: 'from-red-500/15 via-orange-500/10 to-transparent',
     rarity: 'Huyền thoại',
+    autoRule: {
+      enabled: true,
+      conditionType: 'top_rank',
+      maxRank: 5,
+      minScore: 95,
+    },
   },
 
-  // --- NHÓM 4: TẬP THỂ & CÁN SỰ (7) ---
+  // --- NHÓM 4: TẬP THỂ & CÁN SỰ (10 - GỒM CẢ PHÓ BÍ THƯ, LỚP PHÓ VĂN THỂ, CỜ ĐỎ) ---
   {
     id: 'b_cadre_leader',
     name: 'Thủ Lĩnh Bản Lĩnh',
@@ -307,10 +528,70 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
     description: 'Cán sự công tâm, chỉ huy quyết đoán, được tập thể tôn trọng.',
-    criteria: 'Hoàn thành xuất sắc nhiệm vụ quản lý tổ hoặc ban cán sự lớp.',
+    criteria: 'Giữ chức vụ Ban cán sự / Tổ trưởng và điểm TB nề nếp >= 90đ.',
     accentColor: '#F59E0B',
     gradientBg: 'from-amber-500/15 via-yellow-500/10 to-transparent',
     rarity: 'Sử thi',
+    autoRule: {
+      enabled: true,
+      conditionType: 'is_cadre_role',
+      requiredRole: 'ANY_CADRE',
+      minScore: 90,
+    },
+  },
+  {
+    id: 'b_deputy_union_sec',
+    name: 'Ngọn Lửa Phó Bí Thư',
+    iconType: 'deputy_union_sec',
+    category: 'cadre',
+    categoryLabel: 'Tập thể & Cán sự',
+    description: 'Phó Bí thư Chi đoàn xung kích, gắn kết đoàn viên và tiếp lửa phong trào.',
+    criteria: 'Giữ chức vụ Phó Bí thư Chi đoàn (PBT) và điểm TB nề nếp >= 90đ.',
+    accentColor: '#E11D48',
+    gradientBg: 'from-rose-500/15 via-orange-500/10 to-transparent',
+    rarity: 'Sử thi',
+    autoRule: {
+      enabled: true,
+      conditionType: 'is_cadre_role',
+      requiredRole: 'PBT',
+      minScore: 90,
+    },
+  },
+  {
+    id: 'b_arts_sports_deputy',
+    name: 'Đại Sứ Văn Thể Mỹ',
+    iconType: 'arts_sports_deputy',
+    category: 'cadre',
+    categoryLabel: 'Tập thể & Cán sự',
+    description: 'Lớp phó Văn thể năng nổ, dẫn dắt phong trào văn hóa, văn nghệ, thể thao.',
+    criteria: 'Giữ chức vụ Lớp phó Văn thể (LP_VT) và điểm TB nề nếp >= 90đ.',
+    accentColor: '#A21CAF',
+    gradientBg: 'from-fuchsia-500/15 via-purple-500/10 to-transparent',
+    rarity: 'Sử thi',
+    autoRule: {
+      enabled: true,
+      conditionType: 'is_cadre_role',
+      requiredRole: 'LP_VT',
+      minScore: 90,
+    },
+  },
+  {
+    id: 'b_red_flag_warden',
+    name: 'Sao Đỏ Kỷ Cương (Cờ Đỏ)',
+    iconType: 'red_flag_warden',
+    category: 'cadre',
+    categoryLabel: 'Tập thể & Cán sự',
+    description: 'Đội viên Cờ đỏ gương mẫu, công tâm, giữ vững kỷ cương nề nếp lớp học.',
+    criteria: 'Giữ chức vụ Cờ đỏ (CD) và điểm TB nề nếp >= 90đ.',
+    accentColor: '#DC2626',
+    gradientBg: 'from-red-500/15 via-rose-500/10 to-transparent',
+    rarity: 'Sử thi',
+    autoRule: {
+      enabled: true,
+      conditionType: 'is_cadre_role',
+      requiredRole: 'CD',
+      minScore: 90,
+    },
   },
   {
     id: 'b_loving_guide',
@@ -319,10 +600,16 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
     description: 'Luôn lắng nghe, thấu hiểu, gắn kết các thành viên như gia đình.',
-    criteria: 'Gương mẫu hòa giải xung đột, xây dựng tinh thần đoàn kết keo sơn.',
+    criteria: 'Giữ chức vụ Lớp trưởng (LT) và điểm TB nề nếp >= 95đ.',
     accentColor: '#0EA5E9',
     gradientBg: 'from-sky-500/15 via-blue-500/10 to-transparent',
     rarity: 'Sử thi',
+    autoRule: {
+      enabled: true,
+      conditionType: 'is_cadre_role',
+      requiredRole: 'LT',
+      minScore: 95,
+    },
   },
   {
     id: 'b_golden_hands',
@@ -331,10 +618,16 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
     description: 'Trực nhật chu đáo, bảng sạch, giẻ ướt, phấn thơm, lớp tinh tươm.',
-    criteria: 'Tổ chức hoặc trực tiếp thực hiện trực nhật đạt điểm tuyệt đối từ đoàn trường.',
+    criteria: 'Giữ chức vụ Lớp phó Lao động (LP_LD) hoặc đạt 100đ tuần.',
     accentColor: '#14B8A6',
     gradientBg: 'from-teal-500/15 via-emerald-500/10 to-transparent',
     rarity: 'Phổ biến',
+    autoRule: {
+      enabled: true,
+      conditionType: 'is_cadre_role',
+      requiredRole: 'LP_LD',
+      minScore: 90,
+    },
   },
   {
     id: 'b_rescue_knight',
@@ -343,10 +636,16 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
     description: 'Sẵn sàng trực nhật thay bạn bị ốm, hỗ trợ việc lớp không nề hà.',
-    criteria: 'Ít nhất 2 lần tình nguyện gánh vác việc chung khi bạn có việc đột xuất.',
+    criteria: 'Giữ chức vụ Lớp phó Học tập (LP_HT) hoặc Tổ trưởng (TT) gương mẫu.',
     accentColor: '#8B5CF6',
     gradientBg: 'from-purple-500/15 via-violet-500/10 to-transparent',
     rarity: 'Hiếm',
+    autoRule: {
+      enabled: true,
+      conditionType: 'is_cadre_role',
+      requiredRole: 'LP_HT',
+      minScore: 90,
+    },
   },
   {
     id: 'b_team_spirit',
@@ -355,10 +654,16 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
     description: 'Vì cái chung, luôn đặt danh dự tập thể 10A5 lên trên cá nhân.',
-    criteria: 'Góp công lớn đưa tổ hoặc lớp đứng đầu trong các kỳ thi đua tuần.',
+    criteria: 'Đạt Top 10 Bảng xếp hạng thi đua toàn lớp.',
     accentColor: '#F59E0B',
     gradientBg: 'from-amber-500/15 via-orange-500/10 to-transparent',
     rarity: 'Sử thi',
+    autoRule: {
+      enabled: true,
+      conditionType: 'top_rank',
+      maxRank: 10,
+      minScore: 90,
+    },
   },
   {
     id: 'b_class_heart',
@@ -367,10 +672,16 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
     description: 'Tận tâm cống hiến thầm lặng vì một tập thể đoàn kết vững mạnh.',
-    criteria: 'Được toàn thể lớp bình chọn là gương mặt truyền cảm hứng của 10A5.',
+    criteria: 'Đạt Top 3 Bảng xếp hạng thi đua toàn lớp.',
     accentColor: '#E11D48',
     gradientBg: 'from-rose-500/15 via-pink-500/10 to-transparent',
     rarity: 'Huyền thoại',
+    autoRule: {
+      enabled: true,
+      conditionType: 'top_rank',
+      maxRank: 3,
+      minScore: 95,
+    },
   },
   {
     id: 'b_star_10a5',
@@ -379,30 +690,43 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
     description: 'Phần thưởng danh giá cao quý nhất do Giáo viên chủ nhiệm trao tặng.',
-    criteria: 'Học sinh xuất sắc toàn diện cả học lực, đạo đức nề nếp và phong trào.',
+    criteria: 'Đạt Hạng 1 (Top 1) Bảng xếp hạng thi đua toàn lớp.',
     accentColor: '#F59E0B',
     gradientBg: 'from-amber-500/20 via-yellow-400/15 to-transparent',
     rarity: 'Huyền thoại',
+    autoRule: {
+      enabled: true,
+      conditionType: 'top_rank',
+      maxRank: 1,
+      minScore: 98,
+    },
   },
 ];
 
-const STORAGE_KEY_BADGES = 'app_badges_catalog_10a5_v2';
-const STORAGE_KEY_STUDENT_BADGES = 'app_student_badges_10a5_v2';
+const STORAGE_KEY_BADGES = 'app_badges_catalog_10a5_v3';
+const STORAGE_KEY_STUDENT_BADGES = 'app_student_badges_10a5_v3';
 const STORAGE_KEY_STUDENT_ACTIVE_BADGE = 'app_student_active_badge_10a5_v2';
 
 /**
- * Load badge catalog with GV customized names/criteria from localStorage.
+ * Load badge catalog with GV customized names/criteria/autoRule from localStorage.
  */
 export function getBadgeCatalog(): AchievementBadge[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY_BADGES);
+    const raw = localStorage.getItem(STORAGE_KEY_BADGES) || localStorage.getItem('app_badges_catalog_10a5_v2');
     if (!raw) return DEFAULT_30_BADGES;
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      // Merge with defaults to ensure all properties exist
       return DEFAULT_30_BADGES.map(def => {
         const custom = parsed.find((p: AchievementBadge) => p.id === def.id);
-        return custom ? { ...def, ...custom } : def;
+        if (!custom) return def;
+        return {
+          ...def,
+          ...custom,
+          autoRule: {
+            ...(def.autoRule || { enabled: true, conditionType: 'manual_only' }),
+            ...(custom.autoRule || {}),
+          },
+        };
       });
     }
   } catch (e) {
@@ -412,11 +736,14 @@ export function getBadgeCatalog(): AchievementBadge[] {
 }
 
 /**
- * Save updated badge catalog (e.g. GV edits name or criteria).
+ * Save updated badge catalog (e.g. GV edits name, criteria, or autoRule).
  */
 export function saveBadgeCatalog(catalog: AchievementBadge[]): void {
   try {
     localStorage.setItem(STORAGE_KEY_BADGES, JSON.stringify(catalog));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lop10a5:badge_change'));
+    }
   } catch (e) {
     console.error('Error saving badge catalog:', e);
   }
@@ -428,6 +755,7 @@ export function saveBadgeCatalog(catalog: AchievementBadge[]): void {
 export function resetBadgeCatalog(): AchievementBadge[] {
   try {
     localStorage.removeItem(STORAGE_KEY_BADGES);
+    localStorage.removeItem('app_badges_catalog_10a5_v2');
   } catch (e) {
     console.error('Error resetting badge catalog:', e);
   }
@@ -436,6 +764,7 @@ export function resetBadgeCatalog(): AchievementBadge[] {
 
 /**
  * Get map of studentId -> list of awarded badgeIds
+ * (No hardcoded fake starter badges — badges come from real evaluation or GV awards)
  */
 export function getStudentBadgesMap(): Record<string, string[]> {
   try {
@@ -444,18 +773,7 @@ export function getStudentBadgesMap(): Record<string, string[]> {
   } catch (e) {
     console.error('Error loading student badges:', e);
   }
-  // Initial default awards: give each student 2-3 starter badges based on their role/seat
-  const defaultMap: Record<string, string[]> = {
-    HS01: ['b_all_rounder', 'b_cadre_leader', 'b_star_10a5'], // Nguyễn Gia Khiêm (Lớp trưởng)
-    HS02: ['b_union_torch', 'b_march_youth', 'b_positive_energy'], // Trần Minh Triết (Bí thư)
-    HS03: ['b_diligent_quill', 'b_study_buddies', 'b_perfect_ten'], // Lê Hoàng Long (Lớp phó HT)
-    HS04: ['b_green_classroom', 'b_golden_hands', 'b_orderly_desk'], // Phạm Gia Bảo (Lớp phó LĐ)
-    HS05: ['b_iron_discipline', 'b_neat_attire', 'b_perfect_attendance'],
-    HS12: ['b_cadre_leader', 'b_punctuality_hero'], // Tổ trưởng 2
-    HS23: ['b_cadre_leader', 'b_creative_genius'], // Tổ trưởng 3
-    HS34: ['b_cadre_leader', 'b_loving_guide'], // Tổ trưởng 4
-  };
-  return defaultMap;
+  return {};
 }
 
 /**
@@ -567,4 +885,270 @@ export function setAllStudentBadgesState(
   } catch (e) {
     console.error('Error setting student badges state:', e);
   }
+}
+
+/**
+ * Tự động xét duyệt và trao các huy hiệu đủ điều kiện dựa trên:
+ * - Mốc thời gian bắt đầu tính điểm / xét huy hiệu do GV chọn (`tuanBatDauXetHuyHieu` / `ngayBatDauXetHuyHieu`)
+ * - Điều kiện trao (`autoRule`) của từng huy hiệu
+ * @param replaceAutoBadges Nếu true, làm mới lại các huy hiệu tự động theo đúng điều kiện mới
+ */
+export function evaluateAndAutoAwardBadges(params: {
+  students: Student[];
+  records: DisciplineRecord[];
+  academicRecords?: StudentAcademicRecord[];
+  settings: TeacherSettings;
+  currentWeek: number;
+  catalog?: AchievementBadge[];
+  replaceExisting?: boolean;
+}): {
+  updatedMap: Record<string, string[]>;
+  newlyAwardedCount: number;
+  totalAwardedCount: number;
+} {
+  const {
+    students,
+    records,
+    academicRecords = [],
+    settings,
+    currentWeek,
+    catalog = getBadgeCatalog(),
+    replaceExisting = false,
+  } = params;
+
+  const existingMap = replaceExisting ? {} : getStudentBadgesMap();
+  if (!students || students.length === 0) {
+    return { updatedMap: existingMap, newlyAwardedCount: 0, totalAwardedCount: 0 };
+  }
+
+  const startWeek = Math.max(
+    1,
+    Number(settings.tuanBatDauXetHuyHieu || settings.tuanBatDauTinhDiem || 1)
+  );
+  const startDate = String(
+    settings.ngayBatDauXetHuyHieu || settings.ngayBatDauTinhDiem || ''
+  ).trim();
+  const noDataWeeks = (settings.noDataWeeks || []).map(Number);
+
+  // Các tuần hợp lệ kể từ mốc thời gian bắt đầu xét huy hiệu đến tuần hiện tại
+  const activeWeeks: number[] = [];
+  for (let w = startWeek; w <= Number(currentWeek); w++) {
+    if (!noDataWeeks.includes(w)) {
+      activeWeeks.push(w);
+    }
+  }
+
+  // Lọc các bản ghi hợp lệ nằm trong mốc thời gian
+  const validRecords = (records || []).filter(r => {
+    if (!r || r.trangThai === 'DaHuy' || r.trangThai === 'DaChapNhan') return false;
+    const w = Number(r.tuanHoc);
+    if (w < startWeek || w > Number(currentWeek) || noDataWeeks.includes(w)) return false;
+    if (startDate && r.ngayHoc && String(r.ngayHoc).trim() < startDate) return false;
+    return true;
+  });
+
+  // Tính thống kê từng học sinh trên các tuần activeWeeks
+  interface StudentEvalStats {
+    student: Student;
+    weeklyScores: number[];
+    weeklyViolationCounts: number[];
+    studentRecords: DisciplineRecord[];
+    avgScore: number;
+    totalDeductions: number;
+    totalBonusPoints: number;
+    gpa: number | null;
+    subjectTbs: number[];
+  }
+
+  const statsByMa = new Map<string, StudentEvalStats>();
+
+  for (const stu of students) {
+    const stuRecs = validRecords.filter(r => isRecordMatchingStudent(r, stu.maHS, stu.hoTen));
+    const weeklyScores: number[] = [];
+    const weeklyViolationCounts: number[] = [];
+    let totalDeductions = 0;
+    let totalBonusPoints = 0;
+
+    for (const w of activeWeeks) {
+      const wRecs = stuRecs.filter(r => Number(r.tuanHoc) === w);
+      let wDed = 0;
+      let wBon = 0;
+      let wViolCount = 0;
+      for (const rec of wRecs) {
+        const { isBonus, points } = parseRecordPoints(rec);
+        if (!isBonus) {
+          wDed += points;
+          wViolCount += 1;
+        } else {
+          wBon += points;
+        }
+      }
+      totalDeductions += wDed;
+      totalBonusPoints += wBon;
+      const effectiveBonus = settings.batDiemCong ? wBon : 0;
+      const wScore = Math.max(0, settings.diemKhoiDau - wDed + effectiveBonus);
+      weeklyScores.push(wScore);
+      weeklyViolationCounts.push(wViolCount);
+    }
+
+    const avgScore =
+      weeklyScores.length > 0
+        ? Math.round((weeklyScores.reduce((a, b) => a + b, 0) / weeklyScores.length) * 10) / 10
+        : settings.diemKhoiDau;
+
+    // Điểm học tập (ưu tiên HK1 hoặc bản ghi mới nhất)
+    const acad = academicRecords.find(
+      ar => ar.maHS.trim().toUpperCase() === stu.maHS.trim().toUpperCase()
+    );
+    const gpa = acad && typeof acad.diemTBChung === 'number' ? acad.diemTBChung : null;
+    const subjectTbs: number[] = [];
+    if (acad && acad.subjects) {
+      Object.values(acad.subjects).forEach(sub => {
+        if (sub && typeof sub.tb === 'number') {
+          subjectTbs.push(sub.tb);
+        }
+      });
+    }
+
+    statsByMa.set(stu.maHS, {
+      student: stu,
+      weeklyScores,
+      weeklyViolationCounts,
+      studentRecords: stuRecs,
+      avgScore,
+      totalDeductions,
+      totalBonusPoints,
+      gpa,
+      subjectTbs,
+    });
+  }
+
+  // Tính thứ hạng Dense Ranking trên điểm trung bình nề nếp từ mốc thời gian
+  const rankedList = calculateDenseRankings(
+    Array.from(statsByMa.values()),
+    item => item.avgScore,
+    item => item.totalDeductions,
+    item => item.totalBonusPoints
+  );
+  const rankByMa = new Map<string, number>();
+  rankedList.forEach(r => rankByMa.set(r.student.maHS, r.officialRank));
+
+  const nextMap: Record<string, string[]> = {};
+  Object.keys(existingMap).forEach(k => {
+    nextMap[k] = [...(existingMap[k] || [])];
+  });
+
+  let newlyAwardedCount = 0;
+  let totalAwardedCount = 0;
+
+  for (const stu of students) {
+    const stStats = statsByMa.get(stu.maHS);
+    if (!stStats) continue;
+    const currentBadges = new Set<string>(nextMap[stu.maHS] || []);
+    const stuRank = rankByMa.get(stu.maHS) ?? 99;
+
+    for (const badge of catalog) {
+      const rule = badge.autoRule;
+      if (!rule || !rule.enabled || rule.conditionType === 'manual_only') {
+        continue;
+      }
+
+      let qualified = false;
+      const reqWeeks = Math.max(1, Number(rule.minWeeks || 1));
+
+      switch (rule.conditionType) {
+        case 'min_week_score': {
+          const threshold = Number(rule.minScore ?? 100);
+          const qualifyingWeeks = stStats.weeklyScores.filter(s => s >= threshold).length;
+          qualified = activeWeeks.length >= reqWeeks && qualifyingWeeks >= reqWeeks;
+          break;
+        }
+        case 'zero_violations_weeks': {
+          const zeroWeeks = stStats.weeklyViolationCounts.filter(c => c === 0).length;
+          qualified = activeWeeks.length >= reqWeeks && zeroWeeks >= reqWeeks;
+          break;
+        }
+        case 'no_group_violation': {
+          const kw = String(rule.violationKeyword || '').trim().toLowerCase();
+          if (activeWeeks.length >= reqWeeks) {
+            let cleanWeeks = 0;
+            for (const w of activeWeeks) {
+              const hasKwViolation = stStats.studentRecords.some(rec => {
+                if (Number(rec.tuanHoc) !== w) return false;
+                const { isBonus } = parseRecordPoints(rec);
+                if (isBonus) return false;
+                if (!kw) return true;
+                const text = `${rec.nhomHanhVi || ''} ${rec.tenHanhVi || ''} ${rec.ghiChu || ''}`.toLowerCase();
+                return text.includes(kw);
+              });
+              if (!hasKwViolation) cleanWeeks += 1;
+            }
+            qualified = cleanWeeks >= reqWeeks;
+          }
+          break;
+        }
+        case 'min_avg_score': {
+          const threshold = Number(rule.minScore ?? 95);
+          qualified = activeWeeks.length >= reqWeeks && stStats.avgScore >= threshold;
+          break;
+        }
+        case 'top_rank': {
+          const maxR = Number(rule.maxRank ?? 5);
+          const minSc = Number(rule.minScore ?? 90);
+          qualified = activeWeeks.length >= 1 && stuRank <= maxR && stStats.avgScore >= minSc;
+          break;
+        }
+        case 'min_bonus_points': {
+          const minBon = Number(rule.minBonusPoints ?? 5);
+          qualified = stStats.totalBonusPoints >= minBon;
+          break;
+        }
+        case 'min_gpa': {
+          const minG = Number(rule.minGpa ?? 8.0);
+          qualified = stStats.gpa !== null && stStats.gpa >= minG;
+          break;
+        }
+        case 'min_subject_score': {
+          const minSubSc = Number(rule.minSubjectScore ?? 9.0);
+          const minCnt = Math.max(1, Number(rule.minSubjectCount ?? 1));
+          const cnt = stStats.subjectTbs.filter(tb => tb >= minSubSc).length;
+          qualified = cnt >= minCnt;
+          break;
+        }
+        case 'is_cadre_role': {
+          const minSc = Number(rule.minScore ?? 90);
+          const reqRole = rule.requiredRole || 'ANY_CADRE';
+          const hasRole =
+            reqRole === 'ANY_CADRE'
+              ? stu.vaiTro.some(r => r !== 'HS')
+              : stu.vaiTro.includes(reqRole as RoleCode);
+          qualified = hasRole && stStats.avgScore >= minSc;
+          break;
+        }
+      }
+
+      if (qualified && !currentBadges.has(badge.id)) {
+        currentBadges.add(badge.id);
+        newlyAwardedCount += 1;
+      }
+    }
+
+    nextMap[stu.maHS] = Array.from(currentBadges);
+    totalAwardedCount += nextMap[stu.maHS].length;
+  }
+
+  try {
+    localStorage.setItem(STORAGE_KEY_STUDENT_BADGES, JSON.stringify(nextMap));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lop10a5:badge_change'));
+    }
+  } catch (e) {
+    console.error('Error saving auto-awarded badges:', e);
+  }
+
+  return {
+    updatedMap: nextMap,
+    newlyAwardedCount,
+    totalAwardedCount,
+  };
 }

@@ -55,7 +55,8 @@ import {
 } from './services/storageSync';
 import { 
   getAllStudentBadgesState, 
-  setAllStudentBadgesState 
+  setAllStudentBadgesState,
+  evaluateAndAutoAwardBadges
 } from './data/badgeCatalog';
 import { 
   subscribeToCloudClassState, 
@@ -641,6 +642,19 @@ export default function App() {
     return map;
   }, [students, currentWeek, records, settings]);
 
+  // Automatic Badge Evaluation Engine (Chế độ tự động xét & trao huy hiệu theo mốc thời gian và điều kiện GV chọn)
+  useEffect(() => {
+    if (settings.tuDongTraoHuyHieu === false) return;
+    if (!students || students.length === 0) return;
+    evaluateAndAutoAwardBadges({
+      students,
+      records,
+      academicRecords,
+      settings,
+      currentWeek,
+    });
+  }, [students, records, academicRecords, settings, currentWeek]);
+
   // Add record handler
   const handleAddRecord = useCallback((newRecordData: Omit<DisciplineRecord, 'maGhiNhan' | 'thoiGianMayChu' | 'thoiGianMay'>) => {
     const id = `REC-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
@@ -777,6 +791,18 @@ export default function App() {
     localStorage.setItem('app_rules_10a5', JSON.stringify(updated));
     saveServerState(buildFullStateSnapshot({ rules: updated }), true);
   }, [rules, buildFullStateSnapshot]);
+
+  // Teacher updates or uploads Class Rules list (cơ sở trừ/cộng điểm)
+  const handleUpdateRules = useCallback((newRules: RuleItem[]) => {
+    setRules(newRules);
+    localStorage.setItem('app_rules_10a5', JSON.stringify(newRules));
+    saveServerState(buildFullStateSnapshot({ rules: newRules }), true);
+    setToast({
+      id: Date.now().toString(),
+      message: `Đã cập nhật Nội quy lớp: ${newRules.length} quy định ✨`,
+      subMessage: 'Cơ sở trừ điểm và cộng điểm mới đã được lưu lên đám mây.',
+    });
+  }, [buildFullStateSnapshot]);
 
   // Fast demo role switcher
   const handleSwitchDemoRole = (role: RoleCode, studentId?: string) => {
@@ -1013,6 +1039,7 @@ export default function App() {
             onVoidRecord={handleVoidRecord}
             onResolveExplanation={handleResolveExplanation}
             onToggleRulePin={handleToggleRulePin}
+            onUpdateRules={handleUpdateRules}
             onUpdateLayout={handleUpdateLayout}
             onImportRecords={handleImportRecords}
             onUpdateStudentAvatar={handleUpdateStudentAvatar}
