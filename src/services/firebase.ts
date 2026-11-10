@@ -17,6 +17,13 @@ import {
   setDoc, 
   onSnapshot 
 } from 'firebase/firestore';
+import {
+  getDatabase,
+  ref as rtdbRef,
+  set as rtdbSet,
+  get as rtdbGet,
+  onValue as rtdbOnValue
+} from 'firebase/database';
 import { ClassroomFullState } from './storageSync';
 
 // Firebase configuration for Class 10A5
@@ -31,10 +38,11 @@ export const firebaseConfig = {
   measurementId: "G-L0JNVPS481"
 };
 
-// Initialize Firebase App
+// Initialize Firebase App & Services
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const rtdb = getDatabase(app);
 
 // Google Auth Provider setup
 export const googleProvider = new GoogleAuthProvider();
@@ -114,28 +122,69 @@ export async function logoutFirebase(): Promise<void> {
 }
 
 /**
- * Save Gemini Keys Pool to Cloud Firestore
+ * Helper to strip undefined values for Firebase compatibility
  */
-export async function saveCloudGeminiKeys(keys: any[], autoRotate: boolean = true, activeModel?: string): Promise<boolean> {
-  try {
-    const docRef = doc(db, 'classes', '10a5');
-    await setDoc(docRef, {
-      geminiKeys: keys,
-      geminiAutoRotate: autoRotate,
-      geminiModel: activeModel || 'gemini-3.0-flash',
-      geminiUpdatedAt: new Date().toISOString(),
-    }, { merge: true });
-    return true;
-  } catch (err) {
-    console.warn('[Firebase] Lỗi lưu Gemini Keys vào Firestore:', err);
-    return false;
-  }
+function sanitizeForFirebase<T>(data: T): T {
+  return JSON.parse(JSON.stringify(data));
 }
 
 /**
- * Fetch Gemini Keys Pool from Cloud Firestore
+ * Save Gemini Keys Pool to Cloud Firestore & Realtime Database
+ */
+export async function saveCloudGeminiKeys(keys: any[], autoRotate: boolean = true, activeModel?: string): Promise<boolean> {
+  const payload = sanitizeForFirebase({
+    geminiKeys: keys,
+    geminiAutoRotate: autoRotate,
+    geminiModel: activeModel || 'gemini-3.0-flash',
+    geminiUpdatedAt: new Date().toISOString(),
+  });
+
+  let rtdbSuccess = false;
+  let firestoreSuccess = false;
+
+  // Realtime Database
+  try {
+    const keyRef = rtdbRef(rtdb, 'gemini_pool/10a5');
+    await rtdbSet(keyRef, payload);
+    rtdbSuccess = true;
+  } catch (err: any) {
+    console.warn('[Firebase RTDB] Lỗi lưu Gemini Keys:', err?.message || err);
+  }
+
+  // Cloud Firestore (if quota allows)
+  try {
+    const docRef = doc(db, 'classes', '10a5');
+    await setDoc(docRef, payload, { merge: true });
+    firestoreSuccess = true;
+  } catch (err: any) {
+    console.warn('[Firebase Firestore] Lỗi lưu Gemini Keys:', err?.message || err);
+  }
+
+  return rtdbSuccess || firestoreSuccess;
+}
+
+/**
+ * Fetch Gemini Keys Pool from Cloud Storage (RTDB first, fallback to Firestore)
  */
 export async function fetchCloudGeminiKeys(): Promise<{ keys: any[]; autoRotate: boolean; activeModel?: string } | null> {
+  // 1. Try Realtime Database
+  try {
+    const snap = await rtdbGet(rtdbRef(rtdb, 'gemini_pool/10a5'));
+    if (snap.exists()) {
+      const data = snap.val();
+      if (data && Array.isArray(data.geminiKeys) && data.geminiKeys.length > 0) {
+        return {
+          keys: data.geminiKeys,
+          autoRotate: data.geminiAutoRotate !== false,
+          activeModel: data.geminiModel,
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('[Firebase RTDB] Lỗi đọc Gemini Keys:', err);
+  }
+
+  // 2. Fallback to Cloud Firestore
   try {
     const docRef = doc(db, 'classes', '10a5');
     const snap = await getDoc(docRef);
@@ -149,11 +198,10 @@ export async function fetchCloudGeminiKeys(): Promise<{ keys: any[]; autoRotate:
         };
       }
     }
-    return null;
   } catch (err) {
-    console.warn('[Firebase] Lỗi đọc Gemini Keys từ Firestore:', err);
-    return null;
+    console.warn('[Firebase Firestore] Lỗi đọc Gemini Keys:', err);
   }
+  return null;
 }
 
 /**
@@ -164,57 +212,125 @@ export function onFirebaseAuthStateChanged(callback: (user: User | null) => void
 }
 
 /**
- * Fetch full classroom state from Cloud Firestore
+ * Fetch full classroom state from Cloud (RTDB & Firestore with newest updatedAt)
  */
 export async function fetchCloudClassState(): Promise<ClassroomFullState | null> {
+  let rtdbData: ClassroomFullState | null = null;
+  let firestoreData: ClassroomFullState | null = null;
+
+  // 1. Fetch from Firebase Realtime Database
+  try {
+    const snap = await rtdbGet(rtdbRef(rtdb, 'classes/10a5'));
+    if (snap.exists()) {
+      const val = snap.val();
+      if (val && Array.isArray(val.students) && val.students.length > 0) {
+        rtdbData = val as ClassroomFullState;
+      }
+    }
+  } catch (err: any) {
+    console.warn('[Firebase RTDB] Lỗi đọc Realtime Database:', err?.message || err);
+  }
+
+  // 2. Fetch from Cloud Firestore
   try {
     const docRef = doc(db, 'classes', '10a5');
     const snap = await getDoc(docRef);
     if (snap.exists()) {
-      return snap.data() as ClassroomFullState;
+      const val = snap.data();
+      if (val && Array.isArray(val.students) && val.students.length > 0) {
+        firestoreData = val as ClassroomFullState;
+      }
     }
-    return null;
-  } catch (err) {
-    console.warn('[Firebase] Lỗi đọc Firestore:', err);
-    return null;
+  } catch (err: any) {
+    console.warn('[Firebase Firestore] Lỗi đọc Firestore:', err?.message || err);
   }
+
+  // Return the one with the newest updatedAt timestamp
+  if (rtdbData && firestoreData) {
+    const rtdbTime = new Date(rtdbData.updatedAt || 0).getTime();
+    const fsTime = new Date(firestoreData.updatedAt || 0).getTime();
+    return rtdbTime >= fsTime ? rtdbData : firestoreData;
+  }
+
+  return rtdbData || firestoreData || null;
 }
 
 /**
- * Save full classroom state to Cloud Firestore
+ * Save full classroom state to Firebase Realtime Database & Cloud Firestore
  */
 export async function saveCloudClassState(state: ClassroomFullState): Promise<boolean> {
+  const cleanState = sanitizeForFirebase({
+    ...state,
+    updatedAt: state.updatedAt || new Date().toISOString(),
+  });
+
+  let rtdbSuccess = false;
+  let firestoreSuccess = false;
+
+  // 1. Primary write: Firebase Realtime Database (không bị quota 20k writes/ngày chặn)
+  try {
+    const classRef = rtdbRef(rtdb, 'classes/10a5');
+    await rtdbSet(classRef, cleanState);
+    rtdbSuccess = true;
+  } catch (err: any) {
+    console.warn('[Firebase RTDB] Lỗi ghi Realtime Database:', err?.message || err);
+  }
+
+  // 2. Secondary write: Cloud Firestore (nếu còn quota)
   try {
     const docRef = doc(db, 'classes', '10a5');
-    await setDoc(docRef, {
-      ...state,
-      updatedAt: new Date().toISOString(),
-    }, { merge: true });
-    return true;
-  } catch (err) {
-    console.warn('[Firebase] Lỗi ghi Firestore:', err);
-    return false;
+    await setDoc(docRef, cleanState, { merge: true });
+    firestoreSuccess = true;
+  } catch (err: any) {
+    console.warn('[Firebase Firestore] Lỗi ghi Firestore (Spark quota hoặc network):', err?.message || err);
   }
+
+  return rtdbSuccess || firestoreSuccess;
 }
 
 /**
- * Real-time listener for Cloud Firestore updates
+ * Real-time listener for Cloud updates (RTDB onValue + Firestore onSnapshot)
  */
 export function subscribeToCloudClassState(onUpdate: (state: ClassroomFullState) => void): () => void {
+  let unsubRtdb = () => {};
+  let unsubFs = () => {};
+
+  // 1. RTDB listener
+  try {
+    const classRef = rtdbRef(rtdb, 'classes/10a5');
+    unsubRtdb = rtdbOnValue(classRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.val() as ClassroomFullState;
+        if (data && Array.isArray(data.students) && data.students.length > 0) {
+          onUpdate(data);
+        }
+      }
+    }, (err) => {
+      console.warn('[Firebase RTDB] Lỗi lắng nghe realtime:', err);
+    });
+  } catch (err) {
+    console.warn('[Firebase RTDB] Kết nối realtime lỗi:', err);
+  }
+
+  // 2. Firestore listener
   try {
     const docRef = doc(db, 'classes', '10a5');
-    return onSnapshot(docRef, (snap) => {
+    unsubFs = onSnapshot(docRef, (snap) => {
       if (snap.exists()) {
         const data = snap.data() as ClassroomFullState;
-        if (data && Array.isArray(data.students)) {
+        if (data && Array.isArray(data.students) && data.students.length > 0) {
           onUpdate(data);
         }
       }
     }, (error) => {
-      console.warn('[Firebase] Lỗi lắng nghe realtime Firestore:', error);
+      // Ignored silently for quota exceeded
     });
   } catch (err) {
-    console.warn('[Firebase] Lỗi kết nối Firestore Realtime:', err);
-    return () => {};
+    // Ignored
   }
+
+  return () => {
+    unsubRtdb();
+    unsubFs();
+  };
 }

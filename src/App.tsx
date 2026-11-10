@@ -73,12 +73,12 @@ export default function App() {
     if (!saved) return MOCK_STUDENTS;
     try {
       const parsed: Student[] = JSON.parse(saved);
-      // Clean up any corrupted avatarUrl string like "HS01" and ensure default avatar
+      // Clean up any corrupted avatarUrl string like "HS01"
       return parsed.map(s => {
         const hasValidUrl = s.avatarUrl && !s.avatarUrl.startsWith('HS') && s.avatarUrl.length > 5;
         return {
           ...s,
-          avatarUrl: hasValidUrl ? s.avatarUrl : getDefaultStudentAvatar(s.maHS, s.gioiTinh || 'Nam')
+          avatarUrl: hasValidUrl ? s.avatarUrl : undefined
         };
       });
     } catch {
@@ -237,12 +237,30 @@ export default function App() {
     setLayout(newLayout);
     localStorage.setItem('app_students_10a5_v4', JSON.stringify(newStudents));
     localStorage.setItem('app_layout_10a5_v4', JSON.stringify(newLayout));
+
+    // Save immediately to Cloud and Local server
+    const badges = getAllStudentBadgesState();
+    const fullState: ClassroomFullState = {
+      students: newStudents,
+      records,
+      academicRecords,
+      settings,
+      layout: newLayout,
+      rules,
+      teacherAvatar,
+      studentBadgesMap: badges.studentBadgesMap,
+      studentActiveBadges: badges.studentActiveBadges,
+      updatedAt: new Date().toISOString(),
+      version: Date.now(),
+    };
+    saveServerState(fullState);
+
     setToast({
       id: Date.now().toString(),
       message: `Đã cập nhật danh sách lớp: ${newStudents.length} học sinh 🎓`,
-      subMessage: 'Sơ đồ chỗ ngồi và dữ liệu lớp học đã được cập nhật thành công.',
+      subMessage: 'Dữ liệu đã được lưu và đồng bộ lên đám mây thành công.',
     });
-  }, []);
+  }, [records, academicRecords, settings, rules, teacherAvatar]);
 
   // Toast notification state
   const [toast, setToast] = useState<ToastData | null>(null);
@@ -640,12 +658,30 @@ export default function App() {
     setStudents(updatedStudents);
     localStorage.setItem('app_layout_10a5_v4', JSON.stringify(newLayout));
     localStorage.setItem('app_students_10a5_v4', JSON.stringify(updatedStudents));
+
+    // Save immediately to Cloud and Local server
+    const badges = getAllStudentBadgesState();
+    const fullState: ClassroomFullState = {
+      students: updatedStudents,
+      records,
+      academicRecords,
+      settings,
+      layout: newLayout,
+      rules,
+      teacherAvatar,
+      studentBadgesMap: badges.studentBadgesMap,
+      studentActiveBadges: badges.studentActiveBadges,
+      updatedAt: new Date().toISOString(),
+      version: Date.now(),
+    };
+    saveServerState(fullState);
+
     setToast({
       id: Date.now().toString(),
       message: 'Đã lưu sơ đồ lớp học ✨',
-      subMessage: 'Vị trí 42 học sinh và bố trí 4 dãy bàn đã được cập nhật thành công!',
+      subMessage: `Đã lưu danh sách ${updatedStudents.length} học sinh và đồng bộ lên đám mây thành công!`,
     });
-  }, []);
+  }, [records, academicRecords, settings, rules, teacherAvatar]);
 
   // Student avatar update
   const handleUpdateStudentAvatar = useCallback((studentId: string, avatarUrl?: string) => {
@@ -655,6 +691,23 @@ export default function App() {
     setStudents(prev => {
       const updated = prev.map(s => (s.maHS === studentId ? { ...s, avatarUrl: validUrl } : s));
       localStorage.setItem('app_students_10a5_v4', JSON.stringify(updated));
+
+      const badges = getAllStudentBadgesState();
+      const fullState: ClassroomFullState = {
+        students: updated,
+        records,
+        academicRecords,
+        settings,
+        layout,
+        rules,
+        teacherAvatar,
+        studentBadgesMap: badges.studentBadgesMap,
+        studentActiveBadges: badges.studentActiveBadges,
+        updatedAt: new Date().toISOString(),
+        version: Date.now(),
+      };
+      saveServerState(fullState);
+
       return updated;
     });
 
@@ -670,7 +723,7 @@ export default function App() {
       message: 'Đã cập nhật ảnh đại diện ✨',
       subMessage: 'Ảnh đại diện mới đã được áp dụng vào hồ sơ và sơ đồ lớp!',
     });
-  }, []);
+  }, [records, academicRecords, settings, layout, rules, teacherAvatar]);
 
   // Teacher import time-stamped records from file
   const handleImportRecords = useCallback((newRecords: DisciplineRecord[]) => {

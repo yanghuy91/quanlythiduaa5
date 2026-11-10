@@ -365,7 +365,6 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
       finalStudents = parsedStudents.map((draft, idx) => {
         const studentNumber = idx + 1;
         const maHS = `HS${studentNumber < 10 ? '0' + studentNumber : studentNumber}`;
-        const avatarUrl = getDefaultStudentAvatar(maHS, draft.gioiTinh);
 
         return {
           maHS,
@@ -374,7 +373,7 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
           to: draft.to,
           viTriGhe: studentNumber,
           vaiTro: (idx === 0 ? ['LT', 'HS'] : idx === 1 ? ['LP_HT', 'HS'] : ['HS']) as RoleCode[],
-          avatarUrl,
+          avatarUrl: undefined,
           ngaySinh: draft.ngaySinh,
         };
       });
@@ -384,7 +383,6 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
       const appended = parsedStudents.map((draft, idx) => {
         const studentNumber = startNum + idx;
         const maHS = `HS${studentNumber < 10 ? '0' + studentNumber : studentNumber}`;
-        const avatarUrl = getDefaultStudentAvatar(maHS, draft.gioiTinh);
 
         return {
           maHS,
@@ -393,7 +391,7 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
           to: draft.to,
           viTriGhe: studentNumber,
           vaiTro: ['HS'] as RoleCode[],
-          avatarUrl,
+          avatarUrl: undefined,
           ngaySinh: draft.ngaySinh,
         };
       });
@@ -719,7 +717,7 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0" />
                   <span>
-                    Khi bấm xác nhận, hệ thống sẽ <strong>tự động tạo mã học sinh (HS01..HS{totalCount})</strong>, <strong>gán ảnh đại diện 3D theo giới tính</strong> và <strong>tự động xếp vào 4 dãy bàn ghế lớp học</strong> chuẩn mực.
+                    Khi bấm xác nhận, hệ thống sẽ <strong>tự động tạo mã học sinh (HS01..HS{totalCount})</strong>, <strong>hiển thị tên học sinh</strong> và <strong>tự động xếp vào 4 dãy bàn ghế lớp học</strong> chuẩn mực.
                   </span>
                 </div>
               </div>

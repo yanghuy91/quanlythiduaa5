@@ -994,13 +994,15 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   ) : (
                     <div
                       onClick={() => setShowAvatarModal(true)}
-                      className={`w-full h-full rounded-full flex items-center justify-center font-black text-2xl ${
+                      className={`w-full h-full rounded-full flex flex-col items-center justify-center font-black p-1 text-center select-none ${
                         currentStudent.gioiTinh === 'Nu'
                           ? 'bg-rose-100 text-rose-700'
                           : 'bg-sky-100 text-sky-700'
                       }`}
                     >
-                      {getStudentAvatarInitial(currentStudent.hoTen)}
+                      <span className="text-sm font-black leading-tight">
+                        {currentStudent.tenRutGon || currentStudent.hoTen.split(' ').slice(-1)[0]}
+                      </span>
                     </div>
                   )}
                 </AvatarFrame>
@@ -1836,13 +1838,13 @@ export const StudentView: React.FC<StudentViewProps> = ({
                           />
                         ) : (
                           <div
-                            className={`w-full h-full rounded-full flex items-center justify-center font-bold text-xs ${
+                            className={`w-full h-full rounded-full flex items-center justify-center font-bold text-[10px] text-center px-0.5 leading-tight truncate ${
                               item.student.gioiTinh === 'Nu'
                                 ? 'bg-rose-100 text-rose-700'
                                 : 'bg-sky-100 text-sky-700'
                             }`}
                           >
-                            {getStudentAvatarInitial(item.student.hoTen)}
+                            {item.student.tenRutGon || item.student.hoTen.split(' ').slice(-1)[0]}
                           </div>
                         )}
                       </AvatarFrame>
@@ -2087,10 +2089,10 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 {currentStudent.avatarUrl ? (
                   <img src={currentStudent.avatarUrl} alt={currentStudent.hoTen} className="w-full h-full object-cover" />
                 ) : (
-                  <div className={`w-full h-full flex items-center justify-center font-bold text-sm ${
+                  <div className={`w-full h-full flex items-center justify-center font-bold text-xs text-center px-0.5 leading-tight truncate ${
                     currentStudent.gioiTinh === 'Nu' ? 'bg-rose-100 text-rose-700' : 'bg-sky-100 text-sky-700'
                   }`}>
-                    {getStudentAvatarInitial(currentStudent.hoTen)}
+                    {currentStudent.tenRutGon || currentStudent.hoTen.split(' ').slice(-1)[0]}
                   </div>
                 )}
               </div>

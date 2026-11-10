@@ -486,10 +486,14 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                                 loading="lazy"
                               />
                             ) : (
-                              <div className={`w-full h-full flex items-center justify-center font-black text-sm sm:text-base ${
-                                isNu ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300' : 'bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300'
+                              <div className={`w-full h-full flex flex-col items-center justify-center font-black p-1 text-center select-none shadow-inner ${
+                                isNu 
+                                  ? 'bg-gradient-to-b from-rose-100 to-pink-200 text-rose-800 dark:from-rose-950/70 dark:to-pink-900/50 dark:text-rose-200' 
+                                  : 'bg-gradient-to-b from-sky-100 to-blue-200 text-sky-800 dark:from-sky-950/70 dark:to-blue-900/50 dark:text-sky-200'
                               }`}>
-                                {getStudentAvatarInitial(student.hoTen)}
+                                <span className="text-xs sm:text-[13px] font-black leading-tight tracking-tight line-clamp-2 px-0.5">
+                                  {getSeatingMapDisplayName(student, students)}
+                                </span>
                               </div>
                             )}
 

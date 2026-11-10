@@ -217,10 +217,10 @@ export const StudentPicker: React.FC<StudentPickerProps> = ({
                             loading="lazy" 
                           />
                         ) : (
-                          <div className={`w-full h-full flex items-center justify-center font-bold text-xs ${
+                          <div className={`w-full h-full flex items-center justify-center font-bold text-[10px] sm:text-xs px-0.5 text-center leading-tight truncate ${
                             student.gioiTinh === 'Nu' ? 'bg-rose-100 text-rose-700' : 'bg-sky-100 text-sky-700'
                           }`}>
-                            {getStudentAvatarInitial(student.hoTen)}
+                            {student.tenRutGon || student.hoTen.split(' ').slice(-1)[0]}
                           </div>
                         )}
                         <span className="absolute bottom-0 right-0 px-1 text-[8px] font-black bg-black/75 text-white rounded-tl-sm leading-tight">
