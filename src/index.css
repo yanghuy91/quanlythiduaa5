@@ -32,6 +32,12 @@
   --role-ld-bg: rgba(124, 74, 29, 0.14);
   --role-bt-fg: #BE185D;
   --role-bt-bg: rgba(190, 24, 93, 0.14);
+  --role-pbt-fg: #E11D48;
+  --role-pbt-bg: rgba(225, 29, 72, 0.14);
+  --role-vt-fg: #A21CAF;
+  --role-vt-bg: rgba(162, 28, 175, 0.14);
+  --role-cd-fg: #DC2626;
+  --role-cd-bg: rgba(220, 38, 38, 0.15);
   --role-gv-fg: #1E3A8A;
   --role-gv-bg: rgba(30, 58, 138, 0.14);
 }
@@ -67,6 +73,12 @@
   --role-ld-bg: rgba(214, 166, 107, 0.22);
   --role-bt-fg: #F472B6;
   --role-bt-bg: rgba(244, 114, 182, 0.22);
+  --role-pbt-fg: #FB7185;
+  --role-pbt-bg: rgba(251, 113, 133, 0.22);
+  --role-vt-fg: #E879F9;
+  --role-vt-bg: rgba(232, 121, 249, 0.22);
+  --role-cd-fg: #F87171;
+  --role-cd-bg: rgba(248, 113, 113, 0.22);
   --role-gv-fg: #93B4F5;
   --role-gv-bg: rgba(147, 180, 245, 0.22);
 }

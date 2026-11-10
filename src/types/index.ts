@@ -2,7 +2,7 @@
  * Type definitions for Quản lý Nề nếp & Thi đua Lớp học 10A5
  */
 
-export type RoleCode = 'HS' | 'TT' | 'LT' | 'BT' | 'LP_HT' | 'LP_LD' | 'GV';
+export type RoleCode = 'HS' | 'TT' | 'LT' | 'BT' | 'PBT' | 'LP_HT' | 'LP_LD' | 'LP_VT' | 'CD' | 'GV';
 
 export interface StudentRoleBadge {
   code: RoleCode;

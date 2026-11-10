@@ -300,8 +300,11 @@ export const INITIAL_RECORDS: DisciplineRecord[] = [];
 export const ROLE_CONFIG: Record<string, { label: string; short: string; fg: string; bg: string }> = {
   LT: { label: 'Lớp trưởng', short: 'LT', fg: 'var(--role-lt-fg)', bg: 'var(--role-lt-bg)' },
   BT: { label: 'Bí thư', short: 'BT', fg: 'var(--role-bt-fg)', bg: 'var(--role-bt-bg)' },
+  PBT: { label: 'Phó Bí thư', short: 'PBT', fg: 'var(--role-pbt-fg)', bg: 'var(--role-pbt-bg)' },
   LP_HT: { label: 'Lớp phó Học tập', short: 'HT', fg: 'var(--role-ht-fg)', bg: 'var(--role-ht-bg)' },
   LP_LD: { label: 'Lớp phó Lao động', short: 'LĐ', fg: 'var(--role-ld-fg)', bg: 'var(--role-ld-bg)' },
+  LP_VT: { label: 'Lớp phó Văn thể', short: 'VT', fg: 'var(--role-vt-fg)', bg: 'var(--role-vt-bg)' },
+  CD: { label: 'Cờ đỏ', short: 'CĐ', fg: 'var(--role-cd-fg)', bg: 'var(--role-cd-bg)' },
   TT: { label: 'Tổ trưởng', short: 'TT', fg: 'var(--role-tt-fg)', bg: 'var(--role-tt-bg)' },
   GV: { label: 'Giáo viên', short: 'GV', fg: 'var(--role-gv-fg)', bg: 'var(--role-gv-bg)' },
   HS: { label: 'Học sinh', short: 'HS', fg: 'var(--text-muted)', bg: 'var(--surface-2)' },
