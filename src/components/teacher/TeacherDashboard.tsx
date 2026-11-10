@@ -1634,17 +1634,48 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           layout={layout}
           rules={rules}
           records={records}
-          currentWeek={currentWeek}
-          studentSummaries={studentSummaries}
+          settings={settings}
+          academicRecords={internalAcademicRecords}
+          onUpdateStudentsAndLayout={(newStudents, newLayout, isReplace) => {
+            if (onImportStudents) {
+              onImportStudents(newStudents, newLayout, isReplace);
+            } else {
+              onUpdateLayout(newLayout, newStudents);
+            }
+          }}
+          onAddRecords={(newRecs) => {
+            if (onImportRecords) {
+              onImportRecords([...newRecs, ...records]);
+            }
+          }}
+          onUpdateAcademicRecords={handleUpdateAcademicRecords}
+          onRestoreFullBackup={(payload) => {
+            if (payload.students && payload.layout) {
+              if (onImportStudents) {
+                onImportStudents(payload.students, payload.layout, true);
+              } else {
+                onUpdateLayout(payload.layout, payload.students);
+              }
+            }
+            if (payload.records && onImportRecords) {
+              onImportRecords(payload.records);
+            }
+            if (payload.settings) {
+              onUpdateSettings(payload.settings);
+            }
+            if (payload.academicRecords) {
+              handleUpdateAcademicRecords(payload.academicRecords);
+            }
+          }}
           onOpenStudentImportModal={() => setIsStudentImportModalOpen(true)}
           onOpenLayoutEditor={() => {
             setInitialAddSeat(undefined);
             setIsLayoutEditorOpen(true);
           }}
           onSwitchToGradesTab={() => setActiveTab('grades')}
-          onImportRecords={onImportRecords}
-          onUpdateLayout={onUpdateLayout}
-          onImportStudents={onImportStudents}
+          onShowToast={(msg, sub) => {
+            console.log('[Import/Export]', msg, sub || '');
+          }}
         />
       )}
 
