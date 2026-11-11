@@ -40,7 +40,7 @@ export const INITIAL_SETTINGS: TeacherSettings = {
   tuDongChuyenTuan: true, // Mặc định BẬT tự động chuyển tuần vào Thứ 2 hàng tuần theo thời gian thực
   tuanBatDauTinhDiem: 1,
   ngayBatDauTinhDiem: '',
-  tuDongTraoHuyHieu: true,
+  tuDongTraoHuyHieu: false,
   tuanBatDauXetHuyHieu: 1,
   ngayBatDauXetHuyHieu: '',
   bannerSloganText: 'Chăm ngoan - Sáng tạo - Đoàn kết vững bước tương lai',

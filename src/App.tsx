@@ -37,7 +37,8 @@ import {
   getSavedAuthSession, 
   clearAuthSession,
   getAllStudentPasswords,
-  setAllStudentPasswords
+  setAllStudentPasswords,
+  getTeacherPassword
 } from './utils/authService';
 import { getAcademicRecords, saveAcademicRecords } from './data/academicCatalog';
 import { getTeacherAvatar, setTeacherAvatar, resolveTeacherAvatar, DEFAULT_TEACHER_AVATAR } from './data/teacherAvatars';
@@ -51,6 +52,7 @@ import {
   scheduleServerSync, 
   saveServerState, 
   markRemoteStateApplied,
+  hasRemoteStateChanged,
   ClassroomFullState 
 } from './services/storageSync';
 import { 
@@ -213,31 +215,83 @@ export default function App() {
 
   // Toast notification state
   const [toast, setToast] = useState<ToastData | null>(null);
+  const [isCloudReady, setIsCloudReady] = useState(false);
+
+  // Synchronous ref to latest state so sequential mutations in the same tick never use stale closures
+  const latestStateRef = useRef({
+    students,
+    records,
+    academicRecords,
+    settings,
+    layout,
+    rules,
+    teacherAvatar,
+    teacherProfile,
+    currentWeek,
+  });
+  latestStateRef.current = {
+    students,
+    records,
+    academicRecords,
+    settings,
+    layout,
+    rules,
+    teacherAvatar,
+    teacherProfile,
+    currentWeek,
+  };
 
   // Helper to construct a complete snapshot for immediate cloud persistence
   const buildFullStateSnapshot = useCallback((overrides?: Partial<ClassroomFullState>): ClassroomFullState => {
     const badges = getAllStudentBadgesState();
     const passwords = getAllStudentPasswords();
-    return {
-      students,
-      records,
-      academicRecords,
-      settings,
-      layout,
-      rules,
-      teacherAvatar,
-      teacherProfile,
-      currentWeek,
+    const cur = latestStateRef.current;
+    const nextSnapshot: ClassroomFullState = {
+      students: cur.students,
+      records: cur.records,
+      academicRecords: cur.academicRecords,
+      settings: cur.settings,
+      layout: cur.layout,
+      rules: cur.rules,
+      teacherAvatar: cur.teacherAvatar,
+      teacherProfile: cur.teacherProfile,
+      currentWeek: cur.currentWeek,
       studentBadgesMap: badges.studentBadgesMap,
       studentActiveBadges: badges.studentActiveBadges,
+      badgeCatalog: badges.badgeCatalog,
       studentPasswords: passwords,
+      teacherPassword: getTeacherPassword(),
       updatedAt: new Date().toISOString(),
       version: Date.now(),
       ...overrides,
     };
-  }, [students, records, academicRecords, settings, layout, rules, teacherAvatar, teacherProfile, currentWeek]);
+    latestStateRef.current = {
+      students: nextSnapshot.students,
+      records: nextSnapshot.records,
+      academicRecords: nextSnapshot.academicRecords,
+      settings: nextSnapshot.settings,
+      layout: nextSnapshot.layout,
+      rules: nextSnapshot.rules,
+      teacherAvatar: nextSnapshot.teacherAvatar,
+      teacherProfile: nextSnapshot.teacherProfile || cur.teacherProfile,
+      currentWeek: nextSnapshot.currentWeek ?? cur.currentWeek,
+    };
+    return nextSnapshot;
+  }, []);
+
+  const handleUpdateSettings = useCallback((newSets: Partial<TeacherSettings>) => {
+    const updatedSettings: TeacherSettings = {
+      ...latestStateRef.current.settings,
+      ...newSets,
+    };
+    latestStateRef.current.settings = updatedSettings;
+    setSettings(updatedSettings);
+    localStorage.setItem('app_settings_10a5', JSON.stringify(updatedSettings));
+    saveServerState(buildFullStateSnapshot({ settings: updatedSettings }), true);
+  }, [buildFullStateSnapshot]);
 
   const handleUpdateAcademicRecords = useCallback((newRecords: StudentAcademicRecord[]) => {
+    latestStateRef.current.academicRecords = newRecords;
     setAcademicRecords(newRecords);
     saveAcademicRecords(newRecords);
     saveServerState(buildFullStateSnapshot({ academicRecords: newRecords }), true);
@@ -246,16 +300,18 @@ export default function App() {
   const handleSetCurrentWeek = useCallback((week: number) => {
     const mondayStr = getVietnamMondayDateStr();
     const updatedSettings: TeacherSettings = {
-      ...settings,
+      ...latestStateRef.current.settings,
       tuanGocTuDong: week,
       ngayThietLapTuanGoc: mondayStr,
     };
+    latestStateRef.current.settings = updatedSettings;
+    latestStateRef.current.currentWeek = week;
     setSettings(updatedSettings);
     localStorage.setItem('app_settings_10a5', JSON.stringify(updatedSettings));
     setCurrentWeek(week);
     localStorage.setItem('app_current_week', String(week));
     saveServerState(buildFullStateSnapshot({ currentWeek: week, settings: updatedSettings }), true);
-  }, [settings, buildFullStateSnapshot]);
+  }, [buildFullStateSnapshot]);
 
   // Real-time Monday Auto-Advance Week Engine (Tự động chuyển sang tuần tiếp theo vào Thứ 2 hàng tuần)
   useEffect(() => {
@@ -407,19 +463,16 @@ export default function App() {
   const applyCloudState = useCallback((cloudState: ClassroomFullState) => {
     isApplyingRemoteUpdate.current = true;
     markRemoteStateApplied(cloudState);
+    setIsCloudReady(true);
 
     let masterStudents: Student[] | null = null;
-    let masterLayout: SeatLayoutNode[] | null = null;
-    let wasTrimmedToSeating = false;
 
     if (Array.isArray(cloudState.students) && cloudState.students.length > 0) {
       const incomingLayout = Array.isArray(cloudState.layout) && cloudState.layout.length > 0 ? cloudState.layout : [];
       const synced = syncStudentsWithSeatingLayout(normalizeStudentsList(cloudState.students), incomingLayout);
       masterStudents = synced.students;
-      masterLayout = synced.layout;
-      if (cloudState.students.length !== synced.students.length) {
-        wasTrimmedToSeating = true;
-      }
+      latestStateRef.current.students = synced.students;
+      latestStateRef.current.layout = synced.layout;
       setStudents(synced.students);
       setLayout(synced.layout);
       localStorage.setItem('app_students_10a5_v4', JSON.stringify(synced.students));
@@ -438,48 +491,62 @@ export default function App() {
         return prev;
       });
     } else if (Array.isArray(cloudState.layout) && cloudState.layout.length > 0) {
+      latestStateRef.current.layout = cloudState.layout;
       setLayout(cloudState.layout);
       localStorage.setItem('app_layout_10a5_v4', JSON.stringify(cloudState.layout));
     }
 
-    let finalRecords = cloudState.records;
-    if (Array.isArray(cloudState.records)) {
-      const cleanedRecords = filterOutLegacyDemoRecords(cloudState.records);
-      const reconciled = masterStudents
-        ? reconcileDisciplineRecordsWithSeating(masterStudents, cleanedRecords)
-        : cleanedRecords;
-      finalRecords = reconciled;
-      setRecords(reconciled);
-      localStorage.setItem('app_records_10a5', JSON.stringify(reconciled));
-    }
-    let finalAcademicRecords = cloudState.academicRecords;
-    if (Array.isArray(cloudState.academicRecords)) {
-      const reconciledGrades = masterStudents
-        ? reconcileAcademicRecordsWithSeating(masterStudents, cloudState.academicRecords, 1)
-        : cloudState.academicRecords;
-      finalAcademicRecords = reconciledGrades;
-      setAcademicRecords(reconciledGrades);
-      saveAcademicRecords(reconciledGrades);
-    }
+    const incomingRecords = Array.isArray(cloudState.records) ? cloudState.records : [];
+    const cleanedRecords = filterOutLegacyDemoRecords(incomingRecords);
+    const reconciledRecords = masterStudents
+      ? reconcileDisciplineRecordsWithSeating(masterStudents, cleanedRecords)
+      : cleanedRecords;
+    latestStateRef.current.records = reconciledRecords;
+    setRecords(reconciledRecords);
+    localStorage.setItem('app_records_10a5', JSON.stringify(reconciledRecords));
 
-    if (cloudState.settings) {
+    const incomingAcademic = Array.isArray(cloudState.academicRecords) ? cloudState.academicRecords : [];
+    const reconciledGrades = masterStudents
+      ? reconcileAcademicRecordsWithSeating(masterStudents, incomingAcademic, 1)
+      : incomingAcademic;
+    latestStateRef.current.academicRecords = reconciledGrades;
+    setAcademicRecords(reconciledGrades);
+    saveAcademicRecords(reconciledGrades);
+
+    if (cloudState.settings && typeof cloudState.settings === 'object') {
       setSettings(prev => {
-        const merged = { ...prev, ...cloudState.settings };
+        const merged: TeacherSettings = {
+          ...INITIAL_SETTINGS,
+          ...prev,
+          ...cloudState.settings,
+          noDataWeeks: Array.isArray(cloudState.settings.noDataWeeks)
+            ? cloudState.settings.noDataWeeks
+            : [],
+          cadreDelegatedPermissions:
+            cloudState.settings.cadreDelegatedPermissions &&
+            typeof cloudState.settings.cadreDelegatedPermissions === 'object'
+              ? cloudState.settings.cadreDelegatedPermissions
+              : {},
+        };
+        latestStateRef.current.settings = merged;
         localStorage.setItem('app_settings_10a5', JSON.stringify(merged));
         return merged;
       });
     }
-    if (Array.isArray(cloudState.rules)) {
+    if (Array.isArray(cloudState.rules) && cloudState.rules.length > 0) {
+      latestStateRef.current.rules = cloudState.rules;
       setRules(cloudState.rules);
       localStorage.setItem('app_rules_10a5', JSON.stringify(cloudState.rules));
     }
     if (cloudState.teacherAvatar) {
       const resolved = resolveTeacherAvatar(cloudState.teacherAvatar);
+      latestStateRef.current.teacherAvatar = resolved;
       setTeacherAvatarState(resolved);
       setTeacherAvatar(resolved);
       setCurrentUser(prev => prev && prev.vaiTro.includes('GV') ? { ...prev, avatarUrl: resolved } : prev);
     }
     if (cloudState.teacherProfile && typeof cloudState.teacherProfile === 'object') {
+      latestStateRef.current.teacherProfile = cloudState.teacherProfile;
       setTeacherProfileState(cloudState.teacherProfile);
       saveTeacherProfile(cloudState.teacherProfile);
       setCurrentUser(prev => prev && prev.vaiTro.includes('GV') ? {
@@ -489,15 +556,23 @@ export default function App() {
       } : prev);
     }
     if (typeof cloudState.currentWeek === 'number' && cloudState.currentWeek >= 1) {
+      latestStateRef.current.currentWeek = cloudState.currentWeek;
       setCurrentWeek(cloudState.currentWeek);
       localStorage.setItem('app_current_week', String(cloudState.currentWeek));
     }
-    if (cloudState.studentBadgesMap || cloudState.studentActiveBadges) {
-      setAllStudentBadgesState(cloudState.studentBadgesMap, cloudState.studentActiveBadges);
-    }
-    if (cloudState.studentPasswords && typeof cloudState.studentPasswords === 'object') {
-      setAllStudentPasswords(cloudState.studentPasswords);
-    }
+
+    // Luôn đồng bộ trạng thái Huy hiệu (kể cả khi GV đã thu hồi sạch `{}`)
+    setAllStudentBadgesState(
+      cloudState.studentBadgesMap || {},
+      cloudState.studentActiveBadges || {},
+      cloudState.badgeCatalog
+    );
+
+    // Luôn đồng bộ mật khẩu học sinh & GV
+    setAllStudentPasswords(
+      cloudState.studentPasswords || {},
+      cloudState.teacherPassword
+    );
 
     setTimeout(() => {
       isApplyingRemoteUpdate.current = false;
@@ -507,18 +582,45 @@ export default function App() {
   // Persistent Server State: Initial fetch & hydration from Firebase Realtime Database
   useEffect(() => {
     let isMounted = true;
-    (async () => {
+    const syncFromCloud = async (isInitial = false) => {
       try {
         const serverState = await fetchServerState();
         if (!isMounted) return;
         if (serverState) {
-          applyCloudState(serverState);
+          if (isInitial || hasRemoteStateChanged(serverState)) {
+            applyCloudState(serverState);
+          }
+        } else if (isInitial) {
+          setIsCloudReady(true);
         }
       } catch (err) {
-        console.warn('Initial cloud state sync error:', err);
+        if (isInitial) setIsCloudReady(true);
+        console.warn('Cloud state sync error:', err);
       }
-    })();
-    return () => { isMounted = false; };
+    };
+
+    syncFromCloud(true);
+
+    // Đồng bộ bổ trợ khi chuyển tab / mở lại màn hình điện thoại hoặc định kỳ mỗi 6 giây
+    const handleFocusSync = () => {
+      if (document.visibilityState === 'visible') {
+        syncFromCloud(false);
+      }
+    };
+    window.addEventListener('focus', handleFocusSync);
+    document.addEventListener('visibilitychange', handleFocusSync);
+    const pollId = window.setInterval(() => {
+      if (document.visibilityState === 'visible' && !isApplyingRemoteUpdate.current) {
+        syncFromCloud(false);
+      }
+    }, 6000);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('focus', handleFocusSync);
+      document.removeEventListener('visibilitychange', handleFocusSync);
+      clearInterval(pollId);
+    };
   }, [applyCloudState]);
 
   useEffect(() => {
@@ -574,10 +676,14 @@ export default function App() {
     scheduleServerSync(buildFullStateSnapshot());
   }, [students, records, academicRecords, settings, layout, rules, teacherAvatar, teacherProfile, currentWeek, buildFullStateSnapshot]);
 
-  // Sync badges & passwords on student/teacher change events
+  // Sync badges & passwords immediately to Firebase on student/teacher change events
   useEffect(() => {
-    const handleImmediateEventSync = () => {
-      scheduleServerSync(buildFullStateSnapshot());
+    const handleImmediateEventSync = (e: Event) => {
+      const customEv = e as CustomEvent;
+      if (customEv?.detail?.fromCloud) {
+        return; // Không ghi ngược lại nếu sự kiện vừa được kích hoạt từ dữ liệu đám mây
+      }
+      saveServerState(buildFullStateSnapshot(), true);
     };
     window.addEventListener('lop10a5:badge_change', handleImmediateEventSync);
     window.addEventListener('lop10a5:password_change', handleImmediateEventSync);
@@ -586,6 +692,54 @@ export default function App() {
       window.removeEventListener('lop10a5:password_change', handleImmediateEventSync);
     };
   }, [buildFullStateSnapshot]);
+
+  // Cross-tab localStorage listener (đồng bộ tức thì 0ms khi mở GV và HS trên 2 tab cùng trình duyệt)
+  useEffect(() => {
+    const handleCrossTabStorage = (e: StorageEvent) => {
+      if (!e.key || !e.newValue) return;
+      try {
+        if (e.key === 'app_students_10a5_v4') {
+          const parsed = normalizeStudentsList(JSON.parse(e.newValue));
+          latestStateRef.current.students = parsed;
+          setStudents(parsed);
+        } else if (e.key === 'app_layout_10a5_v4') {
+          const parsed = JSON.parse(e.newValue);
+          latestStateRef.current.layout = parsed;
+          setLayout(parsed);
+        } else if (e.key === 'app_records_10a5') {
+          const parsed = filterOutLegacyDemoRecords(JSON.parse(e.newValue));
+          latestStateRef.current.records = parsed;
+          setRecords(parsed);
+        } else if (e.key === 'app_settings_10a5') {
+          const parsed = JSON.parse(e.newValue);
+          latestStateRef.current.settings = parsed;
+          setSettings(parsed);
+        } else if (e.key === 'app_rules_10a5') {
+          const parsed = JSON.parse(e.newValue);
+          latestStateRef.current.rules = parsed;
+          setRules(parsed);
+        } else if (e.key === 'app_current_week') {
+          const w = Number(e.newValue);
+          if (w >= 1) {
+            latestStateRef.current.currentWeek = w;
+            setCurrentWeek(w);
+          }
+        } else if (e.key === 'app_academic_grades_10a5_v2') {
+          const parsed = JSON.parse(e.newValue);
+          latestStateRef.current.academicRecords = parsed;
+          setAcademicRecords(parsed);
+        } else if (
+          e.key === 'app_student_badges_10a5_v3' ||
+          e.key === 'app_student_active_badge_10a5_v2' ||
+          e.key === 'app_badges_catalog_10a5_v3'
+        ) {
+          window.dispatchEvent(new CustomEvent('lop10a5:badge_change', { detail: { fromCloud: true } }));
+        }
+      } catch {}
+    };
+    window.addEventListener('storage', handleCrossTabStorage);
+    return () => window.removeEventListener('storage', handleCrossTabStorage);
+  }, []);
 
   // Compute student summaries
   const studentSummaries = useMemo(() => {
@@ -604,9 +758,11 @@ export default function App() {
     return map;
   }, [students, currentWeek, records, settings]);
 
-  // Automatic Badge Evaluation Engine (Chế độ tự động xét & trao huy hiệu theo mốc thời gian và điều kiện GV chọn)
+  // Automatic Badge Evaluation Engine (Chỉ chạy khi đã tải xong dữ liệu gốc từ Firebase, đang ở quyền GV và GV bật chế độ tự động trao)
   useEffect(() => {
-    if (settings.tuDongTraoHuyHieu === false) return;
+    if (!isCloudReady || isApplyingRemoteUpdate.current) return;
+    if (currentRole !== 'GV') return;
+    if (settings.tuDongTraoHuyHieu !== true) return;
     if (!students || students.length === 0) return;
     evaluateAndAutoAwardBadges({
       students,
@@ -615,7 +771,7 @@ export default function App() {
       settings,
       currentWeek,
     });
-  }, [students, records, academicRecords, settings, currentWeek]);
+  }, [isCloudReady, currentRole, students, records, academicRecords, settings, currentWeek]);
 
   // Add record handler
   const handleAddRecord = useCallback((newRecordData: Omit<DisciplineRecord, 'maGhiNhan' | 'thoiGianMayChu' | 'thoiGianMay'>) => {
@@ -949,12 +1105,7 @@ export default function App() {
             currentWeek={currentWeek}
             onChangeCurrentWeek={handleSetCurrentWeek}
             settings={settings}
-            onUpdateSettings={newSets => {
-              const updatedSettings = { ...settings, ...newSets };
-              setSettings(updatedSettings);
-              localStorage.setItem('app_settings_10a5', JSON.stringify(updatedSettings));
-              saveServerState(buildFullStateSnapshot({ settings: updatedSettings }), true);
-            }}
+            onUpdateSettings={handleUpdateSettings}
             onAddRecord={handleAddRecord}
             onVoidRecord={handleVoidRecord}
             onResolveExplanation={handleResolveExplanation}
@@ -988,12 +1139,7 @@ export default function App() {
             studentSummaries={studentSummaries}
             currentWeek={currentWeek}
             settings={settings}
-            onUpdateSettings={newSets => {
-              const updatedSettings = { ...settings, ...newSets };
-              setSettings(updatedSettings);
-              localStorage.setItem('app_settings_10a5', JSON.stringify(updatedSettings));
-              saveServerState(buildFullStateSnapshot({ settings: updatedSettings }), true);
-            }}
+            onUpdateSettings={handleUpdateSettings}
             academicRecords={academicRecords}
             onAddRecord={handleAddRecord}
             onVoidRecord={handleVoidRecord}
@@ -1015,12 +1161,7 @@ export default function App() {
             studentSummaries={studentSummaries}
             currentWeek={currentWeek}
             settings={settings}
-            onUpdateSettings={newSets => {
-              const updatedSettings = { ...settings, ...newSets };
-              setSettings(updatedSettings);
-              localStorage.setItem('app_settings_10a5', JSON.stringify(updatedSettings));
-              saveServerState(buildFullStateSnapshot({ settings: updatedSettings }), true);
-            }}
+            onUpdateSettings={handleUpdateSettings}
             academicRecords={academicRecords}
             onAddRecord={handleAddRecord}
             onVoidRecord={handleVoidRecord}

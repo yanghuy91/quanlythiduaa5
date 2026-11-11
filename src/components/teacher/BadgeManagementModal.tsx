@@ -112,13 +112,23 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Load catalog on open
+  // Load catalog on open and listen for external/cloud badge updates
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return;
+    setCatalog(getBadgeCatalog());
+    setStudentBadgesMap(getStudentBadgesMap());
+    setShowRevokeAllConfirm(false);
+
+    const handleBadgeSync = () => {
       setCatalog(getBadgeCatalog());
       setStudentBadgesMap(getStudentBadgesMap());
-      setShowRevokeAllConfirm(false);
-    }
+    };
+    window.addEventListener('lop10a5:badge_change', handleBadgeSync);
+    window.addEventListener('storage', handleBadgeSync);
+    return () => {
+      window.removeEventListener('lop10a5:badge_change', handleBadgeSync);
+      window.removeEventListener('storage', handleBadgeSync);
+    };
   }, [isOpen]);
 
   if (!isOpen) return null;

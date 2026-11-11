@@ -344,15 +344,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
   // Active displayed achievement badge next to student avatar
   const [selectedBadgeId, setSelectedBadgeId] = useState<string | null>(() => {
-    try {
-      const active = getStudentActiveBadge(currentStudent.maHS);
-      if (active) return active;
-      const saved = localStorage.getItem(`student_active_badge_${currentStudent.maHS}`);
-      if (saved) return saved;
-      return null;
-    } catch {
-      return null;
-    }
+    return getStudentActiveBadge(currentStudent.maHS);
   });
 
   useEffect(() => {
@@ -361,42 +353,25 @@ export const StudentView: React.FC<StudentViewProps> = ({
       setSelectedBadgeId(getStudentActiveBadge(currentStudent.maHS));
     };
     window.addEventListener('lop10a5:badge_change', syncBadges);
-    return () => window.removeEventListener('lop10a5:badge_change', syncBadges);
+    window.addEventListener('storage', syncBadges);
+    return () => {
+      window.removeEventListener('lop10a5:badge_change', syncBadges);
+      window.removeEventListener('storage', syncBadges);
+    };
   }, [currentStudent.maHS]);
 
   const handleToggleBadge = (badgeId: string) => {
     setSelectedBadgeId(prev => {
       const next = prev === badgeId ? null : badgeId;
       setStudentActiveBadge(currentStudent.maHS, next);
-      try {
-        if (next) {
-          localStorage.setItem(`student_active_badge_${currentStudent.maHS}`, next);
-        } else {
-          localStorage.removeItem(`student_active_badge_${currentStudent.maHS}`);
-        }
-      } catch {}
       return next;
     });
   };
 
   // Re-sync selected badge when student changes (e.g. demo role switcher or login)
   useEffect(() => {
-    try {
-      const active = getStudentActiveBadge(currentStudent.maHS);
-      if (active) {
-        setSelectedBadgeId(active);
-        return;
-      }
-      const saved = localStorage.getItem(`student_active_badge_${currentStudent.maHS}`);
-      if (saved) {
-        setSelectedBadgeId(saved);
-      } else {
-        setSelectedBadgeId('b_iron_discipline');
-      }
-    } catch {
-      setSelectedBadgeId('b_iron_discipline');
-    }
-  }, [currentStudent.maHS]);
+    setSelectedBadgeId(getStudentActiveBadge(currentStudent.maHS));
+  }, [currentStudent.maHS, badgeSyncTick]);
 
   // Time hierarchy filter state: Năm học -> Học kì -> Tuần -> Buổi (Bỏ qua tháng)
   const [periodFilter, setPeriodFilter] = useState<HierarchyPeriodFilter>({
@@ -2139,6 +2114,11 @@ export const StudentView: React.FC<StudentViewProps> = ({
           isOpen={showDelegatedBadgeModal}
           onClose={() => setShowDelegatedBadgeModal(false)}
           students={allStudents}
+          records={records}
+          academicRecords={academicRecords}
+          settings={settings}
+          currentWeek={currentWeek}
+          onUpdateSettings={onUpdateSettings}
         />
       )}
 

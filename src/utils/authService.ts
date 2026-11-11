@@ -28,12 +28,12 @@ export function getAllStudentPasswords(): Record<string, string> {
 /**
  * Hydrate all custom student passwords from cloud state
  */
-export function setAllStudentPasswords(passwordsMap?: Record<string, string>): void {
+export function setAllStudentPasswords(passwordsMap?: Record<string, string>, teacherPassword?: string): void {
   try {
-    if (passwordsMap && typeof passwordsMap === 'object') {
-      const existing = getAllStudentPasswords();
-      const merged = { ...existing, ...passwordsMap };
-      localStorage.setItem(STORAGE_KEY_PASSWORDS, JSON.stringify(merged));
+    const cleanMap = passwordsMap && typeof passwordsMap === 'object' ? passwordsMap : {};
+    localStorage.setItem(STORAGE_KEY_PASSWORDS, JSON.stringify(cleanMap));
+    if (typeof teacherPassword === 'string' && teacherPassword.trim()) {
+      localStorage.setItem(STORAGE_KEY_TEACHER_PASSWORD, teacherPassword.trim());
     }
   } catch (e) {
     console.error('Error setting student passwords:', e);
@@ -185,6 +185,9 @@ export function getTeacherPassword(): string {
 export function setTeacherPassword(newPass: string): void {
   try {
     localStorage.setItem(STORAGE_KEY_TEACHER_PASSWORD, newPass);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lop10a5:password_change'));
+    }
   } catch (e) {}
 }
 

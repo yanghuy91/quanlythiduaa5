@@ -20,7 +20,9 @@ export interface ClassroomFullState {
   currentWeek?: number;
   studentBadgesMap?: Record<string, string[]>;
   studentActiveBadges?: Record<string, string>;
+  badgeCatalog?: any[];
   studentPasswords?: Record<string, string>;
+  teacherPassword?: string;
   updatedAt: string;
   version: number;
 }
@@ -54,13 +56,24 @@ export function computeStateFingerprint(state: ClassroomFullState): string {
       teacherAvatar: state.teacherAvatar,
       teacherProfile: state.teacherProfile,
       currentWeek: state.currentWeek,
-      studentBadgesMap: state.studentBadgesMap,
-      studentActiveBadges: state.studentActiveBadges,
-      studentPasswords: state.studentPasswords,
+      studentBadgesMap: state.studentBadgesMap || {},
+      studentActiveBadges: state.studentActiveBadges || {},
+      badgeCatalog: state.badgeCatalog,
+      studentPasswords: state.studentPasswords || {},
+      teacherPassword: state.teacherPassword,
     });
   } catch {
     return '';
   }
+}
+
+/**
+ * Check if an incoming remote state differs from the last applied/synced fingerprint
+ */
+export function hasRemoteStateChanged(state: ClassroomFullState): boolean {
+  const fp = computeStateFingerprint(state);
+  if (!fp) return false;
+  return fp !== lastSyncedFingerprint;
 }
 
 /**

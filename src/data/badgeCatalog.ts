@@ -728,6 +728,19 @@ export function isBadgeReservedForCadre(badge?: AchievementBadge | null): boolea
   );
 }
 
+function clearLegacyStudentActiveBadgeKeys(): void {
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('student_active_badge_')) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+  } catch {}
+}
+
 /**
  * Thu hồi toàn bộ huy hiệu của tất cả học sinh trong lớp (kể cả huy hiệu đang ghim đại diện)
  */
@@ -735,8 +748,9 @@ export function revokeAllStudentBadges(): void {
   try {
     localStorage.setItem(STORAGE_KEY_STUDENT_BADGES, JSON.stringify({}));
     localStorage.setItem(STORAGE_KEY_STUDENT_ACTIVE_BADGE, JSON.stringify({}));
+    clearLegacyStudentActiveBadgeKeys();
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('lop10a5:badge_change'));
+      window.dispatchEvent(new CustomEvent('lop10a5:badge_change', { detail: { fromCloud: false } }));
     }
   } catch (e) {
     console.error('Error revoking all student badges:', e);
@@ -792,6 +806,9 @@ export function resetBadgeCatalog(): AchievementBadge[] {
   try {
     localStorage.removeItem(STORAGE_KEY_BADGES);
     localStorage.removeItem('app_badges_catalog_10a5_v2');
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lop10a5:badge_change', { detail: { fromCloud: false } }));
+    }
   } catch (e) {
     console.error('Error resetting badge catalog:', e);
   }
@@ -838,13 +855,19 @@ export function revokeBadgeFromStudent(studentId: string, badgeId: string): void
   try {
     const map = getStudentBadgesMap();
     const current = map[studentId] || [];
-    map[studentId] = current.filter(id => id !== badgeId);
+    const nextList = current.filter(id => id !== badgeId);
+    if (nextList.length > 0) {
+      map[studentId] = nextList;
+    } else {
+      delete map[studentId];
+    }
     localStorage.setItem(STORAGE_KEY_STUDENT_BADGES, JSON.stringify(map));
     if (getStudentActiveBadge(studentId) === badgeId) {
       setStudentActiveBadge(studentId, null);
     }
+    localStorage.removeItem(`student_active_badge_${studentId}`);
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('lop10a5:badge_change'));
+      window.dispatchEvent(new CustomEvent('lop10a5:badge_change', { detail: { fromCloud: false } }));
     }
   } catch (e) {
     console.error('Error revoking badge:', e);
@@ -889,11 +912,12 @@ export function setStudentActiveBadge(studentId: string, badgeId: string | null)
 }
 
 /**
- * Export all student badges and active badge settings for sync
+ * Export all student badges, active badge settings, and customized badge catalog for sync
  */
 export function getAllStudentBadgesState(): { 
   studentBadgesMap: Record<string, string[]>; 
-  studentActiveBadges: Record<string, string>; 
+  studentActiveBadges: Record<string, string>;
+  badgeCatalog: AchievementBadge[];
 } {
   let activeBadges: Record<string, string> = {};
   try {
@@ -904,22 +928,34 @@ export function getAllStudentBadgesState(): {
   return {
     studentBadgesMap: getStudentBadgesMap(),
     studentActiveBadges: activeBadges,
+    badgeCatalog: getBadgeCatalog(),
   };
 }
 
 /**
- * Hydrate student badges and active badges from persistent server state
+ * Hydrate student badges, active badges, and badge catalog from persistent server state
  */
 export function setAllStudentBadgesState(
   studentBadgesMap?: Record<string, string[]>, 
-  studentActiveBadges?: Record<string, string>
+  studentActiveBadges?: Record<string, string>,
+  badgeCatalog?: AchievementBadge[]
 ): void {
   try {
-    if (studentBadgesMap && typeof studentBadgesMap === 'object') {
-      localStorage.setItem(STORAGE_KEY_STUDENT_BADGES, JSON.stringify(studentBadgesMap));
+    const cleanBadgesMap =
+      studentBadgesMap && typeof studentBadgesMap === 'object' ? studentBadgesMap : {};
+    const cleanActiveMap =
+      studentActiveBadges && typeof studentActiveBadges === 'object' ? studentActiveBadges : {};
+
+    localStorage.setItem(STORAGE_KEY_STUDENT_BADGES, JSON.stringify(cleanBadgesMap));
+    localStorage.setItem(STORAGE_KEY_STUDENT_ACTIVE_BADGE, JSON.stringify(cleanActiveMap));
+    clearLegacyStudentActiveBadgeKeys();
+
+    if (Array.isArray(badgeCatalog) && badgeCatalog.length > 0) {
+      localStorage.setItem(STORAGE_KEY_BADGES, JSON.stringify(badgeCatalog));
     }
-    if (studentActiveBadges && typeof studentActiveBadges === 'object') {
-      localStorage.setItem(STORAGE_KEY_STUDENT_ACTIVE_BADGE, JSON.stringify(studentActiveBadges));
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lop10a5:badge_change', { detail: { fromCloud: true } }));
     }
   } catch (e) {
     console.error('Error setting student badges state:', e);

@@ -211,19 +211,69 @@ export function onFirebaseAuthStateChanged(callback: (user: User | null) => void
 let lastSavedUpdatedAt = '';
 
 /**
+ * Firebase Realtime Database automatically strips empty objects `{}` and empty arrays `[]`.
+ * This helper restores all omitted collection/map fields back to `[]` and `{}` so that
+ * revoking all badges, clearing records, or clearing noDataWeeks syncs 100% accurately.
+ */
+function normalizeCloudStateFromFirebase(val: any): ClassroomFullState {
+  const rawSettings = val?.settings && typeof val.settings === 'object' ? val.settings : {};
+  const rawBadgesMap =
+    val?.studentBadgesMap && typeof val.studentBadgesMap === 'object' ? val.studentBadgesMap : {};
+  const normalizedBadgesMap: Record<string, string[]> = {};
+  Object.keys(rawBadgesMap).forEach(k => {
+    if (Array.isArray(rawBadgesMap[k]) && rawBadgesMap[k].length > 0) {
+      normalizedBadgesMap[k] = rawBadgesMap[k];
+    }
+  });
+
+  const rawActiveBadges =
+    val?.studentActiveBadges && typeof val.studentActiveBadges === 'object'
+      ? val.studentActiveBadges
+      : {};
+
+  return {
+    ...val,
+    students: Array.isArray(val?.students) ? val.students : [],
+    records: Array.isArray(val?.records) ? val.records : [],
+    academicRecords: Array.isArray(val?.academicRecords) ? val.academicRecords : [],
+    layout: Array.isArray(val?.layout) ? val.layout : [],
+    rules: Array.isArray(val?.rules) ? val.rules : [],
+    settings: {
+      ...rawSettings,
+      noDataWeeks: Array.isArray(rawSettings.noDataWeeks) ? rawSettings.noDataWeeks : [],
+      cadreDelegatedPermissions:
+        rawSettings.cadreDelegatedPermissions &&
+        typeof rawSettings.cadreDelegatedPermissions === 'object'
+          ? rawSettings.cadreDelegatedPermissions
+          : {},
+    },
+    studentBadgesMap: normalizedBadgesMap,
+    studentActiveBadges: rawActiveBadges,
+    badgeCatalog: Array.isArray(val?.badgeCatalog) ? val.badgeCatalog : undefined,
+    studentPasswords:
+      val?.studentPasswords && typeof val.studentPasswords === 'object'
+        ? val.studentPasswords
+        : {},
+    teacherPassword: typeof val?.teacherPassword === 'string' ? val.teacherPassword : undefined,
+    updatedAt: val?.updatedAt || new Date().toISOString(),
+    version: typeof val?.version === 'number' ? val.version : Date.now(),
+  };
+}
+
+/**
  * Fetch full classroom state from Cloud (RTDB REST primary, RTDB SDK fallback)
  */
 export async function fetchCloudClassState(): Promise<ClassroomFullState | null> {
   // 1. Fetch from Firebase Realtime Database via REST (fastest, no socket handshake delays)
   try {
-    const res = await fetch('https://thiduaa5-default-rtdb.firebaseio.com/classes/10a5.json', {
+    const res = await fetch(`https://thiduaa5-default-rtdb.firebaseio.com/classes/10a5.json?t=${Date.now()}`, {
       cache: 'no-store',
       headers: { 'Accept': 'application/json' },
     });
     if (res.ok) {
       const val = await res.json();
       if (val && Array.isArray(val.students) && val.students.length > 0) {
-        return val as ClassroomFullState;
+        return normalizeCloudStateFromFirebase(val);
       }
     }
   } catch (err: any) {
@@ -236,7 +286,7 @@ export async function fetchCloudClassState(): Promise<ClassroomFullState | null>
     if (snap.exists()) {
       const val = snap.val();
       if (val && Array.isArray(val.students) && val.students.length > 0) {
-        return val as ClassroomFullState;
+        return normalizeCloudStateFromFirebase(val);
       }
     }
   } catch (err: any) {
@@ -247,15 +297,16 @@ export async function fetchCloudClassState(): Promise<ClassroomFullState | null>
 }
 
 /**
- * Save classroom state to Firebase Realtime Database using PATCH / update
+ * Save classroom state to Firebase Realtime Database using PUT / set
  */
 export async function saveCloudClassState(state: ClassroomFullState): Promise<boolean> {
-  const updatedAt = state.updatedAt || new Date().toISOString();
+  const updatedAt = `${new Date().toISOString()}_${Math.random().toString(36).slice(2, 6)}`;
   lastSavedUpdatedAt = updatedAt;
 
   const cleanState = sanitizeForFirebase({
     ...state,
     updatedAt,
+    version: Date.now(),
   });
 
   // 1. Primary: Direct REST PUT to Firebase Realtime Database
@@ -332,16 +383,16 @@ export function subscribeToCloudClassState(onUpdate: (state: ClassroomFullState)
     const classRef = rtdbRef(rtdb, 'classes/10a5');
     unsubRtdb = rtdbOnValue(classRef, (snap) => {
       if (snap.exists()) {
-        const data = snap.val() as ClassroomFullState;
-        if (data && Array.isArray(data.students) && data.students.length > 0) {
+        const raw = snap.val();
+        if (raw && Array.isArray(raw.students) && raw.students.length > 0) {
           // Bỏ qua echo nếu dữ liệu trùng với mốc vừa được lưu hoặc vừa áp dụng
-          if (data.updatedAt && (data.updatedAt === lastSavedUpdatedAt || data.updatedAt === lastAppliedRemoteUpdatedAt)) {
+          if (raw.updatedAt && (raw.updatedAt === lastSavedUpdatedAt || raw.updatedAt === lastAppliedRemoteUpdatedAt)) {
             return;
           }
-          if (data.updatedAt) {
-            lastAppliedRemoteUpdatedAt = data.updatedAt;
+          if (raw.updatedAt) {
+            lastAppliedRemoteUpdatedAt = raw.updatedAt;
           }
-          onUpdate(data);
+          onUpdate(normalizeCloudStateFromFirebase(raw));
         }
       }
     }, (err) => {

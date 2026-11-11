@@ -15,7 +15,7 @@ import {
 import { Student, SeatLayoutNode, StudentWeekSummary, RoleCode } from '../../types';
 import { ROLE_CONFIG } from '../../data/mockData';
 import { getSeatingMapDisplayName, getStudentAvatarInitial } from '../../utils/vietnamese';
-import { getBadgeCatalog, getStudentActiveBadge, getStudentBadgesMap } from '../../data/badgeCatalog';
+import { getBadgeCatalog, getStudentActiveBadge, getStudentBadgesMap, isBadgeReservedForCadre, isStudentCadre } from '../../data/badgeCatalog';
 import { BadgeEmblem } from '../common/BadgeEmblem';
 import { resolveStudentAvatar } from '../../data/avatarPresets';
 
@@ -68,8 +68,20 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
     } catch {}
   };
 
+  const [badgeSyncTick, setBadgeSyncTick] = React.useState(0);
+
+  React.useEffect(() => {
+    const handleSync = () => setBadgeSyncTick(t => t + 1);
+    window.addEventListener('lop10a5:badge_change', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('lop10a5:badge_change', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
+
   // Badge Catalog Map
-  const badgeCatalog = React.useMemo(() => getBadgeCatalog(), []);
+  const badgeCatalog = React.useMemo(() => getBadgeCatalog(), [badgeSyncTick]);
   const badgeCatalogMap = React.useMemo(() => {
     const map = new Map<string, typeof badgeCatalog[0]>();
     badgeCatalog.forEach(b => map.set(b.id, b));
@@ -77,7 +89,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
   }, [badgeCatalog]);
 
   // Student Badges Map
-  const studentBadgesMap = React.useMemo(() => getStudentBadgesMap(), []);
+  const studentBadgesMap = React.useMemo(() => getStudentBadgesMap(), [badgeSyncTick]);
 
   // Map student by ID
   const studentMap = React.useMemo(() => {
@@ -408,8 +420,16 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                   const isLocked = isSeatLockedForViewer(student);
                   const summary = studentSummaries[student.maHS];
 
-                  // Active Badge resolution
-                  const activeBadgeId = getStudentActiveBadge(student.maHS) || (studentBadgesMap[student.maHS]?.[0] ?? null);
+                  // Active Badge resolution (chỉ hiển thị nếu học sinh thực sự đang sở hữu huy hiệu đó & đúng quyền hạn)
+                  const unlockedBadgeIds = (studentBadgesMap[student.maHS] || []).filter(bId => {
+                    const bDef = badgeCatalogMap.get(bId);
+                    return bDef && (!isBadgeReservedForCadre(bDef) || isStudentCadre(student));
+                  });
+                  const pinnedId = getStudentActiveBadge(student.maHS);
+                  const activeBadgeId =
+                    pinnedId && unlockedBadgeIds.includes(pinnedId)
+                      ? pinnedId
+                      : (unlockedBadgeIds[0] ?? null);
                   const badgeDef = activeBadgeId ? badgeCatalogMap.get(activeBadgeId) : undefined;
 
                   // Gender color tint: Nam (border sky blue) vs Nữ (border rose pink)
