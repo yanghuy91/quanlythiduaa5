@@ -26,6 +26,7 @@ interface CadreViewProps {
   academicRecords?: StudentAcademicRecord[];
   onAddRecord: (record: Omit<DisciplineRecord, 'maGhiNhan' | 'thoiGianMayChu' | 'thoiGianMay'>) => void;
   onVoidRecord: (recordId: string, reason: string) => void;
+  onUpdateRecord?: (recordId: string, updates: Partial<DisciplineRecord>) => void;
   onResolveExplanation?: (recordId: string, result: 'ChapNhan' | 'TuChoi', reason: string) => void;
   onSubmitExplanation: (recordId: string, explanation: string) => void;
   onUpdateStudentAvatar?: (studentId: string, avatarUrl: string) => void;
@@ -53,6 +54,7 @@ export const CadreView: React.FC<CadreViewProps> = ({
   academicRecords,
   onAddRecord,
   onVoidRecord,
+  onUpdateRecord,
   onResolveExplanation,
   onSubmitExplanation,
   onUpdateStudentAvatar,
@@ -75,6 +77,7 @@ export const CadreView: React.FC<CadreViewProps> = ({
       academicRecords={academicRecords}
       onAddRecord={onAddRecord}
       onVoidRecord={onVoidRecord}
+      onUpdateRecord={onUpdateRecord}
       onResolveExplanation={onResolveExplanation}
       onSubmitExplanation={onSubmitExplanation}
       onUpdateStudentAvatar={onUpdateStudentAvatar}

@@ -24,10 +24,11 @@ export const INITIAL_SETTINGS: TeacherSettings = {
   batDiemCong: false, // Mặc định TẮT theo yêu cầu
   batDiemThuongGoLoi: false,
   tranDiemBu: 50,
-  thoiHanSuaHuyPhut: 1440, // 24 giờ
+  thoiHanSuaHuyPhut: 1440, // 24 giờ (0 = Không giới hạn)
+  thoiHanSuaDuLieuGVPhut: 0, // 0 = Không giới hạn cho Giáo viên
   toTruongTuCham: false,
   hocSinhThayMau: 'CaLop',
-  hanGuiGiaiTrinhNgay: 7,
+  hanGuiGiaiTrinhNgay: 7, // 7 ngày (0 = Không giới hạn)
   nguoiDuyetGiaiTrinh: 'GV',
   mocBuoiSang: '06:30-11:30',
   mocBuoiChieu: '12:30-17:30',

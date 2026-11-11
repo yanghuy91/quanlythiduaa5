@@ -34,7 +34,9 @@ import {
   Settings,
   ClipboardList,
   AlertTriangle,
-  Trash2
+  Trash2,
+  Eye,
+  Edit3
 } from 'lucide-react';
 import { 
   Student, 
@@ -55,11 +57,21 @@ import { StudentPicker } from '../student-picker/StudentPicker';
 import { RecordBottomSheet } from '../record/RecordBottomSheet';
 import { DuplicateWarningModal } from '../record/DuplicateWarningModal';
 import { PeriodHierarchyFilter as PeriodFilterComponent } from '../common/PeriodHierarchyFilter';
-import { checkDuplicateRecord, calculateDenseRankings, isRecordMatchingStudent, parseRecordPoints } from '../../utils/emulation';
+import { 
+  checkDuplicateRecord, 
+  calculateDenseRankings, 
+  isRecordMatchingStudent, 
+  parseRecordPoints,
+  formatEditTimeLimit,
+  isWithinEditTimeLimit,
+  getRemainingEditTimeLabel,
+  isWithinExplanationDayLimit
+} from '../../utils/emulation';
 import { CadreBadge } from '../common/CadreBadge';
 import { CadreHonorsModal, CADRE_DELEGATED_PERMISSION_LIST } from '../common/CadreHonorsModal';
 import { BadgeManagementModal } from '../teacher/BadgeManagementModal';
-import { filterRecordsByHierarchy, calculateStudentPeriodSummary, getSemesterFromWeek, CURRENT_SCHOOL_YEAR } from '../../utils/hierarchy';
+import { StudentInfractionDetailModal } from '../teacher/StudentInfractionDetailModal';
+import { filterRecordsByHierarchy, calculateStudentPeriodSummary, getSemesterFromWeek, CURRENT_SCHOOL_YEAR, ALL_SCHOOL_WEEKS } from '../../utils/hierarchy';
 import { 
   AchievementBadge, 
   BadgeCategory, 
@@ -93,6 +105,7 @@ interface StudentViewProps {
   rules?: RuleItem[];
   onAddRecord?: (record: Omit<DisciplineRecord, 'maGhiNhan' | 'thoiGianMayChu' | 'thoiGianMay'>) => void;
   onVoidRecord?: (recordId: string, reason: string) => void;
+  onUpdateRecord?: (recordId: string, updates: Partial<DisciplineRecord>) => void;
   onSubmitExplanation?: (recordId: string, explanation: string) => void;
   onUpdateStudentAvatar?: (studentId: string, avatarUrl: string) => void;
   onLogout?: () => void;
@@ -115,6 +128,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
   rules = [],
   onAddRecord,
   onVoidRecord,
+  onUpdateRecord,
   onSubmitExplanation,
   onUpdateStudentAvatar,
   onLogout,
@@ -312,13 +326,13 @@ export const StudentView: React.FC<StudentViewProps> = ({
     setVoidReason('');
   };
 
-  const getRemainingHours = (isoTime: string) => {
-    const recordTime = new Date(isoTime).getTime();
-    const now = new Date().getTime();
-    const limitMs = settings.thoiHanSuaHuyPhut * 60 * 1000;
-    const diff = (recordTime + limitMs) - now;
-    return Math.max(0, Math.floor(diff / (1000 * 60 * 60)));
-  };
+  const [inspectingStudent, setInspectingStudent] = useState<Student | null>(null);
+  const [editingLogRecordId, setEditingLogRecordId] = useState<string | null>(null);
+  const [editLogTenHanhVi, setEditLogTenHanhVi] = useState<string>('');
+  const [editLogDiemSo, setEditLogDiemSo] = useState<number>(2);
+  const [editLogTuanHoc, setEditLogTuanHoc] = useState<number>(currentWeek);
+  const [editLogBuoi, setEditLogBuoi] = useState<'Sang' | 'Chieu'>('Sang');
+  const [editLogGhiChu, setEditLogGhiChu] = useState<string>('');
 
   const myAcademicRecord = useMemo(() => {
     return (academicRecords || []).find(r => r.maHS === currentStudent.maHS);
@@ -404,6 +418,36 @@ export const StudentView: React.FC<StudentViewProps> = ({
     });
     return map;
   }, [allStudents, records, periodFilter, settings, currentWeek]);
+
+  // Summaries mapped to StudentWeekSummary format for the currently selected week/period
+  const selectedPeriodWeekSummaries = useMemo(() => {
+    const targetW = typeof periodFilter.tuanHoc === 'number' ? periodFilter.tuanHoc : currentWeek;
+    const map: Record<string, StudentWeekSummary> = {};
+    allStudents.forEach(st => {
+      const pSum = studentPeriodSummaries[st.maHS];
+      if (pSum) {
+        map[st.maHS] = {
+          maHS: st.maHS,
+          hoTen: st.hoTen,
+          to: st.to,
+          tuanHoc: targetW,
+          diemKhoiDau: settings.diemKhoiDau,
+          tongDiemTru: pSum.tongDiemTru,
+          tongDiemCong: pSum.tongDiemCong,
+          diemHienTai: pSum.diemTrungBinh,
+          xepLoai: pSum.xepLoai,
+          mucMau: pSum.mucMau,
+          soLoiTrongTuan: pSum.soLoi,
+          coLoiNang: pSum.mucMau === 'bad',
+          chuaCoDiem: pSum.chuaCoDiem,
+          lyDoChuaCoDiem: pSum.lyDoChuaCoDiem,
+        };
+      } else if (studentSummaries[st.maHS]) {
+        map[st.maHS] = studentSummaries[st.maHS];
+      }
+    });
+    return map;
+  }, [allStudents, studentPeriodSummaries, studentSummaries, periodFilter.tuanHoc, currentWeek, settings.diemKhoiDau]);
 
   const myPeriodSummary = studentPeriodSummaries[currentStudent.maHS] || {
     diemTrungBinh: settings.diemKhoiDau,
@@ -1386,7 +1430,13 @@ export const StudentView: React.FC<StudentViewProps> = ({
                             </div>
                             {weekData.records.map(record => {
                               const isBonus = record.loaiDiem === 'Cong';
-                              const canExplain = record.trangThai === 'HieuLuc' && !record.noiDungGiaiTrinh;
+                              const withinExplainLimit = isWithinExplanationDayLimit(
+                                record.thoiGianMayChu || record.ngayHoc,
+                                settings.hanGuiGiaiTrinhNgay
+                              );
+                              const canExplain =
+                                (record.trangThai === 'HieuLuc' || record.trangThai === 'ChoDuyet') &&
+                                withinExplainLimit;
 
                               return (
                                 <div
@@ -1442,7 +1492,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                                         className="shrink-0 px-2.5 py-1 rounded-xl bg-accent/15 text-accent hover:bg-accent/25 border border-accent/30 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors"
                                       >
                                         <MessageSquare className="w-3 h-3" />
-                                        <span>Giải trình</span>
+                                        <span>{record.noiDungGiaiTrinh ? 'Sửa giải trình' : 'Giải trình'}</span>
                                       </button>
                                     )}
                                   </div>
@@ -1467,7 +1517,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
           <StudentPicker
             students={allStudents}
             layout={layout}
-            studentSummaries={studentSummaries}
+            studentSummaries={selectedPeriodWeekSummaries}
             selectedStudentIds={selectedStudentIds}
             onSelectStudent={handleSelectStudent}
             viewerRole={primaryCadreRole}
@@ -1480,6 +1530,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
             }}
             fastSaveEnabled={fastSaveEnabled}
             onToggleFastSave={() => setFastSaveEnabled(!fastSaveEnabled)}
+            onInspectStudent={(st) => setInspectingStudent(st)}
           />
 
           {isMultiSelect && selectedStudentIds.length > 0 && (
@@ -1518,7 +1569,11 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   {hasDelegatedPerm('HUY_MOI_GHI_NHAN') ? 'Sổ ghi nhận nề nếp toàn lớp (Được GV ủy quyền)' : 'Sổ ghi nhận nề nếp của bạn'}
                 </h3>
                 <p className="text-[11px] text-muted mt-0.5">
-                  {hasDelegatedPerm('HUY_MOI_GHI_NHAN') ? 'Có thể xem và hủy mọi lượt ghi nhận theo ủy quyền của GVCN' : 'Có thể sửa hoặc hủy trong thời hạn 24 giờ kể từ thời điểm ghi'}
+                  {hasDelegatedPerm('HUY_MOI_GHI_NHAN')
+                    ? 'Có thể xem, sửa và hủy mọi lượt ghi nhận theo ủy quyền của GVCN'
+                    : (settings.thoiHanSuaHuyPhut ?? 1440) <= 0
+                      ? 'Có thể sửa hoặc hủy không giới hạn thời gian'
+                      : `Có thể sửa hoặc hủy trong thời hạn ${formatEditTimeLimit(settings.thoiHanSuaHuyPhut)} kể từ thời điểm ghi`}
                 </p>
               </div>
               <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-surface-2 text-muted">
@@ -1535,29 +1590,31 @@ export const StudentView: React.FC<StudentViewProps> = ({
               ) : (
                 filteredMyRecords.map(rec => {
                   const isVoided = rec.trangThai === 'DaHuy';
-                  const remainingHours = getRemainingHours(rec.thoiGianMayChu);
-                  const canModify = !isVoided && (remainingHours > 0 || hasDelegatedPerm('HUY_MOI_GHI_NHAN'));
+                  const withinTimeLimit = isWithinEditTimeLimit(rec.thoiGianMayChu, settings.thoiHanSuaHuyPhut);
+                  const remainingLabel = getRemainingEditTimeLabel(rec.thoiGianMayChu, settings.thoiHanSuaHuyPhut);
+                  const canModify = !isVoided && (withinTimeLimit || hasDelegatedPerm('HUY_MOI_GHI_NHAN'));
+                  const isEditingThis = editingLogRecordId === rec.maGhiNhan;
 
                   return (
                     <div key={rec.maGhiNhan} className="p-3.5 space-y-2 hover:bg-surface-2/40 transition-colors">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-xs font-bold text-main">
                               {rec.hoTen}
                             </span>
                             <span className="text-[11px] text-muted">
                               (Tổ {rec.to})
                             </span>
-                            <span className="text-xs font-bold text-[var(--st-bad)]">
-                              -{rec.diemSo}đ
+                            <span className={`text-xs font-bold ${rec.loaiDiem === 'Cong' ? 'text-[var(--st-ok)]' : 'text-[var(--st-bad)]'}`}>
+                              {rec.loaiDiem === 'Cong' ? '+' : '-'}{rec.diemSo}đ
                             </span>
                           </div>
                           <div className="text-xs font-medium text-main mt-0.5">
                             {rec.tenHanhVi}
                           </div>
-                          <div className="text-[11px] text-muted flex items-center gap-2 mt-0.5">
-                            <span>{rec.ngayHoc} ({rec.buoi === 'Sang' ? 'Sáng' : 'Chiều'})</span>
+                          <div className="text-[11px] text-muted flex items-center gap-2 mt-0.5 flex-wrap">
+                            <span>Tuần {rec.tuanHoc} · {rec.ngayHoc} ({rec.buoi === 'Sang' ? 'Sáng' : 'Chiều'})</span>
                             <span>·</span>
                             <span>Lần {rec.lanThuTrongBuoi} trong buổi</span>
                           </div>
@@ -1572,8 +1629,25 @@ export const StudentView: React.FC<StudentViewProps> = ({
                             <div className="flex items-center gap-1.5">
                               <span className="text-[10px] text-muted flex items-center gap-1">
                                 <Clock className="w-3 h-3 text-accent" />
-                                <span>Còn {remainingHours}h</span>
+                                <span>{remainingLabel}</span>
                               </span>
+                              {onUpdateRecord && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingLogRecordId(rec.maGhiNhan);
+                                    setEditLogTenHanhVi(rec.tenHanhVi);
+                                    setEditLogDiemSo(Number(rec.diemSo) || 1);
+                                    setEditLogTuanHoc(Number(rec.tuanHoc) || currentWeek);
+                                    setEditLogBuoi(rec.buoi || 'Sang');
+                                    setEditLogGhiChu(rec.ghiChu || '');
+                                  }}
+                                  className="p-1.5 rounded-lg text-accent hover:bg-accent/10 transition-colors cursor-pointer"
+                                  title="Sửa bản ghi này"
+                                >
+                                  <Edit3 className="w-4 h-4" />
+                                </button>
+                              )}
                               {onVoidRecord && (
                                 <button
                                   type="button"
@@ -1587,11 +1661,99 @@ export const StudentView: React.FC<StudentViewProps> = ({
                             </div>
                           ) : (
                             <span className="text-[10px] text-muted">
-                              Đã hết hạn 24h
+                              {remainingLabel}
                             </span>
                           )}
                         </div>
                       </div>
+
+                      {isEditingThis && onUpdateRecord && (
+                        <div className="p-3 rounded-xl bg-surface-2 border border-accent/40 space-y-2 text-xs">
+                          <div className="font-bold text-main flex items-center justify-between">
+                            <span>✏️ Sửa dữ liệu ghi nhận</span>
+                            <button
+                              type="button"
+                              onClick={() => setEditingLogRecordId(null)}
+                              className="text-muted hover:text-main text-[11px] cursor-pointer"
+                            >
+                              Đóng
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <input
+                              type="text"
+                              value={editLogTenHanhVi}
+                              onChange={e => setEditLogTenHanhVi(e.target.value)}
+                              placeholder="Nội dung hành vi..."
+                              className="sm:col-span-2 px-2.5 py-1.5 rounded-lg bg-surface border border-token text-xs font-semibold text-main"
+                            />
+                            <div className="flex items-center gap-1">
+                              <span className="text-[11px] text-muted font-semibold">Điểm:</span>
+                              <input
+                                type="number"
+                                min={1}
+                                max={50}
+                                value={editLogDiemSo}
+                                onChange={e => setEditLogDiemSo(Math.max(1, Number(e.target.value) || 1))}
+                                className="w-16 px-2 py-1.5 rounded-lg bg-surface border border-token text-xs font-black text-center text-main"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            <select
+                              value={editLogTuanHoc}
+                              onChange={e => setEditLogTuanHoc(Number(e.target.value))}
+                              className="px-2 py-1.5 rounded-lg bg-surface border border-token text-xs font-bold text-main"
+                            >
+                              {ALL_SCHOOL_WEEKS.map(w => (
+                                <option key={w} value={w}>Tuần {w}</option>
+                              ))}
+                            </select>
+                            <select
+                              value={editLogBuoi}
+                              onChange={e => setEditLogBuoi(e.target.value as 'Sang' | 'Chieu')}
+                              className="px-2 py-1.5 rounded-lg bg-surface border border-token text-xs font-bold text-main"
+                            >
+                              <option value="Sang">Buổi Sáng</option>
+                              <option value="Chieu">Buổi Chiều</option>
+                            </select>
+                            <input
+                              type="text"
+                              value={editLogGhiChu}
+                              onChange={e => setEditLogGhiChu(e.target.value)}
+                              placeholder="Ghi chú..."
+                              className="col-span-2 sm:col-span-1 px-2.5 py-1.5 rounded-lg bg-surface border border-token text-xs text-main"
+                            />
+                          </div>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setEditingLogRecordId(null)}
+                              className="px-2.5 py-1 rounded-lg border border-token text-[11px] text-muted cursor-pointer"
+                            >
+                              Hủy
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!editLogTenHanhVi.trim()) return;
+                                onUpdateRecord(rec.maGhiNhan, {
+                                  tenHanhVi: editLogTenHanhVi.trim(),
+                                  diemSo: Math.max(1, Math.abs(Number(editLogDiemSo) || 1)),
+                                  tuanHoc: Number(editLogTuanHoc),
+                                  hocKi: getSemesterFromWeek(Number(editLogTuanHoc)),
+                                  buoi: editLogBuoi,
+                                  ghiChu: editLogGhiChu.trim() || undefined,
+                                });
+                                setEditingLogRecordId(null);
+                              }}
+                              className="px-3 py-1 rounded-lg bg-accent text-on-accent text-[11px] font-bold cursor-pointer"
+                            >
+                              Lưu thay đổi
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
                       {rec.lyDoHuy && (
                         <div className="text-[10px] text-[var(--st-bad)] italic bg-[var(--st-bad)]/5 p-2 rounded-xl border border-[var(--st-bad)]/20">
@@ -1799,11 +1961,12 @@ export const StudentView: React.FC<StudentViewProps> = ({
             <SeatGrid
               layout={layout}
               students={allStudents}
-              studentSummaries={studentSummaries}
+              studentSummaries={selectedPeriodWeekSummaries}
               selectedStudentIds={[currentStudent.maHS]}
               onSelectStudent={() => {}}
               viewerRole="HS"
               showStatusColors={settings.hocSinhThayMau === 'CaLop'}
+              onInspectStudent={settings.hocSinhThayMau === 'CaLop' || isCadre ? (st) => setInspectingStudent(st) : undefined}
             />
           </div>
         </div>
@@ -1989,9 +2152,15 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className={`text-xs font-bold truncate ${isMe ? 'text-accent' : 'text-main'}`}>
-                            {item.student.hoTen}
-                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setInspectingStudent(item.student)}
+                            className={`text-xs font-bold truncate flex items-center gap-1 cursor-pointer hover:text-accent transition-colors ${isMe ? 'text-accent' : 'text-main'}`}
+                            title="Bấm để xem chi tiết vi phạm trong tuần đang chọn"
+                          >
+                            <span>{item.student.hoTen}</span>
+                            <Eye className="w-3 h-3 text-muted hover:text-accent shrink-0" />
+                          </button>
                           
                           {isMe && (
                             <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-accent text-on-accent shadow-xs">
@@ -2056,11 +2225,16 @@ export const StudentView: React.FC<StudentViewProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2.5 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0">
                       {item.deductions > 0 && (
-                        <span className="text-[10px] font-bold text-[var(--st-bad)] hidden sm:inline-block">
+                        <button
+                          type="button"
+                          onClick={() => setInspectingStudent(item.student)}
+                          className="text-[10px] font-bold text-[var(--st-bad)] bg-rose-500/10 hover:bg-rose-500/20 px-2 py-0.5 rounded-lg border border-rose-500/25 cursor-pointer"
+                          title="Xem chi tiết các lỗi bị trừ điểm"
+                        >
                           -{item.deductions}đ
-                        </span>
+                        </button>
                       )}
                       {item.bonuses > 0 && (
                         <span className="text-[10px] font-bold text-[var(--st-ok)] hidden sm:inline-block">
@@ -2090,6 +2264,15 @@ export const StudentView: React.FC<StudentViewProps> = ({
                           </span>
                         </>
                       )}
+
+                      <button
+                        type="button"
+                        onClick={() => setInspectingStudent(item.student)}
+                        className="p-1.5 rounded-lg bg-surface-2 hover:bg-surface-3 text-muted hover:text-main border border-token cursor-pointer transition-colors"
+                        title="Xem chi tiết lỗi vi phạm theo tuần đang chọn"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-accent" />
+                      </button>
                     </div>
                   </div>
                 );
@@ -2474,6 +2657,27 @@ export const StudentView: React.FC<StudentViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Student Infraction Detail Modal synced with selected week */}
+      <StudentInfractionDetailModal
+        isOpen={!!inspectingStudent}
+        onClose={() => setInspectingStudent(null)}
+        student={inspectingStudent}
+        records={records}
+        summary={inspectingStudent ? selectedPeriodWeekSummaries[inspectingStudent.maHS] : undefined}
+        selectedWeek={typeof periodFilter.tuanHoc === 'number' ? periodFilter.tuanHoc : currentWeek}
+        currentWeek={currentWeek}
+        initialFilterPeriod={periodFilter}
+        settings={settings}
+        viewerRole={primaryCadreRole}
+        onAddRecordForStudent={isCadre && canRecord ? (st) => {
+          setSelectedStudentIds([st.maHS]);
+          setIsBottomSheetOpen(true);
+        } : undefined}
+        onResolveExplanation={hasDelegatedPerm('DUYET_GIAI_TRINH') ? onResolveExplanation : undefined}
+        onVoidRecord={hasDelegatedPerm('HUY_MOI_GHI_NHAN') ? onVoidRecord : undefined}
+        onUpdateRecord={hasDelegatedPerm('HUY_MOI_GHI_NHAN') ? onUpdateRecord : undefined}
+      />
 
       {/* Avatar Upload & Crop Modal */}
       <AvatarUploadModal

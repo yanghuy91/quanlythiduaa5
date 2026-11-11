@@ -179,10 +179,11 @@ export interface TeacherSettings {
   batDiemCong: boolean; // default false
   batDiemThuongGoLoi: boolean; // default false
   tranDiemBu: number; // default 50%
-  thoiHanSuaHuyPhut: number; // default 1440 (24h)
+  thoiHanSuaHuyPhut: number; // default 1440 (24h), 0 = Không giới hạn (dành cho HS / BCS)
+  thoiHanSuaDuLieuGVPhut?: number; // default 0 = Không giới hạn (dành cho Giáo viên)
   toTruongTuCham: boolean; // default false
   hocSinhThayMau: 'CaLop' | 'ChiBanThan';
-  hanGuiGiaiTrinhNgay: number; // 7 days
+  hanGuiGiaiTrinhNgay: number; // default 7 days, 0 = Không giới hạn
   nguoiDuyetGiaiTrinh: 'GV' | 'GV_va_BCS';
   mocBuoiSang: string; // '06:30-11:30'
   mocBuoiChieu: string; // '12:30-17:30'

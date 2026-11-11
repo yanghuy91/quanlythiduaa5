@@ -87,6 +87,13 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
   const [date, setDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
   const [note, setNote] = useState<string>('');
 
+  React.useEffect(() => {
+    if (isOpen) {
+      setTuanHoc(initialWeek);
+      setHocKi(initialSemester ?? getSemesterFromWeek(initialWeek));
+    }
+  }, [isOpen, initialWeek, initialSemester]);
+
   // Weeks available according to chosen semester (HK1: 1..19, HK2: 20..38)
   const availableWeeks = useMemo(() => {
     return hocKi === 1 ? SEMESTER_1_WEEKS : SEMESTER_2_WEEKS;

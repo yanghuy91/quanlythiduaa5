@@ -61,10 +61,7 @@ export function filterRecordsByHierarchy(
   filter: HierarchyPeriodFilter
 ): DisciplineRecord[] {
   return records.filter(rec => {
-    // Năm học (chấp nhận bản ghi cũ chưa gắn namHoc)
-    if (filter.namHoc && rec.namHoc && rec.namHoc !== filter.namHoc) return false;
-
-    // Học kì (nếu xem 1 tuần cụ thể thì ưu tiên khớp theo tuần đó để tránh lệch hocKi khi import)
+    // Học kì / Tuần học (nếu xem 1 tuần cụ thể thì ưu tiên khớp chính xác theo tuần đó)
     if (filter.tuanHoc !== 'all') {
       if (Number(rec.tuanHoc) !== Number(filter.tuanHoc)) return false;
     } else if (filter.hocKi !== 'all') {

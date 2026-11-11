@@ -46,22 +46,58 @@ export function parseRecordPoints(rec: DisciplineRecord): { isBonus: boolean; po
 
 export function isRecordWithinScoringMilestone(
   rec: DisciplineRecord,
-  settings?: TeacherSettings
+  _settings?: TeacherSettings
 ): boolean {
   if (!rec) return false;
-  if (!settings) return true;
-
-  const startWeek = Number(settings.tuanBatDauTinhDiem || 1);
-  if (startWeek > 1 && Number(rec.tuanHoc) < startWeek) {
-    return false;
-  }
-
-  const startDate = String(settings.ngayBatDauTinhDiem || '').trim();
-  if (startDate && rec.ngayHoc && String(rec.ngayHoc).trim() < startDate) {
-    return false;
-  }
-
+  // Theo quy tắc chuẩn: Chỉ các tuần GV đánh dấu nghỉ (noDataWeeks) mới không tính điểm;
+  // các tuần khác đều tính điểm trừ/cộng bình thường để đồng nhất 100% giữa sổ chi tiết và bảng xếp hạng.
   return true;
+}
+
+export function formatEditTimeLimit(minutes?: number): string {
+  const m = Number(minutes ?? 0);
+  if (!Number.isFinite(m) || m <= 0) return 'Không giới hạn';
+  if (m < 60) return `${m} phút`;
+  if (m % 1440 === 0) {
+    const days = m / 1440;
+    return days === 1 ? '24 giờ (1 ngày)' : `${days} ngày`;
+  }
+  return `${Math.round((m / 60) * 10) / 10} giờ`;
+}
+
+export function isWithinEditTimeLimit(recordIsoTime?: string, limitMinutes?: number): boolean {
+  const m = Number(limitMinutes ?? 0);
+  if (!Number.isFinite(m) || m <= 0) return true; // <= 0 nghĩa là Không giới hạn thời gian
+  if (!recordIsoTime) return true;
+  const recordMs = new Date(recordIsoTime).getTime();
+  if (!Number.isFinite(recordMs)) return true;
+  const nowMs = Date.now();
+  return nowMs <= recordMs + m * 60 * 1000;
+}
+
+export function getRemainingEditTimeLabel(recordIsoTime?: string, limitMinutes?: number): string {
+  const m = Number(limitMinutes ?? 0);
+  if (!Number.isFinite(m) || m <= 0) return 'Không giới hạn';
+  if (!recordIsoTime) return 'Không giới hạn';
+  const recordMs = new Date(recordIsoTime).getTime();
+  if (!Number.isFinite(recordMs)) return 'Không giới hạn';
+  const diffMs = recordMs + m * 60 * 1000 - Date.now();
+  if (diffMs <= 0) return `Đã hết hạn (${formatEditTimeLimit(m)})`;
+  const diffMinutes = Math.ceil(diffMs / (60 * 1000));
+  if (diffMinutes < 60) return `Còn ${diffMinutes} phút`;
+  const diffHours = Math.ceil(diffMs / (60 * 60 * 1000));
+  if (diffHours <= 48) return `Còn ${diffHours}h`;
+  const diffDays = Math.ceil(diffMs / (24 * 60 * 60 * 1000));
+  return `Còn ${diffDays} ngày`;
+}
+
+export function isWithinExplanationDayLimit(recordIsoTimeOrDate?: string, limitDays?: number): boolean {
+  const d = Number(limitDays ?? 0);
+  if (!Number.isFinite(d) || d <= 0) return true; // <= 0 nghĩa là Không giới hạn
+  if (!recordIsoTimeOrDate) return true;
+  const recordMs = new Date(recordIsoTimeOrDate).getTime();
+  if (!Number.isFinite(recordMs)) return true;
+  return Date.now() <= recordMs + d * 24 * 60 * 60 * 1000;
 }
 
 export function calculateStudentWeekSummary(
@@ -97,13 +133,12 @@ export function calculateStudentWeekSummary(
     };
   }
 
-  // Lọc bản ghi của học sinh trong tuần (tuân thủ mốc thời gian bắt đầu tính điểm của GV)
+  // Lọc bản ghi của học sinh trong tuần
   const studentRecords = records.filter(r => 
     isRecordMatchingStudent(r, maHS, hoTen) &&
     Number(r.tuanHoc) === targetWeek &&
     r.trangThai !== 'DaHuy' &&
-    r.trangThai !== 'DaChapNhan' && // Bản ghi đã chấp nhận giải trình thì không tính điểm
-    isRecordWithinScoringMilestone(r, settings)
+    r.trangThai !== 'DaChapNhan' // Bản ghi đã chấp nhận giải trình thì không tính điểm
   );
 
   let tongDiemTru = 0;

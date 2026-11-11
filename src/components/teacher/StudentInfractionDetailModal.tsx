@@ -1,7 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   X, 
-  AlertTriangle, 
   CheckCircle2, 
   Clock, 
   Trash2, 
@@ -9,15 +8,29 @@ import {
   PlusCircle, 
   ShieldCheck, 
   MessageSquare,
-  Sparkles
+  Edit3,
+  Check
 } from 'lucide-react';
-import { Student, DisciplineRecord, StudentWeekSummary } from '../../types';
+import { 
+  Student, 
+  DisciplineRecord, 
+  StudentWeekSummary, 
+  HierarchyPeriodFilter, 
+  TeacherSettings, 
+  RoleCode 
+} from '../../types';
 import { getStudentAvatarInitial } from '../../utils/vietnamese';
 import { RecorderBadge } from '../common/RecorderBadge';
 import { AvatarFrame } from '../common/AvatarFrame';
 import { getFrameById } from '../../data/frameData';
 import { resolveStudentAvatar } from '../../data/avatarPresets';
-import { isRecordMatchingStudent, parseRecordPoints } from '../../utils/emulation';
+import { 
+  isRecordMatchingStudent, 
+  parseRecordPoints, 
+  isWithinEditTimeLimit, 
+  getRemainingEditTimeLabel 
+} from '../../utils/emulation';
+import { ALL_SCHOOL_WEEKS, getSemesterFromWeek } from '../../utils/hierarchy';
 
 interface StudentInfractionDetailModalProps {
   isOpen: boolean;
@@ -25,10 +38,15 @@ interface StudentInfractionDetailModalProps {
   student: Student | null;
   records: DisciplineRecord[];
   summary?: StudentWeekSummary;
+  selectedWeek?: number;
   currentWeek?: number;
+  initialFilterPeriod?: HierarchyPeriodFilter;
+  settings?: TeacherSettings;
+  viewerRole?: RoleCode;
   onAddRecordForStudent?: (student: Student) => void;
   onResolveExplanation?: (recordId: string, result: 'ChapNhan' | 'TuChoi', reason: string) => void;
   onVoidRecord?: (recordId: string, reason: string) => void;
+  onUpdateRecord?: (recordId: string, updates: Partial<DisciplineRecord>) => void;
 }
 
 export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModalProps> = ({
@@ -37,27 +55,78 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
   student,
   records,
   summary,
+  selectedWeek,
   currentWeek = 3,
+  initialFilterPeriod,
+  settings,
+  viewerRole = 'GV',
   onAddRecordForStudent,
   onResolveExplanation,
   onVoidRecord,
+  onUpdateRecord,
 }) => {
-  const [filterPeriod, setFilterPeriod] = useState<'all' | 'this_week' | 'hk1' | 'hk2'>('all');
+  const effectiveInitialWeek = selectedWeek ?? (
+    initialFilterPeriod && initialFilterPeriod.tuanHoc !== 'all'
+      ? Number(initialFilterPeriod.tuanHoc)
+      : currentWeek
+  );
+
+  const [activeWeek, setActiveWeek] = useState<number>(effectiveInitialWeek);
+  const [filterPeriod, setFilterPeriod] = useState<'selected_week' | 'all' | 'hk1' | 'hk2'>('selected_week');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'pending' | 'voided'>('all');
   const [voidConfirmId, setVoidConfirmId] = useState<string | null>(null);
   const [voidReason, setVoidReason] = useState<string>('Giáo viên chủ nhiệm xem xét hủy ghi nhận');
 
+  // Inline Edit State
+  const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
+  const [editTenHanhVi, setEditTenHanhVi] = useState<string>('');
+  const [editLoaiDiem, setEditLoaiDiem] = useState<'Tru' | 'Cong'>('Tru');
+  const [editDiemSo, setEditDiemSo] = useState<number>(2);
+  const [editTuanHoc, setEditTuanHoc] = useState<number>(effectiveInitialWeek);
+  const [editBuoi, setEditBuoi] = useState<'Sang' | 'Chieu'>('Sang');
+  const [editGhiChu, setEditGhiChu] = useState<string>('');
+
+  // Sync activeWeek & filterPeriod with the currently viewed week/period whenever modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const targetW = selectedWeek ?? (
+        initialFilterPeriod && initialFilterPeriod.tuanHoc !== 'all'
+          ? Number(initialFilterPeriod.tuanHoc)
+          : currentWeek
+      );
+      setActiveWeek(targetW);
+
+      if (initialFilterPeriod && initialFilterPeriod.tuanHoc === 'all') {
+        if (initialFilterPeriod.hocKi === 1) setFilterPeriod('hk1');
+        else if (initialFilterPeriod.hocKi === 2) setFilterPeriod('hk2');
+        else setFilterPeriod('all');
+      } else {
+        setFilterPeriod('selected_week');
+      }
+      setFilterStatus('all');
+      setVoidConfirmId(null);
+      setEditingRecordId(null);
+    }
+  }, [isOpen, student?.maHS, selectedWeek, currentWeek, initialFilterPeriod]);
+
   // Filter records belonging to this student (by maHS or hoTen)
   const studentRecords = useMemo(() => {
     if (!student) return [];
-    return records.filter(r => isRecordMatchingStudent(r, student.maHS, student.hoTen));
+    return records
+      .filter(r => isRecordMatchingStudent(r, student.maHS, student.hoTen))
+      .sort((a, b) => new Date(b.thoiGianMayChu || 0).getTime() - new Date(a.thoiGianMayChu || 0).getTime());
   }, [student, records]);
+
+  // Count records in activeWeek
+  const activeWeekRecordsCount = useMemo(() => {
+    return studentRecords.filter(r => Number(r.tuanHoc) === Number(activeWeek) && r.trangThai !== 'DaHuy').length;
+  }, [studentRecords, activeWeek]);
 
   // Apply sub-filters
   const displayedRecords = useMemo(() => {
     return studentRecords.filter(r => {
       // Period filter
-      if (filterPeriod === 'this_week' && Number(r.tuanHoc) !== Number(currentWeek)) return false;
+      if (filterPeriod === 'selected_week' && Number(r.tuanHoc) !== Number(activeWeek)) return false;
       if (filterPeriod === 'hk1' && Number(r.hocKi || (Number(r.tuanHoc) <= 19 ? 1 : 2)) !== 1) return false;
       if (filterPeriod === 'hk2' && Number(r.hocKi || (Number(r.tuanHoc) <= 19 ? 1 : 2)) !== 2) return false;
 
@@ -68,7 +137,7 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
 
       return true;
     });
-  }, [studentRecords, filterPeriod, filterStatus, currentWeek]);
+  }, [studentRecords, filterPeriod, filterStatus, activeWeek]);
 
   if (!isOpen || !student) return null;
 
@@ -80,17 +149,54 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
   );
   let totalDeductions = 0;
   let totalBonuses = 0;
+  const allowBonus = settings?.batDiemCong ?? false;
+
   effectiveDisplayed.forEach(r => {
     const { isBonus, points } = parseRecordPoints(r);
     if (!isBonus) totalDeductions += points;
-    else totalBonuses += points;
+    else if (allowBonus) totalBonuses += points;
   });
 
-  const baseScore = summary?.diemKhoiDau ?? 100;
-  const isNoScoreWeek = filterPeriod === 'this_week' && summary?.chuaCoDiem;
+  const baseScore = settings?.diemKhoiDau ?? summary?.diemKhoiDau ?? 100;
+  const noDataWeeks = (settings?.noDataWeeks || []).map(Number);
+  const isSelectedWeekNoData = filterPeriod === 'selected_week' && noDataWeeks.includes(Number(activeWeek));
+  const isSelectedWeekFuture = filterPeriod === 'selected_week' && Number(activeWeek) > Number(currentWeek);
+  const isNoScoreWeek = isSelectedWeekNoData || isSelectedWeekFuture;
+
   const currentScore = isNoScoreWeek
     ? baseScore
     : Math.max(0, baseScore - totalDeductions + totalBonuses);
+
+  // Edit time limit configuration based on viewer role (GV vs HS/BCS)
+  const effectiveLimitMinutes =
+    viewerRole === 'GV'
+      ? (settings?.thoiHanSuaDuLieuGVPhut ?? 0)
+      : (settings?.thoiHanSuaHuyPhut ?? 1440);
+
+  const handleStartEdit = (rec: DisciplineRecord) => {
+    setEditingRecordId(rec.maGhiNhan);
+    setEditTenHanhVi(rec.tenHanhVi);
+    setEditLoaiDiem(rec.loaiDiem || 'Tru');
+    setEditDiemSo(Number(rec.diemSo) || 1);
+    setEditTuanHoc(Number(rec.tuanHoc) || activeWeek);
+    setEditBuoi(rec.buoi || 'Sang');
+    setEditGhiChu(rec.ghiChu || '');
+    setVoidConfirmId(null);
+  };
+
+  const handleSaveEdit = (recordId: string) => {
+    if (!onUpdateRecord || !editTenHanhVi.trim()) return;
+    onUpdateRecord(recordId, {
+      tenHanhVi: editTenHanhVi.trim(),
+      loaiDiem: editLoaiDiem,
+      diemSo: Math.max(1, Math.abs(Number(editDiemSo) || 1)),
+      tuanHoc: Number(editTuanHoc),
+      hocKi: getSemesterFromWeek(Number(editTuanHoc)),
+      buoi: editBuoi,
+      ghiChu: editGhiChu.trim() || undefined,
+    });
+    setEditingRecordId(null);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/75 animate-fade-in">
@@ -132,22 +238,23 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
                   Tổ {student.to}
                 </span>
                 {isNoScoreWeek ? (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-500/15 text-slate-600">
-                    Chưa có điểm
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 border border-amber-500/30">
+                    {isSelectedWeekNoData ? `⊘ Tuần ${activeWeek} không có dữ liệu` : `⏳ Tuần ${activeWeek} chưa học`}
                   </span>
                 ) : (
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    currentScore >= 90 ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)]' :
-                    currentScore >= 75 ? 'bg-accent/15 text-accent' :
-                    currentScore >= 60 ? 'bg-[var(--st-warn)]/15 text-[var(--st-warn)]' :
+                    currentScore >= (settings?.nguongTot ?? 90) ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)]' :
+                    currentScore >= (settings?.nguongKha ?? 75) ? 'bg-accent/15 text-accent' :
+                    currentScore >= (settings?.nguongDat ?? 60) ? 'bg-[var(--st-warn)]/15 text-[var(--st-warn)]' :
                     'bg-[var(--st-bad)]/15 text-[var(--st-bad)]'
                   }`}>
-                    {currentScore}đ · {currentScore >= 90 ? 'Tốt' : currentScore >= 75 ? 'Khá' : currentScore >= 60 ? 'Đạt' : 'Cần cố gắng'}
+                    {filterPeriod === 'selected_week' ? `Tuần ${activeWeek}: ` : ''}{currentScore}đ · {currentScore >= (settings?.nguongTot ?? 90) ? 'Tốt' : currentScore >= (settings?.nguongKha ?? 75) ? 'Khá' : currentScore >= (settings?.nguongDat ?? 60) ? 'Đạt' : 'Cần cố gắng'}
                   </span>
                 )}
               </div>
               <p className="text-xs text-muted mt-0.5">
-                Sổ chi tiết vi phạm nề nếp · Tổng điểm bị trừ: <strong className="text-[var(--st-bad)] font-bold">-{totalDeductions}đ</strong> ({displayedRecords.length} lần ghi nhận)
+                {filterPeriod === 'selected_week' ? `Chi tiết Tuần ${activeWeek}` : filterPeriod === 'hk1' ? 'Chi tiết Học kì 1' : filterPeriod === 'hk2' ? 'Chi tiết Học kì 2' : 'Toàn bộ năm học'} · Tổng điểm trừ: <strong className="text-[var(--st-bad)] font-bold">-{totalDeductions}đ</strong>
+                {allowBonus && totalBonuses > 0 ? <strong className="text-[var(--st-ok)] font-bold ml-1.5">+{totalBonuses}đ</strong> : null} ({displayedRecords.length} lần ghi nhận)
               </p>
             </div>
           </div>
@@ -163,12 +270,39 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
 
         {/* Filters Toolbar */}
         <div className="p-3 bg-surface-2/60 border-b border-token flex items-center justify-between gap-2 flex-wrap text-xs">
-          {/* Period Filter */}
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
-            <span className="text-[11px] font-semibold text-muted mr-1">Kỳ:</span>
+          {/* Period Filter with direct Week Selector */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 flex-wrap">
+            <span className="text-[11px] font-semibold text-muted mr-0.5">Kỳ:</span>
+            <button
+              type="button"
+              onClick={() => setFilterPeriod('selected_week')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                filterPeriod === 'selected_week'
+                  ? 'bg-primary text-on-primary font-bold shadow-2xs'
+                  : 'bg-surface border border-token text-muted hover:text-main'
+              }`}
+            >
+              Tuần {activeWeek} ({activeWeekRecordsCount})
+            </button>
+
+            <select
+              value={activeWeek}
+              onChange={e => {
+                setActiveWeek(Number(e.target.value));
+                setFilterPeriod('selected_week');
+              }}
+              className="px-2 py-1 rounded-lg bg-surface border border-token text-xs font-bold text-main cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent/40"
+              title="Đổi nhanh tuần cần xem"
+            >
+              {ALL_SCHOOL_WEEKS.map(w => (
+                <option key={w} value={w}>
+                  Đổi: Tuần {w}{w === currentWeek ? ' (Hiện tại)' : ''}
+                </option>
+              ))}
+            </select>
+
             {[
-              { id: 'all', label: `Tất cả (${studentRecords.length})` },
-              { id: 'this_week', label: `Tuần ${currentWeek}` },
+              { id: 'all', label: `Tất cả (${studentRecords.filter(r => r.trangThai !== 'DaHuy').length})` },
               { id: 'hk1', label: 'Học kì 1' },
               { id: 'hk2', label: 'Học kì 2' },
             ].map(tab => (
@@ -215,21 +349,36 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
         {/* Infraction List Body */}
         <div className="p-4 sm:p-5 overflow-y-auto space-y-3 flex-1">
           {displayedRecords.length === 0 ? (
-            <div className="py-12 px-4 text-center space-y-2 bg-surface-2/30 rounded-2xl border border-dashed border-token">
+            <div className="py-10 px-4 text-center space-y-2.5 bg-surface-2/30 rounded-2xl border border-dashed border-token">
               <div className="w-12 h-12 rounded-full bg-[var(--st-ok)]/15 text-[var(--st-ok)] flex items-center justify-center mx-auto shadow-2xs">
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <h4 className="text-sm font-bold text-main">
-                Không có lỗi vi phạm nào trong bộ lọc này!
+                {filterPeriod === 'selected_week'
+                  ? `Không có lỗi vi phạm nào trong Tuần ${activeWeek}!`
+                  : 'Không có lỗi vi phạm nào trong bộ lọc này!'}
               </h4>
               <p className="text-xs text-muted max-w-sm mx-auto">
-                Học sinh chấp hành tốt nội quy lớp học trong khoảng thời gian được chọn.
+                Học sinh chấp hành tốt nội quy lớp học trong khoảng thời gian được chọn (Điểm: <strong>{currentScore}đ</strong>).
               </p>
+              {filterPeriod === 'selected_week' && studentRecords.filter(r => r.trangThai !== 'DaHuy').length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setFilterPeriod('all')}
+                  className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent/15 hover:bg-accent/25 text-accent border border-accent/30 text-xs font-bold cursor-pointer transition-all"
+                >
+                  <span>Xem {studentRecords.filter(r => r.trangThai !== 'DaHuy').length} ghi nhận của học sinh ở các tuần khác →</span>
+                </button>
+              )}
             </div>
           ) : (
             displayedRecords.map(rec => {
               const isVoided = rec.trangThai === 'DaHuy';
               const isPending = rec.trangThai === 'ChoDuyet';
+              const isEditingThis = editingRecordId === rec.maGhiNhan;
+              const withinTimeLimit = isWithinEditTimeLimit(rec.thoiGianMayChu, effectiveLimitMinutes);
+              const remainingTimeLabel = getRemainingEditTimeLabel(rec.thoiGianMayChu, effectiveLimitMinutes);
+              const canEditOrVoid = !isVoided && withinTimeLimit && (Boolean(onVoidRecord) || Boolean(onUpdateRecord));
 
               return (
                 <div
@@ -282,7 +431,109 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
                     </div>
                   </div>
 
-                  {/* Crucial Section: WHO RECORDED THIS VIOLATION (Role Color Badge) */}
+                  {/* Inline Edit Form when editing this record */}
+                  {isEditingThis && onUpdateRecord && (
+                    <div className="mt-3 p-3 rounded-xl bg-surface-2 border border-accent/40 space-y-2.5 animate-fade-in text-xs">
+                      <div className="font-bold text-main flex items-center justify-between">
+                        <span>✏️ Chỉnh sửa dữ liệu ghi nhận</span>
+                        <button
+                          type="button"
+                          onClick={() => setEditingRecordId(null)}
+                          className="text-muted hover:text-main text-[11px] cursor-pointer"
+                        >
+                          Đóng
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div className="sm:col-span-2">
+                          <label className="block text-[10px] font-bold text-muted mb-0.5">Nội dung hành vi:</label>
+                          <input
+                            type="text"
+                            value={editTenHanhVi}
+                            onChange={e => setEditTenHanhVi(e.target.value)}
+                            className="w-full px-2.5 py-1.5 rounded-lg bg-surface border border-token text-xs font-semibold text-main"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-muted mb-0.5">Loại &amp; Điểm số:</label>
+                          <div className="flex items-center gap-1">
+                            <select
+                              value={editLoaiDiem}
+                              onChange={e => setEditLoaiDiem(e.target.value as 'Tru' | 'Cong')}
+                              className="px-2 py-1.5 rounded-lg bg-surface border border-token text-xs font-bold text-main"
+                            >
+                              <option value="Tru">Trừ (-)</option>
+                              <option value="Cong">Cộng (+)</option>
+                            </select>
+                            <input
+                              type="number"
+                              min={1}
+                              max={50}
+                              value={editDiemSo}
+                              onChange={e => setEditDiemSo(Math.max(1, Number(e.target.value) || 1))}
+                              className="w-16 px-2 py-1.5 rounded-lg bg-surface border border-token text-xs font-black text-center text-main"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-muted mb-0.5">Tuần học:</label>
+                          <select
+                            value={editTuanHoc}
+                            onChange={e => setEditTuanHoc(Number(e.target.value))}
+                            className="w-full px-2 py-1.5 rounded-lg bg-surface border border-token text-xs font-bold text-main"
+                          >
+                            {ALL_SCHOOL_WEEKS.map(w => (
+                              <option key={w} value={w}>Tuần {w}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-muted mb-0.5">Buổi:</label>
+                          <select
+                            value={editBuoi}
+                            onChange={e => setEditBuoi(e.target.value as 'Sang' | 'Chieu')}
+                            className="w-full px-2 py-1.5 rounded-lg bg-surface border border-token text-xs font-bold text-main"
+                          >
+                            <option value="Sang">Buổi Sáng</option>
+                            <option value="Chieu">Buổi Chiều</option>
+                          </select>
+                        </div>
+                        <div className="col-span-2 sm:col-span-1">
+                          <label className="block text-[10px] font-bold text-muted mb-0.5">Ghi chú:</label>
+                          <input
+                            type="text"
+                            value={editGhiChu}
+                            onChange={e => setEditGhiChu(e.target.value)}
+                            placeholder="Ghi chú thêm..."
+                            className="w-full px-2.5 py-1.5 rounded-lg bg-surface border border-token text-xs text-main"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setEditingRecordId(null)}
+                          className="px-2.5 py-1 rounded-lg border border-token text-[11px] font-semibold text-muted hover:text-main cursor-pointer"
+                        >
+                          Hủy
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSaveEdit(rec.maGhiNhan)}
+                          className="px-3 py-1 rounded-lg bg-accent text-on-accent text-[11px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
+                        >
+                          <Check className="w-3 h-3" />
+                          <span>Lưu thay đổi</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Crucial Section: WHO RECORDED THIS VIOLATION + Edit/Void Actions */}
                   <div className="mt-2.5 pt-2.5 border-t border-token/60 flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-xs font-semibold text-muted">Người ghi nhận:</span>
@@ -291,24 +542,34 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
                         nguoiGhi={rec.nguoiGhi}
                         size="sm"
                       />
+                      {!isVoided && (onVoidRecord || onUpdateRecord) && (
+                        <span className="text-[10px] text-muted inline-flex items-center gap-1 ml-1 px-1.5 py-0.5 rounded bg-surface-2 border border-token">
+                          <Clock className="w-2.5 h-2.5 text-accent" />
+                          <span>{remainingTimeLabel}</span>
+                        </span>
+                      )}
                     </div>
 
-                    {/* Teacher Action: Void / Cancel this infraction */}
-                    {!isVoided && onVoidRecord && (
+                    {/* Teacher / Authorized Action: Edit or Void this infraction */}
+                    {!isVoided && (onVoidRecord || onUpdateRecord) && (
                       <div>
-                        {voidConfirmId === rec.maGhiNhan ? (
-                          <div className="flex items-center gap-1.5 animate-fade-in">
+                        {!withinTimeLimit ? (
+                          <span className="text-[10.5px] text-muted italic">
+                            Đã hết thời gian sửa/hủy
+                          </span>
+                        ) : voidConfirmId === rec.maGhiNhan ? (
+                          <div className="flex items-center gap-1.5 animate-fade-in flex-wrap">
                             <input
                               type="text"
                               value={voidReason}
                               onChange={e => setVoidReason(e.target.value)}
-                              placeholder="Lý do GV hủy..."
+                              placeholder="Lý do hủy..."
                               className="px-2 py-1 text-[11px] bg-surface border border-token rounded-lg w-40"
                             />
                             <button
                               type="button"
                               onClick={() => {
-                                onVoidRecord(rec.maGhiNhan, voidReason);
+                                onVoidRecord?.(rec.maGhiNhan, voidReason);
                                 setVoidConfirmId(null);
                               }}
                               className="px-2 py-1 rounded-lg bg-[var(--st-bad)] text-white text-[10px] font-bold cursor-pointer"
@@ -324,15 +585,33 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
                             </button>
                           </div>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => setVoidConfirmId(rec.maGhiNhan)}
-                            className="text-[11px] font-semibold text-muted hover:text-[var(--st-bad)] transition-colors flex items-center gap-1 cursor-pointer"
-                            title="Giáo viên hủy bỏ bản ghi vi phạm này"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                            <span>Hủy lỗi này</span>
-                          </button>
+                          <div className="flex items-center gap-2.5">
+                            {onUpdateRecord && canEditOrVoid && (
+                              <button
+                                type="button"
+                                onClick={() => handleStartEdit(rec)}
+                                className="text-[11px] font-semibold text-accent hover:underline transition-colors flex items-center gap-1 cursor-pointer"
+                                title="Sửa nội dung, điểm số hoặc tuần của ghi nhận này"
+                              >
+                                <Edit3 className="w-3 h-3" />
+                                <span>Sửa dữ liệu</span>
+                              </button>
+                            )}
+                            {onVoidRecord && canEditOrVoid && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setVoidConfirmId(rec.maGhiNhan);
+                                  setEditingRecordId(null);
+                                }}
+                                className="text-[11px] font-semibold text-muted hover:text-[var(--st-bad)] transition-colors flex items-center gap-1 cursor-pointer"
+                                title="Hủy bỏ bản ghi vi phạm này"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                <span>Hủy lỗi này</span>
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
                     )}
@@ -392,7 +671,7 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
               className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
             >
               <PlusCircle className="w-3.5 h-3.5" />
-              <span>Ghi nhận vi phạm cho học sinh này</span>
+              <span>Ghi nhận vi phạm cho học sinh này (Tuần {activeWeek})</span>
             </button>
           ) : (
             <div />

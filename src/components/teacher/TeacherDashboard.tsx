@@ -116,6 +116,7 @@ interface TeacherDashboardProps {
   onOpenTeacherAvatar?: () => void;
   teacherAvatarUrl?: string;
   onVoidRecord?: (recordId: string, reason: string) => void;
+  onUpdateRecord?: (recordId: string, updates: Partial<DisciplineRecord>) => void;
   onLogout?: () => void;
   teacherProfile?: TeacherProfile;
   onUpdateTeacherProfile?: (profile: TeacherProfile) => void;
@@ -147,6 +148,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   onOpenTeacherAvatar,
   teacherAvatarUrl,
   onVoidRecord,
+  onUpdateRecord,
   onLogout,
   teacherProfile,
   onUpdateTeacherProfile,
@@ -374,22 +376,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     return records.filter(r => r.ngayHoc === todayStr && r.trangThai !== 'DaHuy');
   }, [records]);
 
-  // Students requiring attention (warn / bad)
-  const attentionStudents = useMemo(() => {
-    return students.filter(s => {
-      const summary = studentSummaries[s.maHS];
-      return summary && !summary.chuaCoDiem && (summary.mucMau === 'bad' || summary.mucMau === 'warn');
-    });
-  }, [students, studentSummaries]);
-
-  // Sorting & Filtering State for Emulation Overview (Bảng tổng quan thi đua)
-  type TeacherRankingSort = 'score_desc' | 'score_asc' | 'stt' | 'name_asc' | 'name_desc' | 'to';
-  const [rankingSortBy, setRankingSortBy] = useState<TeacherRankingSort>('score_desc');
-  const [rankingToFilter, setRankingToFilter] = useState<'all' | number>('all');
-  const [rankingSearchQuery, setRankingSearchQuery] = useState('');
-  const [rankingRatingFilter, setRankingRatingFilter] = useState<'all' | 'Tot' | 'Kha' | 'Dat' | 'CanCoGang'>('all');
-  const [filterOnlyViolations, setFilterOnlyViolations] = useState(false);
-
   // Hierarchy Period Summaries for all students
   const teacherPeriodSummaries = useMemo(() => {
     const map: Record<string, ReturnType<typeof calculateStudentPeriodSummary>> = {};
@@ -398,6 +384,52 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     });
     return map;
   }, [students, records, periodFilter, settings, currentWeek]);
+
+  // Summaries mapped to StudentWeekSummary format for the currently selected week/period
+  const selectedPeriodWeekSummaries = useMemo(() => {
+    const targetW = typeof periodFilter.tuanHoc === 'number' ? periodFilter.tuanHoc : currentWeek;
+    const map: Record<string, StudentWeekSummary> = {};
+    students.forEach(st => {
+      const pSum = teacherPeriodSummaries[st.maHS];
+      if (pSum) {
+        map[st.maHS] = {
+          maHS: st.maHS,
+          hoTen: st.hoTen,
+          to: st.to,
+          tuanHoc: targetW,
+          diemKhoiDau: settings.diemKhoiDau,
+          tongDiemTru: pSum.tongDiemTru,
+          tongDiemCong: pSum.tongDiemCong,
+          diemHienTai: pSum.diemTrungBinh,
+          xepLoai: pSum.xepLoai,
+          mucMau: pSum.mucMau,
+          soLoiTrongTuan: pSum.soLoi,
+          coLoiNang: pSum.mucMau === 'bad',
+          chuaCoDiem: pSum.chuaCoDiem,
+          lyDoChuaCoDiem: pSum.lyDoChuaCoDiem,
+        };
+      } else if (studentSummaries[st.maHS]) {
+        map[st.maHS] = studentSummaries[st.maHS];
+      }
+    });
+    return map;
+  }, [students, teacherPeriodSummaries, studentSummaries, periodFilter.tuanHoc, currentWeek, settings.diemKhoiDau]);
+
+  // Students requiring attention (warn / bad) in currently selected week/period
+  const attentionStudents = useMemo(() => {
+    return students.filter(s => {
+      const summary = selectedPeriodWeekSummaries[s.maHS];
+      return summary && !summary.chuaCoDiem && (summary.mucMau === 'bad' || summary.mucMau === 'warn');
+    });
+  }, [students, selectedPeriodWeekSummaries]);
+
+  // Sorting & Filtering State for Emulation Overview (Bảng tổng quan thi đua)
+  type TeacherRankingSort = 'score_desc' | 'score_asc' | 'stt' | 'name_asc' | 'name_desc' | 'to';
+  const [rankingSortBy, setRankingSortBy] = useState<TeacherRankingSort>('score_desc');
+  const [rankingToFilter, setRankingToFilter] = useState<'all' | number>('all');
+  const [rankingSearchQuery, setRankingSearchQuery] = useState('');
+  const [rankingRatingFilter, setRankingRatingFilter] = useState<'all' | 'Tot' | 'Kha' | 'Dat' | 'CanCoGang'>('all');
+  const [filterOnlyViolations, setFilterOnlyViolations] = useState(false);
 
   // Official Emulation Rankings (Thuật toán xếp hạng chuẩn: cùng điểm thì cùng xếp hạng)
   const teacherOfficialRankings = useMemo(() => {
@@ -1046,7 +1078,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 <StudentPicker
                   students={students}
                   layout={layout}
-                  studentSummaries={studentSummaries}
+                  studentSummaries={selectedPeriodWeekSummaries}
                   selectedStudentIds={selectedStudentIds}
                   onSelectStudent={handleSelectStudent}
                   viewerRole="GV"
@@ -1637,7 +1669,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             <StudentPicker
               students={students}
               layout={layout}
-              studentSummaries={studentSummaries}
+              studentSummaries={selectedPeriodWeekSummaries}
               selectedStudentIds={selectedStudentIds}
               onSelectStudent={handleSelectStudent}
               viewerRole="GV"
@@ -2090,14 +2122,83 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               />
             </div>
 
-            <div className="flex items-center justify-between">
+            {/* THỜI GIAN CHO PHÉP SỬA / HỦY DỮ LIỆU CỦA GIÁO VIÊN & HỌC SINH */}
+            <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200 space-y-2.5">
               <div>
-                <span className="font-semibold text-main block">Thời hạn sửa / hủy của Ban cán sự:</span>
-                <span className="text-[11px] text-muted">Tính từ thời điểm ghi nhận</span>
+                <span className="font-extrabold text-amber-950 block">
+                  ⏱️ Thời gian cho phép sửa / hủy dữ liệu của Giáo viên &amp; Học sinh:
+                </span>
+                <span className="text-[11px] text-amber-800">
+                  Cấu hình giới hạn thời gian chỉnh sửa hoặc hủy ghi nhận vi phạm và gửi giải trình (có tùy chọn Không giới hạn).
+                </span>
               </div>
-              <span className="font-bold text-main px-2 py-1 rounded bg-surface-2 border border-token">
-                {settings.thoiHanSuaHuyPhut / 60} giờ
-              </span>
+
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <span className="font-bold text-slate-900 block">1. Thời gian sửa / hủy dữ liệu của Giáo viên:</span>
+                    <span className="text-[11px] text-slate-600">Áp dụng khi GVCN sửa hoặc hủy ghi nhận vi phạm</span>
+                  </div>
+                  <select
+                    value={settings.thoiHanSuaDuLieuGVPhut ?? 0}
+                    onChange={e => onUpdateSettings({ thoiHanSuaDuLieuGVPhut: Number(e.target.value) })}
+                    className="p-1.5 bg-white border border-amber-300 rounded-lg text-xs font-bold text-slate-900 cursor-pointer shrink-0"
+                  >
+                    <option value={0}>♾️ Không giới hạn (Mặc định)</option>
+                    <option value={60}>1 giờ</option>
+                    <option value={180}>3 giờ</option>
+                    <option value={360}>6 giờ</option>
+                    <option value={720}>12 giờ</option>
+                    <option value={1440}>24 giờ (1 ngày)</option>
+                    <option value={4320}>3 ngày (72 giờ)</option>
+                    <option value={10080}>7 ngày (1 tuần)</option>
+                    <option value={43200}>30 ngày (1 tháng)</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-amber-200/70">
+                  <div>
+                    <span className="font-bold text-slate-900 block">2. Thời gian sửa / hủy dữ liệu của Học sinh &amp; Ban cán sự:</span>
+                    <span className="text-[11px] text-slate-600">Tính từ thời điểm ghi nhận vi phạm trong Sổ ghi</span>
+                  </div>
+                  <select
+                    value={settings.thoiHanSuaHuyPhut ?? 1440}
+                    onChange={e => onUpdateSettings({ thoiHanSuaHuyPhut: Number(e.target.value) })}
+                    className="p-1.5 bg-white border border-amber-300 rounded-lg text-xs font-bold text-slate-900 cursor-pointer shrink-0"
+                  >
+                    <option value={0}>♾️ Không giới hạn</option>
+                    <option value={30}>30 phút</option>
+                    <option value={60}>1 giờ</option>
+                    <option value={180}>3 giờ</option>
+                    <option value={360}>6 giờ</option>
+                    <option value={720}>12 giờ</option>
+                    <option value={1440}>24 giờ (1 ngày)</option>
+                    <option value={2880}>48 giờ (2 ngày)</option>
+                    <option value={4320}>3 ngày (72 giờ)</option>
+                    <option value={10080}>7 ngày (1 tuần)</option>
+                    <option value={43200}>30 ngày (1 tháng)</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-amber-200/70">
+                  <div>
+                    <span className="font-bold text-slate-900 block">3. Thời hạn Học sinh gửi / sửa đơn giải trình:</span>
+                    <span className="text-[11px] text-slate-600">Tính từ ngày phát sinh vi phạm nề nếp</span>
+                  </div>
+                  <select
+                    value={settings.hanGuiGiaiTrinhNgay ?? 7}
+                    onChange={e => onUpdateSettings({ hanGuiGiaiTrinhNgay: Number(e.target.value) })}
+                    className="p-1.5 bg-white border border-amber-300 rounded-lg text-xs font-bold text-slate-900 cursor-pointer shrink-0"
+                  >
+                    <option value={0}>♾️ Không giới hạn</option>
+                    <option value={1}>1 ngày (24 giờ)</option>
+                    <option value={3}>3 ngày</option>
+                    <option value={7}>7 ngày (1 tuần)</option>
+                    <option value={14}>14 ngày (2 tuần)</option>
+                    <option value={30}>30 ngày (1 tháng)</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center justify-between">
@@ -3194,14 +3295,19 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         onClose={() => setInspectingStudent(null)}
         student={inspectingStudent}
         records={records}
-        summary={inspectingStudent ? studentSummaries[inspectingStudent.maHS] : undefined}
+        summary={inspectingStudent ? selectedPeriodWeekSummaries[inspectingStudent.maHS] : undefined}
+        selectedWeek={typeof periodFilter.tuanHoc === 'number' ? periodFilter.tuanHoc : currentWeek}
         currentWeek={currentWeek}
+        initialFilterPeriod={periodFilter}
+        settings={settings}
+        viewerRole="GV"
         onAddRecordForStudent={(st) => {
           setSelectedStudentIds([st.maHS]);
           setIsBottomSheetOpen(true);
         }}
         onResolveExplanation={onResolveExplanation}
         onVoidRecord={onVoidRecord}
+        onUpdateRecord={onUpdateRecord}
       />
 
       {/* Student Avatar Modal opened by Teacher */}

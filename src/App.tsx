@@ -827,6 +827,27 @@ export default function App() {
     saveServerState(buildFullStateSnapshot({ records: updated }), true);
   }, [records, buildFullStateSnapshot]);
 
+  // Edit record data within allowed time limit by teacher, cadre, or recorder
+  const handleUpdateRecord = useCallback((recordId: string, updates: Partial<DisciplineRecord>) => {
+    const updated = records.map(r => {
+      if (r.maGhiNhan === recordId) {
+        return {
+          ...r,
+          ...updates,
+        };
+      }
+      return r;
+    });
+    setRecords(updated);
+    localStorage.setItem('app_records_10a5', JSON.stringify(updated));
+    saveServerState(buildFullStateSnapshot({ records: updated }), true);
+
+    setToast({
+      id: `upd-${Date.now()}`,
+      message: 'Đã cập nhật dữ liệu ghi nhận và đồng bộ lên Firebase.',
+    });
+  }, [records, buildFullStateSnapshot]);
+
   // Explanation submit by student
   const handleSubmitExplanation = useCallback((recordId: string, explanation: string) => {
     const updated = records.map(r => {
@@ -1108,6 +1129,7 @@ export default function App() {
             onUpdateSettings={handleUpdateSettings}
             onAddRecord={handleAddRecord}
             onVoidRecord={handleVoidRecord}
+            onUpdateRecord={handleUpdateRecord}
             onResolveExplanation={handleResolveExplanation}
             onToggleRulePin={handleToggleRulePin}
             onUpdateRules={handleUpdateRules}
@@ -1143,6 +1165,7 @@ export default function App() {
             academicRecords={academicRecords}
             onAddRecord={handleAddRecord}
             onVoidRecord={handleVoidRecord}
+            onUpdateRecord={handleUpdateRecord}
             onResolveExplanation={handleResolveExplanation}
             onSubmitExplanation={handleSubmitExplanation}
             onUpdateStudentAvatar={handleUpdateStudentAvatar}
@@ -1165,6 +1188,7 @@ export default function App() {
             academicRecords={academicRecords}
             onAddRecord={handleAddRecord}
             onVoidRecord={handleVoidRecord}
+            onUpdateRecord={handleUpdateRecord}
             onResolveExplanation={handleResolveExplanation}
             onSubmitExplanation={handleSubmitExplanation}
             onUpdateStudentAvatar={handleUpdateStudentAvatar}
