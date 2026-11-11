@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Student, DisciplineRecord, RuleItem } from '../../types';
 import { findStudentInSeatingMaster } from '../../utils/seatingMaster';
+import { findMatchingRule, classifySeverityByPoints } from '../../utils/emulation';
 
 interface TimeDataImportCardProps {
   students: Student[];
@@ -157,6 +158,11 @@ export const TimeDataImportCard: React.FC<TimeDataImportCardProps> = ({
 
     const newRecords: DisciplineRecord[] = validRows.map(row => {
       const nowISO = new Date().toISOString();
+      const matchedRule = findMatchingRule(rules, undefined, row.tenHanhVi, row.loaiDiem);
+      const effectiveMucDo =
+        matchedRule && Number(matchedRule.diemSo) === row.diemSo && matchedRule.mucDo
+          ? matchedRule.mucDo
+          : classifySeverityByPoints(row.diemSo, row.loaiDiem === 'Cong');
       return {
         maGhiNhan: `IMP-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         doiTuong: 'HocSinh',
@@ -169,10 +175,10 @@ export const TimeDataImportCard: React.FC<TimeDataImportCardProps> = ({
         thang: parseInt(row.ngayHoc.split('-')[1], 10) || (new Date().getMonth() + 1),
         hocKi: (row.tuanHoc <= 19 ? 1 : 2) as 1 | 2,
         namHoc: '2026-2027',
-        maNoiQuy: row.loaiDiem === 'Cong' ? 'NQ26' : 'NQ01',
-        nhomHanhVi: row.nhomHanhVi,
+        maNoiQuy: matchedRule?.maNoiQuy || (row.loaiDiem === 'Cong' ? 'NQ26' : 'NQ01'),
+        nhomHanhVi: matchedRule?.nhomHanhVi || row.nhomHanhVi,
         tenHanhVi: row.tenHanhVi,
-        mucDo: row.diemSo >= 5 ? 'Nang' : row.diemSo >= 3 ? 'Vua' : 'Nhe',
+        mucDo: effectiveMucDo,
         diemSo: row.diemSo,
         loaiDiem: row.loaiDiem,
         ghiChu: row.ghiChu ? `[Nhập file ${fileName}] ${row.ghiChu}` : `[Nhập file ${fileName}]`,

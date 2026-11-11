@@ -121,7 +121,17 @@ export interface DisciplineRecord {
   thoiGianHuy?: string;
 }
 
-export type WeekEvaluation = 'Tot' | 'Kha' | 'Dat' | 'ChuaDat';
+export type WeekEvaluation = 'Tot' | 'Kha' | 'Dat' | 'ChuaDat' | string;
+
+export type RatingColorKey = 'emerald' | 'teal' | 'sky' | 'indigo' | 'purple' | 'amber' | 'orange' | 'rose' | 'slate';
+
+export interface ScoreRatingTier {
+  id: string;
+  label: string;
+  minScore: number;
+  color: RatingColorKey;
+  icon?: string;
+}
 
 export type StatusColorLevel = 'none' | 'warn' | 'bad' | 'ok';
 
@@ -176,6 +186,7 @@ export interface TeacherSettings {
   nguongTot: number; // >= 90
   nguongKha: number; // >= 75
   nguongDat: number; // >= 60
+  phanLoaiDiem?: ScoreRatingTier[]; // Danh sách phân loại theo điểm tùy biến linh hoạt của Giáo viên
   batDiemCong: boolean; // default false
   batDiemThuongGoLoi: boolean; // default false
   tranDiemBu: number; // default 50%

@@ -15,8 +15,8 @@ import {
   PenTool,
   ListFilter
 } from 'lucide-react';
-import { Student, RuleItem, RoleCode, DisciplineRecord } from '../../types';
-import { getCurrentSession } from '../../utils/emulation';
+import { Student, RuleItem, RoleCode, DisciplineRecord, SeverityLevel } from '../../types';
+import { getCurrentSession, classifySeverityByPoints } from '../../utils/emulation';
 import { removeVietnameseAccents } from '../../utils/vietnamese';
 import { RecorderBadge } from '../common/RecorderBadge';
 import { 
@@ -73,7 +73,13 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
   const [customCategory, setCustomCategory] = useState<string>('Nề nếp');
   const [customPointType, setCustomPointType] = useState<'Tru' | 'Cong'>('Tru');
   const [customPoints, setCustomPoints] = useState<number>(2);
-  const [customSeverity, setCustomSeverity] = useState<'Nhe' | 'Vua' | 'Nang'>('Nhe');
+
+  const getRuleBorderClass = (loaiDiem: 'Tru' | 'Cong', mucDo: SeverityLevel) => {
+    if (loaiDiem === 'Cong') return 'border-2 border-emerald-500';
+    if (mucDo === 'Nang') return 'border-2 border-rose-600';
+    if (mucDo === 'Vua') return 'border-2 border-amber-500';
+    return 'border-2 border-slate-900 dark:border-slate-300';
+  };
   
   // Time Hierarchy State: Năm học -> Học kì -> Tuần -> Buổi (Bỏ qua tháng)
   const [hocKi, setHocKi] = useState<1 | 2>(() => {
@@ -183,14 +189,16 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
 
   const handleCustomSave = () => {
     if (!customRuleName.trim()) return;
+    const effectivePoints = Math.max(1, customPoints);
+    const derivedSeverity = classifySeverityByPoints(effectivePoints, customPointType === 'Cong');
 
     const customRule: RuleItem = {
       maNoiQuy: `NQ_CUSTOM_${Date.now()}`,
       nhomHanhVi: customCategory,
       tenHanhVi: customRuleName.trim(),
       loaiDiem: customPointType,
-      diemSo: Math.max(1, customPoints),
-      mucDo: customSeverity,
+      diemSo: effectivePoints,
+      mucDo: derivedSeverity,
       ghim: false,
       thuTu: 999,
     };
@@ -412,52 +420,31 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
                   value={customRuleName}
                   onChange={e => setCustomRuleName(e.target.value)}
                   placeholder="VD: Sử dụng điện thoại không đúng lúc, Quên khăn lau bảng, Nói chuyện riêng..."
-                  className="w-full px-3 py-2.5 bg-surface-2 border border-token rounded-xl text-xs text-main placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent font-medium shadow-2xs"
+                  className={`w-full px-3 py-2.5 bg-surface-2 rounded-xl text-xs text-main placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent font-medium shadow-2xs transition-colors ${getRuleBorderClass(
+                    customPointType,
+                    classifySeverityByPoints(customPoints, customPointType === 'Cong')
+                  )}`}
                   autoFocus
                 />
               </div>
 
-              {/* 2. Nhóm hành vi & Mức độ */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-muted mb-1">
-                    Nhóm hành vi:
-                  </label>
-                  <select
-                    value={customCategory}
-                    onChange={e => setCustomCategory(e.target.value)}
-                    className="w-full px-3 py-2 bg-surface-2 border border-token rounded-xl text-xs font-semibold text-main cursor-pointer"
-                  >
-                    <option value="Nề nếp">Nề nếp</option>
-                    <option value="Chuyên cần">Chuyên cần</option>
-                    <option value="Học tập">Học tập</option>
-                    <option value="Lao động - Vệ sinh">Lao động - Vệ sinh</option>
-                    <option value="Phong trào">Phong trào</option>
-                    {allowBonus && <option value="Điểm cộng">Điểm cộng</option>}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-muted mb-1">
-                    Mức độ đánh giá:
-                  </label>
-                  <div className="flex items-center gap-1 bg-surface-2 p-1 rounded-xl border border-token text-xs">
-                    {(['Nhe', 'Vua', 'Nang'] as const).map(sev => (
-                      <button
-                        key={sev}
-                        type="button"
-                        onClick={() => setCustomSeverity(sev)}
-                        className={`flex-1 py-1.5 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
-                          customSeverity === sev
-                            ? sev === 'Nang' ? 'bg-rose-600 text-white shadow-xs' : sev === 'Vua' ? 'bg-amber-500 text-white shadow-xs' : 'bg-accent text-on-accent shadow-xs'
-                            : 'text-muted hover:text-main'
-                        }`}
-                      >
-                        {sev === 'Nhe' ? 'Nhẹ' : sev === 'Vua' ? 'Vừa' : 'Nặng'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              {/* 2. Nhóm hành vi */}
+              <div>
+                <label className="block text-[11px] font-bold text-muted mb-1">
+                  Nhóm hành vi:
+                </label>
+                <select
+                  value={customCategory}
+                  onChange={e => setCustomCategory(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface-2 border border-token rounded-xl text-xs font-semibold text-main cursor-pointer"
+                >
+                  <option value="Nề nếp">Nề nếp</option>
+                  <option value="Chuyên cần">Chuyên cần</option>
+                  <option value="Học tập">Học tập</option>
+                  <option value="Lao động - Vệ sinh">Lao động - Vệ sinh</option>
+                  <option value="Phong trào">Phong trào</option>
+                  {allowBonus && <option value="Điểm cộng">Điểm cộng</option>}
+                </select>
               </div>
 
               {/* 3. Loại điểm & Số điểm */}
@@ -541,28 +528,29 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {frequentRules.map(rule => {
                       const isSelected = selectedRuleId === rule.maNoiQuy;
+                      const isBonus = rule.loaiDiem === 'Cong';
+                      const effectiveSeverity = rule.mucDo || classifySeverityByPoints(rule.diemSo, isBonus);
+                      const borderCls = getRuleBorderClass(rule.loaiDiem, effectiveSeverity);
                       return (
                         <button
                           key={rule.maNoiQuy}
                           type="button"
                           onClick={() => handleSelectRule(rule)}
-                          className={`min-h-[44px] p-2 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                          className={`min-h-[44px] p-2 rounded-xl text-left flex flex-col justify-between transition-all cursor-pointer ${borderCls} ${
                             isSelected 
-                              ? 'border-accent bg-accent/10 ring-2 ring-accent/30' 
-                              : 'border-token bg-surface hover:bg-surface-2'
+                              ? 'bg-accent/10 ring-2 ring-accent/40' 
+                              : 'bg-surface hover:bg-surface-2'
                           }`}
                         >
                           <span className="text-xs font-semibold text-main line-clamp-2 leading-tight">
                             {rule.tenHanhVi}
                           </span>
                           <div className="flex items-center justify-between mt-1 text-[11px]">
-                            <span className="font-bold text-[var(--st-bad)]">
-                              -{rule.diemSo}đ
+                            <span className={`font-bold ${isBonus ? 'text-[var(--st-ok)]' : 'text-[var(--st-bad)]'}`}>
+                              {isBonus ? `+${rule.diemSo}` : `-${rule.diemSo}`}đ
                             </span>
-                            {rule.mucDo === 'Nang' && (
-                              <span className="text-[9px] font-bold px-1 rounded bg-[var(--st-bad)]/15 text-[var(--st-bad)]">
-                                Nặng
-                              </span>
+                            {isSelected && (
+                              <Check className="w-3.5 h-3.5 text-accent stroke-[3]" />
                             )}
                           </div>
                         </button>
@@ -625,16 +613,18 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
                 {filteredRules.map(rule => {
                   const isSelected = selectedRuleId === rule.maNoiQuy;
                   const isBonus = rule.loaiDiem === 'Cong';
+                  const effectiveSeverity = rule.mucDo || classifySeverityByPoints(rule.diemSo, isBonus);
+                  const borderCls = getRuleBorderClass(rule.loaiDiem, effectiveSeverity);
 
                   return (
                     <button
                       key={rule.maNoiQuy}
                       type="button"
                       onClick={() => handleSelectRule(rule)}
-                      className={`w-full min-h-[44px] px-3 py-2 rounded-xl border flex items-center justify-between text-left transition-colors cursor-pointer ${
+                      className={`w-full min-h-[44px] px-3 py-2 rounded-xl flex items-center justify-between text-left transition-colors cursor-pointer ${borderCls} ${
                         isSelected 
-                          ? 'border-accent bg-accent/10 ring-2 ring-accent/30' 
-                          : 'border-token bg-surface hover:bg-surface-2'
+                          ? 'bg-accent/10 ring-2 ring-accent/40' 
+                          : 'bg-surface hover:bg-surface-2'
                       }`}
                     >
                       <div className="min-w-0 pr-2">
@@ -643,9 +633,6 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
                         </div>
                         <div className="text-[10px] text-muted flex items-center gap-1.5 mt-0.5">
                           <span>{rule.nhomHanhVi}</span>
-                          {rule.mucDo === 'Nang' && (
-                            <span className="text-[9px] font-bold text-[var(--st-bad)]">· Mức Nặng</span>
-                          )}
                         </div>
                       </div>
 

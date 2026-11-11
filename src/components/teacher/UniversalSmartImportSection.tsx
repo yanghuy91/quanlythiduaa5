@@ -57,6 +57,7 @@ import {
 } from '../../utils/seatingMaster';
 import { StandardSeatingImportModal } from './StandardSeatingImportModal';
 import { AI_SEATING_PROMPT_GUIDE } from '../../utils/aiSeatingPrompt';
+import { findMatchingRule, classifySeverityByPoints } from '../../utils/emulation';
 
 interface UniversalSmartImportSectionProps {
   students: Student[];
@@ -571,6 +572,17 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                 ? 'Điểm cộng'
                 : 'Nề nếp';
 
+          const activeRuleCatalog = extractedRules.length > 0 ? extractedRules : rules;
+          const matchedRule = findMatchingRule(activeRuleCatalog, undefined, behaviorText, loaiDiem);
+          const effectiveDiemSo =
+            colSoDiem !== -1 && Number.isFinite(Number(row[colSoDiem])) && Number(row[colSoDiem]) !== 0
+              ? diemSo
+              : matchedRule?.diemSo || diemSo;
+          const effectiveMucDo =
+            matchedRule && Number(matchedRule.diemSo) === effectiveDiemSo && matchedRule.mucDo
+              ? matchedRule.mucDo
+              : classifySeverityByPoints(effectiveDiemSo, loaiDiem === 'Cong');
+
           extractedDiscipline.push({
             maGhiNhan: `IMP-${Date.now()}-${extractedDiscipline.length + 1}`,
             thoiGianMayChu: new Date().toISOString(),
@@ -585,11 +597,11 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
             maHS: matchedStudent?.maHS || rawMaRef || 'HS01',
             hoTen: matchedStudent?.hoTen || rawNameRef || rawMaRef,
             to: toNum,
-            maNoiQuy: loaiDiem === 'Cong' ? 'NQ_CONG' : 'NQ_VIPHAM',
-            nhomHanhVi,
+            maNoiQuy: matchedRule?.maNoiQuy || (loaiDiem === 'Cong' ? 'NQ_CONG' : 'NQ_VIPHAM'),
+            nhomHanhVi: matchedRule?.nhomHanhVi || nhomHanhVi,
             tenHanhVi: behaviorText,
-            mucDo: diemSo >= 5 ? 'Nang' : diemSo >= 3 ? 'Vua' : 'Nhe',
-            diemSo,
+            mucDo: effectiveMucDo,
+            diemSo: effectiveDiemSo,
             loaiDiem,
             ghiChu: colGhiChu !== -1 && row[colGhiChu] ? String(row[colGhiChu]).trim() : undefined,
             nguoiGhi: teacherName ? `${teacherName} (GVCN)` : 'GVCN',

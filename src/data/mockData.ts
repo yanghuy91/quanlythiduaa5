@@ -103,13 +103,13 @@ export const MOCK_STUDENTS: Student[] = RAW_MOCK_STUDENTS.map(s => ({
   avatarUrl: s.avatarUrl || getDefaultStudentAvatar(s.maHS, s.gioiTinh || 'Nam'),
 }));
 
-// Danh mục nội quy nề nếp thi đua
+// Danh mục nội quy nề nếp thi đua (Mức độ căn cứ chuẩn theo điểm trừ: 1-2đ: Nhẹ, 3-4đ: Vừa, >=5đ: Nặng)
 export const MOCK_RULES: RuleItem[] = [
   // Chuyên cần & Học tập
   { maNoiQuy: 'NQ01', nhomHanhVi: 'Chuyên cần', tenHanhVi: 'Đi muộn', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: true, thuTu: 1 },
   { maNoiQuy: 'NQ29', nhomHanhVi: 'Chuyên cần', tenHanhVi: 'Nghỉ học có phép', loaiDiem: 'Tru', diemSo: 1, mucDo: 'Nhe', ghim: true, thuTu: 2 },
-  { maNoiQuy: 'NQ02', nhomHanhVi: 'Chuyên cần', tenHanhVi: 'Nghỉ học không phép', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Vua', ghim: true, thuTu: 3 },
-  { maNoiQuy: 'NQ03', nhomHanhVi: 'Chuyên cần', tenHanhVi: 'Trốn tiết, bỏ giờ', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Vua', ghim: false, thuTu: 4 },
+  { maNoiQuy: 'NQ02', nhomHanhVi: 'Chuyên cần', tenHanhVi: 'Nghỉ học không phép', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Nang', ghim: true, thuTu: 3 },
+  { maNoiQuy: 'NQ03', nhomHanhVi: 'Chuyên cần', tenHanhVi: 'Trốn tiết, bỏ giờ', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Nang', ghim: false, thuTu: 4 },
   { maNoiQuy: 'NQ04', nhomHanhVi: 'Chuyên cần', tenHanhVi: 'Vào lớp trễ sau ra chơi', loaiDiem: 'Tru', diemSo: 1, mucDo: 'Nhe', ghim: false, thuTu: 5 },
 
   // Học tập
@@ -139,7 +139,7 @@ export const MOCK_RULES: RuleItem[] = [
 
   // Lao động - Vệ sinh
   { maNoiQuy: 'NQ32', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Vắng buổi lao động có phép', loaiDiem: 'Tru', diemSo: 1, mucDo: 'Nhe', ghim: true, thuTu: 25 },
-  { maNoiQuy: 'NQ33', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Vắng buổi lao động không phép', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Vua', ghim: true, thuTu: 26 },
+  { maNoiQuy: 'NQ33', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Vắng buổi lao động không phép', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Nang', ghim: true, thuTu: 26 },
   { maNoiQuy: 'NQ20', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Trực nhật bẩn hoặc trễ giờ', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: true, thuTu: 27 },
   { maNoiQuy: 'NQ21', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Vứt rác bừa bãi trong lớp', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: true, thuTu: 28 },
   { maNoiQuy: 'NQ22', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Ăn quà vặt trong phòng học', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 29 },

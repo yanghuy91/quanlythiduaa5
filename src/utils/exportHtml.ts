@@ -2,19 +2,22 @@
  * Utility to generate and download a standalone, printable HTML report of Class 10A5
  * Quản lý Nề nếp & Thi đua Lớp học 10A5 - THPT Số 2 Đức Phổ
  */
-import { Student, StudentWeekSummary, DisciplineRecord } from '../types';
-import { calculateDenseRankings } from './emulation';
+import { Student, StudentWeekSummary, DisciplineRecord, TeacherSettings } from '../types';
+import { calculateDenseRankings, getRatingTierInfo, getScoreRatingTiers, getRatingColorClasses } from './emulation';
 
 export function exportClassroomHtmlReport(
   students: Student[],
   studentSummaries: Record<string, StudentWeekSummary>,
   currentWeek: number,
-  records: DisciplineRecord[]
+  records: DisciplineRecord[],
+  settings?: TeacherSettings
 ) {
+  const tiers = getScoreRatingTiers(settings);
+  const topTier = tiers[0];
   const rankedStudents = calculateDenseRankings(
     students.map(student => ({
       student,
-      score: studentSummaries[student.maHS]?.diemHienTai ?? 100,
+      score: studentSummaries[student.maHS]?.diemHienTai ?? (settings?.diemKhoiDau ?? 100),
       deductions: studentSummaries[student.maHS]?.tongDiemTru ?? 0,
       bonuses: studentSummaries[student.maHS]?.tongDiemCong ?? 0,
     })),
@@ -122,10 +125,6 @@ export function exportClassroomHtmlReport(
       font-size: 10px;
       font-weight: bold;
     }
-    .badge-tot { background: #dcfce7; color: #15803d; }
-    .badge-kha { background: #e0f2fe; color: #0369a1; }
-    .badge-dat { background: #fef9c3; color: #a16207; }
-    .badge-chuadat { background: #fee2e2; color: #b91c1c; }
     .footer {
       display: flex;
       justify-content: space-between;
@@ -171,24 +170,24 @@ export function exportClassroomHtmlReport(
     <div class="header">
       <h2>SỞ GD&ĐT QUẢNG NGÃI — THPT SỐ 2 ĐỨC PHỔ</h2>
       <h1>BÁO CÁO THI ĐUA LỚP 10A5</h1>
-      <p>Năm học 2026 - 2027 · Tuần ${currentWeek} · Tổng số: 42 học sinh</p>
+      <p>Năm học 2026 - 2027 · Tuần ${currentWeek} · Tổng số: ${students.length} học sinh</p>
     </div>
 
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-value">42</div>
+        <div class="stat-value">${students.length}</div>
         <div class="stat-label">Sĩ số lớp</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${sortedStudents.filter(s => (studentSummaries[s.maHS]?.diemHienTai ?? 100) >= 90).length}</div>
-        <div class="stat-label">Loại Tốt (≥ 90đ)</div>
+        <div class="stat-value">${sortedStudents.filter(s => (studentSummaries[s.maHS]?.diemHienTai ?? 100) >= (topTier?.minScore ?? 90)).length}</div>
+        <div class="stat-label">${topTier?.label || 'Tốt'} (≥ ${topTier?.minScore ?? 90}đ)</div>
       </div>
       <div class="stat-card">
         <div class="stat-value">${weekRecords.length}</div>
         <div class="stat-label">Lượt ghi nề nếp</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">100đ</div>
+        <div class="stat-value">${settings?.diemKhoiDau ?? 100}đ</div>
         <div class="stat-label">Điểm chuẩn ban đầu</div>
       </div>
     </div>
@@ -204,20 +203,19 @@ export function exportClassroomHtmlReport(
           <th class="text-center" style="width: 60px;">Điểm trừ</th>
           <th class="text-center" style="width: 60px;">Điểm cộng</th>
           <th class="text-center" style="width: 70px;">Điểm tuần</th>
-          <th class="text-center" style="width: 80px;">Xếp loại</th>
+          <th class="text-center" style="width: 95px;">Xếp loại</th>
         </tr>
       </thead>
       <tbody>
         ${sortedStudents.map((s, idx) => {
           const sum = studentSummaries[s.maHS] || {
-            diemHienTai: 100,
+            diemHienTai: settings?.diemKhoiDau ?? 100,
             tongDiemTru: 0,
             tongDiemCong: 0,
-            xepLoai: 'Tot'
+            xepLoai: topTier?.id || 'Tot'
           };
-          const badgeClass = sum.xepLoai === 'Tot' ? 'badge-tot' :
-                             sum.xepLoai === 'Kha' ? 'badge-kha' :
-                             sum.xepLoai === 'Dat' ? 'badge-dat' : 'badge-chuadat';
+          const tier = getRatingTierInfo(sum.xepLoai, sum.diemHienTai, settings);
+          const colorCfg = getRatingColorClasses(tier.color);
           return `
             <tr>
               <td class="text-center"><strong>${rankMap.get(s.maHS) ?? (idx + 1)}</strong></td>
@@ -228,7 +226,7 @@ export function exportClassroomHtmlReport(
               <td class="text-center" style="color: #dc2626;">${sum.tongDiemTru > 0 ? '-' + sum.tongDiemTru : '0'}</td>
               <td class="text-center" style="color: #16a34a;">${sum.tongDiemCong > 0 ? '+' + sum.tongDiemCong : '0'}</td>
               <td class="text-center"><strong>${sum.diemHienTai}</strong></td>
-              <td class="text-center"><span class="badge ${badgeClass}">${sum.xepLoai}</span></td>
+              <td class="text-center"><span class="badge" style="border: 1px solid ${colorCfg.hex}; color: ${colorCfg.hex}; background: ${colorCfg.hex}18;">${tier.label}</span></td>
             </tr>
           `;
         }).join('')}

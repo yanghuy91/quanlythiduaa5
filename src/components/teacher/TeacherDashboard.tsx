@@ -42,14 +42,27 @@ import {
   StudentWeekSummary, 
   TeacherSettings,
   StudentAcademicRecord,
-  CadreDelegatedPermission
+  CadreDelegatedPermission,
+  ScoreRatingTier,
+  RatingColorKey
 } from '../../types';
 import { TeacherGradeManager } from '../grades/TeacherGradeManager';
 import { getAcademicRecords, saveAcademicRecords } from '../../data/academicCatalog';
 import { StudentPicker } from '../student-picker/StudentPicker';
 import { RecordBottomSheet } from '../record/RecordBottomSheet';
 import { DuplicateWarningModal } from '../record/DuplicateWarningModal';
-import { checkDuplicateRecord, calculateDenseRankings, isRecordMatchingStudent } from '../../utils/emulation';
+import { 
+  checkDuplicateRecord, 
+  calculateDenseRankings, 
+  isRecordMatchingStudent,
+  getScoreRatingTiers,
+  getRatingTierInfo,
+  getRatingColorClasses,
+  formatRatingTiersSummary,
+  RATING_PRESETS,
+  RATING_COLOR_PALETTE,
+  classifySeverityByPoints
+} from '../../utils/emulation';
 import { ClassroomLayoutEditor } from './ClassroomLayoutEditor';
 import { CadreHonorsModal } from '../common/CadreHonorsModal';
 import { PeriodHierarchyFilter as PeriodFilterComponent } from '../common/PeriodHierarchyFilter';
@@ -166,7 +179,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [newRuleName, setNewRuleName] = useState('');
   const [newRuleGroup, setNewRuleGroup] = useState('Chuyên cần');
   const [newRuleType, setNewRuleType] = useState<'Tru' | 'Cong'>('Tru');
-  const [newRuleSeverity, setNewRuleSeverity] = useState<'Nhe' | 'Vua' | 'Nang'>('Nhe');
   const [newRuleScore, setNewRuleScore] = useState<number>(2);
 
   const handleRulesExcelUpload = async (file: File) => {
@@ -196,13 +208,15 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   const handleAddSingleRule = () => {
     if (!newRuleName.trim()) return;
+    const cleanScore = Math.max(1, Math.abs(Number(newRuleScore) || 2));
+    const computedSeverity = classifySeverityByPoints(cleanScore, newRuleType === 'Cong');
     const newItem: RuleItem = {
       maNoiQuy: `${newRuleType === 'Cong' ? 'CONG' : 'NQ'}_${Date.now().toString().slice(-4)}`,
       nhomHanhVi: newRuleGroup.trim() || 'Nề nếp',
       tenHanhVi: newRuleName.trim(),
       loaiDiem: newRuleType,
-      mucDo: newRuleSeverity,
-      diemSo: Math.max(1, Math.abs(Number(newRuleScore) || 2)),
+      mucDo: computedSeverity,
+      diemSo: cleanScore,
       ghim: true,
       thuTu: rules.length + 1,
     };
@@ -380,10 +394,10 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const teacherPeriodSummaries = useMemo(() => {
     const map: Record<string, ReturnType<typeof calculateStudentPeriodSummary>> = {};
     students.forEach(st => {
-      map[st.maHS] = calculateStudentPeriodSummary(st, records, periodFilter, settings, currentWeek);
+      map[st.maHS] = calculateStudentPeriodSummary(st, records, periodFilter, settings, currentWeek, rules);
     });
     return map;
-  }, [students, records, periodFilter, settings, currentWeek]);
+  }, [students, records, periodFilter, settings, currentWeek, rules]);
 
   // Summaries mapped to StudentWeekSummary format for the currently selected week/period
   const selectedPeriodWeekSummaries = useMemo(() => {
@@ -423,12 +437,14 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     });
   }, [students, selectedPeriodWeekSummaries]);
 
+  const scoreRatingTiers = useMemo(() => getScoreRatingTiers(settings), [settings]);
+
   // Sorting & Filtering State for Emulation Overview (Bảng tổng quan thi đua)
   type TeacherRankingSort = 'score_desc' | 'score_asc' | 'stt' | 'name_asc' | 'name_desc' | 'to';
   const [rankingSortBy, setRankingSortBy] = useState<TeacherRankingSort>('score_desc');
   const [rankingToFilter, setRankingToFilter] = useState<'all' | number>('all');
   const [rankingSearchQuery, setRankingSearchQuery] = useState('');
-  const [rankingRatingFilter, setRankingRatingFilter] = useState<'all' | 'Tot' | 'Kha' | 'Dat' | 'CanCoGang'>('all');
+  const [rankingRatingFilter, setRankingRatingFilter] = useState<string>('all');
   const [filterOnlyViolations, setFilterOnlyViolations] = useState(false);
 
   // Official Emulation Rankings (Thuật toán xếp hạng chuẩn: cùng điểm thì cùng xếp hạng)
@@ -438,7 +454,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         diemTrungBinh: settings.diemKhoiDau,
         tongDiemTru: 0,
         tongDiemCong: 0,
-        xepLoai: 'Tot',
+        xepLoai: scoreRatingTiers[0]?.id || 'Tot',
       };
       return {
         student,
@@ -457,7 +473,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       item => item.deductions,
       item => item.bonuses
     );
-  }, [students, teacherPeriodSummaries, settings.diemKhoiDau]);
+  }, [students, teacherPeriodSummaries, settings.diemKhoiDau, scoreRatingTiers]);
 
   // Filtered & Sorted Rankings for Teacher View
   const displayedTeacherRankings = useMemo(() => {
@@ -472,11 +488,10 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     }
 
     if (rankingRatingFilter !== 'all') {
-      if (rankingRatingFilter === 'CanCoGang') {
-        list = list.filter(item => item.xepLoai === 'ChuaDat' || item.score < settings.nguongDat);
-      } else {
-        list = list.filter(item => item.xepLoai === rankingRatingFilter);
-      }
+      list = list.filter(item => {
+        const tier = getRatingTierInfo(item.xepLoai, item.score, settings);
+        return tier.id === rankingRatingFilter;
+      });
     }
 
     if (rankingSearchQuery.trim()) {
@@ -526,20 +541,23 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     });
 
     return list;
-  }, [teacherOfficialRankings, rankingToFilter, rankingRatingFilter, rankingSearchQuery, rankingSortBy, filterOnlyViolations]);
+  }, [teacherOfficialRankings, rankingToFilter, rankingRatingFilter, rankingSearchQuery, rankingSortBy, filterOnlyViolations, settings]);
 
   // Statistics for Teacher View
   const teacherRankingStats = useMemo(() => {
     const total = displayedTeacherRankings.length;
-    if (total === 0) return { avgScore: 0, totCount: 0, khaCount: 0, datCount: 0, canCoGangCount: 0 };
+    const tierStats = scoreRatingTiers.map(tier => {
+      const count = displayedTeacherRankings.filter(item => {
+        if (item.chuaCoDiem) return false;
+        return getRatingTierInfo(item.xepLoai, item.score, settings).id === tier.id;
+      }).length;
+      return { tier, count };
+    });
+    if (total === 0) return { avgScore: 0, tierStats };
     const sumScore = displayedTeacherRankings.reduce((sum, item) => sum + item.score, 0);
     const avgScore = Math.round((sumScore / total) * 10) / 10;
-    const totCount = displayedTeacherRankings.filter(item => item.xepLoai === 'Tot').length;
-    const khaCount = displayedTeacherRankings.filter(item => item.xepLoai === 'Kha').length;
-    const datCount = displayedTeacherRankings.filter(item => item.xepLoai === 'Dat').length;
-    const canCoGangCount = displayedTeacherRankings.filter(item => item.xepLoai === 'ChuaDat').length;
-    return { avgScore, totCount, khaCount, datCount, canCoGangCount };
-  }, [displayedTeacherRankings]);
+    return { avgScore, tierStats };
+  }, [displayedTeacherRankings, scoreRatingTiers, settings]);
 
   // Handle student selection from teacher record view
   const handleSelectStudent = (student: Student) => {
@@ -1027,8 +1045,17 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   <h3 className="text-sm font-bold text-main uppercase tracking-wider">
                     Bảng tổng quan thi đua lớp 10A5 ({students.length} học sinh)
                   </h3>
-                  <p className="text-[11px] text-muted mt-0.5">
-                    Khởi đầu {settings.diemKhoiDau} điểm · Xếp loại: Tốt (≥90đ), Khá (≥75đ), Đạt (≥60đ), Cần cố gắng (&lt;60đ)
+                  <p className="text-[11px] text-muted mt-0.5 flex items-center gap-1.5 flex-wrap">
+                    <span>Khởi đầu {settings.diemKhoiDau} điểm · Xếp loại: {formatRatingTiersSummary(settings)}</span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('settings')}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent font-bold text-[10px] border border-accent/30 cursor-pointer transition-colors"
+                      title="Tùy chỉnh linh hoạt các mức xếp loại theo điểm"
+                    >
+                      <Settings className="w-2.5 h-2.5" />
+                      <span>Tùy chỉnh xếp loại</span>
+                    </button>
                   </p>
                 </div>
               </div>
@@ -1063,7 +1090,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
                 <button
                   type="button"
-                  onClick={() => exportClassroomHtmlReport(students, studentSummaries, currentWeek, records)}
+                  onClick={() => exportClassroomHtmlReport(students, studentSummaries, currentWeek, records, settings)}
                   className="px-3.5 py-1.5 rounded-xl bg-surface hover:bg-surface-2 border border-token text-xs font-bold text-main cursor-pointer flex items-center gap-1.5 shadow-xs transition-colors hover:border-accent"
                 >
                   <FileDown className="w-3.5 h-3.5 text-accent" />
@@ -1253,6 +1280,25 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     </button>
                   );
                 })}
+                <span className="mx-1 text-token">|</span>
+                {scoreRatingTiers.map(tier => {
+                  const isSelected = rankingRatingFilter === tier.id;
+                  const colorCls = getRatingColorClasses(tier.color);
+                  return (
+                    <button
+                      key={tier.id}
+                      type="button"
+                      onClick={() => setRankingRatingFilter(isSelected ? 'all' : tier.id)}
+                      className={`px-2.5 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                        isSelected
+                          ? `${colorCls.badgeBg} ${colorCls.badgeText} ${colorCls.badgeBorder} ring-2 ring-offset-1 ring-current/30 shadow-xs`
+                          : 'bg-surface-2 text-muted hover:text-main hover:bg-surface border-token'
+                      }`}
+                    >
+                      {tier.icon ? `${tier.icon} ` : ''}{tier.label}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Hàng 4: Thống kê nhanh */}
@@ -1283,25 +1329,21 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 <div className="flex items-center gap-2 flex-wrap font-medium">
                   {!(displayedTeacherRankings.length > 0 && displayedTeacherRankings.every(i => i.chuaCoDiem)) && (
                     <>
-                      <span className="text-[var(--st-ok)] font-bold">
-                        🌟 Tốt: {teacherRankingStats.totCount}
-                      </span>
-                      <span>·</span>
-                      <span className="text-accent font-bold">
-                        🚀 Khá: {teacherRankingStats.khaCount}
-                      </span>
-                      <span>·</span>
-                      <span className="text-[var(--st-warn)] font-bold">
-                        ⚠️ Đạt: {teacherRankingStats.datCount}
-                      </span>
-                      {teacherRankingStats.canCoGangCount > 0 && (
-                        <>
-                          <span>·</span>
-                          <span className="text-[var(--st-bad)] font-bold">
-                            ❗ Cần cố gắng: {teacherRankingStats.canCoGangCount}
-                          </span>
-                        </>
-                      )}
+                      {teacherRankingStats.tierStats.map(({ tier, count }, idx) => {
+                        const colorCls = getRatingColorClasses(tier.color);
+                        return (
+                          <React.Fragment key={tier.id}>
+                            {idx > 0 && <span>·</span>}
+                            <button
+                              type="button"
+                              onClick={() => setRankingRatingFilter(prev => prev === tier.id ? 'all' : tier.id)}
+                              className={`${colorCls.badgeText} font-bold hover:underline cursor-pointer`}
+                            >
+                              {tier.icon ? `${tier.icon} ` : ''}{tier.label}: {count}
+                            </button>
+                          </React.Fragment>
+                        );
+                      })}
                     </>
                   )}
 
@@ -1504,16 +1546,15 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                               {item.score} đ
                             </span>
 
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              item.xepLoai === 'Tot' ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)]' :
-                              item.xepLoai === 'Kha' ? 'bg-accent/15 text-accent' :
-                              item.xepLoai === 'Dat' ? 'bg-[var(--st-warn)]/15 text-[var(--st-warn)]' :
-                              'bg-[var(--st-bad)]/15 text-[var(--st-bad)]'
-                            }`}>
-                              {item.xepLoai === 'Tot' ? 'Tốt' :
-                               item.xepLoai === 'Kha' ? 'Khá' :
-                               item.xepLoai === 'Dat' ? 'Đạt' : 'Cần cố gắng'}
-                            </span>
+                            {(() => {
+                              const tierInfo = getRatingTierInfo(item.xepLoai, item.score, settings);
+                              const colorCls = getRatingColorClasses(tierInfo.color);
+                              return (
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${colorCls.badgeBg} ${colorCls.badgeText} ${colorCls.badgeBorder}`}>
+                                  {tierInfo.icon ? `${tierInfo.icon} ` : ''}{tierInfo.label}
+                                </span>
+                              );
+                            })()}
                           </>
                         )}
 
@@ -1827,22 +1868,23 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   value={newRuleName}
                   onChange={e => setNewRuleName(e.target.value)}
                   placeholder="Nội dung hành vi (VD: Đi học muộn)"
-                  className="sm:col-span-2 px-2.5 py-2 rounded-xl bg-surface border border-token font-semibold text-main"
+                  className={`sm:col-span-2 px-2.5 py-2 rounded-xl bg-surface font-semibold text-main ${
+                    newRuleType === 'Cong'
+                      ? 'border-2 border-emerald-500'
+                      : classifySeverityByPoints(newRuleScore, false) === 'Nang'
+                        ? 'border-2 border-rose-600'
+                        : classifySeverityByPoints(newRuleScore, false) === 'Vua'
+                          ? 'border-2 border-amber-500'
+                          : 'border-2 border-slate-900 dark:border-slate-300'
+                  }`}
                 />
                 <select
-                  value={`${newRuleType}_${newRuleSeverity}`}
-                  onChange={e => {
-                    const [t, s] = e.target.value.split('_') as ['Tru' | 'Cong', 'Nhe' | 'Vua' | 'Nang'];
-                    setNewRuleType(t);
-                    setNewRuleSeverity(s);
-                  }}
+                  value={newRuleType}
+                  onChange={e => setNewRuleType(e.target.value as 'Tru' | 'Cong')}
                   className="px-2.5 py-2 rounded-xl bg-surface border border-token font-bold text-main"
                 >
-                  <option value="Tru_Nhe">Điểm Trừ · Mức Nhẹ</option>
-                  <option value="Tru_Vua">Điểm Trừ · Mức Vừa</option>
-                  <option value="Tru_Nang">Điểm Trừ · Mức Nặng</option>
-                  <option value="Cong_Nhe">Điểm Cộng · Khuyến khích</option>
-                  <option value="Cong_Vua">Điểm Cộng · Tốt</option>
+                  <option value="Tru">Điểm Trừ (-)</option>
+                  <option value="Cong">Điểm Cộng (+)</option>
                 </select>
                 <div className="flex items-center gap-1.5">
                   <input
@@ -1865,13 +1907,24 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </div>
           )}
 
-          <div className="divide-y divide-token max-h-[500px] overflow-y-auto">
+          <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
             {rules.map(rule => {
               const isBonus = rule.loaiDiem === 'Cong';
               if (isBonus && !settings.batDiemCong) return null;
+              const sev = classifySeverityByPoints(rule.diemSo, isBonus, rule.mucDo);
+              const borderCls = isBonus
+                ? 'border-2 border-emerald-500/80'
+                : sev === 'Nang'
+                  ? 'border-2 border-rose-600'
+                  : sev === 'Vua'
+                    ? 'border-2 border-amber-500'
+                    : 'border-2 border-slate-900 dark:border-slate-300';
 
               return (
-                <div key={rule.maNoiQuy} className="py-2.5 flex items-center justify-between text-xs gap-2">
+                <div
+                  key={rule.maNoiQuy}
+                  className={`p-2.5 rounded-xl bg-surface ${borderCls} flex items-center justify-between text-xs gap-2 transition-colors`}
+                >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <button
                       type="button"
@@ -1889,9 +1942,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       <div className="text-[10px] text-muted flex items-center gap-1.5 mt-0.5">
                         <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-surface-2 border border-token">{rule.maNoiQuy}</span>
                         <span>{rule.nhomHanhVi}</span>
-                        {rule.mucDo === 'Nang' && (
-                          <span className="font-bold text-[var(--st-bad)]">· Mức Nặng (Chuyển đỏ viền)</span>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -2120,6 +2170,211 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 onChange={e => onUpdateSettings({ diemKhoiDau: Number(e.target.value) })}
                 className="w-20 p-1.5 bg-surface-2 border border-token rounded-lg text-center font-bold text-main"
               />
+            </div>
+
+            {/* CẤU HÌNH XẾP LOẠI THI ĐUA THEO ĐIỂM - LINH HOẠT CAO */}
+            <div className="p-3.5 rounded-2xl bg-violet-50/80 dark:bg-violet-950/25 border border-violet-200 dark:border-violet-800/60 space-y-3">
+              <div className="flex items-start justify-between gap-2 flex-wrap">
+                <div>
+                  <span className="font-extrabold text-violet-950 dark:text-violet-200 block text-xs sm:text-sm">
+                    🎯 Cấu hình Xếp loại Thi đua theo Điểm (Tùy biến linh hoạt):
+                  </span>
+                  <span className="text-[11px] text-violet-800 dark:text-violet-300">
+                    Tự do chia nhỏ phân loại, thêm/xoá mức xếp loại, đặt tên phân loại, chọn ngưỡng điểm và màu sắc hiển thị.
+                  </span>
+                </div>
+              </div>
+
+              {/* Mẫu cấu hình nhanh (Presets) */}
+              <div className="space-y-1.5">
+                <span className="text-[10.5px] font-bold text-violet-900 dark:text-violet-300 block">
+                  ⚡ Áp dụng nhanh mẫu phân loại:
+                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {Object.entries(RATING_PRESETS).map(([presetId, preset]) => (
+                    <button
+                      key={presetId}
+                      type="button"
+                      onClick={() => {
+                        const cloned = preset.tiers.map((t: ScoreRatingTier) => ({ ...t }));
+                        onUpdateSettings({ phanLoaiDiem: cloned });
+                      }}
+                      className="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-800 hover:bg-violet-600 hover:text-white text-violet-900 dark:text-violet-200 border border-violet-300 dark:border-violet-700 text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
+                      title={preset.description}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Danh sách các mức phân loại hiện tại */}
+              <div className="space-y-2 pt-1">
+                {scoreRatingTiers.map((tier, idx) => {
+                  const upperBound = idx === 0 ? settings.diemKhoiDau : scoreRatingTiers[idx - 1].minScore - 1;
+                  const rangeLabel =
+                    idx === 0
+                      ? `≥ ${tier.minScore}đ`
+                      : idx === scoreRatingTiers.length - 1 && tier.minScore === 0
+                        ? `< ${scoreRatingTiers[idx - 1].minScore}đ (0đ → ${ Math.max(0, upperBound)}đ)`
+                        : `${tier.minScore}đ → ${Math.max(tier.minScore, upperBound)}đ`;
+
+                  const colorCls = getRatingColorClasses(tier.color);
+
+                  const handleUpdateTier = (patch: Partial<ScoreRatingTier>) => {
+                    const nextTiers = scoreRatingTiers.map(t =>
+                      t.id === tier.id ? { ...t, ...patch } : t
+                    );
+                    nextTiers.sort((a, b) => b.minScore - a.minScore);
+                    onUpdateSettings({ phanLoaiDiem: nextTiers });
+                  };
+
+                  const handleSplitTier = () => {
+                    const topScore = idx === 0 ? Math.max(settings.diemKhoiDau, tier.minScore + 4) : scoreRatingTiers[idx - 1].minScore;
+                    const midScore = Math.round((topScore + tier.minScore) / 2);
+                    if (midScore <= tier.minScore) return;
+                    const upperTier: ScoreRatingTier = {
+                      id: `Tier_${Date.now().toString().slice(-4)}_A`,
+                      label: `${tier.label} +`,
+                      minScore: midScore,
+                      color: tier.color,
+                      icon: tier.icon || '🌟',
+                    };
+                    const nextTiers = [...scoreRatingTiers, upperTier].sort((a, b) => b.minScore - a.minScore);
+                    onUpdateSettings({ phanLoaiDiem: nextTiers });
+                  };
+
+                  const handleDeleteTier = () => {
+                    if (scoreRatingTiers.length <= 1) return;
+                    const nextTiers = scoreRatingTiers.filter(t => t.id !== tier.id);
+                    onUpdateSettings({ phanLoaiDiem: nextTiers });
+                  };
+
+                  return (
+                    <div
+                      key={tier.id}
+                      className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-violet-200 dark:border-slate-700 shadow-2xs space-y-2"
+                    >
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 flex-1 min-w-[180px]">
+                          {/* Chọn biểu tượng */}
+                          <select
+                            value={tier.icon || ''}
+                            onChange={e => handleUpdateTier({ icon: e.target.value })}
+                            className="px-1.5 py-1 rounded-lg bg-surface-2 border border-token text-xs cursor-pointer"
+                            title="Biểu tượng phân loại"
+                          >
+                            <option value="🌟">🌟</option>
+                            <option value="🏆">🏆</option>
+                            <option value="💎">💎</option>
+                            <option value="🚀">🚀</option>
+                            <option value="👍">👍</option>
+                            <option value="🌱">🌱</option>
+                            <option value="⚠️">⚠️</option>
+                            <option value="❗">❗</option>
+                            <option value="🔥">🔥</option>
+                            <option value="">(Trống)</option>
+                          </select>
+
+                          {/* Tên phân loại */}
+                          <input
+                            type="text"
+                            value={tier.label}
+                            onChange={e => handleUpdateTier({ label: e.target.value })}
+                            placeholder="Tên phân loại (VD: Xuất sắc, Tốt...)"
+                            className="flex-1 px-2.5 py-1 rounded-lg bg-surface-2 border border-token text-xs font-extrabold text-main focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+                          />
+                        </div>
+
+                        {/* Ngưỡng điểm tối thiểu */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-[11px] font-bold text-muted">Từ ≥</span>
+                          <input
+                            type="number"
+                            min={0}
+                            max={200}
+                            value={tier.minScore}
+                            onChange={e => handleUpdateTier({ minScore: Math.max(0, Number(e.target.value) || 0) })}
+                            className="w-16 px-2 py-1 rounded-lg bg-surface-2 border border-token text-xs font-black text-center text-main"
+                          />
+                          <span className="text-[11px] font-bold text-muted">đ</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 flex-wrap pt-1 border-t border-slate-100 dark:border-slate-800">
+                        {/* Chọn màu sắc + Xem trước nhãn */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <select
+                            value={tier.color}
+                            onChange={e => handleUpdateTier({ color: e.target.value as RatingColorKey })}
+                            className="px-2 py-0.5 rounded-lg bg-surface-2 border border-token text-[11px] font-bold text-main cursor-pointer"
+                          >
+                            {Object.entries(RATING_COLOR_PALETTE).map(([colorKey, colorItem]) => (
+                              <option key={colorKey} value={colorKey}>
+                                Màu: {colorItem.name}
+                              </option>
+                            ))}
+                          </select>
+
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${colorCls.badge}`}>
+                            {tier.icon ? `${tier.icon} ` : ''}{tier.label} ({rangeLabel})
+                          </span>
+                        </div>
+
+                        {/* Nút Chia nhỏ & Xóa */}
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={handleSplitTier}
+                            className="px-2 py-0.5 rounded-lg bg-violet-100 hover:bg-violet-200 text-violet-800 text-[10.5px] font-bold cursor-pointer transition-colors"
+                            title="Chia nhỏ khoảng điểm của mức này thành 2 phân loại chi tiết hơn"
+                          >
+                            ✂️ Chia nhỏ
+                          </button>
+                          {scoreRatingTiers.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={handleDeleteTier}
+                              className="px-2 py-0.5 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 text-[10.5px] font-bold cursor-pointer transition-colors"
+                              title="Xoá mức phân loại này"
+                            >
+                              Xoá
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Nút Thêm phân loại mới */}
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const lowestMin = scoreRatingTiers.length > 0 ? scoreRatingTiers[scoreRatingTiers.length - 1].minScore : 50;
+                    const newMin = lowestMin > 10 ? Math.max(0, lowestMin - 10) : 85;
+                    const newTier: ScoreRatingTier = {
+                      id: `Tier_${Date.now().toString().slice(-4)}`,
+                      label: 'Phân loại mới',
+                      minScore: newMin,
+                      color: 'sky',
+                      icon: '⭐',
+                    };
+                    const nextTiers = [...scoreRatingTiers, newTier].sort((a, b) => b.minScore - a.minScore);
+                    onUpdateSettings({ phanLoaiDiem: nextTiers });
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-extrabold cursor-pointer flex items-center gap-1.5 shadow-xs transition-all"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Thêm phân loại mới</span>
+                </button>
+
+                <span className="text-[10.5px] text-violet-800 dark:text-violet-300 font-semibold">
+                  Đang dùng <strong>{scoreRatingTiers.length}</strong> mức phân loại
+                </span>
+              </div>
             </div>
 
             {/* THỜI GIAN CHO PHÉP SỬA / HỦY DỮ LIỆU CỦA GIÁO VIÊN & HỌC SINH */}

@@ -6,9 +6,17 @@ import {
   TeacherSettings, 
   TimeHierarchy, 
   WeekEvaluation, 
-  StatusColorLevel 
+  StatusColorLevel,
+  RuleItem
 } from '../types';
-import { isRecordMatchingStudent, parseRecordPoints, isRecordWithinScoringMilestone } from './emulation';
+import {
+  isRecordMatchingStudent,
+  parseRecordPoints,
+  isRecordWithinScoringMilestone,
+  resolveRecordSeverity,
+  evaluateScoreTier,
+  getScoreRatingTiers,
+} from './emulation';
 
 export const CURRENT_SCHOOL_YEAR = '2026-2027';
 
@@ -88,10 +96,12 @@ export function calculateStudentPeriodSummary(
   records: DisciplineRecord[],
   filter: HierarchyPeriodFilter,
   settings: TeacherSettings,
-  currentWeek?: number
+  currentWeek?: number,
+  rules?: RuleItem[]
 ): StudentPeriodSummary {
   const noDataWeeks = (settings.noDataWeeks || []).map(Number);
   const maxActiveWeek = currentWeek !== undefined ? Number(currentWeek) : 38;
+  const topTier = getScoreRatingTiers(settings)[0];
 
   // Trường hợp 1: Đang xem 1 tuần cụ thể
   if (filter.tuanHoc !== 'all') {
@@ -108,7 +118,7 @@ export function calculateStudentPeriodSummary(
         tongDiemTru: 0,
         tongDiemCong: 0,
         soLoi: 0,
-        xepLoai: 'Tot',
+        xepLoai: topTier?.id || 'Tot',
         mucMau: 'none',
         chuaCoDiem: true,
         lyDoChuaCoDiem: isFutureWeek ? 'future' : 'no_data',
@@ -139,19 +149,14 @@ export function calculateStudentPeriodSummary(
       const { isBonus, points } = parseRecordPoints(rec);
       if (!isBonus) {
         tongDiemTru += points;
-        if (rec.mucDo === 'Nang') coLoiNang = true;
+        if (resolveRecordSeverity(rec, rules) === 'Nang') coLoiNang = true;
       } else if (settings.batDiemCong) {
         tongDiemCong += points;
       }
     });
 
     const diemTuan = Math.max(0, settings.diemKhoiDau - tongDiemTru + tongDiemCong);
-
-    let xepLoai: WeekEvaluation = 'ChuaDat';
-    if (diemTuan >= settings.nguongTot) xepLoai = 'Tot';
-    else if (diemTuan >= settings.nguongKha) xepLoai = 'Kha';
-    else if (diemTuan >= settings.nguongDat) xepLoai = 'Dat';
-    else xepLoai = 'ChuaDat';
+    const xepLoai: WeekEvaluation = evaluateScoreTier(diemTuan, settings).id;
 
     let mucMau: StatusColorLevel = 'none';
     if (settings.batDiemCong && tongDiemCong > tongDiemTru && tongDiemTru === 0) {
@@ -209,7 +214,7 @@ export function calculateStudentPeriodSummary(
       tongDiemTru: 0,
       tongDiemCong: 0,
       soLoi: 0,
-      xepLoai: 'Tot',
+      xepLoai: topTier?.id || 'Tot',
       mucMau: 'none',
       chuaCoDiem: true,
       lyDoChuaCoDiem: hasFuture ? 'future' : 'no_data',
@@ -234,7 +239,7 @@ export function calculateStudentPeriodSummary(
     const { isBonus, points } = parseRecordPoints(rec);
     if (!isBonus) {
       tongDiemTru += points;
-      if (rec.mucDo === 'Nang') coLoiNang = true;
+      if (resolveRecordSeverity(rec, rules) === 'Nang') coLoiNang = true;
     } else if (settings.batDiemCong) {
       tongDiemCong += points;
     }
@@ -259,12 +264,7 @@ export function calculateStudentPeriodSummary(
 
   const totalScoreSum = lichSuTuan.reduce((sum, item) => sum + item.diem, 0);
   const diemTrungBinh = Math.round((totalScoreSum / validScoredWeeks.length) * 10) / 10;
-
-  let xepLoai: WeekEvaluation = 'ChuaDat';
-  if (diemTrungBinh >= settings.nguongTot) xepLoai = 'Tot';
-  else if (diemTrungBinh >= settings.nguongKha) xepLoai = 'Kha';
-  else if (diemTrungBinh >= settings.nguongDat) xepLoai = 'Dat';
-  else xepLoai = 'ChuaDat';
+  const xepLoai: WeekEvaluation = evaluateScoreTier(diemTrungBinh, settings).id;
 
   let mucMau: StatusColorLevel = 'none';
   if (settings.batDiemCong && tongDiemCong > tongDiemTru && tongDiemTru === 0) {

@@ -752,11 +752,12 @@ export default function App() {
         currentWeek,
         records,
         settings,
-        currentWeek
+        currentWeek,
+        rules
       );
     });
     return map;
-  }, [students, currentWeek, records, settings]);
+  }, [students, currentWeek, records, settings, rules]);
 
   // Automatic Badge Evaluation Engine (Chỉ chạy khi đã tải xong dữ liệu gốc từ Firebase, đang ở quyền GV và GV bật chế độ tự động trao)
   useEffect(() => {

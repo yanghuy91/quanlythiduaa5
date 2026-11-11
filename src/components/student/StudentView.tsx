@@ -65,7 +65,12 @@ import {
   parseRecordPoints,
   isWithinEditTimeLimit,
   getRemainingEditTimeLabel,
-  isWithinExplanationDayLimit
+  isWithinExplanationDayLimit,
+  getScoreRatingTiers,
+  evaluateScoreTier,
+  getRatingTierInfo,
+  getRatingColorClasses,
+  classifySeverityByPoints
 } from '../../utils/emulation';
 import { CadreBadge } from '../common/CadreBadge';
 import { CadreHonorsModal, CADRE_DELEGATED_PERMISSION_LIST } from '../common/CadreHonorsModal';
@@ -359,11 +364,13 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
   const [selectedBadgeCategory, setSelectedBadgeCategory] = useState<'all' | BadgeCategory>('all');
 
+  const scoreRatingTiers = useMemo(() => getScoreRatingTiers(settings), [settings]);
+
   // Sorting & Filtering State for Bảng Thi Đua / Emulation Overview
   type RankingSortOption = 'score_desc' | 'score_asc' | 'stt' | 'name_asc' | 'name_desc' | 'to';
   const [rankingSortBy, setRankingSortBy] = useState<RankingSortOption>('score_desc');
   const [rankingToFilter, setRankingToFilter] = useState<'all' | number>('all');
-  const [rankingRatingFilter, setRankingRatingFilter] = useState<'all' | 'Tot' | 'Kha' | 'Dat' | 'CanCoGang'>('all');
+  const [rankingRatingFilter, setRankingRatingFilter] = useState<string>('all');
   const [rankingSearchQuery, setRankingSearchQuery] = useState('');
   const [rankingOnlyMe, setRankingOnlyMe] = useState(false);
 
@@ -427,10 +434,10 @@ export const StudentView: React.FC<StudentViewProps> = ({
   const studentPeriodSummaries = useMemo(() => {
     const map: Record<string, ReturnType<typeof calculateStudentPeriodSummary>> = {};
     allStudents.forEach(st => {
-      map[st.maHS] = calculateStudentPeriodSummary(st, records, periodFilter, settings, currentWeek);
+      map[st.maHS] = calculateStudentPeriodSummary(st, records, periodFilter, settings, currentWeek, rules);
     });
     return map;
-  }, [allStudents, records, periodFilter, settings, currentWeek]);
+  }, [allStudents, records, periodFilter, settings, currentWeek, rules]);
 
   // Summaries mapped to StudentWeekSummary format for the currently selected week/period
   const selectedPeriodWeekSummaries = useMemo(() => {
@@ -473,11 +480,12 @@ export const StudentView: React.FC<StudentViewProps> = ({
         recordingWeek,
         records,
         settings,
-        currentWeek
+        currentWeek,
+        rules
       );
     });
     return map;
-  }, [allStudents, recordingWeek, records, settings, currentWeek]);
+  }, [allStudents, recordingWeek, records, settings, currentWeek, rules]);
 
   const myPeriodSummary = studentPeriodSummaries[currentStudent.maHS] || {
     diemTrungBinh: settings.diemKhoiDau,
@@ -615,12 +623,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
       });
 
       const score = Math.max(0, settings.diemKhoiDau - tongTru + tongCong);
-
-      let xepLoai: 'Tot' | 'Kha' | 'Dat' | 'CanCoGang' = 'Tot';
-      if (score >= 90) xepLoai = 'Tot';
-      else if (score >= 75) xepLoai = 'Kha';
-      else if (score >= 60) xepLoai = 'Dat';
-      else xepLoai = 'CanCoGang';
+      const tier = evaluateScoreTier(score, settings);
 
       return {
         ...item,
@@ -630,7 +633,8 @@ export const StudentView: React.FC<StudentViewProps> = ({
         tongCong,
         soLoi,
         score,
-        xepLoai,
+        xepLoai: tier.id,
+        tier,
         chuaCoDiem,
         isNoData,
       };
@@ -705,7 +709,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
     }
 
     if (rankingRatingFilter !== 'all') {
-      list = list.filter(item => item.xepLoai === rankingRatingFilter);
+      list = list.filter(item => getRatingTierInfo(item.xepLoai, item.score, settings).id === rankingRatingFilter);
     }
 
     if (rankingSearchQuery.trim()) {
@@ -1301,21 +1305,15 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 )}
               </div>
 
-              {!myPeriodSummary.chuaCoDiem && (
-                <div className={`px-3 py-1.5 rounded-2xl text-xs font-extrabold shadow-xs ${
-                  myPeriodSummary.xepLoai === 'Tot' 
-                    ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)] border border-[var(--st-ok)]/30'
-                    : myPeriodSummary.xepLoai === 'Kha'
-                    ? 'bg-accent/15 text-accent border border-accent/30'
-                    : myPeriodSummary.xepLoai === 'Dat'
-                    ? 'bg-[var(--st-warn)]/15 text-[var(--st-warn)] border border-[var(--st-warn)]/30'
-                    : 'bg-[var(--st-bad)]/15 text-[var(--st-bad)] border border-[var(--st-bad)]/30'
-                }`}>
-                  {myPeriodSummary.xepLoai === 'Tot' ? '🌟 Loại Tốt' :
-                   myPeriodSummary.xepLoai === 'Kha' ? '🚀 Loại Khá' :
-                   myPeriodSummary.xepLoai === 'Dat' ? '⚠️ Loại Đạt' : '❗ Cần cố gắng'}
-                </div>
-              )}
+              {!myPeriodSummary.chuaCoDiem && (() => {
+                const tierInfo = getRatingTierInfo(myPeriodSummary.xepLoai, myPeriodSummary.diemTrungBinh, settings);
+                const colorCls = getRatingColorClasses(tierInfo.color);
+                return (
+                  <div className={`px-3 py-1.5 rounded-2xl text-xs font-extrabold shadow-xs border ${colorCls.badgeBg} ${colorCls.badgeText} ${colorCls.badgeBorder}`}>
+                    {tierInfo.icon ? `${tierInfo.icon} ` : ''}Loại {tierInfo.label}
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
@@ -1353,13 +1351,11 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 const isExpanded = expandedWeeks.has(weekData.week);
                 const isCurrent = weekData.isCurrent;
 
-                const ratingBadge = weekData.xepLoai === 'Tot' 
-                  ? { text: '🌟 Loại Tốt', cls: 'bg-[var(--st-ok)]/15 text-[var(--st-ok)] border-[var(--st-ok)]/30' }
-                  : weekData.xepLoai === 'Kha'
-                  ? { text: '🚀 Loại Khá', cls: 'bg-accent/15 text-accent border-accent/30' }
-                  : weekData.xepLoai === 'Dat'
-                  ? { text: '⚠️ Loại Đạt', cls: 'bg-[var(--st-warn)]/15 text-[var(--st-warn)] border-[var(--st-warn)]/30' }
-                  : { text: '❗ Cần cố gắng', cls: 'bg-[var(--st-bad)]/15 text-[var(--st-bad)] border-[var(--st-bad)]/30' };
+                const tierColorCls = getRatingColorClasses(weekData.tier.color);
+                const ratingBadge = {
+                  text: `${weekData.tier.icon ? `${weekData.tier.icon} ` : ''}Loại ${weekData.tier.label}`,
+                  cls: `${tierColorCls.badgeBg} ${tierColorCls.badgeText} ${tierColorCls.badgeBorder}`,
+                };
 
                 return (
                   <div key={weekData.week} className={`transition-colors ${isCurrent ? 'bg-accent/[0.02]' : ''}`}>
@@ -1790,9 +1786,11 @@ export const StudentView: React.FC<StudentViewProps> = ({
                               type="button"
                               onClick={() => {
                                 if (!editLogTenHanhVi.trim()) return;
+                                const cleanPts = Math.max(1, Math.abs(Number(editLogDiemSo) || 1));
                                 onUpdateRecord(rec.maGhiNhan, {
                                   tenHanhVi: editLogTenHanhVi.trim(),
-                                  diemSo: Math.max(1, Math.abs(Number(editLogDiemSo) || 1)),
+                                  diemSo: cleanPts,
+                                  mucDo: classifySeverityByPoints(cleanPts, rec.loaiDiem === 'Cong'),
                                   tuanHoc: Number(editLogTuanHoc),
                                   hocKi: getSemesterFromWeek(Number(editLogTuanHoc)),
                                   buoi: editLogBuoi,
@@ -2305,16 +2303,15 @@ export const StudentView: React.FC<StudentViewProps> = ({
                             {item.score} đ
                           </span>
 
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            item.xepLoai === 'Tot' ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)]' :
-                            item.xepLoai === 'Kha' ? 'bg-accent/15 text-accent' :
-                            item.xepLoai === 'Dat' ? 'bg-[var(--st-warn)]/15 text-[var(--st-warn)]' :
-                            'bg-[var(--st-bad)]/15 text-[var(--st-bad)]'
-                          }`}>
-                            {item.xepLoai === 'Tot' ? 'Tốt' :
-                             item.xepLoai === 'Kha' ? 'Khá' :
-                             item.xepLoai === 'Dat' ? 'Đạt' : 'Cần cố gắng'}
-                          </span>
+                          {(() => {
+                            const tierInfo = getRatingTierInfo(item.xepLoai, item.score, settings);
+                            const colorCls = getRatingColorClasses(tierInfo.color);
+                            return (
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${colorCls.badgeBg} ${colorCls.badgeText} ${colorCls.badgeBorder}`}>
+                                {tierInfo.icon ? `${tierInfo.icon} ` : ''}{tierInfo.label}
+                              </span>
+                            );
+                          })()}
                         </>
                       )}
 

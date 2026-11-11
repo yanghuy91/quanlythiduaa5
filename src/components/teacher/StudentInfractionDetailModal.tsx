@@ -28,7 +28,10 @@ import {
   isRecordMatchingStudent, 
   parseRecordPoints, 
   isWithinEditTimeLimit, 
-  getRemainingEditTimeLabel 
+  getRemainingEditTimeLabel,
+  evaluateScoreTier,
+  getRatingColorClasses,
+  classifySeverityByPoints
 } from '../../utils/emulation';
 import { ALL_SCHOOL_WEEKS, getSemesterFromWeek } from '../../utils/hierarchy';
 
@@ -186,10 +189,12 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
 
   const handleSaveEdit = (recordId: string) => {
     if (!onUpdateRecord || !editTenHanhVi.trim()) return;
+    const effectivePoints = Math.max(1, Math.abs(Number(editDiemSo) || 1));
     onUpdateRecord(recordId, {
       tenHanhVi: editTenHanhVi.trim(),
       loaiDiem: editLoaiDiem,
-      diemSo: Math.max(1, Math.abs(Number(editDiemSo) || 1)),
+      diemSo: effectivePoints,
+      mucDo: classifySeverityByPoints(effectivePoints, editLoaiDiem === 'Cong'),
       tuanHoc: Number(editTuanHoc),
       hocKi: getSemesterFromWeek(Number(editTuanHoc)),
       buoi: editBuoi,
@@ -241,16 +246,15 @@ export const StudentInfractionDetailModal: React.FC<StudentInfractionDetailModal
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 border border-amber-500/30">
                     {isSelectedWeekNoData ? `⊘ Tuần ${activeWeek} không có dữ liệu` : `⏳ Tuần ${activeWeek} chưa học`}
                   </span>
-                ) : (
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    currentScore >= (settings?.nguongTot ?? 90) ? 'bg-[var(--st-ok)]/15 text-[var(--st-ok)]' :
-                    currentScore >= (settings?.nguongKha ?? 75) ? 'bg-accent/15 text-accent' :
-                    currentScore >= (settings?.nguongDat ?? 60) ? 'bg-[var(--st-warn)]/15 text-[var(--st-warn)]' :
-                    'bg-[var(--st-bad)]/15 text-[var(--st-bad)]'
-                  }`}>
-                    {filterPeriod === 'selected_week' ? `Tuần ${activeWeek}: ` : ''}{currentScore}đ · {currentScore >= (settings?.nguongTot ?? 90) ? 'Tốt' : currentScore >= (settings?.nguongKha ?? 75) ? 'Khá' : currentScore >= (settings?.nguongDat ?? 60) ? 'Đạt' : 'Cần cố gắng'}
-                  </span>
-                )}
+                ) : (() => {
+                  const tier = evaluateScoreTier(currentScore, settings);
+                  const tierColor = getRatingColorClasses(tier.color);
+                  return (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${tierColor.badge}`}>
+                      {filterPeriod === 'selected_week' ? `Tuần ${activeWeek}: ` : ''}{currentScore}đ · {tier.icon ? `${tier.icon} ` : ''}{tier.label}
+                    </span>
+                  );
+                })()}
               </div>
               <p className="text-xs text-muted mt-0.5">
                 {filterPeriod === 'selected_week' ? `Chi tiết Tuần ${activeWeek}` : filterPeriod === 'hk1' ? 'Chi tiết Học kì 1' : filterPeriod === 'hk2' ? 'Chi tiết Học kì 2' : 'Toàn bộ năm học'} · Tổng điểm trừ: <strong className="text-[var(--st-bad)] font-bold">-{totalDeductions}đ</strong>

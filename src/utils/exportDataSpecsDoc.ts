@@ -16,55 +16,24 @@ import {
   reconcileAcademicRecordsWithSeating,
   reconcileDisciplineRecordsWithSeating,
 } from './seatingMaster';
+import { classifySeverityByPoints } from './emulation';
 
 /**
- * Bản mẫu Câu lệnh AI (Prompt) chuẩn hóa — Gom toàn bộ thông tin vào 1 Bảng / 1 File duy nhất
- * Lấy SƠ ĐỒ LỚP làm chuẩn gốc và quy chiếu các danh sách khác từ Sơ đồ lớp.
+ * Bản mẫu Câu lệnh AI (Prompt) chuẩn hóa — Ngắn gọn, dễ hiểu
  */
-export const AI_MASTER_PROMPT_TEXT = `Đóng vai trợ lý dữ liệu giáo dục chuyên nghiệp. Hãy đọc toàn bộ file/hình ảnh tôi đính kèm (sơ đồ lớp học, danh sách lớp, bảng điểm, nội quy lớp hoặc sổ ghi đầu bài/nề nếp) và chuẩn hóa thành ĐÚNG CẤU TRÚC BẢNG CHUẨN dưới đây.
-NGUYÊN TẮC BẮT BUỘC: LẤY SƠ ĐỒ LỚP LÀM CHUẨN GỐC (Mã HS, Họ và tên, Tổ 1..4 theo Dãy bàn 1..4, Số bàn 1..6), mọi danh sách khác (điểm môn học, nề nếp, thông tin cá nhân) phải quy chiếu theo đúng học sinh trên Sơ đồ lớp:
+export const AI_MASTER_PROMPT_TEXT = `Hãy đọc tài liệu/hình ảnh đính kèm và xuất ra bảng chuẩn theo Sơ đồ lớp (4 Tổ x 6 Bàn):
 
-1. BẢNG TỔNG HỢP CHUẨN THEO SƠ ĐỒ LỚP - ĐIỂM MÔN HỌC (Ngăn cách bằng dấu Tab hoặc xuất ra Sheet 1 file Excel):
-Các cột theo đúng thứ tự:
+1. BẢNG DANH SÁCH & ĐIỂM MÔN HỌC (Sheet 1):
 STT | Mã HS | Họ và tên | Giới tính | Ngày sinh | Tổ | Chức vụ | Dãy bàn | Số bàn | Toán | Ngữ văn | Tiếng Anh | Vật lí | Hóa học | Sinh học | Lịch sử | Địa lí | GDKT&PL | Tin học | Công nghệ | GDQP-AN | GDTC | HĐTN-HN | Nhận xét GVCN
+- Chức vụ viết tắt: LT, BT, PBT, LP_HT, LP_LD, LP_VT, CD, TT, HS.
 
-Quy tắc điền dữ liệu Bảng 1:
-- Mã HS: HS01, HS02... theo chuẩn Sơ đồ lớp.
-- Họ và tên: Viết hoa chữ cái đầu mỗi từ (VD: Nguyễn Văn An).
-- Giới tính: Chỉ ghi "Nam" hoặc "Nữ". (Nếu nguồn không ghi rõ, hãy tự suy luận hợp lý theo tên tiếng Việt).
-- Ngày sinh: Định dạng DD/MM/YYYY (nếu có, không có để trống).
-- Tổ: Ghi số 1, 2, 3 hoặc 4 theo đúng Dãy bàn trên Sơ đồ lớp (Dãy 1 = Tổ 1, Dãy 2 = Tổ 2, Dãy 3 = Tổ 3, Dãy 4 = Tổ 4).
-- Chức vụ: Ghi mã viết tắt chuẩn:
-  + LT (Lớp trưởng)
-  + BT (Bí thư)
-  + PBT (Phó Bí thư)
-  + LP_HT (Lớp phó học tập)
-  + LP_LD (Lớp phó lao động)
-  + LP_VT (Lớp phó văn thể)
-  + CD (Cờ đỏ)
-  + TT (Tổ trưởng)
-  + HS (Học sinh - mặc định nếu không giữ chức vụ)
-- Dãy bàn: Số từ 1 đến 4 (chuẩn theo Tổ trên Sơ đồ lớp).
-- Số bàn: Số bàn từ 1 đến 6 (tính từ trên bục giảng xuống theo Sơ đồ lớp).
-- Các cột môn tính điểm (Toán -> GDQP-AN): Quy chiếu từ bảng điểm vào đúng học sinh trên Sơ đồ lớp, ghi điểm trung bình môn hệ 10 (VD: 8.5). Nếu chưa có điểm thì để trống.
-- Các cột môn nhận xét (GDTC, HĐTN-HN): Ghi "Đ" (Đạt) hoặc "CĐ" (Chưa đạt). Nếu chưa có thì để trống.
-
-2. BẢNG NỘI QUY LỚP (CƠ SỞ TRỪ ĐIỂM & CỘNG ĐIỂM - Chỉ tạo nếu tài liệu có nội quy):
-Các cột theo đúng thứ tự:
+2. BẢNG NỘI QUY LỚP (Sheet 2 - Nếu có nội quy):
 Mã nội quy | Nhóm hành vi | Tên hành vi | Loại điểm | Điểm số | Mức độ | Ghim
 - Loại điểm: "Trừ" hoặc "Cộng"
-- Điểm số: Số nguyên dương (VD: 2, 5, 10)
-- Mức độ: "Nhẹ", "Vừa" hoặc "Nặng"
+- Mức độ (chỉ căn cứ vào quy định file hoặc điểm trừ): Trừ 1–2đ = Nhẹ (viền đen), Trừ 3–4đ = Vừa (viền cam), Trừ từ 5đ trở lên = Nặng (viền đỏ).
 
-3. BẢNG NHẬT KÝ NỀ NẾP - VI PHẠM & ĐIỂM CỘNG (Quy chiếu theo học sinh trên Sơ đồ lớp - Chỉ tạo nếu có dữ liệu vi phạm/điểm cộng):
-Các cột theo đúng thứ tự:
-Ngày học | Buổi | Tuần | Mã hoặc Họ tên HS | Tổ | Nhóm hành vi | Nội dung hành vi | Loại điểm | Số điểm | Ghi chú
-- Ngày học: YYYY-MM-DD (VD: 2026-11-09)
-- Buổi: "Sáng" hoặc "Chiều"
-- Loại điểm: "Trừ" (vi phạm) hoặc "Cộng" (tuyên dương)
-- Số điểm: Số nguyên dương (VD: 2, 5, 10)
-
-YÊU CẦU QUAN TRỌNG: Chỉ xuất ra bảng dữ liệu sạch đã quy chiếu chuẩn theo Sơ đồ lớp để tôi copy hoặc tải về 1 file Excel (.xlsx) thả thẳng vào phần mềm, không giải thích dài dòng.`;
+3. BẢNG NHẬT KÝ NỀ NẾP (Sheet 3 - Nếu có vi phạm/điểm cộng):
+Ngày học | Buổi | Tuần | Mã hoặc Họ tên HS | Tổ | Nhóm hành vi | Nội dung hành vi | Loại điểm | Số điểm | Ghi chú`;
 
 /**
  * Chuyển đổi mảng vaiTro sang chuỗi mã chức vụ hiển thị trong Excel
@@ -245,17 +214,14 @@ export function downloadRulesExcelTemplate(currentRules?: RuleItem[]): void {
   XLSX.utils.book_append_sheet(wb, ws1, '1_Noi_Quy_Lop');
 
   const ws2Guide = [
-    ['HƯỚNG DẪN LẬP & NHẬP FILE NỘI QUY LỚP (CƠ SỞ TRỪ ĐIỂM & CỘNG ĐIỂM) - LỚP 10A5'],
-    [''],
-    ['1. Thầy có thể chỉnh sửa trực tiếp danh sách quy định trừ điểm / cộng điểm trong Sheet "1_Noi_Quy_Lop" hoặc thêm dòng mới.'],
-    ['2. Cột "Tên hành vi (Nội dung quy định)" và "Điểm số" là 2 thông tin quan trọng nhất làm cơ sở trừ điểm khi chấm nề nếp.'],
-    ['3. Cột "Loại điểm": Điền "Trừ" (đối với lỗi vi phạm) hoặc "Cộng" (đối với hành vi tuyên dương/khen thưởng). Nếu bỏ trống mặc định là "Trừ".'],
-    ['4. Cột "Mức độ": Điền "Nhẹ", "Vừa" hoặc "Nặng" (Các lỗi "Nặng" sẽ làm viền ghế trên sơ đồ lớp chuyển màu đỏ cảnh báo).'],
-    ['5. Cột "Ghim hay dùng": Điền "Có" để ghim hành vi đó lên đầu bảng chọn nhanh khi Giáo viên hoặc Ban cán sự bấm chấm điểm trên Sơ đồ lớp.'],
-    ['6. Sau khi lưu file, thầy vào mục "Nội quy" hoặc "Nhập / Xuất" -> Bấm "Up File Nội Quy Lớp Theo Mẫu" để áp dụng ngay làm cơ sở trừ điểm!'],
+    ['HƯỚNG DẪN NHANH FILE NỘI QUY LỚP - LỚP 10A5'],
+    ['1. Điền "Tên hành vi", "Loại điểm" (Trừ/Cộng) và "Điểm số".'],
+    ['2. Mức độ vi phạm chỉ căn cứ vào cột "Mức độ" (nếu có ghi) hoặc "Điểm số": Trừ 1–2đ = Nhẹ (viền đen), Trừ 3–4đ = Vừa (viền cam), Trừ từ 5đ trở lên = Nặng (viền đỏ).'],
+    ['3. Cột "Ghim hay dùng": Điền "Có" để hiện ở đầu bảng chọn nhanh.'],
+    ['4. Lưu file rồi bấm "Up File Nội Quy Lớp (.xlsx)" trong mục Nội quy.'],
   ];
   const ws2 = XLSX.utils.aoa_to_sheet(ws2Guide);
-  ws2['!cols'] = [{ wch: 115 }];
+  ws2['!cols'] = [{ wch: 110 }];
   XLSX.utils.book_append_sheet(wb, ws2, '2_Huong_Dan_Noi_Quy');
 
   XLSX.writeFile(wb, 'File_Mau_Noi_Quy_Lop_10A5.xlsx');
@@ -403,13 +369,8 @@ export function parseRulesFromAoA(rows: any[][]): RuleItem[] {
         ? 'Vệ sinh'
         : 'Nề nếp');
 
-    // Mức độ
-    let mucDo: SeverityLevel = 'Nhe';
-    if (rawSeverity.includes('nang') || diemSo >= 10) {
-      mucDo = 'Nang';
-    } else if (rawSeverity.includes('vua') || (diemSo >= 3 && diemSo < 10)) {
-      mucDo = 'Vua';
-    }
+    // Mức độ: chỉ căn cứ vào quy định của file nhập vào (nếu cột Mức độ có ghi rõ) và điểm trừ thực tế
+    const mucDo: SeverityLevel = classifySeverityByPoints(diemSo, loaiDiem === 'Cong', rawSeverity);
 
     // Ghim
     const ghim =
@@ -598,17 +559,14 @@ export function downloadUnifiedExcelTemplate(
 
   // Sheet 4: Hướng dẫn nhanh ngay trong file Excel
   const sheet4Guide = [
-    ['HƯỚNG DẪN NHẬP DỮ LIỆU CHUẨN SƠ ĐỒ LỚP & NỘI QUY LỚP (1 FILE DUY NHẤT) - LỚP 10A5'],
-    [''],
-    ['NGUYÊN TẮC VÀNG: DÙ LẤY DỮ LIỆU TỪ FILE NÀO, HỆ THỐNG LUÔN LẤY SƠ ĐỒ LỚP LÀM CHUẨN GỐC VÀ TỰ ĐỘNG QUY CHIẾU CÁC DANH SÁCH KHÁC TỪ SƠ ĐỒ LỚP.'],
-    ['0. Sheet "0_SoDoLop_Chuan": Sơ đồ chỗ ngồi 2D trực quan của lớp (4 Tổ / 4 Dãy bàn x 6 Bàn). Đây là chuẩn gốc về Mã HS, Họ tên, Tổ và chỗ ngồi.'],
-    ['1. Sheet "1_DanhSach_Chongoi_Diem": Chứa Danh sách học sinh đã quy chiếu từ Sơ đồ lớp kèm Điểm các môn học.'],
-    ['   - Mã chức vụ hỗ trợ: LT (Lớp trưởng), BT (Bí thư), PBT (Phó Bí thư), LP_HT (Lớp phó học tập), LP_LD (Lớp phó lao động), LP_VT (Lớp phó văn thể), CD (Cờ đỏ), TT (Tổ trưởng).'],
-    ['2. Sheet "2_NhatKy_NeNep": Chứa các lượt ghi nhận vi phạm hoặc điểm cộng (Tự động quy chiếu Tổ và Mã HS từ Sơ đồ lớp).'],
-    ['3. Sheet "3_NoiQuy_Lop": Chứa danh mục Nội quy lớp (Cơ sở trừ điểm / cộng điểm) để Giáo viên và Ban cán sự bấm chấm điểm hàng ngày.'],
+    ['HƯỚNG DẪN NHANH (1 FILE DUY NHẤT) - LỚP 10A5'],
+    ['1. Sheet "0_SoDoLop_Chuan": Sơ đồ lớp 4 Tổ x 6 Bàn làm chuẩn gốc.'],
+    ['2. Sheet "1_DanhSach_Chongoi_Diem": Danh sách học sinh, chức vụ (LT, BT, PBT, LP_HT, LP_LD, LP_VT, CD, TT) và điểm môn học.'],
+    ['3. Sheet "2_NhatKy_NeNep": Ghi nhận vi phạm / điểm cộng theo tuần.'],
+    ['4. Sheet "3_NoiQuy_Lop": Nội quy lớp. Mức độ căn cứ vào quy định file hoặc điểm trừ: 1–2đ = Nhẹ (viền đen), 3–4đ = Vừa (viền cam), ≥5đ = Nặng (viền đỏ).'],
   ];
   const ws4 = XLSX.utils.aoa_to_sheet(sheet4Guide);
-  ws4['!cols'] = [{ wch: 115 }];
+  ws4['!cols'] = [{ wch: 110 }];
   XLSX.utils.book_append_sheet(wb, ws4, '4_HuongDan');
 
   XLSX.writeFile(wb, 'File_Mau_Nhap_Du_Lieu_10A5_Chuan_SoDoLop.xlsx');
@@ -796,228 +754,61 @@ export function exportDataSpecsWordDocument(): void {
           xmlns='http://www.w3.org/TR/REC-html40'>
     <head>
       <meta charset="utf-8">
-      <title>Hướng Dẫn Nhập Xuất Dữ Liệu 1 File Duy Nhất - Lớp 10A5</title>
+      <title>Hướng Dẫn Nhập Xuất Dữ Liệu Đơn Giản - Lớp 10A5</title>
       <style>
-        @page {
-          size: A4;
-          margin: 2cm 2cm 2cm 2cm;
-        }
-        body {
-          font-family: 'Times New Roman', serif;
-          font-size: 13pt;
-          line-height: 1.5;
-          color: #111827;
-        }
-        h1 {
-          font-size: 17pt;
-          font-weight: bold;
-          text-align: center;
-          color: #1e3a8a;
-          text-transform: uppercase;
-          margin-bottom: 6pt;
-        }
-        .subtitle {
-          text-align: center;
-          font-style: italic;
-          color: #4b5563;
-          font-size: 11.5pt;
-          margin-bottom: 18pt;
-          border-bottom: 2px solid #1e3a8a;
-          padding-bottom: 10pt;
-        }
-        h2 {
-          font-size: 14pt;
-          font-weight: bold;
-          color: #1d4ed8;
-          margin-top: 16pt;
-          margin-bottom: 8pt;
-          background-color: #eff6ff;
-          padding: 6pt 10pt;
-          border-left: 4px solid #1d4ed8;
-        }
-        h3 {
-          font-size: 13pt;
-          font-weight: bold;
-          color: #0f766e;
-          margin-top: 12pt;
-          margin-bottom: 6pt;
-        }
-        p {
-          margin: 6pt 0;
-          text-align: justify;
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 10pt 0;
-          font-size: 11pt;
-        }
-        th, td {
-          border: 1px solid #9ca3af;
-          padding: 5pt 6pt;
-          text-align: left;
-          vertical-align: top;
-        }
-        th {
-          background-color: #dbeafe;
-          color: #1e3a8a;
-          font-weight: bold;
-        }
-        .code-box {
-          background-color: #f8fafc;
-          border: 1px dashed #64748b;
-          padding: 10pt;
-          font-family: 'Courier New', monospace;
-          font-size: 10.5pt;
-          margin: 8pt 0;
-          white-space: pre-wrap;
-        }
-        .highlight-box {
-          background-color: #ecfdf5;
-          border: 1px solid #10b981;
-          padding: 10pt;
-          margin: 10pt 0;
-        }
-        ul, ol {
-          margin: 6pt 0;
-          padding-left: 22pt;
-        }
-        li {
-          margin-bottom: 4pt;
-        }
+        @page { size: A4; margin: 2cm; }
+        body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.5; color: #111827; }
+        h1 { font-size: 16pt; font-weight: bold; text-align: center; color: #1e3a8a; text-transform: uppercase; margin-bottom: 6pt; }
+        .subtitle { text-align: center; font-style: italic; color: #4b5563; font-size: 11pt; margin-bottom: 14pt; border-bottom: 1px solid #1e3a8a; padding-bottom: 8pt; }
+        h2 { font-size: 13.5pt; font-weight: bold; color: #1d4ed8; margin-top: 14pt; margin-bottom: 6pt; }
+        table { width: 100%; border-collapse: collapse; margin: 8pt 0; font-size: 11pt; }
+        th, td { border: 1px solid #9ca3af; padding: 5pt 6pt; text-align: left; }
+        th { background-color: #dbeafe; color: #1e3a8a; font-weight: bold; }
+        .code-box { background-color: #f8fafc; border: 1px dashed #64748b; padding: 8pt; font-family: 'Courier New', monospace; font-size: 10.5pt; white-space: pre-wrap; }
       </style>
     </head>
     <body>
-      <h1>HƯỚNG DẪN NHẬP - XUẤT DỮ LIỆU THÔNG MINH (1 FILE DUY NHẤT)</h1>
-      <div class="subtitle">
-        Hệ thống Quản lý Nề nếp, Sơ đồ lớp &amp; Học tập Lớp 10A5<br/>
-        Nguyên tắc: "Đưa 1 file vào là đủ toàn bộ thông tin" — Ngày xuất: ${dateStr}
-      </div>
+      <h1>HƯỚNG DẪN NHẬP DỮ LIỆU ĐƠN GIẢN (1 FILE EXCEL)</h1>
+      <div class="subtitle">Hệ thống Quản lý Lớp 10A5 — Ngày xuất: ${dateStr}</div>
 
-      <div class="highlight-box">
-        <b>NGUYÊN TẮC CỐT LÕI (ĐƠN GIẢN &amp; ĐỒNG NHẤT 100%):</b><br/>
-        Thay vì phải tách rời nhiều file hay qua nhiều bước phức tạp, hệ thống được thiết kế để <b>chỉ cần thả 1 file Excel (.xlsx) duy nhất</b> (hoặc file Nội quy lớp theo mẫu) vào mục <b>Nhập / Xuất</b> hoặc <b>Nội quy</b>. Hệ thống sẽ tự động đọc và cập nhật đồng thời:<br/>
-        1. <b>Danh sách học sinh</b> (Mã HS, Họ và tên, Giới tính, Ngày sinh, SĐT Phụ huynh)<br/>
-        2. <b>Phân tổ &amp; Ban cán sự</b> (Tổ 1–4, Lớp trưởng, Bí thư, Phó Bí thư, Lớp phó Học tập/Lao động/Văn thể, Cờ đỏ, Tổ trưởng)<br/>
-        3. <b>Sơ đồ chỗ ngồi</b> (Dãy bàn, Số bàn — lấy Sơ đồ lớp 48 chỗ làm chuẩn gốc)<br/>
-        4. <b>Nội quy lớp (Cơ sở trừ điểm &amp; cộng điểm)</b> (Mã nội quy, Nhóm hành vi, Tên hành vi, Điểm trừ/cộng, Mức độ)<br/>
-        5. <b>Bảng điểm tất cả các môn học &amp; Nhật ký Nề nếp</b>
-      </div>
-
-      <h2>I. QUY TRÌNH 3 BƯỚC NHẬP DỮ LIỆU NHANH NHẤT</h2>
+      <h2>1. Cách nhập dữ liệu (3 bước)</h2>
       <ol>
-        <li><b>Bước 1:</b> Nhấn nút <b>"Tải File Excel Mẫu"</b> hoặc <b>"Tải File Mẫu Nội Quy Lớp (.xlsx)"</b> ngay trên màn hình của giáo viên.</li>
-        <li><b>Bước 2:</b> Mở file Excel mẫu, điền danh sách học sinh, chức vụ, điểm các môn hoặc bảng Nội quy lớp (các hành vi và mức điểm trừ).</li>
-        <li><b>Bước 3:</b> Kéo thả file Excel vừa lưu vào hệ thống và bấm <b>"Áp Dụng Ngay"</b>. Toàn bộ dữ liệu sẽ được cập nhật và đồng bộ tức thì lên Đám mây (Firebase)!</li>
+        <li>Bấm <b>"Tải File Excel Mẫu"</b> hoặc <b>"Tải File Mẫu Nội Quy Lớp (.xlsx)"</b>.</li>
+        <li>Điền danh sách học sinh, bảng điểm hoặc nội quy lớp vào file mẫu.</li>
+        <li>Tải file Excel vừa lưu lên mục <b>Nhập / Xuất</b> hoặc <b>Nội quy</b>.</li>
       </ol>
 
-      <h2>II. QUY TẮC CÁC CỘT TRONG FILE EXCEL CHUẨN</h2>
+      <h2>2. Quy định phân loại mức độ vi phạm</h2>
+      <p>Hệ thống xác định mức độ vi phạm dựa trên <b>quy định trong file Nội quy nhập vào</b> và <b>số điểm trừ</b> (hiển thị bằng màu viền trên nút chọn):</p>
+      <ul>
+        <li><b>Mức Nhẹ (Viền đen):</b> Điểm trừ 1 – 2 điểm (hoặc cột Mức độ ghi Nhẹ).</li>
+        <li><b>Mức Vừa (Viền cam):</b> Điểm trừ 3 – 4 điểm (hoặc cột Mức độ ghi Vừa).</li>
+        <li><b>Mức Nặng (Viền đỏ):</b> Điểm trừ từ 5 điểm trở lên (hoặc cột Mức độ ghi Nặng).</li>
+      </ul>
 
-      <h3>1. Sheet "1_DanhSach_Chongoi_Diem" (Danh sách + Chỗ ngồi + Điểm môn học)</h3>
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 22%;">Tên cột chuẩn</th>
-            <th style="width: 18%;">Mức độ</th>
-            <th style="width: 60%;">Quy tắc nhập &amp; Giá trị hợp lệ</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><b>STT, Mã HS</b></td>
-            <td>Tự động</td>
-            <td>VD: <b>HS01, HS02...</b> (Theo chuẩn Sơ đồ lớp 48 học sinh).</td>
-          </tr>
-          <tr>
-            <td><b>Họ và tên</b></td>
-            <td><b>BẮT BUỘC</b></td>
-            <td>Họ và tên đầy đủ của học sinh (VD: <i>Nguyễn Minh Khôi</i>).</td>
-          </tr>
-          <tr>
-            <td><b>Giới tính, Ngày sinh</b></td>
-            <td>Tùy chọn</td>
-            <td>Ghi <b>Nam</b> hoặc <b>Nữ</b>; Ngày sinh định dạng DD/MM/YYYY.</td>
-          </tr>
-          <tr>
-            <td><b>Tổ, Dãy bàn, Số bàn</b></td>
-            <td>Tự động</td>
-            <td>Tổ 1–4 tương ứng Dãy bàn 1–4, Số bàn 1–6 (tối đa 48 ghế chuẩn).</td>
-          </tr>
-          <tr>
-            <td><b>Chức vụ</b></td>
-            <td>Tùy chọn</td>
-            <td>
-              Ghi mã viết tắt hoặc tên chức vụ đều được:<br/>
-              - <b>LT</b> (hoặc <i>Lớp trưởng</i>)<br/>
-              - <b>BT</b> (hoặc <i>Bí thư</i>)<br/>
-              - <b>PBT</b> (hoặc <i>Phó Bí thư</i>)<br/>
-              - <b>LP_HT</b> (hoặc <i>Lớp phó học tập</i>)<br/>
-              - <b>LP_LD</b> (hoặc <i>Lớp phó lao động</i>)<br/>
-              - <b>LP_VT</b> (hoặc <i>Lớp phó văn thể</i>)<br/>
-              - <b>CD</b> (hoặc <i>Cờ đỏ / Sao đỏ</i>)<br/>
-              - <b>TT</b> (hoặc <i>Tổ trưởng</i>)<br/>
-              - <b>HS</b> (hoặc để trống: Học sinh)
-            </td>
-          </tr>
-          <tr>
-            <td><b>Các cột môn học</b></td>
-            <td>Tùy chọn</td>
-            <td>Điền điểm trung bình môn hệ số 10 (VD: <i>8.5</i>) hoặc <b>Đ / CĐ</b> cho môn nhận xét.</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <h3>2. Sheet "3_NoiQuy_Lop" hoặc File Mẫu Nội Quy Lớp (Cơ sở trừ điểm)</h3>
-      <p>Dùng để thiết lập danh mục các lỗi vi phạm và mức điểm trừ/cộng cho lớp:</p>
+      <h2>3. Bảng mẫu Nội quy lớp</h2>
       <table>
         <thead>
           <tr>
             <th>Mã nội quy</th>
             <th>Nhóm hành vi</th>
-            <th>Tên hành vi (Nội dung quy định)</th>
+            <th>Tên hành vi</th>
             <th>Loại điểm</th>
             <th>Điểm số</th>
             <th>Mức độ</th>
-            <th>Ghim hay dùng</th>
+            <th>Ghim</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>NQ01</td>
-            <td>Chuyên cần</td>
-            <td>Đi học muộn (sau trống vào lớp)</td>
-            <td>Trừ</td>
-            <td>2</td>
-            <td>Nhẹ</td>
-            <td>Có</td>
-          </tr>
-          <tr>
-            <td>NQ02</td>
-            <td>Chuyên cần</td>
-            <td>Nghỉ học không phép / Bỏ tiết</td>
-            <td>Trừ</td>
-            <td>10</td>
-            <td>Nặng</td>
-            <td>Có</td>
-          </tr>
-          <tr>
-            <td>KT01</td>
-            <td>Điểm cộng</td>
-            <td>Phát biểu xây dựng bài sôi nổi</td>
-            <td>Cộng</td>
-            <td>5</td>
-            <td>Nhẹ</td>
-            <td>Có</td>
-          </tr>
+          <tr><td>NQ01</td><td>Chuyên cần</td><td>Đi học muộn</td><td>Trừ</td><td>2</td><td>Nhẹ</td><td>Có</td></tr>
+          <tr><td>NQ05</td><td>Trật tự</td><td>Mất trật tự trong giờ học</td><td>Trừ</td><td>3</td><td>Vừa</td><td>Có</td></tr>
+          <tr><td>NQ02</td><td>Chuyên cần</td><td>Nghỉ học không phép / Bỏ tiết</td><td>Trừ</td><td>5</td><td>Nặng</td><td>Có</td></tr>
+          <tr><td>KT01</td><td>Điểm cộng</td><td>Phát biểu xây dựng bài</td><td>Cộng</td><td>5</td><td>Nhẹ</td><td>Có</td></tr>
         </tbody>
       </table>
 
-      <h2>III. CÂU LỆNH (PROMPT) MẪU DÀNH CHO AI (CHATGPT / GEMINI)</h2>
+      <h2>4. Câu lệnh AI mẫu (nếu nhờ ChatGPT / Gemini tạo bảng)</h2>
       <div class="code-box">${AI_MASTER_PROMPT_TEXT}</div>
-
-      <p style="margin-top: 16pt; text-align: center; font-weight: bold; color: #1e3a8a;">
-        — HỆ THỐNG QUẢN LÝ LỚP HỌC THÔNG MINH 10A5 —
-      </p>
     </body>
     </html>
   `;
