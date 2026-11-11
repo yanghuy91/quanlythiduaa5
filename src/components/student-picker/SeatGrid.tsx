@@ -546,10 +546,10 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                               )}
                             </div>
 
-                            {/* Góc dưới trái: Phù hiệu Ban cán sự lớp */}
+                            {/* Góc dưới trái: Phù hiệu Ban cán sự lớp (Thu nhỏ gọn ở góc trên điện thoại) */}
                             {topRole !== 'HS' && (
                               <div 
-                                className="absolute bottom-1 left-1 px-1 py-0.5 rounded-md text-[9px] font-black shadow-md z-10 flex items-center gap-0.5 border border-white/60 dark:border-black/40 backdrop-blur-xs leading-none"
+                                className="absolute bottom-0.5 left-0.5 px-1 py-0.5 rounded text-[8px] sm:text-[9px] font-black shadow-sm z-10 flex items-center gap-0.5 border border-white/70 backdrop-blur-xs leading-none scale-[0.72] sm:scale-95 origin-bottom-left"
                                 style={{ 
                                   backgroundColor: roleConfig.bg, 
                                   color: roleConfig.fg 
@@ -561,10 +561,10 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                               </div>
                             )}
 
-                            {/* Góc dưới phải: Huy hiệu thi đua cá nhân */}
+                            {/* Góc dưới phải: Huy hiệu thi đua cá nhân (Nhỏ gọn sát góc để không che mặt ảnh trên điện thoại) */}
                             {badgeDef && (
                               <div 
-                                className="absolute bottom-0.5 right-0.5 drop-shadow-md z-10 transition-transform group-hover:scale-115"
+                                className="absolute bottom-0 right-0 drop-shadow-md z-10 transition-transform scale-[0.62] sm:scale-90 origin-bottom-right group-hover:scale-95 sm:group-hover:scale-105"
                                 title={`Huy hiệu: ${badgeDef.name} (${badgeDef.categoryLabel})`}
                               >
                                 <BadgeEmblem type={badgeDef.iconType} size="xs" />
@@ -572,29 +572,29 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                             )}
                           </div>
 
-                          {/* Tên học sinh đặt ngay phía dưới ảnh avatar */}
-                          <div className="w-full mt-1 sm:mt-1.5 px-0.5 min-w-0 text-center">
-                            <span className={`text-[10.5px] sm:text-xs font-extrabold tracking-tight truncate block leading-tight ${
+                          {/* Tên học sinh đặt ngay phía dưới ảnh avatar - chữ nhỏ gọn vừa vặn trên điện thoại */}
+                          <div className="w-full mt-0.5 sm:mt-1 px-0.5 min-w-0 text-center">
+                            <span className={`text-[8.5px] sm:text-[11px] font-extrabold tracking-tighter sm:tracking-tight line-clamp-1 block leading-tight ${
                               isSelected ? 'text-accent' : 'text-main'
                             }`}>
                               {isGroupView ? student.hoTen : getSeatingMapDisplayName(student, students)}
                             </span>
                             {badgeDef ? (
                               <span 
-                                className="text-[9px] font-bold text-amber-700 dark:text-amber-300 truncate block leading-none opacity-90 mt-0.5"
+                                className="text-[7.5px] sm:text-[9px] font-bold text-amber-700 truncate block leading-none opacity-90 mt-0.5"
                                 title={badgeDef.name}
                               >
                                 {badgeDef.name}
                               </span>
                             ) : topRole !== 'HS' ? (
                               <span 
-                                className="text-[9px] font-bold truncate block leading-none mt-0.5"
+                                className="text-[7.5px] sm:text-[9px] font-bold truncate block leading-none mt-0.5"
                                 style={{ color: roleConfig.fg }}
                               >
                                 {topRole === 'TT' && student.toTruongTo ? `Tổ trưởng ${student.toTruongTo}` : roleConfig.label}
                               </span>
                             ) : (
-                              <span className="text-[9px] font-medium text-muted truncate block leading-none opacity-70 mt-0.5">
+                              <span className="text-[7.5px] sm:text-[9px] font-medium text-muted truncate block leading-none opacity-70 mt-0.5">
                                 Tổ {student.to}
                               </span>
                             )}

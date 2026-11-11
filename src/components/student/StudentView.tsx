@@ -66,7 +66,9 @@ import {
   getBadgeCatalog, 
   getStudentBadgesMap, 
   getStudentActiveBadge, 
-  setStudentActiveBadge 
+  setStudentActiveBadge,
+  isBadgeReservedForCadre,
+  isStudentCadre
 } from '../../data/badgeCatalog';
 import { BadgeEmblem } from '../common/BadgeEmblem';
 import { AvatarFrame } from '../common/AvatarFrame';
@@ -338,6 +340,8 @@ export const StudentView: React.FC<StudentViewProps> = ({
   const [rankingSearchQuery, setRankingSearchQuery] = useState('');
   const [rankingOnlyMe, setRankingOnlyMe] = useState(false);
 
+  const [badgeSyncTick, setBadgeSyncTick] = useState(0);
+
   // Active displayed achievement badge next to student avatar
   const [selectedBadgeId, setSelectedBadgeId] = useState<string | null>(() => {
     try {
@@ -345,11 +349,20 @@ export const StudentView: React.FC<StudentViewProps> = ({
       if (active) return active;
       const saved = localStorage.getItem(`student_active_badge_${currentStudent.maHS}`);
       if (saved) return saved;
-      return 'b_iron_discipline'; // default badge if unlocked
+      return null;
     } catch {
       return null;
     }
   });
+
+  useEffect(() => {
+    const syncBadges = () => {
+      setBadgeSyncTick(t => t + 1);
+      setSelectedBadgeId(getStudentActiveBadge(currentStudent.maHS));
+    };
+    window.addEventListener('lop10a5:badge_change', syncBadges);
+    return () => window.removeEventListener('lop10a5:badge_change', syncBadges);
+  }, [currentStudent.maHS]);
 
   const handleToggleBadge = (badgeId: string) => {
     setSelectedBadgeId(prev => {
@@ -577,35 +590,17 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
   // Compute Unlocked Badges for current student from the 30-badge catalog
   const myBadges = useMemo(() => {
-    const hasLate = myRecords.some(r => r.maNoiQuy === 'NQ01' || r.tenHanhVi.includes('muộn'));
-    const hasStudyFault = myRecords.some(r => r.nhomHanhVi === 'Học tập');
-    const hasSanitationFault = myRecords.some(r => r.nhomHanhVi === 'Lao động - Vệ sinh');
-    const isGoodScore = myWeekSummary.diemHienTai >= 90;
-    const isIronDiscipline = myWeekSummary.diemHienTai === 100 && myWeekSummary.soLoiTrongTuan === 0;
-
     const catalog = getBadgeCatalog();
     const studentBadgesMap = getStudentBadgesMap();
     const explicitlyAwarded = studentBadgesMap[currentStudent.maHS] || [];
+    const studentIsCadre = isStudentCadre(currentStudent);
 
     return catalog.map(badge => {
-      let unlocked = explicitlyAwarded.includes(badge.id);
-
-      // Automated criteria fallbacks
-      if (!unlocked) {
-        if (badge.id === 'b_iron_discipline') unlocked = isIronDiscipline;
-        else if (badge.id === 'b_punctuality_hero') unlocked = !hasLate;
-        else if (badge.id === 'b_neat_attire') unlocked = true;
-        else if (badge.id === 'b_green_classroom') unlocked = !hasSanitationFault;
-        else if (badge.id === 'b_orderly_desk') unlocked = true;
-        else if (badge.id === 'b_diligent_quill') unlocked = !hasStudyFault;
-        else if (badge.id === 'b_positive_energy') unlocked = isGoodScore;
-        else if (badge.id === 'b_fitness_warrior') unlocked = true;
-        else if (badge.id === 'b_golden_hands') unlocked = !hasSanitationFault;
-      }
-
-      return { ...badge, unlocked };
+      const reservedForCadre = isBadgeReservedForCadre(badge);
+      const unlocked = explicitlyAwarded.includes(badge.id) && (!reservedForCadre || studentIsCadre);
+      return { ...badge, unlocked, reservedForCadre };
     });
-  }, [myRecords, myWeekSummary, currentStudent.maHS]);
+  }, [currentStudent, badgeSyncTick]);
 
   // Active badge to display beside student Avatar
   const activeDisplayedBadge = useMemo(() => {
@@ -1225,17 +1220,6 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   <span className="text-xs font-semibold text-muted">
                     Tổ {currentStudent.to}
                   </span>
-                  <span className="text-muted/40">•</span>
-                  {/* Unified Cài Đặt Button */}
-                  <button
-                    type="button"
-                    onClick={() => setShowSettingsModal(true)}
-                    className="px-2.5 py-1 rounded-xl bg-surface-2 hover:bg-surface-3 border border-token text-[11px] font-bold text-main transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs hover:border-accent active:scale-95"
-                    title="Cài đặt tài khoản: Đổi ảnh đại diện, đổi huy hiệu, đổi mật khẩu"
-                  >
-                    <Settings className="w-3 h-3 text-accent" />
-                    <span>Cài đặt tài khoản</span>
-                  </button>
                 </div>
               </div>
             </div>
@@ -1686,7 +1670,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                     : 'bg-surface/80 text-muted hover:text-main border border-token/50'
                 }`}
               >
-                <span>✨ Tất cả (30)</span>
+                <span>✨ Tất cả ({myBadges.length})</span>
               </button>
               <button
                 type="button"
@@ -1697,7 +1681,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                     : 'bg-surface/80 text-muted hover:text-main border border-token/50'
                 }`}
               >
-                <span>🛡️ Kỷ luật (8)</span>
+                <span>🛡️ Kỷ luật ({myBadges.filter(b => b.category === 'discipline').length})</span>
               </button>
               <button
                 type="button"
@@ -1708,7 +1692,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                     : 'bg-surface/80 text-muted hover:text-main border border-token/50'
                 }`}
               >
-                <span>📚 Học tập (8)</span>
+                <span>📚 Học tập ({myBadges.filter(b => b.category === 'academic').length})</span>
               </button>
               <button
                 type="button"
@@ -1719,7 +1703,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                     : 'bg-surface/80 text-muted hover:text-main border border-token/50'
                 }`}
               >
-                <span>🚩 Phong trào (7)</span>
+                <span>🚩 Phong trào ({myBadges.filter(b => b.category === 'movement').length})</span>
               </button>
               <button
                 type="button"
@@ -1730,7 +1714,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                     : 'bg-surface/80 text-muted hover:text-main border border-token/50'
                 }`}
               >
-                <span>⭐ Cán sự &amp; Lớp (7)</span>
+                <span>⭐ Cán sự &amp; Lớp ({myBadges.filter(b => b.category === 'cadre').length})</span>
               </button>
             </div>
 
@@ -1766,12 +1750,17 @@ export const StudentView: React.FC<StudentViewProps> = ({
                             <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-surface border border-token text-muted font-bold">
                               {badge.rarity}
                             </span>
+                            {badge.reservedForCadre && (
+                              <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 font-extrabold">
+                                👑 Chỉ Ban cán sự
+                              </span>
+                            )}
                             {badge.unlocked ? (
-                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold">
+                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-700 font-bold">
                                 Đã mở khóa
                               </span>
                             ) : (
-                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-muted font-medium">
+                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 text-muted font-medium">
                                 Chưa đạt
                               </span>
                             )}
@@ -1881,7 +1870,14 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 }`}
                 title="Bấm để lọc nhanh xem riêng vị trí thi đua của bạn"
               >
-                <span>⭐ Vị trí của bạn: {myRank === 1 ? '🥇 Hạng 1' : myRank === 2 ? '🥈 Hạng 2' : myRank === 3 ? '🥉 Hạng 3' : `Hạng #${myRank}`}{myRankItem?.isTied ? ' (Đồng hạng)' : ''} ({myPeriodSummary.diemTrungBinh}đ)</span>
+                <span>
+                  ⭐ Vị trí của bạn:{' '}
+                  {myPeriodSummary.chuaCoDiem
+                    ? myPeriodSummary.lyDoChuaCoDiem === 'no_data'
+                      ? '⊘ Tuần không có dữ liệu'
+                      : '⏳ Tuần chưa học'
+                    : `${myRank === 1 ? '🥇 Hạng 1' : myRank === 2 ? '🥈 Hạng 2' : myRank === 3 ? '🥉 Hạng 3' : `Hạng #${myRank}`}${myRankItem?.isTied ? ' (Đồng hạng)' : ''} (${myPeriodSummary.diemTrungBinh}đ)`}
+                </span>
               </button>
             </div>
           </div>

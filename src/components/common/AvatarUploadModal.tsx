@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { Camera, Upload, Trash2, X, Check, Sparkles, Lock, ShieldAlert } from 'lucide-react';
+import { Camera, Upload, Trash2, X, Check, Lock } from 'lucide-react';
 import { Student, TeacherSettings } from '../../types';
 import { getStudentAvatarInitial } from '../../utils/vietnamese';
 import { PRESET_STUDENT_AVATARS, StudentAvatarPreset, resolveStudentAvatar } from '../../data/avatarPresets';
@@ -209,48 +209,8 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
             </div>
           </div>
 
-          {/* 50 Curated High Quality Student Avatars (All in one unified list, no category tabs) */}
-          <div className="space-y-2.5 pt-2 border-t border-slate-200">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 text-xs font-black text-slate-900">
-                <Sparkles className="w-4 h-4 text-amber-500" />
-                <span>Kho Avatar ({genderMatchedPresets.length} ảnh):</span>
-              </div>
-              
-              {/* Controls & Badges */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {/* Duplicate Policy Badge */}
-                <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl border text-[11px] font-bold shadow-2xs ${
-                  allowDuplicate
-                    ? 'bg-blue-50 border-blue-200 text-blue-700'
-                    : 'bg-amber-50 border-amber-200 text-amber-800'
-                }`}>
-                  {allowDuplicate ? (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Cho phép trùng</span>
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-3.5 h-3.5" />
-                      <span>Cấm trùng avatar (Mỗi HS 1 ảnh)</span>
-                    </>
-                  )}
-                </div>
-
-                {/* Gender badge fixed from school records / teacher */}
-                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-black shadow-2xs ${
-                  studentGender === 'Nu' 
-                    ? 'bg-rose-50 border-rose-200 text-rose-700' 
-                    : 'bg-sky-50 border-sky-200 text-sky-700'
-                }`}>
-                  <Lock className="w-3.5 h-3.5 shrink-0" />
-                  <span>Giới tính: {studentGender === 'Nu' ? 'Nữ ♀' : 'Nam ♂'}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Clean Avatar Grid without text descriptions or category tabs */}
+          {/* Curated High Quality Student Avatars */}
+          <div className="pt-2 border-t border-slate-200">
             <div className="max-h-64 sm:max-h-80 overflow-y-auto grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 gap-2.5 p-2.5 border border-slate-200 rounded-2xl bg-slate-50/80">
               {genderMatchedPresets.map((preset: StudentAvatarPreset) => {
                 const isSelected = previewUrl === preset.imageSrc;
@@ -324,7 +284,7 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
               Hoặc tải ảnh chân dung từ thiết bị của bạn
             </span>
             <span className="text-[10px] font-medium text-slate-500">
-              Hỗ trợ PNG, JPG, WebP (Tự động canh vuông chuẩn đẹp)
+              Hỗ trợ định dạng PNG, JPG, WebP
             </span>
           </div>
 

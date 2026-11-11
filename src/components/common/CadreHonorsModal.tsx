@@ -4,6 +4,7 @@ import { Student, CadreDelegatedPermission } from '../../types';
 import { CADRE_ROLES_INFO } from '../../data/badgeData';
 import { getCadreBanner } from '../../data/cadreBanners';
 import { BadgeEmblem, getCadreRoleEmblemType } from './BadgeEmblem';
+import cadreLeadershipCrest from '../../assets/images/cadre_leadership_crest_1794145976007.jpg';
 
 export const CADRE_DELEGATED_PERMISSION_LIST: Array<{
   id: CadreDelegatedPermission;
@@ -92,9 +93,9 @@ export const CadreHonorsModal: React.FC<CadreHonorsModalProps> = ({
         {/* Header with Leadership Crest Visual */}
         <div className="relative p-5 sm:p-6 bg-gradient-to-r from-amber-500/15 via-blue-500/10 to-purple-500/15 border-b border-token flex items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border-2 border-amber-500/40 shadow-md shrink-0 bg-surface">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border-2 border-amber-500/40 shadow-md shrink-0 bg-surface flex items-center justify-center">
               <img
-                src="/src/assets/images/cadre_leadership_crest_1794145976007.jpg"
+                src={cadreLeadershipCrest}
                 alt="Huy hiệu Ban Cán Sự 10A5"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
@@ -176,7 +177,7 @@ export const CadreHonorsModal: React.FC<CadreHonorsModalProps> = ({
                   <div className="p-3.5 flex-1 flex flex-col justify-between gap-2.5">
                     <div className="flex items-start gap-3">
                       <div 
-                        className="w-11 h-11 rounded-2xl flex items-center justify-center p-1 shrink-0 shadow-inner"
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center p-1 shrink-0 shadow-inner overflow-visible"
                         style={{ 
                           backgroundColor: `${info.accentColor}20`, 
                           border: `1.5px solid ${info.accentColor}40` 

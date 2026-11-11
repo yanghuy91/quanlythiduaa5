@@ -1229,30 +1229,47 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   <span>
                     Đang hiển thị: <strong className="text-main font-bold">{displayedTeacherRankings.length}</strong> / {students.length} học sinh
                   </span>
-                  <span>·</span>
-                  <span>
-                    Điểm trung bình: <strong className="text-accent font-bold">{teacherRankingStats.avgScore} đ</strong>
-                  </span>
+                  {displayedTeacherRankings.length > 0 && displayedTeacherRankings.every(i => i.chuaCoDiem) ? (
+                    <>
+                      <span>·</span>
+                      <span className="font-bold text-slate-600">
+                        {displayedTeacherRankings[0]?.lyDoChuaCoDiem === 'no_data'
+                          ? '⊘ Tuần không có dữ liệu (Không tính điểm)'
+                          : '⏳ Tuần chưa học (Chưa tính điểm)'}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span>·</span>
+                      <span>
+                        Điểm trung bình: <strong className="text-accent font-bold">{teacherRankingStats.avgScore} đ</strong>
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap font-medium">
-                  <span className="text-[var(--st-ok)] font-bold">
-                    🌟 Tốt: {teacherRankingStats.totCount}
-                  </span>
-                  <span>·</span>
-                  <span className="text-accent font-bold">
-                    🚀 Khá: {teacherRankingStats.khaCount}
-                  </span>
-                  <span>·</span>
-                  <span className="text-[var(--st-warn)] font-bold">
-                    ⚠️ Đạt: {teacherRankingStats.datCount}
-                  </span>
-                  {teacherRankingStats.canCoGangCount > 0 && (
+                  {!(displayedTeacherRankings.length > 0 && displayedTeacherRankings.every(i => i.chuaCoDiem)) && (
                     <>
-                      <span>·</span>
-                      <span className="text-[var(--st-bad)] font-bold">
-                        ❗ Cần cố gắng: {teacherRankingStats.canCoGangCount}
+                      <span className="text-[var(--st-ok)] font-bold">
+                        🌟 Tốt: {teacherRankingStats.totCount}
                       </span>
+                      <span>·</span>
+                      <span className="text-accent font-bold">
+                        🚀 Khá: {teacherRankingStats.khaCount}
+                      </span>
+                      <span>·</span>
+                      <span className="text-[var(--st-warn)] font-bold">
+                        ⚠️ Đạt: {teacherRankingStats.datCount}
+                      </span>
+                      {teacherRankingStats.canCoGangCount > 0 && (
+                        <>
+                          <span>·</span>
+                          <span className="text-[var(--st-bad)] font-bold">
+                            ❗ Cần cố gắng: {teacherRankingStats.canCoGangCount}
+                          </span>
+                        </>
+                      )}
                     </>
                   )}
 

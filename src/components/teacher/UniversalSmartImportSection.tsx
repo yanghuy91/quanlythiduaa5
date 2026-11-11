@@ -1254,21 +1254,21 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
 
         <div className="p-5 space-y-5">
           {/* KHỐI ĐẶC BIỆT: NHẬP DỮ LIỆU CHUẨN TỪ SƠ ĐỒ LỚP (3 CỘT: STT | HỌ TÊN | VỊ TRÍ) */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-900 text-white shadow-lg border-2 border-amber-400/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-50 via-blue-50 to-amber-50/70 text-slate-900 shadow-sm border-2 border-indigo-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start sm:items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shrink-0 shadow-md">
-                <Sparkles className="w-6 h-6 text-purple-900" />
+              <div className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shrink-0 shadow-sm">
+                <Sparkles className="w-6 h-6 text-indigo-900" />
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h4 className="text-sm sm:text-base font-black tracking-tight text-white">
+                  <h4 className="text-sm sm:text-base font-black tracking-tight text-slate-900">
                     Nhập Dữ Liệu Chuẩn Từ Sơ Đồ Lớp (Chỉ Cần 3 Thông Tin)
                   </h4>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-400 text-slate-950">
                     Mới · Tiện Lợi
                   </span>
                 </div>
-                <p className="text-xs text-blue-200 mt-1 leading-relaxed">
+                <p className="text-xs text-slate-700 mt-1 leading-relaxed">
                   Chỉ cần 3 cột: <strong>STT | Họ và tên | Vị trí</strong> (Tổ - Bàn - Ghế). Có sẵn Prompt AI chuẩn mốc phòng học để chụp ảnh sơ đồ đưa AI phân tích mà không bao giờ bị ngược hướng!
                 </p>
               </div>
@@ -1278,22 +1278,22 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
               <button
                 type="button"
                 onClick={handleCopyPrompt3Col}
-                className={`px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-sm cursor-pointer ${
+                className={`px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-2xs cursor-pointer ${
                   copiedPrompt3Col
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-white/15 hover:bg-white/25 text-white border border-white/25'
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-white hover:bg-indigo-50 text-indigo-900 border border-indigo-200'
                 }`}
               >
-                {copiedPrompt3Col ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4 text-amber-300" />}
+                {copiedPrompt3Col ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4 text-indigo-600" />}
                 <span>{copiedPrompt3Col ? 'Đã copy Prompt AI!' : 'Copy Prompt AI (3 Cột)'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setIsStandardSeatingModalOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center gap-2 shadow-md transition-all cursor-pointer active:scale-95"
+                className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95"
               >
-                <Upload className="w-4 h-4 text-purple-900" />
+                <Upload className="w-4 h-4 text-amber-300" />
                 <span>Mở Cửa Sổ Nhập Chuẩn (3 Cột)</span>
               </button>
             </div>

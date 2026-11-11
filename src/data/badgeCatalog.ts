@@ -618,7 +618,7 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
     description: 'Trực nhật chu đáo, bảng sạch, giẻ ướt, phấn thơm, lớp tinh tươm.',
-    criteria: 'Giữ chức vụ Lớp phó Lao động (LP_LD) hoặc đạt 100đ tuần.',
+    criteria: 'Dành cho Ban cán sự (Lớp phó Lao động LP_LD) đạt điểm TB nề nếp >= 90đ.',
     accentColor: '#14B8A6',
     gradientBg: 'from-teal-500/15 via-emerald-500/10 to-transparent',
     rarity: 'Phổ biến',
@@ -636,7 +636,7 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
     description: 'Sẵn sàng trực nhật thay bạn bị ốm, hỗ trợ việc lớp không nề hà.',
-    criteria: 'Giữ chức vụ Lớp phó Học tập (LP_HT) hoặc Tổ trưởng (TT) gương mẫu.',
+    criteria: 'Dành cho Ban cán sự (Lớp phó Học tập LP_HT hoặc Tổ trưởng TT) gương mẫu.',
     accentColor: '#8B5CF6',
     gradientBg: 'from-purple-500/15 via-violet-500/10 to-transparent',
     rarity: 'Hiếm',
@@ -654,7 +654,7 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
     description: 'Vì cái chung, luôn đặt danh dự tập thể 10A5 lên trên cá nhân.',
-    criteria: 'Đạt Top 10 Bảng xếp hạng thi đua toàn lớp.',
+    criteria: 'Dành cho Ban cán sự đạt Top 10 Bảng xếp hạng thi đua toàn lớp.',
     accentColor: '#F59E0B',
     gradientBg: 'from-amber-500/15 via-orange-500/10 to-transparent',
     rarity: 'Sử thi',
@@ -672,7 +672,7 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
     description: 'Tận tâm cống hiến thầm lặng vì một tập thể đoàn kết vững mạnh.',
-    criteria: 'Đạt Top 3 Bảng xếp hạng thi đua toàn lớp.',
+    criteria: 'Dành cho Ban cán sự đạt Top 3 Bảng xếp hạng thi đua toàn lớp.',
     accentColor: '#E11D48',
     gradientBg: 'from-rose-500/15 via-pink-500/10 to-transparent',
     rarity: 'Huyền thoại',
@@ -690,7 +690,7 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
     description: 'Phần thưởng danh giá cao quý nhất do Giáo viên chủ nhiệm trao tặng.',
-    criteria: 'Đạt Hạng 1 (Top 1) Bảng xếp hạng thi đua toàn lớp.',
+    criteria: 'Dành cho Ban cán sự đạt Hạng 1 (Top 1) Bảng xếp hạng thi đua toàn lớp.',
     accentColor: '#F59E0B',
     gradientBg: 'from-amber-500/20 via-yellow-400/15 to-transparent',
     rarity: 'Huyền thoại',
@@ -706,6 +706,42 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
 const STORAGE_KEY_BADGES = 'app_badges_catalog_10a5_v3';
 const STORAGE_KEY_STUDENT_BADGES = 'app_student_badges_10a5_v3';
 const STORAGE_KEY_STUDENT_ACTIVE_BADGE = 'app_student_active_badge_10a5_v2';
+
+/**
+ * Kiểm tra học sinh có thuộc Ban cán sự lớp (LT, BT, PBT, LP_HT, LP_LD, LP_VT, CD, TT) hay không
+ */
+export function isStudentCadre(student?: Pick<Student, 'vaiTro'> | null): boolean {
+  if (!student || !Array.isArray(student.vaiTro)) return false;
+  return student.vaiTro.some(r => r !== 'HS');
+}
+
+/**
+ * Kiểm tra huy hiệu có thuộc nhóm chỉ dành riêng cho Ban cán sự hay không
+ * (Toàn bộ nhóm Tập thể & Cán sự + các huy hiệu gắn với chức vụ cán sự)
+ */
+export function isBadgeReservedForCadre(badge?: AchievementBadge | null): boolean {
+  if (!badge) return false;
+  return (
+    badge.category === 'cadre' ||
+    badge.autoRule?.conditionType === 'is_cadre_role' ||
+    badge.id === 'b_union_torch'
+  );
+}
+
+/**
+ * Thu hồi toàn bộ huy hiệu của tất cả học sinh trong lớp (kể cả huy hiệu đang ghim đại diện)
+ */
+export function revokeAllStudentBadges(): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_STUDENT_BADGES, JSON.stringify({}));
+    localStorage.setItem(STORAGE_KEY_STUDENT_ACTIVE_BADGE, JSON.stringify({}));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lop10a5:badge_change'));
+    }
+  } catch (e) {
+    console.error('Error revoking all student badges:', e);
+  }
+}
 
 /**
  * Load badge catalog with GV customized names/criteria/autoRule from localStorage.
@@ -804,6 +840,9 @@ export function revokeBadgeFromStudent(studentId: string, badgeId: string): void
     const current = map[studentId] || [];
     map[studentId] = current.filter(id => id !== badgeId);
     localStorage.setItem(STORAGE_KEY_STUDENT_BADGES, JSON.stringify(map));
+    if (getStudentActiveBadge(studentId) === badgeId) {
+      setStudentActiveBadge(studentId, null);
+    }
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('lop10a5:badge_change'));
     }
@@ -891,7 +930,8 @@ export function setAllStudentBadgesState(
  * Tự động xét duyệt và trao các huy hiệu đủ điều kiện dựa trên:
  * - Mốc thời gian bắt đầu tính điểm / xét huy hiệu do GV chọn (`tuanBatDauXetHuyHieu` / `ngayBatDauXetHuyHieu`)
  * - Điều kiện trao (`autoRule`) của từng huy hiệu
- * @param replaceAutoBadges Nếu true, làm mới lại các huy hiệu tự động theo đúng điều kiện mới
+ * - Ràng buộc: Các huy hiệu nhóm Tập thể & Cán sự hoặc gắn chức vụ chỉ được xét trao cho Ban cán sự
+ * @param replaceExisting Nếu true, thu hồi toàn bộ huy hiệu cũ và tính lại từ đầu theo đúng điều kiện mới
  */
 export function evaluateAndAutoAwardBadges(params: {
   students: Student[];
@@ -1040,14 +1080,31 @@ export function evaluateAndAutoAwardBadges(params: {
 
   let newlyAwardedCount = 0;
   let totalAwardedCount = 0;
+  let hasChanged = replaceExisting;
 
   for (const stu of students) {
     const stStats = statsByMa.get(stu.maHS);
     if (!stStats) continue;
+    const isCadre = isStudentCadre(stu);
     const currentBadges = new Set<string>(nextMap[stu.maHS] || []);
     const stuRank = rankByMa.get(stu.maHS) ?? 99;
 
+    // Nếu học sinh không phải Ban cán sự mà đang giữ huy hiệu chỉ dành riêng cho Ban cán sự thì thu hồi
+    if (!isCadre) {
+      for (const badge of catalog) {
+        if (isBadgeReservedForCadre(badge) && currentBadges.has(badge.id)) {
+          currentBadges.delete(badge.id);
+          hasChanged = true;
+        }
+      }
+    }
+
     for (const badge of catalog) {
+      // Ràng buộc cứng: Huy hiệu nhóm Tập thể & Cán sự hoặc gắn chức vụ chỉ dành cho Ban cán sự
+      if (isBadgeReservedForCadre(badge) && !isCadre) {
+        continue;
+      }
+
       const rule = badge.autoRule;
       if (!rule || !rule.enabled || rule.conditionType === 'manual_only') {
         continue;
@@ -1110,7 +1167,7 @@ export function evaluateAndAutoAwardBadges(params: {
         }
         case 'min_subject_score': {
           const minSubSc = Number(rule.minSubjectScore ?? 9.0);
-          const minCnt = Math.max(1, Number(rule.minSubjectCount ?? 1));
+          const minCnt = Math.max(1, Number(minSubjectCountOrDefault(rule.minSubjectCount)));
           const cnt = stStats.subjectTbs.filter(tb => tb >= minSubSc).length;
           qualified = cnt >= minCnt;
           break;
@@ -1120,7 +1177,7 @@ export function evaluateAndAutoAwardBadges(params: {
           const reqRole = rule.requiredRole || 'ANY_CADRE';
           const hasRole =
             reqRole === 'ANY_CADRE'
-              ? stu.vaiTro.some(r => r !== 'HS')
+              ? isCadre
               : stu.vaiTro.includes(reqRole as RoleCode);
           qualified = hasRole && stStats.avgScore >= minSc;
           break;
@@ -1130,6 +1187,7 @@ export function evaluateAndAutoAwardBadges(params: {
       if (qualified && !currentBadges.has(badge.id)) {
         currentBadges.add(badge.id);
         newlyAwardedCount += 1;
+        hasChanged = true;
       }
     }
 
@@ -1137,9 +1195,25 @@ export function evaluateAndAutoAwardBadges(params: {
     totalAwardedCount += nextMap[stu.maHS].length;
   }
 
-  if (newlyAwardedCount > 0) {
+  if (hasChanged) {
     try {
       localStorage.setItem(STORAGE_KEY_STUDENT_BADGES, JSON.stringify(nextMap));
+      // Đồng bộ lại huy hiệu đang ghim đại diện: nếu huy hiệu đang ghim không còn trong danh sách sở hữu thì gỡ ghim
+      const rawActive = localStorage.getItem(STORAGE_KEY_STUDENT_ACTIVE_BADGE);
+      if (rawActive) {
+        const activeMap = JSON.parse(rawActive) as Record<string, string>;
+        let activeModified = false;
+        Object.keys(activeMap).forEach(stId => {
+          const owned = nextMap[stId] || [];
+          if (!owned.includes(activeMap[stId])) {
+            delete activeMap[stId];
+            activeModified = true;
+          }
+        });
+        if (activeModified) {
+          localStorage.setItem(STORAGE_KEY_STUDENT_ACTIVE_BADGE, JSON.stringify(activeMap));
+        }
+      }
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('lop10a5:badge_change'));
       }
@@ -1154,3 +1228,8 @@ export function evaluateAndAutoAwardBadges(params: {
     totalAwardedCount,
   };
 }
+
+function minSubjectCountOrDefault(val?: number): number {
+  return typeof val === 'number' && val >= 1 ? val : 1;
+}
+

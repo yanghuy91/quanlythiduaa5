@@ -14,6 +14,8 @@ import {
   Sliders,
   Zap,
   RefreshCw,
+  Trash2,
+  ShieldAlert,
 } from 'lucide-react';
 import {
   Student,
@@ -23,6 +25,7 @@ import {
   RoleCode,
 } from '../../types';
 import { BadgeEmblem } from '../common/BadgeEmblem';
+import { INITIAL_SETTINGS } from '../../data/mockData';
 import {
   AchievementBadge,
   BadgeCategory,
@@ -36,6 +39,9 @@ import {
   getStudentBadgesMap,
   awardBadgeToStudent,
   revokeBadgeFromStudent,
+  revokeAllStudentBadges,
+  isBadgeReservedForCadre,
+  isStudentCadre,
   evaluateAndAutoAwardBadges,
 } from '../../data/badgeCatalog';
 import { getStudentAvatarInitial } from '../../utils/vietnamese';
@@ -94,6 +100,10 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
   const [awardingBadge, setAwardingBadge] = useState<AchievementBadge | null>(null);
   const [studentSearch, setStudentSearch] = useState('');
 
+  // Revoke all badges & recalculate options for GVCN
+  const [showRevokeAllConfirm, setShowRevokeAllConfirm] = useState(false);
+  const [autoRevokeBeforeRecalc, setAutoRevokeBeforeRecalc] = useState(true);
+
   // Toast notice
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -107,6 +117,7 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
     if (isOpen) {
       setCatalog(getBadgeCatalog());
       setStudentBadgesMap(getStudentBadgesMap());
+      setShowRevokeAllConfirm(false);
     }
   }, [isOpen]);
 
@@ -123,23 +134,37 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
     return matchCategory && matchQuery;
   });
 
+  // Thu hồi tất cả huy hiệu của toàn bộ học sinh
+  const handleConfirmRevokeAll = () => {
+    revokeAllStudentBadges();
+    setStudentBadgesMap({});
+    setShowRevokeAllConfirm(false);
+    // Tắt tạm tự động trao nền để giữ trạng thái sạch cho đến khi GV bấm Tính lại
+    onUpdateSettings?.({ tuDongTraoHuyHieu: false });
+    showToast('Đã thu hồi sạch toàn bộ huy hiệu của tất cả học sinh trong lớp!');
+  };
+
   // Chạy xét và trao huy hiệu tự động
-  const handleRunAutoAward = (replaceExisting = false) => {
-    if (!settings) return;
+  const handleRunAutoAward = (isRecalculate = false) => {
+    const shouldClearFirst = isRecalculate && autoRevokeBeforeRecalc;
+    if (shouldClearFirst) {
+      revokeAllStudentBadges();
+    }
+    const effectiveSettings: TeacherSettings = settings || INITIAL_SETTINGS;
     const res = evaluateAndAutoAwardBadges({
       students,
       records,
       academicRecords,
-      settings,
+      settings: effectiveSettings,
       currentWeek,
       catalog,
-      replaceExisting,
+      replaceExisting: shouldClearFirst || isRecalculate,
     });
     setStudentBadgesMap(res.updatedMap);
-    if (replaceExisting) {
+    if (isRecalculate) {
       showToast(
-        `Đã làm mới & tự động trao ${res.totalAwardedCount} lượt huy hiệu theo đúng mốc thời gian (Tuần ${
-          settings.tuanBatDauXetHuyHieu || settings.tuanBatDauTinhDiem || 1
+        `${shouldClearFirst ? 'Đã thu hồi sạch huy hiệu cũ & ' : 'Đã '}tính lại thành công: Trao ${res.totalAwardedCount} lượt huy hiệu (Tuần ${
+          effectiveSettings.tuanBatDauXetHuyHieu || effectiveSettings.tuanBatDauTinhDiem || 1
         } → Tuần ${currentWeek})!`
       );
     } else {
@@ -236,14 +261,12 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
 
   // Handle Reset to defaults
   const handleResetCatalog = () => {
-    if (window.confirm('Khôi phục toàn bộ danh mục huy hiệu về tên và điều kiện trao mặc định ban đầu?')) {
-      const reset = resetBadgeCatalog();
-      setCatalog(reset);
-      showToast('Đã khôi phục danh mục huy hiệu về cấu hình gốc!');
-    }
+    const reset = resetBadgeCatalog();
+    setCatalog(reset);
+    showToast('Đã khôi phục danh mục huy hiệu về cấu hình gốc!');
   };
 
-  // Toggle award badge for student
+  // Toggle award badge for student (có kiểm tra huy hiệu dành riêng cho Ban cán sự)
   const handleToggleAward = (studentId: string, badgeId: string) => {
     const currentList = studentBadgesMap[studentId] || [];
     const hasBadge = currentList.includes(badgeId);
@@ -251,6 +274,12 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
     if (hasBadge) {
       revokeBadgeFromStudent(studentId, badgeId);
     } else {
+      const targetBadge = catalog.find(b => b.id === badgeId);
+      const targetStudent = students.find(s => s.maHS === studentId);
+      if (isBadgeReservedForCadre(targetBadge) && !isStudentCadre(targetStudent)) {
+        showToast('Huy hiệu này chỉ dành riêng cho thành viên Ban cán sự lớp!');
+        return;
+      }
       awardBadgeToStudent(studentId, badgeId);
     }
     setStudentBadgesMap(getStudentBadgesMap());
@@ -284,7 +313,17 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+            <button
+              type="button"
+              onClick={() => setShowRevokeAllConfirm(true)}
+              title="Thu hồi toàn bộ huy hiệu đang có của học sinh cả lớp"
+              className="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs active:scale-95"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+              <span>Thu hồi tất cả huy hiệu</span>
+            </button>
+
             <button
               type="button"
               onClick={() => setShowAutoConfigPanel(!showAutoConfigPanel)}
@@ -317,6 +356,35 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Thanh xác nhận Thu hồi tất cả huy hiệu */}
+        {showRevokeAllConfirm && (
+          <div className="bg-rose-50 border-b border-rose-200 px-4 py-2.5 flex flex-col sm:flex-row items-center justify-between gap-2.5 shrink-0 animate-in slide-in-from-top-2">
+            <div className="flex items-center gap-2 text-xs text-rose-900 font-bold">
+              <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>
+                Xác nhận thu hồi sạch toàn bộ huy hiệu hiện có của {students.length} học sinh trong lớp (để bắt đầu tính lại từ đầu)?
+              </span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleConfirmRevokeAll}
+                className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold cursor-pointer shadow-xs active:scale-95 flex items-center gap-1"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Xác nhận thu hồi sạch</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowRevokeAllConfirm(false)}
+                className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-bold cursor-pointer"
+              >
+                Hủy
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Toast Alert */}
         {toastMessage && (
@@ -415,13 +483,34 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
-                  <span className="text-[11px] text-slate-600">
-                    Đang tính từ <b>Tuần {startWeekVal}</b> → <b>Tuần {currentWeek}</b>
-                    {startDateVal ? ` (từ ngày ${startDateVal})` : ''}. Các tuần trước mốc này không trừ điểm.
-                  </span>
+                <div className="pt-1.5 border-t border-slate-100 space-y-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-[11px] text-slate-600">
+                      Đang xét từ <b>Tuần {startWeekVal}</b> → <b>Tuần {currentWeek}</b>
+                      {startDateVal ? ` (từ ngày ${startDateVal})` : ''}.
+                    </span>
 
-                  <div className="flex items-center gap-1.5">
+                    <label className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-900 bg-amber-50/80 px-2.5 py-1 rounded-lg border border-amber-200 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={autoRevokeBeforeRecalc}
+                        onChange={e => setAutoRevokeBeforeRecalc(e.target.checked)}
+                        className="w-3.5 h-3.5 accent-amber-600 rounded cursor-pointer"
+                      />
+                      <span>Tự động thu hồi sạch trước khi bấm Tính lại</span>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => setShowRevokeAllConfirm(true)}
+                      className="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-bold flex items-center gap-1 cursor-pointer active:scale-95"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                      <span>Thu hồi tất cả huy hiệu</span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => handleRunAutoAward(false)}
@@ -430,14 +519,15 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
                       <Zap className="w-3.5 h-3.5 text-amber-300" />
                       <span>Xét &amp; Trao thêm tự động</span>
                     </button>
+
                     <button
                       type="button"
                       onClick={() => handleRunAutoAward(true)}
-                      title="Xóa các huy hiệu cũ không còn đủ điều kiện và cấp lại chuẩn theo mốc thời gian mới"
-                      className="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold flex items-center gap-1 cursor-pointer active:scale-95"
+                      title="Thu hồi các huy hiệu cũ và tính lại chuẩn theo mốc thời gian mới"
+                      className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
                     >
-                      <RefreshCw className="w-3.5 h-3.5 text-amber-700" />
-                      <span>Tính lại từ đầu</span>
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Tính lại huy hiệu</span>
                     </button>
                   </div>
                 </div>
@@ -689,7 +779,12 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
                         <h3 className="text-sm font-extrabold text-main truncate">
                           {badge.name}
                         </h3>
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex items-center gap-1 shrink-0 flex-wrap">
+                          {isBadgeReservedForCadre(badge) && (
+                            <span className="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                              👑 Chỉ Ban cán sự
+                            </span>
+                          )}
                           <span
                             className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded-full border ${
                               isAuto
@@ -1171,15 +1266,26 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
                   })
                   .map(st => {
                     const hasBadge = (studentBadgesMap[st.maHS] || []).includes(awardingBadge.id);
+                    const isCadreOnlyBadge = isBadgeReservedForCadre(awardingBadge);
+                    const studentIsCadre = isStudentCadre(st);
+                    const isRestricted = isCadreOnlyBadge && !studentIsCadre && !hasBadge;
 
                     return (
                       <div
                         key={st.maHS}
-                        onClick={() => handleToggleAward(st.maHS, awardingBadge.id)}
-                        className={`p-2.5 rounded-2xl border transition-all flex items-center justify-between gap-3 cursor-pointer ${
-                          hasBadge
-                            ? 'bg-amber-500/10 border-amber-500/40 shadow-xs'
-                            : 'bg-surface hover:bg-surface-2 border-token'
+                        onClick={() => {
+                          if (isRestricted) {
+                            showToast('Huy hiệu này chỉ dành riêng cho thành viên Ban cán sự lớp!');
+                            return;
+                          }
+                          handleToggleAward(st.maHS, awardingBadge.id);
+                        }}
+                        className={`p-2.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                          isRestricted
+                            ? 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed'
+                            : hasBadge
+                            ? 'bg-amber-500/10 border-amber-500/40 shadow-xs cursor-pointer'
+                            : 'bg-surface hover:bg-surface-2 border-token cursor-pointer'
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
@@ -1191,13 +1297,18 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
                             {getStudentAvatarInitial(st.hoTen)}
                           </div>
                           <div className="min-w-0">
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-xs font-extrabold text-main truncate">
                                 {st.hoTen}
                               </span>
                               <span className="text-[10px] text-muted">
                                 #{st.viTriGhe} · Tổ {st.to}
                               </span>
+                              {studentIsCadre && (
+                                <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                                  Ban cán sự ({st.vaiTro.filter(r => r !== 'HS').join(', ')})
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1207,6 +1318,10 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
                             <span className="px-2.5 py-1 rounded-xl bg-emerald-500 text-white text-[11px] font-bold flex items-center gap-1 shadow-xs">
                               <Check className="w-3 h-3 stroke-[3]" />
                               <span>Đã trao</span>
+                            </span>
+                          ) : isRestricted ? (
+                            <span className="px-2 py-1 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 text-[10px] font-semibold">
+                              Chỉ Ban cán sự
                             </span>
                           ) : (
                             <span className="px-2.5 py-1 rounded-xl bg-surface-2 border border-token text-muted text-[11px] font-bold hover:text-main">

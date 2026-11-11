@@ -94,15 +94,13 @@ export function calculateStudentPeriodSummary(
   currentWeek?: number
 ): StudentPeriodSummary {
   const noDataWeeks = (settings.noDataWeeks || []).map(Number);
-  const startWeek = Number(settings.tuanBatDauTinhDiem || 1);
   const maxActiveWeek = currentWeek !== undefined ? Number(currentWeek) : 38;
 
   // Trường hợp 1: Đang xem 1 tuần cụ thể
   if (filter.tuanHoc !== 'all') {
     const targetWeek = Number(filter.tuanHoc);
     const isFutureWeek = currentWeek !== undefined && targetWeek > maxActiveWeek;
-    const isBeforeStartWeek = startWeek > 1 && targetWeek < startWeek;
-    const isNoDataWeek = noDataWeeks.includes(targetWeek) || isBeforeStartWeek;
+    const isNoDataWeek = noDataWeeks.includes(targetWeek);
 
     if (isFutureWeek || isNoDataWeek) {
       return {
@@ -199,9 +197,9 @@ export function calculateStudentPeriodSummary(
         ? SEMESTER_2_WEEKS
         : ALL_SCHOOL_WEEKS;
 
-  // Chỉ tính các tuần >= tuần bắt đầu tính điểm, <= tuần hiện tại và không nằm trong danh sách tuần nghỉ/không có dữ liệu
+  // Chỉ tính các tuần <= tuần hiện tại và không nằm trong danh sách tuần nghỉ/không có dữ liệu do GV đánh dấu
   const validScoredWeeks = baseWeeks.filter(
-    w => w >= startWeek && w <= maxActiveWeek && !noDataWeeks.includes(w)
+    w => w <= maxActiveWeek && !noDataWeeks.includes(w)
   );
 
   if (validScoredWeeks.length === 0) {

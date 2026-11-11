@@ -75,10 +75,8 @@ export function calculateStudentWeekSummary(
 ): StudentWeekSummary {
   const targetWeek = Number(tuanHoc);
   const noDataWeeks = (settings.noDataWeeks || []).map(Number);
-  const startWeek = Number(settings.tuanBatDauTinhDiem || 1);
   const isFutureWeek = currentWeek !== undefined && targetWeek > Number(currentWeek);
-  const isBeforeStartWeek = startWeek > 1 && targetWeek < startWeek;
-  const isNoDataWeek = noDataWeeks.includes(targetWeek) || isBeforeStartWeek;
+  const isNoDataWeek = noDataWeeks.includes(targetWeek);
 
   if (isFutureWeek || isNoDataWeek) {
     return {
