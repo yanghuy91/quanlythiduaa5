@@ -214,65 +214,6 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
         </div>
       </div>
 
-      {/* Mobile Tổ / Dãy Selector Tabs */}
-      <div className="flex sm:hidden items-center justify-between gap-1 p-1 bg-surface-2 rounded-xl border border-token text-[11px]">
-        <button
-          type="button"
-          onClick={() => setActiveDãyTab('all')}
-          className={`flex-1 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-            activeDãyTab === 'all' 
-              ? 'bg-surface text-main shadow-xs' 
-              : 'text-muted hover:text-main'
-          }`}
-        >
-          Cả lớp
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveDãyTab('to-4')}
-          className={`flex-1 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-            activeDãyTab === 'to-4' 
-              ? 'bg-surface text-main shadow-xs' 
-              : 'text-muted hover:text-main'
-          }`}
-        >
-          Tổ 4
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveDãyTab('to-3')}
-          className={`flex-1 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-            activeDãyTab === 'to-3' 
-              ? 'bg-surface text-main shadow-xs' 
-              : 'text-muted hover:text-main'
-          }`}
-        >
-          Tổ 3
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveDãyTab('to-2')}
-          className={`flex-1 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-            activeDãyTab === 'to-2' 
-              ? 'bg-surface text-main shadow-xs' 
-              : 'text-muted hover:text-main'
-          }`}
-        >
-          Tổ 2
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveDãyTab('to-1')}
-          className={`flex-1 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-            activeDãyTab === 'to-1' 
-              ? 'bg-surface text-main shadow-xs' 
-              : 'text-muted hover:text-main'
-          }`}
-        >
-          Tổ 1
-        </button>
-      </div>
-
       {/* Classroom Orientation Notice */}
       <div className="w-full flex items-center justify-between px-3 py-1.5 bg-surface-2/60 rounded-xl border border-token/60 text-xs">
         <span className="flex items-center gap-1.5 font-bold text-[var(--role-gv-fg)]">
@@ -288,35 +229,80 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
         </span>
       </div>
 
-      {/* Group / Dãy Column Titles (Desktop) */}
-      {activeDãyTab === 'all' && (
-        <div 
-          className="hidden sm:grid gap-x-1 sm:gap-x-1.5 text-center text-[11px] font-extrabold text-muted uppercase tracking-wider px-0.5 mb-1"
+      {/* Thanh lọc Sơ đồ: Đưa "Cả lớp" lên trên, hàng dưới là 4 Tổ dóng thẳng xuống đúng 4 dãy bàn */}
+      <div className="flex flex-col gap-1.5 px-0.5 mb-0.5">
+        <button
+          type="button"
+          onClick={() => setActiveDãyTab('all')}
+          className={`w-full py-1.5 rounded-xl border text-xs font-extrabold transition-all cursor-pointer text-center ${
+            activeDãyTab === 'all'
+              ? 'bg-accent text-on-accent border-accent shadow-xs'
+              : 'bg-surface-2 text-muted hover:text-main border-token'
+          }`}
+        >
+          Cả lớp ({seatedStudents.length} HS)
+        </button>
+
+        <div
+          className="grid gap-x-1 sm:gap-x-1.5 text-center text-[11px] font-extrabold uppercase tracking-wider"
           style={{
             gridTemplateColumns: displayMode === 'compact'
               ? 'repeat(2, minmax(0, 1fr)) 12px repeat(2, minmax(0, 1fr)) 20px repeat(2, minmax(0, 1fr)) 12px repeat(2, minmax(0, 1fr))'
               : 'repeat(2, minmax(0, 1fr)) 14px repeat(2, minmax(0, 1fr)) 24px repeat(2, minmax(0, 1fr)) 14px repeat(2, minmax(0, 1fr))',
           }}
         >
-          <div className="col-span-2 bg-blue-50/50 dark:bg-blue-950/20 py-1 rounded-lg border border-blue-200/50 dark:border-blue-900/30 text-blue-600 dark:text-blue-400">
+          <button
+            type="button"
+            onClick={() => setActiveDãyTab(activeDãyTab === 'to-4' ? 'all' : 'to-4')}
+            className={`col-span-2 py-1 rounded-lg border transition-all cursor-pointer ${
+              activeDãyTab === 'to-4'
+                ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                : 'bg-blue-50/60 dark:bg-blue-950/25 border-blue-200/70 dark:border-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-100/70'
+            }`}
+          >
             Tổ 4
-          </div>
+          </button>
           <div className="col-span-1 flex items-center justify-center opacity-30 select-none text-[9px]">·</div>
-          <div className="col-span-2 bg-purple-50/50 dark:bg-purple-950/20 py-1 rounded-lg border border-purple-200/50 dark:border-purple-900/30 text-purple-600 dark:text-purple-400">
+          <button
+            type="button"
+            onClick={() => setActiveDãyTab(activeDãyTab === 'to-3' ? 'all' : 'to-3')}
+            className={`col-span-2 py-1 rounded-lg border transition-all cursor-pointer ${
+              activeDãyTab === 'to-3'
+                ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                : 'bg-purple-50/60 dark:bg-purple-950/25 border-purple-200/70 dark:border-purple-900/40 text-purple-600 dark:text-purple-400 hover:bg-purple-100/70'
+            }`}
+          >
             Tổ 3
+          </button>
+          <div className="col-span-1 flex items-center justify-center text-[8px] sm:text-[9px] font-bold text-muted opacity-60 select-none">
+            <span className="hidden sm:inline">Lối đi</span>
+            <span className="sm:hidden">·</span>
           </div>
-          <div className="col-span-1 flex items-center justify-center text-[9px] font-bold text-muted opacity-60 select-none">
-            Lối đi
-          </div>
-          <div className="col-span-2 bg-emerald-50/50 dark:bg-emerald-950/20 py-1 rounded-lg border border-emerald-200/50 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+          <button
+            type="button"
+            onClick={() => setActiveDãyTab(activeDãyTab === 'to-2' ? 'all' : 'to-2')}
+            className={`col-span-2 py-1 rounded-lg border transition-all cursor-pointer ${
+              activeDãyTab === 'to-2'
+                ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                : 'bg-emerald-50/60 dark:bg-emerald-950/25 border-emerald-200/70 dark:border-emerald-900/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100/70'
+            }`}
+          >
             Tổ 2
-          </div>
+          </button>
           <div className="col-span-1 flex items-center justify-center opacity-30 select-none text-[9px]">·</div>
-          <div className="col-span-2 bg-amber-50/50 dark:bg-amber-950/20 py-1 rounded-lg border border-amber-200/50 dark:border-amber-900/30 text-amber-600 dark:text-amber-400">
+          <button
+            type="button"
+            onClick={() => setActiveDãyTab(activeDãyTab === 'to-1' ? 'all' : 'to-1')}
+            className={`col-span-2 py-1 rounded-lg border transition-all cursor-pointer ${
+              activeDãyTab === 'to-1'
+                ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
+                : 'bg-amber-50/60 dark:bg-amber-950/25 border-amber-200/70 dark:border-amber-900/40 text-amber-600 dark:text-amber-400 hover:bg-amber-100/70'
+            }`}
+          >
             Tổ 1
-          </div>
+          </button>
         </div>
-      )}
+      </div>
 
       {/* Seating Container */}
       <div className="w-full overflow-x-auto no-scrollbar pb-2 pt-0.5">
@@ -389,7 +375,10 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                         title={node.ghiChu || 'Chỗ trống'}
                       >
                         {displayMode === 'avatar_badge' ? (
-                          <div className="w-full aspect-square rounded-xl sm:rounded-2xl border-2 border-dashed border-token/40 bg-surface-2/20" />
+                          <>
+                            <div className="w-full h-4 sm:h-5 mb-0.5" />
+                            <div className="w-full aspect-square rounded-xl sm:rounded-2xl border-2 border-dashed border-token/40 bg-surface-2/20" />
+                          </>
                         ) : (
                           <div className="w-full h-full rounded-xl border border-dashed border-token/40 bg-surface-2/10" />
                         )}
@@ -408,7 +397,10 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                         }`}
                       >
                         {displayMode === 'avatar_badge' ? (
-                          <div className="w-full aspect-square rounded-xl sm:rounded-2xl border border-dashed border-token/40 bg-surface-2/20" />
+                          <>
+                            <div className="w-full h-4 sm:h-5 mb-0.5" />
+                            <div className="w-full aspect-square rounded-xl sm:rounded-2xl border border-dashed border-token/40 bg-surface-2/20" />
+                          </>
                         ) : (
                           <div className="w-full h-full rounded-xl border border-dashed border-token/40 bg-surface-2/10" />
                         )}
@@ -503,12 +495,42 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                         /* CHẾ ĐỘ ẢNH (AVATAR & HUY HIỆU) */
                         /* ======================================================== */
                         <>
+                          {/* PHÍA TRÊN ẢNH (KHÔNG CHE KHUẤT AVATAR): Thống nhất 2 biểu tượng theo thứ tự 1. Huy hiệu -> 2. Vi phạm (nếu có) */}
+                          <div className="w-full h-4 sm:h-5 mb-0.5 flex items-center justify-center gap-1 px-0.5">
+                            {badgeDef && (
+                              <span
+                                className="inline-flex items-center justify-center shrink-0 scale-90 sm:scale-100"
+                                title={`Huy hiệu: ${badgeDef.name} (${badgeDef.categoryLabel})`}
+                              >
+                                <BadgeEmblem type={badgeDef.iconType} size="2xs" />
+                              </span>
+                            )}
+                            {statusIcon && (
+                              <span
+                                role={onInspectStudent ? 'button' : undefined}
+                                tabIndex={onInspectStudent ? 0 : undefined}
+                                onClick={(e) => {
+                                  if (onInspectStudent) {
+                                    e.stopPropagation();
+                                    onInspectStudent(student);
+                                  }
+                                }}
+                                className={`inline-flex items-center justify-center p-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-300/80 shadow-2xs transition-transform ${
+                                  onInspectStudent ? 'cursor-pointer hover:scale-110' : 'pointer-events-none'
+                                }`}
+                                title={onInspectStudent ? 'Xem chi tiết vi phạm & người ghi' : `Có ${summary?.soLoiTrongTuan || 1} vi phạm nề nếp`}
+                              >
+                                <AlertTriangle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500 fill-amber-400/25 stroke-[2.5]" />
+                              </span>
+                            )}
+                          </div>
+
                           {/* Khung ảnh vuông tràn viền rộng, viền mảnh theo giới tính/trạng thái */}
                           <div 
                             className={`
                               relative w-full aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-surface transition-all
                               ${isSelected 
-                                ? 'ring-3 ring-accent shadow-lg scale-[1.03] z-10' 
+                                ? 'ring-2 sm:ring-3 ring-accent shadow-md scale-[1.02] z-10' 
                                 : isNu 
                                   ? 'border-2 border-rose-300 dark:border-rose-500/70 shadow-xs group-hover:border-rose-400 group-hover:shadow-md' 
                                   : 'border-2 border-sky-300 dark:border-sky-500/70 shadow-xs group-hover:border-sky-400 group-hover:shadow-md'
@@ -520,7 +542,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                                 : undefined
                             }
                           >
-                            {/* Ảnh Avatar 3D chất lượng cao hiển thị to bản */}
+                            {/* Ảnh Avatar 3D chất lượng cao hiển thị không bị che mặt */}
                             {student.avatarUrl ? (
                               <img
                                 src={resolveStudentAvatar(student.avatarUrl)}
@@ -540,36 +562,10 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                               </div>
                             )}
 
-                            {/* Góc trên phải: Biểu tượng trạng thái nề nếp hoặc Check chọn */}
-                            <div className="absolute top-1 right-1 flex items-center gap-0.5 z-10">
-                              {statusIcon && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    if (onInspectStudent) {
-                                      e.stopPropagation();
-                                      onInspectStudent(student);
-                                    }
-                                  }}
-                                  className={`p-0.5 rounded-full bg-surface/90 shadow-xs backdrop-blur-xs transition-transform ${
-                                    onInspectStudent ? 'cursor-pointer hover:scale-125' : 'pointer-events-none'
-                                  }`}
-                                  title={onInspectStudent ? 'Xem chi tiết vi phạm & người ghi' : undefined}
-                                >
-                                  {statusIcon}
-                                </button>
-                              )}
-                              {isSelected && (
-                                <span className="w-4 h-4 rounded-full bg-accent text-on-accent flex items-center justify-center shadow-md pointer-events-none">
-                                  <Check className="w-2.5 h-2.5 stroke-[3]" />
-                                </span>
-                              )}
-                            </div>
-
-                            {/* Góc dưới trái: Phù hiệu Ban cán sự lớp (Thu nhỏ gọn ở góc trên điện thoại) */}
+                            {/* SÁT BÊN DƯỚI ẢNH (CHO CHE ẢNH MỘT TÍ): Biểu tượng Ban cán sự (trái) và Dấu tích đánh dấu đó là mình / đang chọn (phải) */}
                             {topRole !== 'HS' && (
                               <div 
-                                className="absolute bottom-0.5 left-0.5 px-1 py-0.5 rounded text-[8px] sm:text-[9px] font-black shadow-sm z-10 flex items-center gap-0.5 border border-white/70 backdrop-blur-xs leading-none scale-[0.72] sm:scale-95 origin-bottom-left"
+                                className="absolute bottom-0.5 left-0.5 px-1 py-0.5 rounded text-[8px] sm:text-[9px] font-black shadow-sm z-10 flex items-center gap-0.5 border border-white/75 backdrop-blur-xs leading-none scale-[0.75] sm:scale-95 origin-bottom-left"
                                 style={{ 
                                   backgroundColor: roleConfig.bg, 
                                   color: roleConfig.fg 
@@ -581,14 +577,13 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                               </div>
                             )}
 
-                            {/* Góc dưới phải: Huy hiệu thi đua cá nhân (Nhỏ gọn sát góc để không che mặt ảnh trên điện thoại) */}
-                            {badgeDef && (
-                              <div 
-                                className="absolute bottom-0 right-0 drop-shadow-md z-10 transition-transform scale-[0.62] sm:scale-90 origin-bottom-right group-hover:scale-95 sm:group-hover:scale-105"
-                                title={`Huy hiệu: ${badgeDef.name} (${badgeDef.categoryLabel})`}
+                            {isSelected && (
+                              <span
+                                className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-accent text-on-accent border border-white/80 flex items-center justify-center shadow-md pointer-events-none z-10"
+                                title="Đang chọn / Vị trí của bạn"
                               >
-                                <BadgeEmblem type={badgeDef.iconType} size="xs" />
-                              </div>
+                                <Check className="w-2.5 h-2.5 stroke-[3]" />
+                              </span>
                             )}
                           </div>
 
@@ -599,22 +594,15 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
                             }`}>
                               {isGroupView ? student.hoTen : getSeatingMapDisplayName(student, students)}
                             </span>
-                            {badgeDef ? (
+                            {topRole !== 'HS' ? (
                               <span 
-                                className="text-[7.5px] sm:text-[9px] font-bold text-amber-700 truncate block leading-none opacity-90 mt-0.5"
-                                title={badgeDef.name}
-                              >
-                                {badgeDef.name}
-                              </span>
-                            ) : topRole !== 'HS' ? (
-                              <span 
-                                className="text-[7.5px] sm:text-[9px] font-bold truncate block leading-none mt-0.5"
+                                className="text-[7px] sm:text-[9px] font-bold truncate block leading-none mt-0.5"
                                 style={{ color: roleConfig.fg }}
                               >
                                 {topRole === 'TT' && student.toTruongTo ? `Tổ trưởng ${student.toTruongTo}` : roleConfig.label}
                               </span>
                             ) : (
-                              <span className="text-[7.5px] sm:text-[9px] font-medium text-muted truncate block leading-none opacity-70 mt-0.5">
+                              <span className="text-[7px] sm:text-[9px] font-medium text-muted truncate block leading-none opacity-70 mt-0.5">
                                 Tổ {student.to}
                               </span>
                             )}

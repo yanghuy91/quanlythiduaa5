@@ -60,9 +60,9 @@ import { PeriodHierarchyFilter as PeriodFilterComponent } from '../common/Period
 import { 
   checkDuplicateRecord, 
   calculateDenseRankings, 
+  calculateStudentWeekSummary,
   isRecordMatchingStudent, 
   parseRecordPoints,
-  formatEditTimeLimit,
   isWithinEditTimeLimit,
   getRemainingEditTimeLabel,
   isWithinExplanationDayLimit
@@ -178,9 +178,15 @@ export const StudentView: React.FC<StudentViewProps> = ({
     pendingRule: RuleItem;
     duplicateStudents: { student: Student; existingRecords: DisciplineRecord[] }[];
     safeStudentIds: string[];
+    extraNote?: string;
+    date?: string;
+    buoi?: 'Sang' | 'Chieu';
+    hocKi?: 1 | 2;
+    tuanHoc?: number;
   } | null>(null);
   const [voidModalRecord, setVoidModalRecord] = useState<DisciplineRecord | null>(null);
   const [voidReason, setVoidReason] = useState('');
+  const [recordingWeek, setRecordingWeek] = useState<number>(currentWeek);
 
   const [logPeriodFilter, setLogPeriodFilter] = useState<HierarchyPeriodFilter>({
     namHoc: CURRENT_SCHOOL_YEAR,
@@ -192,6 +198,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
   });
 
   useEffect(() => {
+    setRecordingWeek(currentWeek);
     setLogPeriodFilter(prev => ({
       ...prev,
       hocKi: getSemesterFromWeek(currentWeek),
@@ -312,10 +319,16 @@ export const StudentView: React.FC<StudentViewProps> = ({
         pendingRule: rule,
         duplicateStudents: duplicates,
         safeStudentIds: safeIds,
+        extraNote,
+        date,
+        buoi,
+        hocKi,
+        tuanHoc,
       });
       return;
     }
 
+    setRecordingWeek(tuanHoc);
     commitRecords(targetStudents, rule, extraNote, date, buoi, false, hocKi, tuanHoc);
   };
 
@@ -448,6 +461,23 @@ export const StudentView: React.FC<StudentViewProps> = ({
     });
     return map;
   }, [allStudents, studentPeriodSummaries, studentSummaries, periodFilter.tuanHoc, currentWeek, settings.diemKhoiDau]);
+
+  // Summaries for the selected recordingWeek in Cadre "Ghi vi phạm" tab
+  const recordingWeekSummaries = useMemo(() => {
+    const map: Record<string, StudentWeekSummary> = {};
+    allStudents.forEach(st => {
+      map[st.maHS] = calculateStudentWeekSummary(
+        st.maHS,
+        st.hoTen,
+        st.to,
+        recordingWeek,
+        records,
+        settings,
+        currentWeek
+      );
+    });
+    return map;
+  }, [allStudents, recordingWeek, records, settings, currentWeek]);
 
   const myPeriodSummary = studentPeriodSummaries[currentStudent.maHS] || {
     diemTrungBinh: settings.diemKhoiDau,
@@ -1513,11 +1543,41 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
       {/* CADRE TAB 1: GHI NHẬN VI PHẠM (Chỉ dành cho cán sự có quyền ghi) */}
       {isCadre && canRecord && activeTab === 'record' && (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
+          {/* Thanh chọn Tuần ghi nhận thật gọn (Chỉ hiện Tuần, không hiện HK hay Năm học) */}
+          <div className="px-3.5 py-2 rounded-2xl bg-surface border border-token shadow-2xs flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-accent shrink-0" />
+              <span className="text-xs font-extrabold text-main">Tuần ghi vi phạm:</span>
+              <select
+                value={recordingWeek}
+                onChange={e => setRecordingWeek(Number(e.target.value))}
+                className="px-3 py-1 rounded-xl bg-surface-2 border border-token text-xs font-black text-accent focus:outline-none focus:ring-2 focus:ring-accent/40 cursor-pointer"
+                aria-label="Chọn tuần ghi vi phạm"
+              >
+                {ALL_SCHOOL_WEEKS.map(w => (
+                  <option key={w} value={w}>
+                    Tuần {w}{w === currentWeek ? ' (Hiện tại)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {recordingWeek !== currentWeek && (
+              <button
+                type="button"
+                onClick={() => setRecordingWeek(currentWeek)}
+                className="px-2.5 py-1 rounded-lg bg-accent/15 text-accent text-[11px] font-bold hover:bg-accent/25 transition-colors cursor-pointer"
+              >
+                Về Tuần {currentWeek}
+              </button>
+            )}
+          </div>
+
           <StudentPicker
             students={allStudents}
             layout={layout}
-            studentSummaries={selectedPeriodWeekSummaries}
+            studentSummaries={recordingWeekSummaries}
             selectedStudentIds={selectedStudentIds}
             onSelectStudent={handleSelectStudent}
             viewerRole={primaryCadreRole}
@@ -1568,13 +1628,6 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 <h3 className="text-xs font-bold text-main uppercase tracking-wider">
                   {hasDelegatedPerm('HUY_MOI_GHI_NHAN') ? 'Sổ ghi nhận nề nếp toàn lớp (Được GV ủy quyền)' : 'Sổ ghi nhận nề nếp của bạn'}
                 </h3>
-                <p className="text-[11px] text-muted mt-0.5">
-                  {hasDelegatedPerm('HUY_MOI_GHI_NHAN')
-                    ? 'Có thể xem, sửa và hủy mọi lượt ghi nhận theo ủy quyền của GVCN'
-                    : (settings.thoiHanSuaHuyPhut ?? 1440) <= 0
-                      ? 'Có thể sửa hoặc hủy không giới hạn thời gian'
-                      : `Có thể sửa hoặc hủy trong thời hạn ${formatEditTimeLimit(settings.thoiHanSuaHuyPhut)} kể từ thời điểm ghi`}
-                </p>
               </div>
               <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-surface-2 text-muted">
                 {filteredMyRecords.length} lượt
@@ -1897,8 +1950,9 @@ export const StudentView: React.FC<StudentViewProps> = ({
                                 Đã mở khóa
                               </span>
                             ) : (
-                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 text-muted font-medium">
-                                Chưa đạt
+                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 text-muted font-medium flex items-center gap-1">
+                                <Lock className="w-2.5 h-2.5" />
+                                <span>Chưa mở khóa</span>
                               </span>
                             )}
                             {isSelected && (
@@ -1907,17 +1961,19 @@ export const StudentView: React.FC<StudentViewProps> = ({
                               </span>
                             )}
                           </div>
-                          <p className="text-[11px] text-muted mt-1 leading-snug">
-                            {badge.description}
-                          </p>
+                          {badge.unlocked && (
+                            <p className="text-[11px] text-muted mt-1 leading-snug">
+                              {badge.description}
+                            </p>
+                          )}
                         </div>
                       </div>
 
-                      <div className="pt-2 border-t border-token/60 flex items-center justify-between gap-2">
-                        <span className="text-[10px] text-muted font-medium truncate">
-                          Tiêu chí: {badge.criteria}
-                        </span>
-                        {badge.unlocked ? (
+                      {badge.unlocked && (
+                        <div className="pt-2 border-t border-token/60 flex items-center justify-between gap-2">
+                          <span className="text-[10px] text-muted font-medium truncate">
+                            Tiêu chí: {badge.criteria}
+                          </span>
                           <button
                             type="button"
                             onClick={() => handleToggleBadge(badge.id)}
@@ -1939,13 +1995,8 @@ export const StudentView: React.FC<StudentViewProps> = ({
                               </>
                             )}
                           </button>
-                        ) : (
-                          <span className="text-[10px] text-muted italic flex items-center gap-1 shrink-0">
-                            <Lock className="w-3 h-3" />
-                            <span>Chưa mở khóa</span>
-                          </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -2043,12 +2094,12 @@ export const StudentView: React.FC<StudentViewProps> = ({
               </div>
             </div>
 
-            {/* Lọc theo Tổ: Gọn 1 dòng duy nhất (Cả lớp | Tổ 1 | Tổ 2 | Tổ 3 | Tổ 4) */}
-            <div className="grid grid-cols-5 gap-1.5 pt-1.5 border-t border-token/60">
+            {/* Lọc theo Tổ: Cả lớp ở trên, 4 Tổ ở hàng dưới dóng đều 4 cột */}
+            <div className="flex flex-col gap-1.5 pt-1.5 border-t border-token/60">
               <button
                 type="button"
                 onClick={() => setRankingToFilter('all')}
-                className={`py-1.5 px-1 rounded-xl text-xs font-bold transition-all cursor-pointer text-center whitespace-nowrap ${
+                className={`w-full py-1.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-center whitespace-nowrap ${
                   rankingToFilter === 'all'
                     ? 'bg-blue-600 text-white shadow-xs font-extrabold'
                     : 'bg-surface-2 text-muted hover:text-main hover:bg-surface border border-token'
@@ -2056,23 +2107,25 @@ export const StudentView: React.FC<StudentViewProps> = ({
               >
                 Cả lớp
               </button>
-              {[1, 2, 3, 4].map(toNum => {
-                const isSelected = rankingToFilter === toNum;
-                return (
-                  <button
-                    key={toNum}
-                    type="button"
-                    onClick={() => setRankingToFilter(toNum)}
-                    className={`py-1.5 px-1 rounded-xl text-xs font-bold transition-all cursor-pointer text-center whitespace-nowrap ${
-                      isSelected
-                        ? 'bg-blue-600 text-white shadow-xs font-extrabold'
-                        : 'bg-surface-2 text-muted hover:text-main hover:bg-surface border border-token'
-                    }`}
-                  >
-                    Tổ {toNum}
-                  </button>
-                );
-              })}
+              <div className="grid grid-cols-4 gap-1.5">
+                {[1, 2, 3, 4].map(toNum => {
+                  const isSelected = rankingToFilter === toNum;
+                  return (
+                    <button
+                      key={toNum}
+                      type="button"
+                      onClick={() => setRankingToFilter(toNum)}
+                      className={`py-1.5 px-1 rounded-xl text-xs font-bold transition-all cursor-pointer text-center whitespace-nowrap ${
+                        isSelected
+                          ? 'bg-blue-600 text-white shadow-xs font-extrabold'
+                          : 'bg-surface-2 text-muted hover:text-main hover:bg-surface border border-token'
+                      }`}
+                    >
+                      Tổ {toNum}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -2563,7 +2616,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
         students={isMultiSelect ? selectedStudents : (singleSelectedStudent ? [singleSelectedStudent] : [])}
         rules={rules}
         allowBonus={settings.batDiemCong}
-        initialWeek={currentWeek}
+        initialWeek={recordingWeek}
         onSave={(payload) => {
           handleAttemptSubmitRule(
             payload.rule, 
@@ -2587,10 +2640,12 @@ export const StudentView: React.FC<StudentViewProps> = ({
             commitRecords(
               confirmedStudents,
               duplicateWarningData.pendingRule,
-              undefined,
-              undefined,
-              undefined,
-              true
+              duplicateWarningData.extraNote,
+              duplicateWarningData.date,
+              duplicateWarningData.buoi,
+              true,
+              duplicateWarningData.hocKi ?? getSemesterFromWeek(duplicateWarningData.tuanHoc ?? recordingWeek),
+              duplicateWarningData.tuanHoc ?? recordingWeek
             );
           }}
           selectedStudents={isMultiSelect ? selectedStudents : (singleSelectedStudent ? [singleSelectedStudent] : [])}
@@ -2664,10 +2719,20 @@ export const StudentView: React.FC<StudentViewProps> = ({
         onClose={() => setInspectingStudent(null)}
         student={inspectingStudent}
         records={records}
-        summary={inspectingStudent ? selectedPeriodWeekSummaries[inspectingStudent.maHS] : undefined}
-        selectedWeek={typeof periodFilter.tuanHoc === 'number' ? periodFilter.tuanHoc : currentWeek}
+        summary={
+          inspectingStudent
+            ? (activeTab === 'record'
+                ? recordingWeekSummaries[inspectingStudent.maHS]
+                : selectedPeriodWeekSummaries[inspectingStudent.maHS])
+            : undefined
+        }
+        selectedWeek={
+          activeTab === 'record'
+            ? recordingWeek
+            : (typeof periodFilter.tuanHoc === 'number' ? periodFilter.tuanHoc : currentWeek)
+        }
         currentWeek={currentWeek}
-        initialFilterPeriod={periodFilter}
+        initialFilterPeriod={activeTab === 'record' ? undefined : periodFilter}
         settings={settings}
         viewerRole={primaryCadreRole}
         onAddRecordForStudent={isCadre && canRecord ? (st) => {

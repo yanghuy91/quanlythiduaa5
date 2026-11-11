@@ -3,6 +3,7 @@
  * Quản lý Nề nếp & Thi đua Lớp học 10A5 - THPT Số 2 Đức Phổ
  */
 import { Student, StudentWeekSummary, DisciplineRecord } from '../types';
+import { calculateDenseRankings } from './emulation';
 
 export function exportClassroomHtmlReport(
   students: Student[],
@@ -10,11 +11,20 @@ export function exportClassroomHtmlReport(
   currentWeek: number,
   records: DisciplineRecord[]
 ) {
-  const sortedStudents = [...students].sort((a, b) => {
-    const scoreA = studentSummaries[a.maHS]?.diemHienTai ?? 100;
-    const scoreB = studentSummaries[b.maHS]?.diemHienTai ?? 100;
-    return scoreB - scoreA;
-  });
+  const rankedStudents = calculateDenseRankings(
+    students.map(student => ({
+      student,
+      score: studentSummaries[student.maHS]?.diemHienTai ?? 100,
+      deductions: studentSummaries[student.maHS]?.tongDiemTru ?? 0,
+      bonuses: studentSummaries[student.maHS]?.tongDiemCong ?? 0,
+    })),
+    item => item.score,
+    item => item.deductions,
+    item => item.bonuses
+  );
+  const sortedStudents = rankedStudents.map(r => r.student);
+  const rankMap = new Map<string, number>();
+  rankedStudents.forEach(r => rankMap.set(r.student.maHS, r.officialRank));
 
   const weekRecords = records.filter(r => r.tuanHoc === currentWeek && r.trangThai !== 'DaHuy');
 
@@ -210,7 +220,7 @@ export function exportClassroomHtmlReport(
                              sum.xepLoai === 'Dat' ? 'badge-dat' : 'badge-chuadat';
           return `
             <tr>
-              <td class="text-center"><strong>${idx + 1}</strong></td>
+              <td class="text-center"><strong>${rankMap.get(s.maHS) ?? (idx + 1)}</strong></td>
               <td>${s.maHS}</td>
               <td><strong>${s.hoTen}</strong> ${s.vaiTro.includes('LT') ? '(Lớp trưởng)' : s.vaiTro.includes('BT') ? '(Bí thư)' : ''}</td>
               <td class="text-center">Tổ ${s.to}</td>

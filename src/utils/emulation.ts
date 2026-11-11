@@ -245,9 +245,10 @@ export function checkDuplicateRecord(
 }
 
 /**
- * Thuật toán xếp hạng thi đua chuẩn học đường (Dense Ranking - Cùng điểm thì cùng xếp hạng).
+ * Thuật toán xếp hạng thi đua chuẩn (Standard Competition Ranking - 1224):
  * - Học sinh có cùng số điểm sẽ có cùng một thứ hạng (Đồng hạng).
- * - Thứ hạng tiếp theo tăng lên 1 mức (ví dụ: 100đ -> Hạng 1; 98đ -> Hạng 2; 95đ -> Hạng 3).
+ * - Học sinh có mức điểm thấp hơn tiếp theo sẽ xếp ở vị trí bằng (tổng số học sinh xếp trên + 1).
+ *   Ví dụ: Có 10 học sinh đạt 100đ (cùng xếp Hạng 1) thì học sinh đạt 98đ kế tiếp sẽ xếp Hạng 11.
  * - Nếu cùng điểm: thứ tự hiển thị ưu tiên người ít bị trừ điểm hơn -> nhiều điểm cộng hơn -> thứ tự bảng chữ cái tiếng Việt.
  */
 export function calculateDenseRankings<T extends { student: { hoTen: string } }>(
@@ -284,14 +285,14 @@ export function calculateDenseRankings<T extends { student: { hoTen: string } }>
     scoreFrequency.set(s, (scoreFrequency.get(s) || 0) + 1);
   }
 
-  // 3. Gán thứ hạng: cùng điểm thì cùng xếp hạng (officialRank bằng nhau)
+  // 3. Gán thứ hạng chuẩn: nếu có N học sinh đồng hạng phía trên thì người tiếp theo có điểm thấp hơn xếp hạng N + 1 (idx + 1)
   let currentRank = 1;
   return sorted.map((item, idx) => {
     const currentScore = getScore(item);
     if (idx > 0) {
       const prevScore = getScore(sorted[idx - 1]);
       if (currentScore < prevScore) {
-        currentRank += 1;
+        currentRank = idx + 1;
       }
     }
     const count = scoreFrequency.get(currentScore) || 1;

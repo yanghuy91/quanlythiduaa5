@@ -20,10 +20,8 @@ import { getCurrentSession } from '../../utils/emulation';
 import { removeVietnameseAccents } from '../../utils/vietnamese';
 import { RecorderBadge } from '../common/RecorderBadge';
 import { 
-  SEMESTER_1_WEEKS, 
-  SEMESTER_2_WEEKS, 
+  ALL_SCHOOL_WEEKS,
   getSemesterFromWeek,
-  CURRENT_SCHOOL_YEAR
 } from '../../utils/hierarchy';
 
 export interface RecordSavePayload {
@@ -94,19 +92,10 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
     }
   }, [isOpen, initialWeek, initialSemester]);
 
-  // Weeks available according to chosen semester (HK1: 1..19, HK2: 20..38)
-  const availableWeeks = useMemo(() => {
-    return hocKi === 1 ? SEMESTER_1_WEEKS : SEMESTER_2_WEEKS;
-  }, [hocKi]);
-
-  // Handle changing semester
-  const handleChangeSemester = (newHocKi: 1 | 2) => {
-    setHocKi(newHocKi);
-    if (newHocKi === 1 && (tuanHoc < 1 || tuanHoc > 19)) {
-      setTuanHoc(1);
-    } else if (newHocKi === 2 && (tuanHoc < 20 || tuanHoc > 38)) {
-      setTuanHoc(20);
-    }
+  // Handle changing week directly (automatically syncs hocKi)
+  const handleChangeWeek = (newWeek: number) => {
+    setTuanHoc(newWeek);
+    setHocKi(getSemesterFromWeek(newWeek));
   };
 
   // Available categories
@@ -238,7 +227,7 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
                 {students.length === 1 ? students[0].hoTen : `Ghi ${students.length} học sinh`}
               </span>
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/20">
-                HK{hocKi} · Tuần {tuanHoc} · {session === 'Sang' ? 'Buổi Sáng' : 'Buổi Chiều'}
+                Tuần {tuanHoc} · {session === 'Sang' ? 'Buổi Sáng' : 'Buổi Chiều'}
               </span>
             </div>
             <p className="text-[11px] text-muted truncate mt-0.5">
@@ -302,13 +291,32 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
           </div>
         )}
 
-        {/* Time Hierarchy Selector Bar (Năm học -> Học kì -> Tuần -> Buổi, Bỏ qua tháng) */}
-        <div className="px-4 py-2 bg-surface-2 border-b border-token flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <Layers className="w-3.5 h-3.5 text-accent shrink-0" />
-            <span className="text-[11px] font-bold text-main truncate">
-              Học kì {hocKi} &gt; Tuần {tuanHoc} &gt; {session === 'Sang' ? 'Sáng' : 'Chiều'}
-            </span>
+        {/* Compact Week & Session Selector Bar (Chỉ hiện Tuần & Buổi gọn gàng, không hiện HK hay Năm học) */}
+        <div className="px-4 py-2 bg-surface-2 border-b border-token flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <Calendar className="w-3.5 h-3.5 text-accent shrink-0" />
+            <select
+              value={tuanHoc}
+              onChange={e => handleChangeWeek(Number(e.target.value))}
+              className="px-2.5 py-1 bg-surface border border-token rounded-lg text-xs font-extrabold text-main cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent/40"
+              aria-label="Chọn tuần ghi nhận"
+            >
+              {ALL_SCHOOL_WEEKS.map(w => (
+                <option key={w} value={w}>
+                  Tuần {w}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={session}
+              onChange={e => setSession(e.target.value as 'Sang' | 'Chieu')}
+              className="px-2.5 py-1 bg-surface border border-token rounded-lg text-xs font-bold text-main cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent/40"
+              aria-label="Chọn buổi ghi nhận"
+            >
+              <option value="Sang">Buổi Sáng</option>
+              <option value="Chieu">Buổi Chiều</option>
+            </select>
           </div>
 
           <button
@@ -316,79 +324,27 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
             onClick={() => setShowTimeCustomizer(!showTimeCustomizer)}
             className="text-[11px] font-bold text-accent hover:underline flex items-center gap-1 cursor-pointer shrink-0"
           >
-            <span>{showTimeCustomizer ? 'Thu gọn' : 'Đổi tuần/buổi'}</span>
+            <span>{showTimeCustomizer ? 'Thu gọn' : '+ Ghi chú / Ngày'}</span>
             <ChevronDown className={`w-3 h-3 transition-transform ${showTimeCustomizer ? 'rotate-180' : ''}`} />
           </button>
         </div>
 
-        {/* Time Customizer Panel (Hierarchical Week & Session Picker) */}
+        {/* Optional Note & Date Panel */}
         {showTimeCustomizer && (
-          <div className="px-4 py-3 bg-accent/5 border-b border-token space-y-2.5 animate-fadeIn text-xs">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {/* 1. Học kì */}
-              <div>
-                <label className="block text-[10px] font-bold text-muted mb-0.5 uppercase tracking-wide">
-                  Học kì
-                </label>
-                <select
-                  value={hocKi}
-                  onChange={e => handleChangeSemester(Number(e.target.value) as 1 | 2)}
-                  className="w-full px-2 py-1.5 bg-surface border border-token rounded-lg text-xs font-semibold text-main cursor-pointer"
-                >
-                  <option value={1}>Học kì 1 (T1-19)</option>
-                  <option value={2}>Học kì 2 (T20-38)</option>
-                </select>
-              </div>
-
-              {/* 2. Tuần học (List tuần tương ứng học kì đã chọn) */}
-              <div>
-                <label className="block text-[10px] font-bold text-muted mb-0.5 uppercase tracking-wide">
-                  Tuần học ({hocKi === 1 ? '1-19' : '20-38'})
-                </label>
-                <select
-                  value={tuanHoc}
-                  onChange={e => setTuanHoc(Number(e.target.value))}
-                  className="w-full px-2 py-1.5 bg-surface border border-token rounded-lg text-xs font-semibold text-main cursor-pointer"
-                >
-                  {availableWeeks.map(w => (
-                    <option key={w} value={w}>
-                      Tuần {w}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* 3. Buổi học */}
-              <div>
-                <label className="block text-[10px] font-bold text-muted mb-0.5 uppercase tracking-wide">
-                  Buổi học
-                </label>
-                <select
-                  value={session}
-                  onChange={e => setSession(e.target.value as 'Sang' | 'Chieu')}
-                  className="w-full px-2 py-1.5 bg-surface border border-token rounded-lg text-xs font-semibold text-main cursor-pointer"
-                >
-                  <option value="Sang">Buổi Sáng</option>
-                  <option value="Chieu">Buổi Chiều</option>
-                </select>
-              </div>
-
-              {/* 4. Ngày học */}
-              <div>
-                <label className="block text-[10px] font-bold text-muted mb-0.5 uppercase tracking-wide">
-                  Ngày ghi nhận
-                </label>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                  className="w-full px-2 py-1 bg-surface border border-token rounded-lg text-xs font-semibold text-main"
-                />
-              </div>
+          <div className="px-4 py-2.5 bg-accent/5 border-b border-token grid grid-cols-1 sm:grid-cols-3 gap-2 animate-fadeIn text-xs">
+            <div>
+              <label className="block text-[10px] font-bold text-muted mb-0.5 uppercase tracking-wide">
+                Ngày ghi nhận
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                className="w-full px-2 py-1 bg-surface border border-token rounded-lg text-xs font-semibold text-main"
+              />
             </div>
 
-            {/* Note input */}
-            <div>
+            <div className="sm:col-span-2">
               <label className="block text-[10px] font-bold text-muted mb-0.5 uppercase tracking-wide">
                 Ghi chú thêm (tùy chọn)
               </label>
