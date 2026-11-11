@@ -61,7 +61,9 @@ import {
   formatRatingTiersSummary,
   RATING_PRESETS,
   RATING_COLOR_PALETTE,
-  classifySeverityByPoints
+  classifySeverityByPoints,
+  STANDARD_RULE_CATEGORIES,
+  normalizeRuleCategory
 } from '../../utils/emulation';
 import { ClassroomLayoutEditor } from './ClassroomLayoutEditor';
 import { CadreHonorsModal } from '../common/CadreHonorsModal';
@@ -210,9 +212,10 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     if (!newRuleName.trim()) return;
     const cleanScore = Math.max(1, Math.abs(Number(newRuleScore) || 2));
     const computedSeverity = classifySeverityByPoints(cleanScore, newRuleType === 'Cong');
+    const normalizedGroup = normalizeRuleCategory(newRuleGroup, newRuleName.trim(), newRuleType);
     const newItem: RuleItem = {
       maNoiQuy: `${newRuleType === 'Cong' ? 'CONG' : 'NQ'}_${Date.now().toString().slice(-4)}`,
-      nhomHanhVi: newRuleGroup.trim() || 'Nề nếp',
+      nhomHanhVi: normalizedGroup,
       tenHanhVi: newRuleName.trim(),
       loaiDiem: newRuleType,
       mucDo: computedSeverity,
@@ -1856,13 +1859,18 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             <div className="p-3.5 rounded-2xl bg-surface-2 border border-token space-y-3">
               <div className="text-xs font-black text-main">➕ Thêm quy định Nội quy mới (Cơ sở trừ / cộng điểm)</div>
               <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5 text-xs">
-                <input
-                  type="text"
+                <select
                   value={newRuleGroup}
                   onChange={e => setNewRuleGroup(e.target.value)}
-                  placeholder="Nhóm (VD: Chuyên cần, Tác phong)"
-                  className="px-2.5 py-2 rounded-xl bg-surface border border-token font-semibold text-main"
-                />
+                  className="px-2.5 py-2 rounded-xl bg-surface border border-token font-bold text-main"
+                >
+                  {STANDARD_RULE_CATEGORIES.map(cat => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                  <option value="Điểm cộng">Điểm cộng</option>
+                </select>
                 <input
                   type="text"
                   value={newRuleName}
@@ -1941,7 +1949,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       <span className="font-semibold text-main">{rule.tenHanhVi}</span>
                       <div className="text-[10px] text-muted flex items-center gap-1.5 mt-0.5">
                         <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-surface-2 border border-token">{rule.maNoiQuy}</span>
-                        <span>{rule.nhomHanhVi}</span>
+                        <span>{normalizeRuleCategory(rule.nhomHanhVi, rule.tenHanhVi, rule.loaiDiem)}</span>
                       </div>
                     </div>
                   </div>

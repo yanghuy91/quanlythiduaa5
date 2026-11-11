@@ -57,7 +57,7 @@ import {
 } from '../../utils/seatingMaster';
 import { StandardSeatingImportModal } from './StandardSeatingImportModal';
 import { AI_SEATING_PROMPT_GUIDE } from '../../utils/aiSeatingPrompt';
-import { findMatchingRule, classifySeverityByPoints } from '../../utils/emulation';
+import { findMatchingRule, classifySeverityByPoints, normalizeRuleCategory } from '../../utils/emulation';
 
 interface UniversalSmartImportSectionProps {
   students: Student[];
@@ -565,12 +565,9 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
               ? 'Cong'
               : 'Tru';
           const diemSo = Math.abs(rawScoreNum) || 2;
-          const nhomHanhVi =
-            colNhomHanhVi !== -1 && row[colNhomHanhVi]
-              ? String(row[colNhomHanhVi]).trim()
-              : loaiDiem === 'Cong'
-                ? 'Điểm cộng'
-                : 'Nề nếp';
+          const rawGroupVal =
+            colNhomHanhVi !== -1 && row[colNhomHanhVi] ? String(row[colNhomHanhVi]).trim() : '';
+          const nhomHanhVi = normalizeRuleCategory(rawGroupVal, behaviorText, loaiDiem);
 
           const activeRuleCatalog = extractedRules.length > 0 ? extractedRules : rules;
           const matchedRule = findMatchingRule(activeRuleCatalog, undefined, behaviorText, loaiDiem);

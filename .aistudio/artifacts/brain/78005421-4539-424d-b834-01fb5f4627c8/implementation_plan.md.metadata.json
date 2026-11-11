@@ -1,6 +1,0 @@
-{
-  "summary":  "Kế hoạch bảo vệ dữ liệu thật trên Firebase khỏi bị ghi đè khi cập nhật mã nguồn hoặc triển khai phiên bản mới từ AI Studio, chỉ lưu trữ trên Firebase Realtime Database và trình duyệt cá nhân.",
-  "updatedAt":  "2026-11-10T05:53:11.452072407Z",
-  "requestFeedback":  true,
-  "userFacing":  true
-}

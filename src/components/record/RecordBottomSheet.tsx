@@ -16,7 +16,7 @@ import {
   ListFilter
 } from 'lucide-react';
 import { Student, RuleItem, RoleCode, DisciplineRecord, SeverityLevel } from '../../types';
-import { getCurrentSession, classifySeverityByPoints } from '../../utils/emulation';
+import { getCurrentSession, classifySeverityByPoints, STANDARD_RULE_CATEGORIES, normalizeRuleCategory } from '../../utils/emulation';
 import { removeVietnameseAccents } from '../../utils/vietnamese';
 import { RecorderBadge } from '../common/RecorderBadge';
 import { 
@@ -104,14 +104,34 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
     setHocKi(getSemesterFromWeek(newWeek));
   };
 
-  // Available categories
+  // Available categories aligned with latest rules (xếp gọn thành 2 hàng trên điện thoại)
   const categories = useMemo(() => {
-    const list = ['all', 'Chuyên cần', 'Học tập', 'Nề nếp', 'Phong trào', 'Lao động - Vệ sinh'];
+    const base: string[] = ['all', ...STANDARD_RULE_CATEGORIES];
     if (allowBonus) {
-      list.push('Điểm cộng');
+      base.push('Điểm cộng');
     }
-    return list;
-  }, [allowBonus]);
+    // Bổ sung các nhóm tùy chỉnh khác nếu có trong nội quy mới nhất
+    rules.forEach(r => {
+      if (!allowBonus && r.loaiDiem === 'Cong') return;
+      const normCat = normalizeRuleCategory(r.nhomHanhVi, r.tenHanhVi, r.loaiDiem);
+      if (normCat && !base.includes(normCat)) {
+        base.push(normCat);
+      }
+    });
+    return base;
+  }, [allowBonus, rules]);
+
+  // Count rules per category
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: 0 };
+    rules.forEach(r => {
+      if (!allowBonus && r.loaiDiem === 'Cong') return;
+      counts.all = (counts.all || 0) + 1;
+      const normCat = normalizeRuleCategory(r.nhomHanhVi, r.tenHanhVi, r.loaiDiem);
+      counts[normCat] = (counts[normCat] || 0) + 1;
+    });
+    return counts;
+  }, [rules, allowBonus]);
 
   // Pinned "Hay dùng" rules
   const frequentRules = useMemo(() => {
@@ -124,8 +144,9 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
       // Hide bonus rules if disabled
       if (!allowBonus && r.loaiDiem === 'Cong') return false;
 
-      // Category filter
-      if (activeCategory !== 'all' && r.nhomHanhVi !== activeCategory) {
+      // Category filter (chuẩn hóa nhóm hành vi để luôn khớp với nội quy mới nhất)
+      const normCat = normalizeRuleCategory(r.nhomHanhVi, r.tenHanhVi, r.loaiDiem);
+      if (activeCategory !== 'all' && normCat !== activeCategory && r.nhomHanhVi !== activeCategory) {
         return false;
       }
 
@@ -133,7 +154,7 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
       if (ruleSearch.trim()) {
         const cleanSearch = removeVietnameseAccents(ruleSearch);
         const cleanName = removeVietnameseAccents(r.tenHanhVi);
-        const cleanGroup = removeVietnameseAccents(r.nhomHanhVi);
+        const cleanGroup = removeVietnameseAccents(normCat);
         return cleanName.includes(cleanSearch) || cleanGroup.includes(cleanSearch);
       }
 
@@ -428,23 +449,27 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
                 />
               </div>
 
-              {/* 2. Nhóm hành vi */}
+              {/* 2. Nhóm hành vi (Xếp 2 hàng gọn gàng dễ chọn trên điện thoại) */}
               <div>
-                <label className="block text-[11px] font-bold text-muted mb-1">
+                <label className="block text-[11px] font-bold text-muted mb-1.5">
                   Nhóm hành vi:
                 </label>
-                <select
-                  value={customCategory}
-                  onChange={e => setCustomCategory(e.target.value)}
-                  className="w-full px-3 py-2 bg-surface-2 border border-token rounded-xl text-xs font-semibold text-main cursor-pointer"
-                >
-                  <option value="Nề nếp">Nề nếp</option>
-                  <option value="Chuyên cần">Chuyên cần</option>
-                  <option value="Học tập">Học tập</option>
-                  <option value="Lao động - Vệ sinh">Lao động - Vệ sinh</option>
-                  <option value="Phong trào">Phong trào</option>
-                  {allowBonus && <option value="Điểm cộng">Điểm cộng</option>}
-                </select>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[...STANDARD_RULE_CATEGORIES, ...(allowBonus ? ['Điểm cộng'] : [])].map(cat => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setCustomCategory(cat)}
+                      className={`py-2 px-1.5 rounded-xl text-[11px] sm:text-xs font-bold text-center truncate transition-all cursor-pointer border ${
+                        customCategory === cat
+                          ? 'bg-primary text-on-primary border-primary shadow-xs'
+                          : 'bg-surface-2 border-token text-muted hover:text-main'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* 3. Loại điểm & Số điểm */}
@@ -590,22 +615,26 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
                 </button>
               )}
 
-              {/* Category Filter Tabs */}
-              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-                {categories.map(cat => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setActiveCategory(cat)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
-                      activeCategory === cat 
-                        ? 'bg-primary text-on-primary font-bold' 
-                        : 'bg-surface-2 border border-token text-muted hover:text-main'
-                    }`}
-                  >
-                    {cat === 'all' ? 'Tất cả' : cat}
-                  </button>
-                ))}
+              {/* Category Filter Tabs: Xếp gọn thành 2 hàng (3 cột/hàng), tên ngắn gọn tránh mất chữ trên ĐT */}
+              <div className="grid grid-cols-3 gap-1.5">
+                {categories.map(cat => {
+                  const cnt = categoryCounts[cat] ?? 0;
+                  const label = cat === 'all' ? 'Tất cả' : cat;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setActiveCategory(cat)}
+                      className={`py-2 px-1.5 rounded-xl text-[11px] sm:text-xs text-center truncate transition-all cursor-pointer border ${
+                        activeCategory === cat 
+                          ? 'bg-primary text-on-primary border-primary font-extrabold shadow-xs' 
+                          : 'bg-surface-2 border-token text-muted hover:text-main font-semibold'
+                      }`}
+                    >
+                      {label} ({cnt})
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Rules List */}
@@ -615,6 +644,7 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
                   const isBonus = rule.loaiDiem === 'Cong';
                   const effectiveSeverity = rule.mucDo || classifySeverityByPoints(rule.diemSo, isBonus);
                   const borderCls = getRuleBorderClass(rule.loaiDiem, effectiveSeverity);
+                  const displayCategory = normalizeRuleCategory(rule.nhomHanhVi, rule.tenHanhVi, rule.loaiDiem);
 
                   return (
                     <button
@@ -632,7 +662,7 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
                           {rule.tenHanhVi}
                         </div>
                         <div className="text-[10px] text-muted flex items-center gap-1.5 mt-0.5">
-                          <span>{rule.nhomHanhVi}</span>
+                          <span>{displayCategory}</span>
                         </div>
                       </div>
 

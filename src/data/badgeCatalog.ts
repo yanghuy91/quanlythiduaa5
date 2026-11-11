@@ -403,15 +403,15 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'movement',
     categoryLabel: 'Phong trào & Đoàn hội',
     description: 'Nhiệt huyết xung kích trong các hoạt động Đoàn trường và Chi đoàn.',
-    criteria: 'Giữ chức vụ Bí thư Chi đoàn và đạt điểm nề nếp >= 90đ.',
+    criteria: 'Tham gia tích cực các hoạt động Đoàn - Hội và đạt điểm TB nề nếp >= 92đ.',
     accentColor: '#EF4444',
     gradientBg: 'from-red-500/15 via-rose-500/10 to-transparent',
     rarity: 'Sử thi',
     autoRule: {
       enabled: true,
-      conditionType: 'is_cadre_role',
-      requiredRole: 'BT',
-      minScore: 90,
+      conditionType: 'min_avg_score',
+      minScore: 92,
+      minWeeks: 2,
     },
   },
   {
@@ -520,15 +520,15 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     },
   },
 
-  // --- NHÓM 4: TẬP THỂ & CÁN SỰ (10 - GỒM CẢ PHÓ BÍ THƯ, LỚP PHÓ VĂN THỂ, CỜ ĐỎ) ---
+  // --- NHÓM 4: TẬP THỂ & CÁN SỰ (4 HUY HIỆU CHUNG CHO BAN CÁN SỰ + 6 HUY HIỆU TẬP THỂ ĐẠI TRÀ) ---
   {
     id: 'b_cadre_leader',
     name: 'Thủ Lĩnh Bản Lĩnh',
     iconType: 'cadre_leader',
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
-    description: 'Cán sự công tâm, chỉ huy quyết đoán, được tập thể tôn trọng.',
-    criteria: 'Giữ chức vụ Ban cán sự / Tổ trưởng và điểm TB nề nếp >= 90đ.',
+    description: 'Cán sự lớp bản lĩnh, công tâm, điều hành công việc tập thể hiệu quả.',
+    criteria: 'Dành chung cho thành viên Ban cán sự / Tổ trưởng đạt điểm TB nề nếp >= 90đ.',
     accentColor: '#F59E0B',
     gradientBg: 'from-amber-500/15 via-yellow-500/10 to-transparent',
     rarity: 'Sử thi',
@@ -541,74 +541,74 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
   },
   {
     id: 'b_deputy_union_sec',
-    name: 'Ngọn Lửa Phó Bí Thư',
+    name: 'Cán Sự Tiên Phong',
     iconType: 'deputy_union_sec',
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
-    description: 'Phó Bí thư Chi đoàn xung kích, gắn kết đoàn viên và tiếp lửa phong trào.',
-    criteria: 'Giữ chức vụ Phó Bí thư Chi đoàn (PBT) và điểm TB nề nếp >= 90đ.',
+    description: 'Cán sự năng nổ, luôn đi đầu trong các hoạt động và nhiệm vụ của lớp.',
+    criteria: 'Dành chung cho thành viên Ban cán sự / Tổ trưởng đạt điểm TB nề nếp >= 90đ.',
     accentColor: '#E11D48',
     gradientBg: 'from-rose-500/15 via-orange-500/10 to-transparent',
     rarity: 'Sử thi',
     autoRule: {
       enabled: true,
       conditionType: 'is_cadre_role',
-      requiredRole: 'PBT',
-      minScore: 90,
-    },
-  },
-  {
-    id: 'b_arts_sports_deputy',
-    name: 'Đại Sứ Văn Thể Mỹ',
-    iconType: 'arts_sports_deputy',
-    category: 'cadre',
-    categoryLabel: 'Tập thể & Cán sự',
-    description: 'Lớp phó Văn thể năng nổ, dẫn dắt phong trào văn hóa, văn nghệ, thể thao.',
-    criteria: 'Giữ chức vụ Lớp phó Văn thể (LP_VT) và điểm TB nề nếp >= 90đ.',
-    accentColor: '#A21CAF',
-    gradientBg: 'from-fuchsia-500/15 via-purple-500/10 to-transparent',
-    rarity: 'Sử thi',
-    autoRule: {
-      enabled: true,
-      conditionType: 'is_cadre_role',
-      requiredRole: 'LP_VT',
+      requiredRole: 'ANY_CADRE',
       minScore: 90,
     },
   },
   {
     id: 'b_red_flag_warden',
-    name: 'Sao Đỏ Kỷ Cương (Cờ Đỏ)',
+    name: 'Gương Sáng Cán Sự',
     iconType: 'red_flag_warden',
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
-    description: 'Đội viên Cờ đỏ gương mẫu, công tâm, giữ vững kỷ cương nề nếp lớp học.',
-    criteria: 'Giữ chức vụ Cờ đỏ (CD) và điểm TB nề nếp >= 90đ.',
+    description: 'Cán sự gương mẫu, trách nhiệm cao, giữ vững kỷ cương nề nếp lớp học.',
+    criteria: 'Dành chung cho thành viên Ban cán sự / Tổ trưởng đạt điểm TB nề nếp >= 92đ.',
     accentColor: '#DC2626',
     gradientBg: 'from-red-500/15 via-rose-500/10 to-transparent',
     rarity: 'Sử thi',
     autoRule: {
       enabled: true,
       conditionType: 'is_cadre_role',
-      requiredRole: 'CD',
-      minScore: 90,
+      requiredRole: 'ANY_CADRE',
+      minScore: 92,
     },
   },
   {
     id: 'b_loving_guide',
-    name: 'Người Cầm Lái Yêu Thương',
+    name: 'Ngôi Sao Cán Sự',
     iconType: 'loving_guide',
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
-    description: 'Luôn lắng nghe, thấu hiểu, gắn kết các thành viên như gia đình.',
-    criteria: 'Giữ chức vụ Lớp trưởng (LT) và điểm TB nề nếp >= 95đ.',
+    description: 'Cán sự tận tâm, luôn lắng nghe, sẻ chia và gắn kết các thành viên trong lớp.',
+    criteria: 'Dành chung cho thành viên Ban cán sự / Tổ trưởng đạt điểm TB nề nếp >= 95đ.',
     accentColor: '#0EA5E9',
     gradientBg: 'from-sky-500/15 via-blue-500/10 to-transparent',
     rarity: 'Sử thi',
     autoRule: {
       enabled: true,
       conditionType: 'is_cadre_role',
-      requiredRole: 'LT',
+      requiredRole: 'ANY_CADRE',
       minScore: 95,
+    },
+  },
+  {
+    id: 'b_arts_sports_deputy',
+    name: 'Hạt Nhân Văn Thể Mỹ',
+    iconType: 'arts_sports_deputy',
+    category: 'cadre',
+    categoryLabel: 'Tập thể & Cán sự',
+    description: 'Sôi nổi đóng góp vào phong trào văn hóa, văn nghệ, thể dục thể thao của lớp.',
+    criteria: 'Tích cực tham gia phong trào lớp và đạt điểm TB nề nếp >= 92đ.',
+    accentColor: '#A21CAF',
+    gradientBg: 'from-fuchsia-500/15 via-purple-500/10 to-transparent',
+    rarity: 'Hiếm',
+    autoRule: {
+      enabled: true,
+      conditionType: 'min_avg_score',
+      minScore: 92,
+      minWeeks: 2,
     },
   },
   {
@@ -617,34 +617,34 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     iconType: 'golden_hands',
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
-    description: 'Trực nhật chu đáo, bảng sạch, giẻ ướt, phấn thơm, lớp tinh tươm.',
-    criteria: 'Dành cho Ban cán sự (Lớp phó Lao động LP_LD) đạt điểm TB nề nếp >= 90đ.',
+    description: 'Trực nhật chu đáo, bảng sạch, lớp học gọn gàng ngăn nắp tinh tươm.',
+    criteria: 'Hoàn thành tốt công tác trực nhật, không vi phạm vệ sinh/lao động trong ít nhất 2 tuần.',
     accentColor: '#14B8A6',
     gradientBg: 'from-teal-500/15 via-emerald-500/10 to-transparent',
     rarity: 'Phổ biến',
     autoRule: {
       enabled: true,
-      conditionType: 'is_cadre_role',
-      requiredRole: 'LP_LD',
-      minScore: 90,
+      conditionType: 'no_group_violation',
+      violationKeyword: 'trực nhật',
+      minWeeks: 2,
     },
   },
   {
     id: 'b_rescue_knight',
-    name: 'Hiệp Sĩ Cứu Trợ',
+    name: 'Hiệp Sĩ Tương Trợ',
     iconType: 'rescue_knight',
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
-    description: 'Sẵn sàng trực nhật thay bạn bị ốm, hỗ trợ việc lớp không nề hà.',
-    criteria: 'Dành cho Ban cán sự (Lớp phó Học tập LP_HT hoặc Tổ trưởng TT) gương mẫu.',
+    description: 'Sẵn sàng giúp đỡ bạn bè, hỗ trợ công việc chung của tập thể không nề hà.',
+    criteria: 'Nhiệt tình hỗ trợ tập thể và đạt điểm TB nề nếp >= 93đ.',
     accentColor: '#8B5CF6',
     gradientBg: 'from-purple-500/15 via-violet-500/10 to-transparent',
     rarity: 'Hiếm',
     autoRule: {
       enabled: true,
-      conditionType: 'is_cadre_role',
-      requiredRole: 'LP_HT',
-      minScore: 90,
+      conditionType: 'min_avg_score',
+      minScore: 93,
+      minWeeks: 2,
     },
   },
   {
@@ -654,7 +654,7 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
     description: 'Vì cái chung, luôn đặt danh dự tập thể 10A5 lên trên cá nhân.',
-    criteria: 'Dành cho Ban cán sự đạt Top 10 Bảng xếp hạng thi đua toàn lớp.',
+    criteria: 'Đạt Top 10 Bảng xếp hạng thi đua toàn lớp với điểm TB >= 90đ.',
     accentColor: '#F59E0B',
     gradientBg: 'from-amber-500/15 via-orange-500/10 to-transparent',
     rarity: 'Sử thi',
@@ -672,7 +672,7 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
     description: 'Tận tâm cống hiến thầm lặng vì một tập thể đoàn kết vững mạnh.',
-    criteria: 'Dành cho Ban cán sự đạt Top 3 Bảng xếp hạng thi đua toàn lớp.',
+    criteria: 'Đạt Top 3 Bảng xếp hạng thi đua toàn lớp với điểm TB >= 95đ.',
     accentColor: '#E11D48',
     gradientBg: 'from-rose-500/15 via-pink-500/10 to-transparent',
     rarity: 'Huyền thoại',
@@ -690,7 +690,7 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
     category: 'cadre',
     categoryLabel: 'Tập thể & Cán sự',
     description: 'Phần thưởng danh giá cao quý nhất do Giáo viên chủ nhiệm trao tặng.',
-    criteria: 'Dành cho Ban cán sự đạt Hạng 1 (Top 1) Bảng xếp hạng thi đua toàn lớp.',
+    criteria: 'Đạt Hạng 1 (Top 1) Bảng xếp hạng thi đua toàn lớp với điểm TB >= 98đ.',
     accentColor: '#F59E0B',
     gradientBg: 'from-amber-500/20 via-yellow-400/15 to-transparent',
     rarity: 'Huyền thoại',
@@ -703,9 +703,51 @@ export const DEFAULT_30_BADGES: AchievementBadge[] = [
   },
 ];
 
-const STORAGE_KEY_BADGES = 'app_badges_catalog_10a5_v3';
+const STORAGE_KEY_BADGES = 'app_badges_catalog_10a5_v4';
 const STORAGE_KEY_STUDENT_BADGES = 'app_student_badges_10a5_v3';
 const STORAGE_KEY_STUDENT_ACTIVE_BADGE = 'app_student_active_badge_10a5_v2';
+
+// Tập hợp các tên huy hiệu đặc thù vị trí cũ cần tự động nâng cấp sang bộ huy hiệu mới (4 huy hiệu cán sự chung + 26 đại trà)
+const LEGACY_ROLE_SPECIFIC_BADGE_NAMES = new Set([
+  'Ngọn Lửa Phó Bí Thư',
+  'Đại Sứ Văn Thể Mỹ',
+  'Sao Đỏ Kỷ Cương (Cờ Đỏ)',
+  'Người Cầm Lái Yêu Thương',
+  'Hiệp Sĩ Cứu Trợ',
+]);
+
+const GENERAL_CADRE_BADGE_IDS = new Set([
+  'b_cadre_leader',
+  'b_deputy_union_sec',
+  'b_red_flag_warden',
+  'b_loving_guide',
+]);
+
+function normalizeBadgeItemWithDefaults(custom: AchievementBadge, def: AchievementBadge): AchievementBadge {
+  // Nếu là một trong các huy hiệu vừa được chuẩn hóa lại (bỏ gắn cứng chức vụ cụ thể hoặc chuyển sang đại trà)
+  const hasLegacySpecificName = LEGACY_ROLE_SPECIFIC_BADGE_NAMES.has(custom.name);
+  const hasLegacySpecificRole =
+    custom.autoRule?.conditionType === 'is_cadre_role' &&
+    (!GENERAL_CADRE_BADGE_IDS.has(def.id) ||
+      (custom.autoRule.requiredRole && custom.autoRule.requiredRole !== 'ANY_CADRE'));
+  const hasLegacyCadreCriteria =
+    !GENERAL_CADRE_BADGE_IDS.has(def.id) &&
+    typeof custom.criteria === 'string' &&
+    (custom.criteria.includes('Dành cho Ban cán sự') || custom.criteria.includes('Giữ chức vụ'));
+
+  if (hasLegacySpecificName || hasLegacySpecificRole || hasLegacyCadreCriteria) {
+    return def;
+  }
+
+  return {
+    ...def,
+    ...custom,
+    autoRule: {
+      ...(def.autoRule || { enabled: true, conditionType: 'manual_only' }),
+      ...(custom.autoRule || {}),
+    },
+  };
+}
 
 /**
  * Kiểm tra học sinh có thuộc Ban cán sự lớp (LT, BT, PBT, LP_HT, LP_LD, LP_VT, CD, TT) hay không
@@ -717,15 +759,12 @@ export function isStudentCadre(student?: Pick<Student, 'vaiTro'> | null): boolea
 
 /**
  * Kiểm tra huy hiệu có thuộc nhóm chỉ dành riêng cho Ban cán sự hay không
- * (Toàn bộ nhóm Tập thể & Cán sự + các huy hiệu gắn với chức vụ cán sự)
+ * Chỉ 4 huy hiệu cán sự chung (có conditionType === 'is_cadre_role') dành riêng cho Ban cán sự;
+ * tất cả 26 huy hiệu còn lại có thể trao đại trà cho mọi học sinh trong lớp.
  */
 export function isBadgeReservedForCadre(badge?: AchievementBadge | null): boolean {
   if (!badge) return false;
-  return (
-    badge.category === 'cadre' ||
-    badge.autoRule?.conditionType === 'is_cadre_role' ||
-    badge.id === 'b_union_torch'
-  );
+  return badge.autoRule?.conditionType === 'is_cadre_role';
 }
 
 function clearLegacyStudentActiveBadgeKeys(): void {
@@ -762,21 +801,17 @@ export function revokeAllStudentBadges(): void {
  */
 export function getBadgeCatalog(): AchievementBadge[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY_BADGES) || localStorage.getItem('app_badges_catalog_10a5_v2');
+    const raw =
+      localStorage.getItem(STORAGE_KEY_BADGES) ||
+      localStorage.getItem('app_badges_catalog_10a5_v3') ||
+      localStorage.getItem('app_badges_catalog_10a5_v2');
     if (!raw) return DEFAULT_30_BADGES;
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
       return DEFAULT_30_BADGES.map(def => {
         const custom = parsed.find((p: AchievementBadge) => p.id === def.id);
         if (!custom) return def;
-        return {
-          ...def,
-          ...custom,
-          autoRule: {
-            ...(def.autoRule || { enabled: true, conditionType: 'manual_only' }),
-            ...(custom.autoRule || {}),
-          },
-        };
+        return normalizeBadgeItemWithDefaults(custom, def);
       });
     }
   } catch (e) {
@@ -805,6 +840,7 @@ export function saveBadgeCatalog(catalog: AchievementBadge[]): void {
 export function resetBadgeCatalog(): AchievementBadge[] {
   try {
     localStorage.removeItem(STORAGE_KEY_BADGES);
+    localStorage.removeItem('app_badges_catalog_10a5_v3');
     localStorage.removeItem('app_badges_catalog_10a5_v2');
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('lop10a5:badge_change', { detail: { fromCloud: false } }));

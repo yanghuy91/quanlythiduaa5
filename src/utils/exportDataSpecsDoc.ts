@@ -16,23 +16,36 @@ import {
   reconcileAcademicRecordsWithSeating,
   reconcileDisciplineRecordsWithSeating,
 } from './seatingMaster';
-import { classifySeverityByPoints } from './emulation';
+import {
+  classifySeverityByPoints,
+  normalizeRuleCategory,
+  STANDARD_RULE_CATEGORIES,
+} from './emulation';
 
 /**
- * Bản mẫu Câu lệnh AI (Prompt) chuẩn hóa — Ngắn gọn, dễ hiểu
+ * Bản mẫu Câu lệnh AI (Prompt) chuẩn hóa — Ngắn gọn, dễ hiểu, bóc tách chuẩn 5 nhóm vi phạm
  */
-export const AI_MASTER_PROMPT_TEXT = `Hãy đọc tài liệu/hình ảnh đính kèm và xuất ra bảng chuẩn theo Sơ đồ lớp (4 Tổ x 6 Bàn):
+export const AI_MASTER_PROMPT_TEXT = `Hãy đọc tài liệu/hình ảnh đính kèm và bóc tách dữ liệu ra bảng chuẩn:
 
-1. BẢNG DANH SÁCH & ĐIỂM MÔN HỌC (Sheet 1):
+1. BẢNG NỘI QUY LỚP (Nếu tài liệu là Nội quy / Quy định tính điểm):
+Mã nội quy | Nhóm hành vi | Tên hành vi | Loại điểm | Điểm số | Mức độ | Ghim
+QUY TẮC BÓC TÁCH NỘI QUY CHUẨN CHO AI:
+- Cột "Nhóm hành vi": BẮT BUỘC xếp vào đúng 1 trong 5 nhóm vi phạm chuẩn gọn sau: "Chuyên cần", "Học tập", "Nề nếp", "Phong trào", "Lao động" (hoặc "Điểm cộng" nếu là khen thưởng/cộng điểm):
+  + "Chuyên cần": Đi học muộn, nghỉ học có phép/không phép, bỏ tiết, trốn tiết, điểm danh.
+  + "Học tập": Không thuộc bài, thiếu bài tập, quên sách vở/dụng cụ học tập, mất trật tự/nói chuyện/làm việc riêng trong giờ học, gian lận kiểm tra.
+  + "Nề nếp": Đồng phục, bảng tên, khăn quàng/huy hiệu, tác phong, đầu tóc, điện thoại, nói tục, vô lễ, đánh nhau, an toàn giao thông, bảo quản tài sản.
+  + "Phong trào": Sinh hoạt lớp, chào cờ, xếp hàng, thể dục giữa giờ, hoạt động Đoàn - Đội, văn nghệ, thể thao, ngoại khóa.
+  + "Lao động": Trực nhật, quét lớp, lau bảng, đổ rác, vệ sinh chỗ ngồi/hành lang, chăm sóc cây xanh, tắt điện quạt.
+- Cột "Loại điểm": Chỉ ghi "Trừ" hoặc "Cộng".
+- Cột "Điểm số": Ghi số nguyên dương (VD: 1, 2, 3, 5, 10).
+- Cột "Mức độ": Căn cứ theo quy định trong tài liệu hoặc theo Điểm trừ: Trừ 1–2đ = "Nhẹ" (viền đen), Trừ 3–4đ = "Vừa" (viền cam), Trừ từ 5đ trở lên = "Nặng" (viền đỏ).
+- Cột "Ghim": Ghi "Có" với các lỗi phổ biến hay gặp, còn lại ghi "Không".
+
+2. BẢNG DANH SÁCH & ĐIỂM MÔN HỌC (Nếu tài liệu là Danh sách lớp / Bảng điểm):
 STT | Mã HS | Họ và tên | Giới tính | Ngày sinh | Tổ | Chức vụ | Dãy bàn | Số bàn | Toán | Ngữ văn | Tiếng Anh | Vật lí | Hóa học | Sinh học | Lịch sử | Địa lí | GDKT&PL | Tin học | Công nghệ | GDQP-AN | GDTC | HĐTN-HN | Nhận xét GVCN
 - Chức vụ viết tắt: LT, BT, PBT, LP_HT, LP_LD, LP_VT, CD, TT, HS.
 
-2. BẢNG NỘI QUY LỚP (Sheet 2 - Nếu có nội quy):
-Mã nội quy | Nhóm hành vi | Tên hành vi | Loại điểm | Điểm số | Mức độ | Ghim
-- Loại điểm: "Trừ" hoặc "Cộng"
-- Mức độ (chỉ căn cứ vào quy định file hoặc điểm trừ): Trừ 1–2đ = Nhẹ (viền đen), Trừ 3–4đ = Vừa (viền cam), Trừ từ 5đ trở lên = Nặng (viền đỏ).
-
-3. BẢNG NHẬT KÝ NỀ NẾP (Sheet 3 - Nếu có vi phạm/điểm cộng):
+3. BẢNG NHẬT KÝ NỀ NẾP (Nếu tài liệu là Sổ theo dõi vi phạm / Cờ đỏ):
 Ngày học | Buổi | Tuần | Mã hoặc Họ tên HS | Tổ | Nhóm hành vi | Nội dung hành vi | Loại điểm | Số điểm | Ghi chú`;
 
 /**
@@ -123,44 +136,44 @@ export function buildRulesSheetAoA(rules?: RuleItem[]): any[][] {
             nhomHanhVi: 'Chuyên cần',
             tenHanhVi: 'Nghỉ học không phép / Bỏ tiết',
             loaiDiem: 'Tru',
-            diemSo: 10,
+            diemSo: 5,
             mucDo: 'Nang',
             ghim: true,
             thuTu: 2,
           },
           {
             maNoiQuy: 'NQ03',
-            nhomHanhVi: 'Tác phong',
-            tenHanhVi: 'Không mặc đồng phục / Thiếu bảng tên, phù hiệu',
+            nhomHanhVi: 'Học tập',
+            tenHanhVi: 'Không thuộc bài cũ / Không làm bài tập về nhà',
             loaiDiem: 'Tru',
-            diemSo: 2,
-            mucDo: 'Nhe',
+            diemSo: 3,
+            mucDo: 'Vua',
             ghim: true,
             thuTu: 3,
           },
           {
             maNoiQuy: 'NQ04',
-            nhomHanhVi: 'Học tập',
-            tenHanhVi: 'Không làm bài tập về nhà / Không thuộc bài cũ',
+            nhomHanhVi: 'Nề nếp',
+            tenHanhVi: 'Sai đồng phục / Không đeo bảng tên',
             loaiDiem: 'Tru',
-            diemSo: 5,
-            mucDo: 'Vua',
+            diemSo: 2,
+            mucDo: 'Nhe',
             ghim: true,
             thuTu: 4,
           },
           {
             maNoiQuy: 'NQ05',
-            nhomHanhVi: 'Trật tự',
-            tenHanhVi: 'Mất trật tự, nói chuyện riêng trong giờ học',
+            nhomHanhVi: 'Phong trào',
+            tenHanhVi: 'Không tập thể dục giữa giờ / Mất trật tự khi chào cờ',
             loaiDiem: 'Tru',
-            diemSo: 3,
-            mucDo: 'Vua',
+            diemSo: 2,
+            mucDo: 'Nhe',
             ghim: true,
             thuTu: 5,
           },
           {
             maNoiQuy: 'NQ06',
-            nhomHanhVi: 'Vệ sinh',
+            nhomHanhVi: 'Lao động',
             tenHanhVi: 'Không trực nhật / Xả rác bừa bãi trong lớp',
             loaiDiem: 'Tru',
             diemSo: 3,
@@ -173,7 +186,7 @@ export function buildRulesSheetAoA(rules?: RuleItem[]): any[][] {
             nhomHanhVi: 'Điểm cộng',
             tenHanhVi: 'Phát biểu xây dựng bài sôi nổi / Đạt điểm 9, 10',
             loaiDiem: 'Cong',
-            diemSo: 5,
+            diemSo: 2,
             mucDo: 'Nhe',
             ghim: true,
             thuTu: 7,
@@ -183,7 +196,7 @@ export function buildRulesSheetAoA(rules?: RuleItem[]): any[][] {
   const rows = defaultSampleRules.map((r, idx) => [
     idx + 1,
     r.maNoiQuy,
-    r.nhomHanhVi,
+    normalizeRuleCategory(r.nhomHanhVi, r.tenHanhVi, r.loaiDiem),
     r.tenHanhVi,
     r.loaiDiem === 'Cong' ? 'Cộng' : 'Trừ',
     r.diemSo,
@@ -215,8 +228,8 @@ export function downloadRulesExcelTemplate(currentRules?: RuleItem[]): void {
 
   const ws2Guide = [
     ['HƯỚNG DẪN NHANH FILE NỘI QUY LỚP - LỚP 10A5'],
-    ['1. Điền "Tên hành vi", "Loại điểm" (Trừ/Cộng) và "Điểm số".'],
-    ['2. Mức độ vi phạm chỉ căn cứ vào cột "Mức độ" (nếu có ghi) hoặc "Điểm số": Trừ 1–2đ = Nhẹ (viền đen), Trừ 3–4đ = Vừa (viền cam), Trừ từ 5đ trở lên = Nặng (viền đỏ).'],
+    [`1. Cột "Nhóm hành vi": Dùng đúng 5 nhóm chuẩn gọn: ${STANDARD_RULE_CATEGORIES.join(', ')} (hoặc "Điểm cộng").`],
+    ['2. Mức độ vi phạm căn cứ vào cột "Mức độ" (nếu có ghi) hoặc "Điểm số": Trừ 1–2đ = Nhẹ (viền đen), Trừ 3–4đ = Vừa (viền cam), Trừ từ 5đ trở lên = Nặng (viền đỏ).'],
     ['3. Cột "Ghim hay dùng": Điền "Có" để hiện ở đầu bảng chọn nhanh.'],
     ['4. Lưu file rồi bấm "Up File Nội Quy Lớp (.xlsx)" trong mục Nội quy.'],
   ];
@@ -354,20 +367,8 @@ export function parseRulesFromAoA(rows: any[][]): RuleItem[] {
     const numPoints = Math.abs(parseFloat(rawPointsStr.replace(/[^\d.-]/g, '')));
     const diemSo = Number.isFinite(numPoints) && numPoints > 0 ? Math.round(numPoints) : 2;
 
-    // Nhóm hành vi
-    const nhomHanhVi =
-      rawGroup ||
-      (loaiDiem === 'Cong'
-        ? 'Điểm cộng'
-        : lowerName.includes('muon') || lowerName.includes('nghi') || lowerName.includes('tiet')
-        ? 'Chuyên cần'
-        : lowerName.includes('dong phuc') || lowerName.includes('tac phong')
-        ? 'Tác phong'
-        : lowerName.includes('bai') || lowerName.includes('vo')
-        ? 'Học tập'
-        : lowerName.includes('ve sinh') || lowerName.includes('truc nhat') || lowerName.includes('rac')
-        ? 'Vệ sinh'
-        : 'Nề nếp');
+    // Nhóm hành vi: Chuẩn hóa về đúng 5 nhóm vi phạm gọn ('Chuyên cần', 'Học tập', 'Nề nếp', 'Phong trào', 'Lao động') hoặc 'Điểm cộng'
+    const nhomHanhVi = normalizeRuleCategory(rawGroup, rawName, loaiDiem);
 
     // Mức độ: chỉ căn cứ vào quy định của file nhập vào (nếu cột Mức độ có ghi rõ) và điểm trừ thực tế
     const mucDo: SeverityLevel = classifySeverityByPoints(diemSo, loaiDiem === 'Cong', rawSeverity);
@@ -778,8 +779,17 @@ export function exportDataSpecsWordDocument(): void {
         <li>Tải file Excel vừa lưu lên mục <b>Nhập / Xuất</b> hoặc <b>Nội quy</b>.</li>
       </ol>
 
-      <h2>2. Quy định phân loại mức độ vi phạm</h2>
-      <p>Hệ thống xác định mức độ vi phạm dựa trên <b>quy định trong file Nội quy nhập vào</b> và <b>số điểm trừ</b> (hiển thị bằng màu viền trên nút chọn):</p>
+      <h2>2. Quy tắc chuẩn hóa 5 Nhóm vi phạm &amp; Mức độ</h2>
+      <p><b>A. 5 Nhóm vi phạm chuẩn gọn (khớp 100% với nút chọn của Ban cán sự):</b></p>
+      <ul>
+        <li><b>Chuyên cần:</b> Đi học muộn, nghỉ học có phép/không phép, bỏ tiết, trốn tiết.</li>
+        <li><b>Học tập:</b> Không thuộc bài, thiếu bài tập, quên sách vở, nói chuyện/mất trật tự trong giờ học, gian lận kiểm tra.</li>
+        <li><b>Nề nếp:</b> Đồng phục, bảng tên, tác phong, điện thoại, nói tục, vô lễ, đánh nhau, an toàn giao thông, tài sản chung.</li>
+        <li><b>Phong trào:</b> Sinh hoạt lớp, chào cờ, xếp hàng, thể dục giữa giờ, hoạt động Đoàn - Đội, văn nghệ, thể thao.</li>
+        <li><b>Lao động:</b> Trực nhật, quét lớp, lau bảng, đổ rác, vệ sinh lớp học/hành lang, tắt điện quạt.</li>
+        <li><i>(Và nhóm <b>Điểm cộng</b> đối với các hành vi khen thưởng, phát biểu, đạt điểm giỏi).</i></li>
+      </ul>
+      <p><b>B. Phân loại mức độ vi phạm (hiển thị bằng màu viền trên nút chọn):</b></p>
       <ul>
         <li><b>Mức Nhẹ (Viền đen):</b> Điểm trừ 1 – 2 điểm (hoặc cột Mức độ ghi Nhẹ).</li>
         <li><b>Mức Vừa (Viền cam):</b> Điểm trừ 3 – 4 điểm (hoặc cột Mức độ ghi Vừa).</li>
@@ -801,9 +811,12 @@ export function exportDataSpecsWordDocument(): void {
         </thead>
         <tbody>
           <tr><td>NQ01</td><td>Chuyên cần</td><td>Đi học muộn</td><td>Trừ</td><td>2</td><td>Nhẹ</td><td>Có</td></tr>
-          <tr><td>NQ05</td><td>Trật tự</td><td>Mất trật tự trong giờ học</td><td>Trừ</td><td>3</td><td>Vừa</td><td>Có</td></tr>
+          <tr><td>NQ03</td><td>Học tập</td><td>Không làm bài tập / Mất trật tự trong giờ</td><td>Trừ</td><td>3</td><td>Vừa</td><td>Có</td></tr>
+          <tr><td>NQ04</td><td>Nề nếp</td><td>Sai đồng phục / Không đeo bảng tên</td><td>Trừ</td><td>2</td><td>Nhẹ</td><td>Có</td></tr>
+          <tr><td>NQ05</td><td>Phong trào</td><td>Không tập thể dục giữa giờ</td><td>Trừ</td><td>2</td><td>Nhẹ</td><td>Có</td></tr>
+          <tr><td>NQ06</td><td>Lao động</td><td>Không trực nhật / Xả rác trong lớp</td><td>Trừ</td><td>3</td><td>Vừa</td><td>Có</td></tr>
           <tr><td>NQ02</td><td>Chuyên cần</td><td>Nghỉ học không phép / Bỏ tiết</td><td>Trừ</td><td>5</td><td>Nặng</td><td>Có</td></tr>
-          <tr><td>KT01</td><td>Điểm cộng</td><td>Phát biểu xây dựng bài</td><td>Cộng</td><td>5</td><td>Nhẹ</td><td>Có</td></tr>
+          <tr><td>KT01</td><td>Điểm cộng</td><td>Phát biểu xây dựng bài</td><td>Cộng</td><td>2</td><td>Nhẹ</td><td>Có</td></tr>
         </tbody>
       </table>
 

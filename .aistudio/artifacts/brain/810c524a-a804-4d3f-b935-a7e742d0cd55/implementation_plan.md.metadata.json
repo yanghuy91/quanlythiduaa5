@@ -1,6 +1,0 @@
-{
-  "summary":  "Kế hoạch triển khai 8 hạng mục sửa lỗi và nâng cấp giao diện cho Hệ thống Quản lý Nề nếp & Thi đua Lớp 10A5 (THPT Số 2 Đức Phổ): sửa lỗi vỡ huy hiệu Đội ngũ đầu tàu thi đua, chuẩn hóa logic tuần không có dữ liệu, bổ sung tính năng thu hồi toàn bộ huy hiệu cho GVCN, giới hạn huy hiệu dành riêng cho Ban cán sự, khắc phục triệt để lỗi nền tối chữ chìm, tối ưu hiển thị sơ đồ dạng ảnh trên điện thoại, lược bỏ các nhãn thiếu chuyên nghiệp trong kho Avatar và gỡ bỏ nút cài đặt tài khoản trùng lặp ở màn hình Học sinh.",
-  "updatedAt":  "2026-11-11T09:36:13.658041769Z",
-  "requestFeedback":  true,
-  "userFacing":  true
-}

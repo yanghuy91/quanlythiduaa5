@@ -137,14 +137,14 @@ export const MOCK_RULES: RuleItem[] = [
   { maNoiQuy: 'NQ18', nhomHanhVi: 'Phong trào', tenHanhVi: 'Đến muộn giờ chào cờ / sinh hoạt', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 23 },
   { maNoiQuy: 'NQ19', nhomHanhVi: 'Phong trào', tenHanhVi: 'Thiếu nghiêm túc khi hát Quốc ca', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 24 },
 
-  // Lao động - Vệ sinh
-  { maNoiQuy: 'NQ32', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Vắng buổi lao động có phép', loaiDiem: 'Tru', diemSo: 1, mucDo: 'Nhe', ghim: true, thuTu: 25 },
-  { maNoiQuy: 'NQ33', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Vắng buổi lao động không phép', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Nang', ghim: true, thuTu: 26 },
-  { maNoiQuy: 'NQ20', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Trực nhật bẩn hoặc trễ giờ', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: true, thuTu: 27 },
-  { maNoiQuy: 'NQ21', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Vứt rác bừa bãi trong lớp', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: true, thuTu: 28 },
-  { maNoiQuy: 'NQ22', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Ăn quà vặt trong phòng học', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 29 },
-  { maNoiQuy: 'NQ23', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Không tắt quạt, đèn khi ra khỏi lớp', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 30 },
-  { maNoiQuy: 'NQ24', nhomHanhVi: 'Lao động - Vệ sinh', tenHanhVi: 'Viết vẽ bậy lên bàn hoặc tường', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: false, thuTu: 31 },
+  // Lao động (Vệ sinh & Trực nhật)
+  { maNoiQuy: 'NQ32', nhomHanhVi: 'Lao động', tenHanhVi: 'Vắng buổi lao động có phép', loaiDiem: 'Tru', diemSo: 1, mucDo: 'Nhe', ghim: true, thuTu: 25 },
+  { maNoiQuy: 'NQ33', nhomHanhVi: 'Lao động', tenHanhVi: 'Vắng buổi lao động không phép', loaiDiem: 'Tru', diemSo: 5, mucDo: 'Nang', ghim: true, thuTu: 26 },
+  { maNoiQuy: 'NQ20', nhomHanhVi: 'Lao động', tenHanhVi: 'Trực nhật bẩn hoặc trễ giờ', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: true, thuTu: 27 },
+  { maNoiQuy: 'NQ21', nhomHanhVi: 'Lao động', tenHanhVi: 'Vứt rác bừa bãi trong lớp', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: true, thuTu: 28 },
+  { maNoiQuy: 'NQ22', nhomHanhVi: 'Lao động', tenHanhVi: 'Ăn quà vặt trong phòng học', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 29 },
+  { maNoiQuy: 'NQ23', nhomHanhVi: 'Lao động', tenHanhVi: 'Không tắt quạt, đèn khi ra khỏi lớp', loaiDiem: 'Tru', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 30 },
+  { maNoiQuy: 'NQ24', nhomHanhVi: 'Lao động', tenHanhVi: 'Viết vẽ bậy lên bàn hoặc tường', loaiDiem: 'Tru', diemSo: 3, mucDo: 'Vua', ghim: false, thuTu: 31 },
 
   // Điểm cộng (chỉ hiển thị khi GV kích hoạt tuỳ chọn)
   { maNoiQuy: 'NQ25', nhomHanhVi: 'Điểm cộng', tenHanhVi: 'Đạt điểm 9-10 bài kiểm tra', loaiDiem: 'Cong', diemSo: 2, mucDo: 'Nhe', ghim: false, thuTu: 32 },

@@ -23,7 +23,7 @@ import {
   getDefaultStudentAvatar,
   filterOutLegacyDemoRecords
 } from './data/mockData';
-import { calculateStudentWeekSummary, calculateDenseRankings } from './utils/emulation';
+import { calculateStudentWeekSummary, calculateDenseRankings, normalizeRulesList } from './utils/emulation';
 import { Header } from './components/common/Header';
 import { Footer } from './components/common/Footer';
 import { Toast, ToastData } from './components/common/Toast';
@@ -126,20 +126,17 @@ export default function App() {
   const [layout, setLayout] = useState<SeatLayoutNode[]>(initialSeatingState.layout);
   const [rules, setRules] = useState<RuleItem[]>(() => {
     const saved = localStorage.getItem('app_rules_10a5');
-    if (!saved) return MOCK_RULES;
+    if (!saved) return normalizeRulesList(MOCK_RULES);
     try {
       const parsed: RuleItem[] = JSON.parse(saved);
-      // Tự động bổ sung các nội quy mới nếu chưa có trong bộ lưu trữ
+      // Tự động bổ sung các nội quy mới nếu chưa có trong bộ lưu trữ và chuẩn hóa nhóm hành vi
       const existingIds = new Set(parsed.map(r => r.maNoiQuy));
       const missing = MOCK_RULES.filter(r => !existingIds.has(r.maNoiQuy));
-      if (missing.length > 0) {
-        const merged = [...parsed, ...missing];
-        localStorage.setItem('app_rules_10a5', JSON.stringify(merged));
-        return merged;
-      }
-      return parsed;
+      const merged = normalizeRulesList(missing.length > 0 ? [...parsed, ...missing] : parsed);
+      localStorage.setItem('app_rules_10a5', JSON.stringify(merged));
+      return merged;
     } catch {
-      return MOCK_RULES;
+      return normalizeRulesList(MOCK_RULES);
     }
   });
   const [settings, setSettings] = useState<TeacherSettings>(() => {
@@ -534,9 +531,10 @@ export default function App() {
       });
     }
     if (Array.isArray(cloudState.rules) && cloudState.rules.length > 0) {
-      latestStateRef.current.rules = cloudState.rules;
-      setRules(cloudState.rules);
-      localStorage.setItem('app_rules_10a5', JSON.stringify(cloudState.rules));
+      const normalizedRules = normalizeRulesList(cloudState.rules);
+      latestStateRef.current.rules = normalizedRules;
+      setRules(normalizedRules);
+      localStorage.setItem('app_rules_10a5', JSON.stringify(normalizedRules));
     }
     if (cloudState.teacherAvatar) {
       const resolved = resolveTeacherAvatar(cloudState.teacherAvatar);
@@ -715,7 +713,7 @@ export default function App() {
           latestStateRef.current.settings = parsed;
           setSettings(parsed);
         } else if (e.key === 'app_rules_10a5') {
-          const parsed = JSON.parse(e.newValue);
+          const parsed = normalizeRulesList(JSON.parse(e.newValue));
           latestStateRef.current.rules = parsed;
           setRules(parsed);
         } else if (e.key === 'app_current_week') {
@@ -731,7 +729,8 @@ export default function App() {
         } else if (
           e.key === 'app_student_badges_10a5_v3' ||
           e.key === 'app_student_active_badge_10a5_v2' ||
-          e.key === 'app_badges_catalog_10a5_v3'
+          e.key === 'app_badges_catalog_10a5_v3' ||
+          e.key === 'app_badges_catalog_10a5_v4'
         ) {
           window.dispatchEvent(new CustomEvent('lop10a5:badge_change', { detail: { fromCloud: true } }));
         }
@@ -916,9 +915,10 @@ export default function App() {
 
   // Teacher updates or uploads Class Rules list (cơ sở trừ/cộng điểm)
   const handleUpdateRules = useCallback((newRules: RuleItem[]) => {
-    setRules(newRules);
-    localStorage.setItem('app_rules_10a5', JSON.stringify(newRules));
-    saveServerState(buildFullStateSnapshot({ rules: newRules }), true);
+    const normalized = normalizeRulesList(newRules);
+    setRules(normalized);
+    localStorage.setItem('app_rules_10a5', JSON.stringify(normalized));
+    saveServerState(buildFullStateSnapshot({ rules: normalized }), true);
   }, [buildFullStateSnapshot]);
 
   // Fast demo role switcher

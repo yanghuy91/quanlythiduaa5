@@ -205,6 +205,187 @@ export function formatRatingTiersSummary(settings?: TeacherSettings): string {
     .join(', ');
 }
 
+export const STANDARD_RULE_CATEGORIES = [
+  'Chuyên cần',
+  'Học tập',
+  'Nề nếp',
+  'Phong trào',
+  'Lao động',
+] as const;
+
+export type StandardRuleCategory = (typeof STANDARD_RULE_CATEGORIES)[number] | 'Điểm cộng';
+
+/**
+ * Chuẩn hóa tên nhóm hành vi / nhóm vi phạm về đúng 5 nhóm chuẩn gọn gàng:
+ * - Chuyên cần
+ * - Học tập
+ * - Nề nếp
+ * - Phong trào
+ * - Lao động
+ * (Và "Điểm cộng" đối với các hành vi cộng điểm thưởng)
+ */
+export function normalizeRuleCategory(
+  rawGroup?: string,
+  tenHanhVi?: string,
+  loaiDiem?: 'Tru' | 'Cong'
+): string {
+  const norm = (s?: string) =>
+    String(s || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/\s+/g, ' ');
+
+  const g = norm(rawGroup);
+  const b = norm(tenHanhVi);
+
+  if (
+    loaiDiem === 'Cong' ||
+    g.includes('diem cong') ||
+    g.includes('khen thuong') ||
+    g.includes('tuyen duong') ||
+    g === 'cong' ||
+    g === 'thuong'
+  ) {
+    return 'Điểm cộng';
+  }
+
+  // 1. Khớp theo tên nhóm nhập vào
+  if (
+    g.includes('chuyen can') ||
+    g.includes('gio giac') ||
+    g.includes('di hoc') ||
+    g.includes('nghi hoc') ||
+    g.includes('di muon')
+  ) {
+    return 'Chuyên cần';
+  }
+  if (
+    g.includes('hoc tap') ||
+    g.includes('bai tap') ||
+    g.includes('kiem tra') ||
+    g.includes('thi cu') ||
+    g.includes('sach vo')
+  ) {
+    return 'Học tập';
+  }
+  if (
+    g.includes('lao dong') ||
+    g.includes('ve sinh') ||
+    g.includes('truc nhat') ||
+    g.includes('co so vat chat') ||
+    g.includes('tai san')
+  ) {
+    return 'Lao động';
+  }
+  if (
+    g.includes('phong trao') ||
+    g.includes('hoat dong') ||
+    g.includes('doan') ||
+    g.includes('chao co') ||
+    g.includes('sinh hoat') ||
+    g.includes('ngoai khoa') ||
+    g.includes('van nghe') ||
+    g.includes('the thao') ||
+    g.includes('the duc')
+  ) {
+    return 'Phong trào';
+  }
+  if (
+    g.includes('ne nep') ||
+    g.includes('tac phong') ||
+    g.includes('dong phuc') ||
+    g.includes('trat tu') ||
+    g.includes('ky luat') ||
+    g.includes('dao duc') ||
+    g.includes('ung xu') ||
+    g.includes('noi quy') ||
+    g.includes('dien thoai') ||
+    g.includes('giao thong') ||
+    g.includes('an toan')
+  ) {
+    return 'Nề nếp';
+  }
+
+  // 2. Suy luận thông minh từ tên hành vi nếu nhóm trống hoặc chưa chuẩn
+  if (
+    b.includes('di muon') ||
+    b.includes('di hoc muon') ||
+    b.includes('tre gio') ||
+    b.includes('vao lop tre') ||
+    b.includes('nghi hoc') ||
+    b.includes('tron tiet') ||
+    b.includes('bo tiet') ||
+    b.includes('bo gio') ||
+    b.includes('vang hoc')
+  ) {
+    return 'Chuyên cần';
+  }
+  if (
+    b.includes('bai tap') ||
+    b.includes('sach vo') ||
+    b.includes('dung cu hoc tap') ||
+    b.includes('ghi chep') ||
+    b.includes('gian lan') ||
+    b.includes('kiem tra') ||
+    b.includes('chuan bi bai') ||
+    b.includes('thuoc bai') ||
+    b.includes('phu dao') ||
+    b.includes('vang tiet')
+  ) {
+    return 'Học tập';
+  }
+  if (
+    b.includes('lao dong') ||
+    b.includes('ve sinh') ||
+    b.includes('truc nhat') ||
+    b.includes('rac') ||
+    b.includes('qua vat') ||
+    b.includes('an uong') ||
+    b.includes('tat quat') ||
+    b.includes('tat den') ||
+    b.includes('viet ve') ||
+    b.includes('ban ghe')
+  ) {
+    return 'Lao động';
+  }
+  if (
+    b.includes('phong trao') ||
+    b.includes('hoat dong') ||
+    b.includes('chi doan') ||
+    b.includes('chao co') ||
+    b.includes('quoc ca') ||
+    b.includes('sinh hoat') ||
+    b.includes('the duc giua gio') ||
+    b.includes('ngoai khoa')
+  ) {
+    return 'Phong trào';
+  }
+
+  return 'Nề nếp';
+}
+
+/**
+ * Chuẩn hóa toàn bộ danh sách nội quy để nhóm hành vi và mức độ luôn đồng bộ
+ */
+export function normalizeRulesList(rules: RuleItem[]): RuleItem[] {
+  if (!Array.isArray(rules)) return [];
+  return rules.map((r, idx) => {
+    const loaiDiem = r.loaiDiem === 'Cong' ? 'Cong' : 'Tru';
+    const diemSo = Math.max(1, Math.abs(Number(r.diemSo) || 2));
+    return {
+      ...r,
+      nhomHanhVi: normalizeRuleCategory(r.nhomHanhVi, r.tenHanhVi, loaiDiem),
+      loaiDiem,
+      diemSo,
+      mucDo: classifySeverityByPoints(diemSo, loaiDiem === 'Cong', r.mucDo),
+      thuTu: r.thuTu || idx + 1,
+    };
+  });
+}
+
 export function normalizeStudentName(name?: string): string {
   return String(name || '')
     .trim()
