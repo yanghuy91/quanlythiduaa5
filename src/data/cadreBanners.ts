@@ -5,6 +5,8 @@ import bannerLpHt from '../assets/banners/banner_lp_ht.jpg';
 import bannerLpLd from '../assets/banners/banner_lp_ld.jpg';
 import bannerTt from '../assets/banners/banner_tt.jpg';
 import bannerHs from '../assets/banners/banner_hs.jpg';
+import bannerCd from '../assets/banners/banner_cd.jpg';
+import bannerLpVt from '../assets/banners/banner_lp_vt.jpg';
 import { RoleCode } from '../types';
 
 export interface CadreBannerConfig {
@@ -76,7 +78,7 @@ export const CADRE_BANNERS: Record<string, CadreBannerConfig> = {
     roleKey: 'LP_VT',
     roleName: 'Lớp phó Văn thể',
     subtitle: 'Đại Sứ Văn Hóa - Nghệ Thuật - Thể Thao 10A5',
-    imageSrc: bannerBt,
+    imageSrc: bannerLpVt,
     gradientFallback: 'from-fuchsia-900 via-purple-950 to-slate-900',
     accentBadge: 'bg-fuchsia-400 text-slate-950 border-white',
     tagline: 'Sôi nổi - Tài năng - Lan tỏa năng lượng tích cực 🎭',
@@ -85,7 +87,7 @@ export const CADRE_BANNERS: Record<string, CadreBannerConfig> = {
     roleKey: 'CD',
     roleName: 'Đội Cờ đỏ Nề nếp',
     subtitle: 'Giám Sát Kỷ Cương & Tác Phong 10A5',
-    imageSrc: bannerLt,
+    imageSrc: bannerCd,
     gradientFallback: 'from-red-900 via-rose-950 to-slate-900',
     accentBadge: 'bg-red-500 text-white border-amber-200',
     tagline: 'Công tâm - Nghiêm túc - Giữ vững kỷ cương trường lớp 🏵️',

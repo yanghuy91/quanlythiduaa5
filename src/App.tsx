@@ -254,13 +254,6 @@ export default function App() {
     setCurrentWeek(week);
     localStorage.setItem('app_current_week', String(week));
     saveServerState(buildFullStateSnapshot({ currentWeek: week, settings: updatedSettings }), true);
-    setToast({
-      id: Date.now().toString(),
-      message: `Đã chọn tuần hiện tại: Tuần ${week} ✨`,
-      subMessage: updatedSettings.tuDongChuyenTuan !== false && week < 38
-        ? `Đồng bộ thời gian thực: Tự động sang Tuần ${week + 1} vào Thứ 2 tới (${getNextVietnamMondayDisplayStr()})`
-        : `Điểm thi đua của lớp 10A5 được cập nhật theo Tuần ${week}`,
-    });
   }, [settings, buildFullStateSnapshot]);
 
   // Real-time Monday Auto-Advance Week Engine (Tự động chuyển sang tuần tiếp theo vào Thứ 2 hàng tuần)
@@ -300,11 +293,6 @@ export default function App() {
           setCurrentWeek(nextWeek);
           localStorage.setItem('app_current_week', String(nextWeek));
           saveServerState(buildFullStateSnapshot({ currentWeek: nextWeek, settings: updatedSettings }), true);
-          setToast({
-            id: `auto-week-${nextWeek}`,
-            message: `Đã sang Thứ 2 tuần mới: Tự động chuyển sang Tuần ${nextWeek} 📅`,
-            subMessage: `Hệ thống thời gian thực đã tự động cập nhật từ Tuần ${currentWeek} sang Tuần ${nextWeek}.`,
-          });
         }
       }
     };
@@ -345,11 +333,6 @@ export default function App() {
       return prev;
     });
     saveServerState(buildFullStateSnapshot({ teacherAvatar: resolved }), true);
-    setToast({
-      id: Date.now().toString(),
-      message: 'Đã cập nhật ảnh đại diện Thầy ✨',
-      subMessage: 'Ảnh đại diện Giáo viên chủ nhiệm đã được lưu lên đám mây.',
-    });
   }, [buildFullStateSnapshot]);
 
   // Teacher updates profile (custom name & status text)
@@ -369,11 +352,6 @@ export default function App() {
       return prev;
     });
     saveServerState(buildFullStateSnapshot({ teacherProfile: profile }), true);
-    setToast({
-      id: Date.now().toString(),
-      message: 'Đã lưu thông tin Giáo viên chủ nhiệm ✨',
-      subMessage: `Họ tên: ${profile.hoTen} • ${profile.statusText}`,
-    });
   }, [buildFullStateSnapshot]);
 
   // Teacher imports real student list from Excel or Text (Lấy Sơ đồ lớp làm chuẩn & quy chiếu)
@@ -402,12 +380,6 @@ export default function App() {
       }),
       true
     );
-
-    setToast({
-      id: Date.now().toString(),
-      message: `Đã đồng bộ Sơ đồ lớp chuẩn: ${normalized.length} học sinh 🎓`,
-      subMessage: 'Tất cả danh sách điểm và nề nếp đã được quy chiếu theo Sơ đồ lớp và lưu lên mây.',
-    });
   }, [academicRecords, records, buildFullStateSnapshot]);
 
   // Sync to local storage
@@ -576,8 +548,8 @@ export default function App() {
           await logoutFirebase().catch(() => {});
           setToast({
             id: Date.now().toString(),
-            message: `Truy cập bị từ chối: ${firebaseUser.email} ⛔`,
-            subMessage: 'Chỉ tài khoản Google của Giáo viên chủ nhiệm (yanghuy91@gmail.com) mới có quyền quản trị.',
+            message: `Truy cập bị từ chối ⛔`,
+            subMessage: 'Chỉ tài khoản Google của Giáo viên chủ nhiệm mới có quyền quản trị.',
           });
         }
       }
@@ -657,14 +629,6 @@ export default function App() {
     setRecords(updated);
     localStorage.setItem('app_records_10a5', JSON.stringify(updated));
     saveServerState(buildFullStateSnapshot({ records: updated, updatedAt: nowISO }), true);
-
-    // Show 8-second Toast with Undo
-    setToast({
-      id,
-      recordId: id,
-      message: `Đã ghi: ${record.hoTen} – ${record.tenHanhVi}`,
-      subMessage: `Trừ ${record.diemSo} điểm · Buổi ${record.buoi === 'Sang' ? 'Sáng' : 'Chiều'}`,
-    });
   }, [records, buildFullStateSnapshot]);
 
   // Undo / Void record handler
@@ -674,7 +638,7 @@ export default function App() {
         return {
           ...r,
           trangThai: 'DaHuy' as const,
-          lyDoHuy: 'Người ghi bấm Hoàn tác trong 8 giây',
+          lyDoHuy: 'Người ghi bấm Hoàn tác',
           thoiGianHuy: new Date().toISOString(),
         };
       }
@@ -683,11 +647,6 @@ export default function App() {
     setRecords(updated);
     localStorage.setItem('app_records_10a5', JSON.stringify(updated));
     saveServerState(buildFullStateSnapshot({ records: updated }), true);
-
-    setToast({
-      id: `undo-${Date.now()}`,
-      message: 'Đã hoàn tác bản ghi vi phạm thành công.',
-    });
   }, [records, buildFullStateSnapshot]);
 
   // Manual void by cadre or teacher
@@ -706,11 +665,6 @@ export default function App() {
     setRecords(updated);
     localStorage.setItem('app_records_10a5', JSON.stringify(updated));
     saveServerState(buildFullStateSnapshot({ records: updated }), true);
-
-    setToast({
-      id: `void-${Date.now()}`,
-      message: 'Bản ghi đã được chuyển sang trạng thái Đã hủy.',
-    });
   }, [records, buildFullStateSnapshot]);
 
   // Explanation submit by student
@@ -783,11 +737,6 @@ export default function App() {
     setRules(newRules);
     localStorage.setItem('app_rules_10a5', JSON.stringify(newRules));
     saveServerState(buildFullStateSnapshot({ rules: newRules }), true);
-    setToast({
-      id: Date.now().toString(),
-      message: `Đã cập nhật Nội quy lớp: ${newRules.length} quy định ✨`,
-      subMessage: 'Cơ sở trừ điểm và cộng điểm mới đã được lưu lên đám mây.',
-    });
   }, [buildFullStateSnapshot]);
 
   // Fast demo role switcher
@@ -874,12 +823,6 @@ export default function App() {
       }),
       true
     );
-
-    setToast({
-      id: Date.now().toString(),
-      message: 'Đã lưu Sơ đồ lớp chuẩn & quy chiếu dữ liệu ✨',
-      subMessage: `Đã đồng bộ ${normalized.length} học sinh trên Sơ đồ lớp với Bảng điểm & Nhật ký nề nếp lên đám mây!`,
-    });
   }, [academicRecords, records, buildFullStateSnapshot]);
 
   // Student or Teacher updates a student's avatar
@@ -903,12 +846,6 @@ export default function App() {
       }
       return prev;
     });
-
-    setToast({
-      id: Date.now().toString(),
-      message: 'Đã cập nhật & lưu ảnh đại diện lên mây ✨',
-      subMessage: 'Ảnh đại diện mới đã được đồng bộ vào hồ sơ và sơ đồ lớp trên mọi thiết bị!',
-    });
   }, [students, currentRole, buildFullStateSnapshot]);
 
   // Teacher import time-stamped records from file (Quy chiếu theo Sơ đồ lớp & deduplicated by maGhiNhan)
@@ -929,11 +866,6 @@ export default function App() {
     setRecords(updated);
     localStorage.setItem('app_records_10a5', JSON.stringify(updated));
     saveServerState(buildFullStateSnapshot({ records: updated }), true);
-    setToast({
-      id: Date.now().toString(),
-      message: `Đã nạp & quy chiếu ${cleanedIncoming.length} bản ghi theo Sơ đồ lớp ✨`,
-      subMessage: 'Dữ liệu thi đua từ file đã được quy chiếu theo Sơ đồ lớp và lưu lên đám mây thành công!',
-    });
   }, [students, layout, records, buildFullStateSnapshot]);
 
   // Teacher assigns custom frame to student
@@ -972,11 +904,6 @@ export default function App() {
     setStudents(updated);
     localStorage.setItem('app_students_10a5_v4', JSON.stringify(updated));
     saveServerState(buildFullStateSnapshot({ students: updated }), true);
-    setToast({
-      id: Date.now().toString(),
-      message: 'Đã tự động phong tặng khung vinh danh ✨',
-      subMessage: 'Top 1 (Kim Cương), Top 2-3 (Bạch Kim), Top 4-10 (Hoàng Kim) theo chuẩn đồng hạng đã được lưu lên mây!',
-    });
   }, [students, studentSummaries, buildFullStateSnapshot]);
 
   // Active logged-in student synced with live students array

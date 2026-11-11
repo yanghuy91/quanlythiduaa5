@@ -117,7 +117,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       if (user && user.email) {
         if (!isAuthorizedTeacherEmail(user.email)) {
           await logoutFirebase();
-          setErrorMsg(`⛔ Tài khoản Google "${user.email}" không phải là tài khoản Giáo viên chủ nhiệm lớp 10A5. Chỉ tài khoản yanghuy91@gmail.com mới có quyền quản trị!`);
+          setErrorMsg(`⛔ Tài khoản Google "${user.email}" không phải là tài khoản Giáo viên chủ nhiệm lớp 10A5.`);
           return;
         }
 
@@ -167,7 +167,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
                 if (!isAuthorizedTeacherEmail(payload.email)) {
                   await logoutFirebase().catch(() => {});
-                  setErrorMsg(`⛔ Tài khoản Google "${payload.email}" không phải là tài khoản Giáo viên chủ nhiệm lớp 10A5. Chỉ tài khoản yanghuy91@gmail.com mới có quyền quản trị!`);
+                  setErrorMsg(`⛔ Tài khoản Google "${payload.email}" không phải là tài khoản Giáo viên chủ nhiệm lớp 10A5.`);
                   setIsGoogleLoading(false);
                   return;
                 }

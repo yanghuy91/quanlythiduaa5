@@ -123,6 +123,8 @@ export const StudentView: React.FC<StudentViewProps> = ({
 }) => {
   const primaryCadreRole = cadreRole || currentStudent.vaiTro.find(r => r !== 'HS') || 'HS';
   const isCadre = primaryCadreRole !== 'HS';
+  // Các chức vụ Phó bí thư (PBT), Cờ đỏ (CD), Lớp phó Văn thể (LP_VT) không có quyền hạn ghi vi phạm
+  const canRecord = isCadre && !['PBT', 'CD', 'LP_VT'].includes(primaryCadreRole);
 
   // Delegated Teacher permissions for this Cadre
   const myDelegatedPermissions = useMemo<CadreDelegatedPermission[]>(() => {
@@ -135,6 +137,12 @@ export const StudentView: React.FC<StudentViewProps> = ({
   const [showDelegatedExplanationsModal, setShowDelegatedExplanationsModal] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'my_score' | 'grades' | 'badges' | 'seating' | 'ranking' | 'record' | 'my_log'>('my_score');
+
+  useEffect(() => {
+    if (!canRecord && (activeTab === 'record' || activeTab === 'my_log')) {
+      setActiveTab('my_score');
+    }
+  }, [canRecord, activeTab]);
 
   const handleToggleNoDataWeek = (week: number) => {
     if (!onUpdateSettings) return;
@@ -868,8 +876,8 @@ export const StudentView: React.FC<StudentViewProps> = ({
         </div>
       </div>
 
-      {/* Student Nav Tabs: Đối với Ban cán sự chia làm 2 hàng gọn gàng trên điện thoại */}
-      {isCadre ? (
+      {/* Student Nav Tabs: Đối với Ban cán sự có quyền ghi vi phạm chia làm 2 hàng gọn gàng trên điện thoại */}
+      {isCadre && canRecord ? (
         <div className="flex flex-col gap-1.5 p-1.5 bg-surface-2 rounded-2xl border border-token w-full max-w-xl mx-auto shadow-2xs">
           {/* HÀNG 1 (Cán sự & Cá nhân): Ghi vi phạm | Sổ ghi | Của tôi */}
           <div className="grid grid-cols-3 gap-1.5 w-full">
@@ -1494,8 +1502,8 @@ export const StudentView: React.FC<StudentViewProps> = ({
         </div>
       )}
 
-      {/* CADRE TAB 1: GHI NHẬN VI PHẠM */}
-      {isCadre && activeTab === 'record' && (
+      {/* CADRE TAB 1: GHI NHẬN VI PHẠM (Chỉ dành cho cán sự có quyền ghi) */}
+      {isCadre && canRecord && activeTab === 'record' && (
         <div className="space-y-3">
           <StudentPicker
             students={allStudents}
@@ -1532,8 +1540,8 @@ export const StudentView: React.FC<StudentViewProps> = ({
         </div>
       )}
 
-      {/* CADRE TAB 2: SỔ GHI CỦA TÔI */}
-      {isCadre && activeTab === 'my_log' && (
+      {/* CADRE TAB 2: SỔ GHI CỦA TÔI (Chỉ dành cho cán sự có quyền ghi) */}
+      {isCadre && canRecord && activeTab === 'my_log' && (
         <div className="space-y-3">
           <PeriodFilterComponent
             filter={logPeriodFilter}
