@@ -1137,13 +1137,15 @@ export function evaluateAndAutoAwardBadges(params: {
     totalAwardedCount += nextMap[stu.maHS].length;
   }
 
-  try {
-    localStorage.setItem(STORAGE_KEY_STUDENT_BADGES, JSON.stringify(nextMap));
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('lop10a5:badge_change'));
+  if (newlyAwardedCount > 0) {
+    try {
+      localStorage.setItem(STORAGE_KEY_STUDENT_BADGES, JSON.stringify(nextMap));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lop10a5:badge_change'));
+      }
+    } catch (e) {
+      console.error('Error saving auto-awarded badges:', e);
     }
-  } catch (e) {
-    console.error('Error saving auto-awarded badges:', e);
   }
 
   return {

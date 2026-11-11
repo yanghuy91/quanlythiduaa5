@@ -53,55 +53,48 @@ export const INITIAL_SETTINGS: TeacherSettings = {
 // Cơ cấu phòng học chuẩn: 4 DÃY BÀN = 4 TỔ (Mỗi dãy 6 bàn, mỗi bàn 2 học sinh)
 // Vị trí: Cửa chính (Bên phải) = Tổ 1, tính dần sang Bàn GV (Bên trái) = Tổ 4
 const RAW_MOCK_STUDENTS: Student[] = [
-  // TỔ 1 - DÃY 1 (Gần Cửa chính) - 11 HS (Bàn 1..6, Bàn 6 có 1 ghế trống)
-  { maHS: 'HS01', hoTen: 'Nguyễn Khắc Huy', tenRutGon: 'N.K.Huy', to: 1, dayBan: 1, soBan: 1, viTriGhe: 1, vaiTro: ['LT'], gioiTinh: 'Nam' },
-  { maHS: 'HS02', hoTen: 'Trần Thị Mai Anh', tenRutGon: 'T.T.M.Anh', to: 1, dayBan: 1, soBan: 1, viTriGhe: 2, vaiTro: ['BT', 'TT'], toTruongTo: 1, gioiTinh: 'Nu' },
-  { maHS: 'HS03', hoTen: 'Lê Hoàng Long', tenRutGon: 'L.H.Long', to: 1, dayBan: 1, soBan: 2, viTriGhe: 3, vaiTro: ['LP_HT'], gioiTinh: 'Nam' },
-  { maHS: 'HS04', hoTen: 'Phạm Quốc Bảo', tenRutGon: 'P.Q.Bảo', to: 1, dayBan: 1, soBan: 2, viTriGhe: 4, vaiTro: ['LP_LD'], gioiTinh: 'Nam' },
-  { maHS: 'HS05', hoTen: 'Nguyễn Văn Huy', tenRutGon: 'N.V.Huy', to: 1, dayBan: 1, soBan: 3, viTriGhe: 5, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS06', hoTen: 'Nguyễn Văn Hùng', tenRutGon: 'N.V.Hùng', to: 1, dayBan: 1, soBan: 3, viTriGhe: 6, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS07', hoTen: 'Đinh Thị Thuỳ Trang', tenRutGon: 'Đ.T.T.Trang', to: 1, dayBan: 1, soBan: 4, viTriGhe: 7, vaiTro: ['HS'], gioiTinh: 'Nu' },
-  { maHS: 'HS08', hoTen: 'Huỳnh Gia Bảo', tenRutGon: 'H.G.Bảo', to: 1, dayBan: 1, soBan: 4, viTriGhe: 8, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS09', hoTen: 'Trần Thị Minh Anh', tenRutGon: 'T.T.Minh Anh', to: 1, dayBan: 1, soBan: 5, viTriGhe: 9, vaiTro: ['HS'], gioiTinh: 'Nu' },
-  { maHS: 'HS10', hoTen: 'Lý Quốc Thịnh', tenRutGon: 'L.Q.Thịnh', to: 1, dayBan: 1, soBan: 5, viTriGhe: 10, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS11', hoTen: 'Phan Như Quỳnh', tenRutGon: 'P.N.Quỳnh', to: 1, dayBan: 1, soBan: 6, viTriGhe: 11, vaiTro: ['HS'], gioiTinh: 'Nu' },
-
-  // TỔ 2 - DÃY 2 - 11 HS (Bàn 1..6, Bàn 6 có 1 ghế trống)
-  { maHS: 'HS12', hoTen: 'Vũ Đình Trọng', tenRutGon: 'V.Đ.Trọng', to: 2, dayBan: 2, soBan: 1, viTriGhe: 12, vaiTro: ['TT'], toTruongTo: 2, gioiTinh: 'Nam' },
-  { maHS: 'HS13', hoTen: 'Võ Minh Quân', tenRutGon: 'V.M.Quân', to: 2, dayBan: 2, soBan: 1, viTriGhe: 13, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS14', hoTen: 'Ngô Thanh Hằng', tenRutGon: 'N.T.Hằng', to: 2, dayBan: 2, soBan: 2, viTriGhe: 14, vaiTro: ['HS'], gioiTinh: 'Nu' },
-  { maHS: 'HS15', hoTen: 'Đoàn Nhật Nam', tenRutGon: 'Đ.N.Nam', to: 2, dayBan: 2, soBan: 2, viTriGhe: 15, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS16', hoTen: 'Dương Khánh Linh', tenRutGon: 'D.K.Linh', to: 2, dayBan: 2, soBan: 3, viTriGhe: 16, vaiTro: ['HS'], gioiTinh: 'Nu' },
-  { maHS: 'HS17', hoTen: 'Trịnh Hoài An', tenRutGon: 'T.H.An', to: 2, dayBan: 2, soBan: 3, viTriGhe: 17, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS18', hoTen: 'Lê Hải Long', tenRutGon: 'L.Hải Long', to: 2, dayBan: 2, soBan: 4, viTriGhe: 18, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS19', hoTen: 'Hồ Tuấn Kiệt', tenRutGon: 'H.T.Kiệt', to: 2, dayBan: 2, soBan: 4, viTriGhe: 19, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS20', hoTen: 'Mai Thảo My', tenRutGon: 'M.T.My', to: 2, dayBan: 2, soBan: 5, viTriGhe: 20, vaiTro: ['HS'], gioiTinh: 'Nu' },
-  { maHS: 'HS21', hoTen: 'Bùi Gia Khiêm', tenRutGon: 'B.G.Khiêm', to: 2, dayBan: 2, soBan: 5, viTriGhe: 21, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS22', hoTen: 'Cao Hoàng Bách', tenRutGon: 'C.H.Bách', to: 2, dayBan: 2, soBan: 6, viTriGhe: 22, vaiTro: ['HS'], gioiTinh: 'Nam' },
-
-  // TỔ 3 - DÃY 3 - 10 HS (Bàn 1..5, Bàn 6 trống)
-  { maHS: 'HS23', hoTen: 'Đặng Thị Thuỷ Tiên', tenRutGon: 'Đ.T.T.Tiên', to: 3, dayBan: 3, soBan: 1, viTriGhe: 23, vaiTro: ['TT'], toTruongTo: 3, gioiTinh: 'Nu' },
-  { maHS: 'HS24', hoTen: 'Lương Thế Vinh', tenRutGon: 'L.T.Vinh', to: 3, dayBan: 3, soBan: 1, viTriGhe: 24, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS25', hoTen: 'Nguyễn Thị Bích Ngọc', tenRutGon: 'N.T.B.Ngọc', to: 3, dayBan: 3, soBan: 2, viTriGhe: 25, vaiTro: ['HS'], gioiTinh: 'Nu' },
-  { maHS: 'HS26', hoTen: 'Trần Đại Quang', tenRutGon: 'T.Đ.Quang', to: 3, dayBan: 3, soBan: 2, viTriGhe: 26, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS27', hoTen: 'Đỗ Ngọc Ánh', tenRutGon: 'Đ.N.Ánh', to: 3, dayBan: 3, soBan: 3, viTriGhe: 27, vaiTro: ['HS'], gioiTinh: 'Nu' },
-  { maHS: 'HS28', hoTen: 'Hà Văn Dũng', tenRutGon: 'H.V.Dũng', to: 3, dayBan: 3, soBan: 3, viTriGhe: 28, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS29', hoTen: 'Tạ Minh Khang', tenRutGon: 'T.M.Khang', to: 3, dayBan: 3, soBan: 4, viTriGhe: 29, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS30', hoTen: 'Lâm Mỹ Duyên', tenRutGon: 'L.M.Duyên', to: 3, dayBan: 3, soBan: 4, viTriGhe: 30, vaiTro: ['HS'], gioiTinh: 'Nu' },
-  { maHS: 'HS31', hoTen: 'Vương Đình Trí', tenRutGon: 'V.Đ.Trí', to: 3, dayBan: 3, soBan: 5, viTriGhe: 31, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS32', hoTen: 'Phan Thảo Uyên', tenRutGon: 'P.T.Uyên', to: 3, dayBan: 3, soBan: 5, viTriGhe: 32, vaiTro: ['HS'], gioiTinh: 'Nu' },
-
-  // TỔ 4 - DÃY 4 (Gần Bàn GV) - 10 HS (Bàn 1..5, Bàn 6 trống)
-  { maHS: 'HS33', hoTen: 'Hoàng Quốc Việt', tenRutGon: 'H.Q.Việt', to: 4, dayBan: 4, soBan: 1, viTriGhe: 33, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS34', hoTen: 'Bùi Minh Triết', tenRutGon: 'B.M.Triết', to: 4, dayBan: 4, soBan: 1, viTriGhe: 34, vaiTro: ['TT'], toTruongTo: 4, gioiTinh: 'Nam' },
-  { maHS: 'HS35', hoTen: 'Nguyễn Thanh Tùng', tenRutGon: 'N.T.Tùng', to: 4, dayBan: 4, soBan: 2, viTriGhe: 35, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS36', hoTen: 'Lê Diệu Linh', tenRutGon: 'L.D.Linh', to: 4, dayBan: 4, soBan: 2, viTriGhe: 36, vaiTro: ['HS'], gioiTinh: 'Nu' },
-  { maHS: 'HS37', hoTen: 'Đặng Tuấn Anh', tenRutGon: 'Đ.T.Anh', to: 4, dayBan: 4, soBan: 3, viTriGhe: 37, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS38', hoTen: 'Phạm Hồng Sơn', tenRutGon: 'P.H.Sơn', to: 4, dayBan: 4, soBan: 3, viTriGhe: 38, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS39', hoTen: 'Trương Ngọc Huyền', tenRutGon: 'T.N.Huyền', to: 4, dayBan: 4, soBan: 4, viTriGhe: 39, vaiTro: ['HS'], gioiTinh: 'Nu' },
-  { maHS: 'HS40', hoTen: 'Nguyễn Tấn Đạt', tenRutGon: 'N.T.Đạt', to: 4, dayBan: 4, soBan: 4, viTriGhe: 40, vaiTro: ['HS'], gioiTinh: 'Nam' },
-  { maHS: 'HS41', hoTen: 'Trần Kim Cương', tenRutGon: 'T.K.Cương', to: 4, dayBan: 4, soBan: 5, viTriGhe: 41, vaiTro: ['HS'], gioiTinh: 'Nu' },
-  { maHS: 'HS42', hoTen: 'Hồ Hoàng Phương', tenRutGon: 'H.H.Phương', to: 4, dayBan: 4, soBan: 5, viTriGhe: 42, vaiTro: ['HS'], gioiTinh: 'Nu' }
+  { maHS: 'HS01', hoTen: 'Phạm Xuân An', tenRutGon: 'P.X.An', to: 2, dayBan: 2, soBan: 1, viTriGhe: 1, vaiTro: ["TT"], gioiTinh: 'Nu' },
+  { maHS: 'HS02', hoTen: 'Nguyễn Hà Hoàng Anh', tenRutGon: 'N.H.H.Anh', to: 3, dayBan: 3, soBan: 1, viTriGhe: 2, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS03', hoTen: 'Quách Gia Bảo', tenRutGon: 'Q.G.Bảo', to: 1, dayBan: 1, soBan: 1, viTriGhe: 3, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS04', hoTen: 'Nguyễn Bá Bi', tenRutGon: 'N.B.Bi', to: 1, dayBan: 1, soBan: 2, viTriGhe: 4, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS05', hoTen: 'Bùi Trân Châu', tenRutGon: 'B.T.Châu', to: 1, dayBan: 1, soBan: 1, viTriGhe: 5, vaiTro: ["HS"], gioiTinh: 'Nu' },
+  { maHS: 'HS06', hoTen: 'Trần Thị Bảo Châu', tenRutGon: 'T.T.B.Châu', to: 4, dayBan: 4, soBan: 6, viTriGhe: 6, vaiTro: ["HS"], gioiTinh: 'Nu' },
+  { maHS: 'HS07', hoTen: 'Châu Ngọc Bích Dung', tenRutGon: 'C.N.B.Dung', to: 2, dayBan: 2, soBan: 1, viTriGhe: 7, vaiTro: ["HS"], gioiTinh: 'Nu' },
+  { maHS: 'HS08', hoTen: 'Ngô Thanh Dũng', tenRutGon: 'N.T.Dũng', to: 4, dayBan: 4, soBan: 1, viTriGhe: 8, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS09', hoTen: 'Nguyễn Khánh Duy', tenRutGon: 'N.K.Duy', to: 3, dayBan: 3, soBan: 1, viTriGhe: 9, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS10', hoTen: 'Nguyễn Quốc Đạt', tenRutGon: 'N.Q.Đạt', to: 1, dayBan: 1, soBan: 3, viTriGhe: 10, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS11', hoTen: 'Nguyễn Trần Nhật Hào', tenRutGon: 'N.T.N.Hào', to: 4, dayBan: 4, soBan: 2, viTriGhe: 11, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS12', hoTen: 'Võ Nguyễn Gia Hạo', tenRutGon: 'V.N.G.Hạo', to: 1, dayBan: 1, soBan: 3, viTriGhe: 12, vaiTro: ["LP_LD"], gioiTinh: 'Nam' },
+  { maHS: 'HS13', hoTen: 'Châu Minh Hiếu', tenRutGon: 'C.M.Hiếu', to: 3, dayBan: 3, soBan: 2, viTriGhe: 13, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS14', hoTen: 'Võ Trọng Hoàng', tenRutGon: 'V.T.Hoàng', to: 4, dayBan: 4, soBan: 4, viTriGhe: 14, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS15', hoTen: 'Võ Hữu Hưng', tenRutGon: 'V.H.Hưng', to: 2, dayBan: 2, soBan: 6, viTriGhe: 15, vaiTro: ["PBT"], gioiTinh: 'Nam' },
+  { maHS: 'HS16', hoTen: 'Võ Đoàn Nguyên Khang', tenRutGon: 'V.Đ.N.Khang', to: 1, dayBan: 1, soBan: 5, viTriGhe: 16, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS17', hoTen: 'Lê Bảo Khanh', tenRutGon: 'L.B.Khanh', to: 1, dayBan: 1, soBan: 4, viTriGhe: 17, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS18', hoTen: 'Nguyễn An Khiếu', tenRutGon: 'N.A.Khiếu', to: 3, dayBan: 3, soBan: 4, viTriGhe: 18, vaiTro: ["TT"], toTruongTo: 3, gioiTinh: 'Nam' },
+  { maHS: 'HS19', hoTen: 'Nguyễn Đăng Khoa', tenRutGon: 'N.Đ.Khoa', to: 3, dayBan: 3, soBan: 4, viTriGhe: 19, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS20', hoTen: 'Trần Võ Anh Khoa', tenRutGon: 'T.V.A.Khoa', to: 1, dayBan: 1, soBan: 5, viTriGhe: 20, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS21', hoTen: 'Nguyễn Tấn Kiệt', tenRutGon: 'N.T.Kiệt', to: 4, dayBan: 4, soBan: 1, viTriGhe: 21, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS22', hoTen: 'Nguyễn Tuấn Kiệt', tenRutGon: 'N.T.Kiệt', to: 3, dayBan: 3, soBan: 2, viTriGhe: 22, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS23', hoTen: 'Phạm Thương Kiều', tenRutGon: 'P.T.Kiều', to: 2, dayBan: 2, soBan: 2, viTriGhe: 23, vaiTro: ["HS"], gioiTinh: 'Nu' },
+  { maHS: 'HS24', hoTen: 'Phạm Vũ Gia Minh', tenRutGon: 'P.V.G.Minh', to: 4, dayBan: 4, soBan: 2, viTriGhe: 24, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS25', hoTen: 'Nguyễn Phương Nguyên', tenRutGon: 'N.P.Nguyên', to: 3, dayBan: 3, soBan: 5, viTriGhe: 25, vaiTro: ["LT"], gioiTinh: 'Nu' },
+  { maHS: 'HS26', hoTen: 'Trịnh Lê Kiều Nhi', tenRutGon: 'T.L.K.Nhi', to: 3, dayBan: 3, soBan: 5, viTriGhe: 26, vaiTro: ["HS"], gioiTinh: 'Nu' },
+  { maHS: 'HS27', hoTen: 'Võ Nguyễn Ngọc Nhi', tenRutGon: 'V.N.N.Nhi', to: 2, dayBan: 2, soBan: 4, viTriGhe: 27, vaiTro: ["HS"], gioiTinh: 'Nu' },
+  { maHS: 'HS28', hoTen: 'Nguyễn Thị Mỹ Nhung', tenRutGon: 'N.T.M.Nhung', to: 4, dayBan: 4, soBan: 5, viTriGhe: 28, vaiTro: ["CD","TT"], toTruongTo: 4, gioiTinh: 'Nu' },
+  { maHS: 'HS29', hoTen: 'Lê Ngọc Quỳnh Như', tenRutGon: 'L.N.Q.Như', to: 2, dayBan: 2, soBan: 4, viTriGhe: 29, vaiTro: ["HS"], gioiTinh: 'Nu' },
+  { maHS: 'HS30', hoTen: 'Võ Thị Huỳnh Như', tenRutGon: 'V.T.H.Như', to: 2, dayBan: 2, soBan: 3, viTriGhe: 30, vaiTro: ["HS"], gioiTinh: 'Nu' },
+  { maHS: 'HS31', hoTen: 'Phạm Minh Quân', tenRutGon: 'P.M.Quân', to: 2, dayBan: 2, soBan: 3, viTriGhe: 31, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS32', hoTen: 'Phan Viết Thắng', tenRutGon: 'P.V.Thắng', to: 3, dayBan: 3, soBan: 6, viTriGhe: 32, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS33', hoTen: 'Lê Thị Thanh Thương', tenRutGon: 'L.T.T.Thương', to: 3, dayBan: 3, soBan: 3, viTriGhe: 33, vaiTro: ["LP_HT"], gioiTinh: 'Nu' },
+  { maHS: 'HS34', hoTen: 'Trương Hoàng Tiến', tenRutGon: 'T.H.Tiến', to: 4, dayBan: 4, soBan: 4, viTriGhe: 34, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS35', hoTen: 'Nguyễn Thị Thùy Trâm', tenRutGon: 'N.T.T.Trâm', to: 1, dayBan: 1, soBan: 4, viTriGhe: 35, vaiTro: ["HS"], gioiTinh: 'Nu' },
+  { maHS: 'HS36', hoTen: 'Võ Ngọc Cát Tường', tenRutGon: 'V.N.C.Tường', to: 4, dayBan: 4, soBan: 5, viTriGhe: 36, vaiTro: ["HS"], gioiTinh: 'Nu' },
+  { maHS: 'HS37', hoTen: 'Đỗ Tú Uyên', tenRutGon: 'Đ.T.Uyên', to: 4, dayBan: 4, soBan: 3, viTriGhe: 37, vaiTro: ["HS"], gioiTinh: 'Nu' },
+  { maHS: 'HS38', hoTen: 'Trần Việt', tenRutGon: 'T.Việt', to: 3, dayBan: 3, soBan: 3, viTriGhe: 38, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS39', hoTen: 'Trần Châu Thanh Vương', tenRutGon: 'T.C.T.Vương', to: 2, dayBan: 2, soBan: 5, viTriGhe: 39, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS40', hoTen: 'Võ Trần Minh Vương', tenRutGon: 'V.T.M.Vương', to: 2, dayBan: 2, soBan: 2, viTriGhe: 40, vaiTro: ["HS"], gioiTinh: 'Nam' },
+  { maHS: 'HS41', hoTen: 'Nguyễn Ngọc Phúc Vy', tenRutGon: 'N.N.P.Vy', to: 4, dayBan: 4, soBan: 3, viTriGhe: 41, vaiTro: ["LP_VT"], gioiTinh: 'Nu' },
+  { maHS: 'HS42', hoTen: 'Trần Huỳnh Ngọc Vy', tenRutGon: 'T.H.N.Vy', to: 1, dayBan: 1, soBan: 2, viTriGhe: 42, vaiTro: ["TT"], toTruongTo: 1, gioiTinh: 'Nu' },
 ];
 
 export const MOCK_STUDENTS: Student[] = RAW_MOCK_STUDENTS.map(s => ({
@@ -169,109 +162,505 @@ export const MOCK_RULES: RuleItem[] = [
 // Cột 8: Lối đi 2
 // Cột 9, 10: Dãy 1 (Tổ 1)
 export const MOCK_SEAT_LAYOUT: SeatLayoutNode[] = [
-  // Hàng 0: Đầu lớp (Bàn GV bên trái, Bảng ở giữa, Cửa chính bên phải)
-  { hang: 0, cot: 0, loaiO: 'banGV', ghiChu: 'Bàn GV' },
-  { hang: 0, cot: 1, loaiO: 'banGV', ghiChu: 'Bàn GV' },
-  { hang: 0, cot: 2, loaiO: 'loidi' },
-  { hang: 0, cot: 3, loaiO: 'buc', ghiChu: 'Bảng' },
-  { hang: 0, cot: 4, loaiO: 'buc', ghiChu: 'Bảng' },
-  { hang: 0, cot: 5, loaiO: 'buc', ghiChu: 'Bảng 10A5' },
-  { hang: 0, cot: 6, loaiO: 'buc', ghiChu: 'Bảng' },
-  { hang: 0, cot: 7, loaiO: 'buc', ghiChu: 'Bảng' },
-  { hang: 0, cot: 8, loaiO: 'loidi' },
-  { hang: 0, cot: 9, loaiO: 'cua', ghiChu: 'Cửa chính' },
-  { hang: 0, cot: 10, loaiO: 'cua', ghiChu: 'Cửa chính' },
-
-  // Hàng 1 (Bàn 1 của cả 4 dãy)
-  { hang: 1, cot: 0, loaiO: 'ghe', maHS: 'HS33' }, // Dãy 4, Bàn 1 (ghế trái)
-  { hang: 1, cot: 1, loaiO: 'ghe', maHS: 'HS34' }, // Dãy 4, Bàn 1 (ghế phải)
-  { hang: 1, cot: 2, loaiO: 'loidi' },
-  { hang: 1, cot: 3, loaiO: 'ghe', maHS: 'HS23' }, // Dãy 3, Bàn 1 (ghế trái)
-  { hang: 1, cot: 4, loaiO: 'ghe', maHS: 'HS24' }, // Dãy 3, Bàn 1 (ghế phải)
-  { hang: 1, cot: 5, loaiO: 'loidi' },             // Lối đi chính giữa
-  { hang: 1, cot: 6, loaiO: 'ghe', maHS: 'HS12' }, // Dãy 2, Bàn 1 (ghế trái)
-  { hang: 1, cot: 7, loaiO: 'ghe', maHS: 'HS13' }, // Dãy 2, Bàn 1 (ghế phải)
-  { hang: 1, cot: 8, loaiO: 'loidi' },
-  { hang: 1, cot: 9, loaiO: 'ghe', maHS: 'HS01' }, // Dãy 1, Bàn 1 (ghế trái)
-  { hang: 1, cot: 10, loaiO: 'ghe', maHS: 'HS02' },// Dãy 1, Bàn 1 (ghế phải)
-
-  // Hàng 2 (Bàn 2 của cả 4 dãy)
-  { hang: 2, cot: 0, loaiO: 'ghe', maHS: 'HS35' }, // Dãy 4, Bàn 2
-  { hang: 2, cot: 1, loaiO: 'ghe', maHS: 'HS36' },
-  { hang: 2, cot: 2, loaiO: 'loidi' },
-  { hang: 2, cot: 3, loaiO: 'ghe', maHS: 'HS25' }, // Dãy 3, Bàn 2
-  { hang: 2, cot: 4, loaiO: 'ghe', maHS: 'HS26' },
-  { hang: 2, cot: 5, loaiO: 'loidi' },
-  { hang: 2, cot: 6, loaiO: 'ghe', maHS: 'HS14' }, // Dãy 2, Bàn 2
-  { hang: 2, cot: 7, loaiO: 'ghe', maHS: 'HS15' },
-  { hang: 2, cot: 8, loaiO: 'loidi' },
-  { hang: 2, cot: 9, loaiO: 'ghe', maHS: 'HS03' }, // Dãy 1, Bàn 2
-  { hang: 2, cot: 10, loaiO: 'ghe', maHS: 'HS04' },
-
-  // Hàng 3 (Bàn 3 của cả 4 dãy)
-  { hang: 3, cot: 0, loaiO: 'ghe', maHS: 'HS37' }, // Dãy 4, Bàn 3
-  { hang: 3, cot: 1, loaiO: 'ghe', maHS: 'HS38' },
-  { hang: 3, cot: 2, loaiO: 'loidi' },
-  { hang: 3, cot: 3, loaiO: 'ghe', maHS: 'HS27' }, // Dãy 3, Bàn 3
-  { hang: 3, cot: 4, loaiO: 'ghe', maHS: 'HS28' },
-  { hang: 3, cot: 5, loaiO: 'loidi' },
-  { hang: 3, cot: 6, loaiO: 'ghe', maHS: 'HS16' }, // Dãy 2, Bàn 3
-  { hang: 3, cot: 7, loaiO: 'ghe', maHS: 'HS17' },
-  { hang: 3, cot: 8, loaiO: 'loidi' },
-  { hang: 3, cot: 9, loaiO: 'ghe', maHS: 'HS05' }, // Dãy 1, Bàn 3
-  { hang: 3, cot: 10, loaiO: 'ghe', maHS: 'HS06' },
-
-  // Hàng 4 (Bàn 4 của cả 4 dãy)
-  { hang: 4, cot: 0, loaiO: 'ghe', maHS: 'HS39' }, // Dãy 4, Bàn 4
-  { hang: 4, cot: 1, loaiO: 'ghe', maHS: 'HS40' },
-  { hang: 4, cot: 2, loaiO: 'loidi' },
-  { hang: 4, cot: 3, loaiO: 'ghe', maHS: 'HS29' }, // Dãy 3, Bàn 4
-  { hang: 4, cot: 4, loaiO: 'ghe', maHS: 'HS30' },
-  { hang: 4, cot: 5, loaiO: 'loidi' },
-  { hang: 4, cot: 6, loaiO: 'ghe', maHS: 'HS18' }, // Dãy 2, Bàn 4
-  { hang: 4, cot: 7, loaiO: 'ghe', maHS: 'HS19' },
-  { hang: 4, cot: 8, loaiO: 'loidi' },
-  { hang: 4, cot: 9, loaiO: 'ghe', maHS: 'HS07' }, // Dãy 1, Bàn 4
-  { hang: 4, cot: 10, loaiO: 'ghe', maHS: 'HS08' },
-
-  // Hàng 5 (Bàn 5 của cả 4 dãy)
-  { hang: 5, cot: 0, loaiO: 'ghe', maHS: 'HS41' }, // Dãy 4, Bàn 5
-  { hang: 5, cot: 1, loaiO: 'ghe', maHS: 'HS42' },
-  { hang: 5, cot: 2, loaiO: 'loidi' },
-  { hang: 5, cot: 3, loaiO: 'ghe', maHS: 'HS31' }, // Dãy 3, Bàn 5
-  { hang: 5, cot: 4, loaiO: 'ghe', maHS: 'HS32' },
-  { hang: 5, cot: 5, loaiO: 'loidi' },
-  { hang: 5, cot: 6, loaiO: 'ghe', maHS: 'HS20' }, // Dãy 2, Bàn 5
-  { hang: 5, cot: 7, loaiO: 'ghe', maHS: 'HS21' },
-  { hang: 5, cot: 8, loaiO: 'loidi' },
-  { hang: 5, cot: 9, loaiO: 'ghe', maHS: 'HS09' }, // Dãy 1, Bàn 5
-  { hang: 5, cot: 10, loaiO: 'ghe', maHS: 'HS10' },
-
-  // Hàng 6 (Bàn 6 của cả 4 dãy)
-  { hang: 6, cot: 0, loaiO: 'trong', ghiChu: 'Chỗ trống Bàn 6 - Tổ 4' },
-  { hang: 6, cot: 1, loaiO: 'trong', ghiChu: 'Chỗ trống Bàn 6 - Tổ 4' },
-  { hang: 6, cot: 2, loaiO: 'loidi' },
-  { hang: 6, cot: 3, loaiO: 'trong', ghiChu: 'Chỗ trống Bàn 6 - Tổ 3' },
-  { hang: 6, cot: 4, loaiO: 'trong', ghiChu: 'Chỗ trống Bàn 6 - Tổ 3' },
-  { hang: 6, cot: 5, loaiO: 'loidi' },
-  { hang: 6, cot: 6, loaiO: 'ghe', maHS: 'HS22' },                       // Dãy 2, Bàn 6 (HS cuối Tổ 2)
-  { hang: 6, cot: 7, loaiO: 'trong', ghiChu: 'Chỗ trống Bàn 6 - Tổ 2' },
-  { hang: 6, cot: 8, loaiO: 'loidi' },
-  { hang: 6, cot: 9, loaiO: 'ghe', maHS: 'HS11' },                       // Dãy 1, Bàn 6 (HS cuối Tổ 1)
-  { hang: 6, cot: 10, loaiO: 'trong', ghiChu: 'Chỗ trống Bàn 6 - Tổ 1' },
-
-  // Hàng 7: Cuối lớp
-  { hang: 7, cot: 0, loaiO: 'cua', ghiChu: 'Cửa sau' },
-  { hang: 7, cot: 1, loaiO: 'trong' },
-  { hang: 7, cot: 2, loaiO: 'loidi' },
-  { hang: 7, cot: 3, loaiO: 'trong' },
-  { hang: 7, cot: 4, loaiO: 'trong' },
-  { hang: 7, cot: 5, loaiO: 'trong', ghiChu: 'Khoảng trống cuối lớp' },
-  { hang: 7, cot: 6, loaiO: 'trong' },
-  { hang: 7, cot: 7, loaiO: 'trong' },
-  { hang: 7, cot: 8, loaiO: 'loidi' },
-  { hang: 7, cot: 9, loaiO: 'trong' },
-  { hang: 7, cot: 10, loaiO: 'trong' }
+  {
+    "hang": 0,
+    "cot": 0,
+    "loaiO": "banGV",
+    "ghiChu": "Bàn GV"
+  },
+  {
+    "hang": 0,
+    "cot": 1,
+    "loaiO": "banGV",
+    "ghiChu": "Bàn GV"
+  },
+  {
+    "hang": 0,
+    "cot": 2,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 0,
+    "cot": 3,
+    "loaiO": "buc",
+    "ghiChu": "Bảng"
+  },
+  {
+    "hang": 0,
+    "cot": 4,
+    "loaiO": "buc",
+    "ghiChu": "Bảng"
+  },
+  {
+    "hang": 0,
+    "cot": 5,
+    "loaiO": "buc",
+    "ghiChu": "Bảng 10A5"
+  },
+  {
+    "hang": 0,
+    "cot": 6,
+    "loaiO": "buc",
+    "ghiChu": "Bảng"
+  },
+  {
+    "hang": 0,
+    "cot": 7,
+    "loaiO": "buc",
+    "ghiChu": "Bảng"
+  },
+  {
+    "hang": 0,
+    "cot": 8,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 0,
+    "cot": 9,
+    "loaiO": "cua",
+    "ghiChu": "Cửa chính"
+  },
+  {
+    "hang": 0,
+    "cot": 10,
+    "loaiO": "cua",
+    "ghiChu": "Cửa chính"
+  },
+  {
+    "hang": 1,
+    "cot": 0,
+    "loaiO": "ghe",
+    "maHS": "HS08"
+  },
+  {
+    "hang": 1,
+    "cot": 1,
+    "loaiO": "ghe",
+    "maHS": "HS21"
+  },
+  {
+    "hang": 1,
+    "cot": 2,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 1,
+    "cot": 3,
+    "loaiO": "ghe",
+    "maHS": "HS09"
+  },
+  {
+    "hang": 1,
+    "cot": 4,
+    "loaiO": "ghe",
+    "maHS": "HS02"
+  },
+  {
+    "hang": 1,
+    "cot": 5,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 1,
+    "cot": 6,
+    "loaiO": "ghe",
+    "maHS": "HS07"
+  },
+  {
+    "hang": 1,
+    "cot": 7,
+    "loaiO": "ghe",
+    "maHS": "HS01"
+  },
+  {
+    "hang": 1,
+    "cot": 8,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 1,
+    "cot": 9,
+    "loaiO": "ghe",
+    "maHS": "HS03"
+  },
+  {
+    "hang": 1,
+    "cot": 10,
+    "loaiO": "ghe",
+    "maHS": "HS05"
+  },
+  {
+    "hang": 2,
+    "cot": 0,
+    "loaiO": "ghe",
+    "maHS": "HS11"
+  },
+  {
+    "hang": 2,
+    "cot": 1,
+    "loaiO": "ghe",
+    "maHS": "HS24"
+  },
+  {
+    "hang": 2,
+    "cot": 2,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 2,
+    "cot": 3,
+    "loaiO": "ghe",
+    "maHS": "HS13"
+  },
+  {
+    "hang": 2,
+    "cot": 4,
+    "loaiO": "ghe",
+    "maHS": "HS22"
+  },
+  {
+    "hang": 2,
+    "cot": 5,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 2,
+    "cot": 6,
+    "loaiO": "ghe",
+    "maHS": "HS23"
+  },
+  {
+    "hang": 2,
+    "cot": 7,
+    "loaiO": "ghe",
+    "maHS": "HS40"
+  },
+  {
+    "hang": 2,
+    "cot": 8,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 2,
+    "cot": 9,
+    "loaiO": "ghe",
+    "maHS": "HS04"
+  },
+  {
+    "hang": 2,
+    "cot": 10,
+    "loaiO": "ghe",
+    "maHS": "HS42"
+  },
+  {
+    "hang": 3,
+    "cot": 0,
+    "loaiO": "ghe",
+    "maHS": "HS37"
+  },
+  {
+    "hang": 3,
+    "cot": 1,
+    "loaiO": "ghe",
+    "maHS": "HS41"
+  },
+  {
+    "hang": 3,
+    "cot": 2,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 3,
+    "cot": 3,
+    "loaiO": "ghe",
+    "maHS": "HS38"
+  },
+  {
+    "hang": 3,
+    "cot": 4,
+    "loaiO": "ghe",
+    "maHS": "HS33"
+  },
+  {
+    "hang": 3,
+    "cot": 5,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 3,
+    "cot": 6,
+    "loaiO": "ghe",
+    "maHS": "HS31"
+  },
+  {
+    "hang": 3,
+    "cot": 7,
+    "loaiO": "ghe",
+    "maHS": "HS30"
+  },
+  {
+    "hang": 3,
+    "cot": 8,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 3,
+    "cot": 9,
+    "loaiO": "ghe",
+    "maHS": "HS12"
+  },
+  {
+    "hang": 3,
+    "cot": 10,
+    "loaiO": "ghe",
+    "maHS": "HS10"
+  },
+  {
+    "hang": 4,
+    "cot": 0,
+    "loaiO": "ghe",
+    "maHS": "HS14"
+  },
+  {
+    "hang": 4,
+    "cot": 1,
+    "loaiO": "ghe",
+    "maHS": "HS34"
+  },
+  {
+    "hang": 4,
+    "cot": 2,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 4,
+    "cot": 3,
+    "loaiO": "ghe",
+    "maHS": "HS18"
+  },
+  {
+    "hang": 4,
+    "cot": 4,
+    "loaiO": "ghe",
+    "maHS": "HS19"
+  },
+  {
+    "hang": 4,
+    "cot": 5,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 4,
+    "cot": 6,
+    "loaiO": "ghe",
+    "maHS": "HS29"
+  },
+  {
+    "hang": 4,
+    "cot": 7,
+    "loaiO": "ghe",
+    "maHS": "HS27"
+  },
+  {
+    "hang": 4,
+    "cot": 8,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 4,
+    "cot": 9,
+    "loaiO": "ghe",
+    "maHS": "HS17"
+  },
+  {
+    "hang": 4,
+    "cot": 10,
+    "loaiO": "ghe",
+    "maHS": "HS35"
+  },
+  {
+    "hang": 5,
+    "cot": 0,
+    "loaiO": "ghe",
+    "maHS": "HS28"
+  },
+  {
+    "hang": 5,
+    "cot": 1,
+    "loaiO": "ghe",
+    "maHS": "HS36"
+  },
+  {
+    "hang": 5,
+    "cot": 2,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 5,
+    "cot": 3,
+    "loaiO": "ghe",
+    "maHS": "HS25"
+  },
+  {
+    "hang": 5,
+    "cot": 4,
+    "loaiO": "ghe",
+    "maHS": "HS26"
+  },
+  {
+    "hang": 5,
+    "cot": 5,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 5,
+    "cot": 6,
+    "loaiO": "trong",
+    "ghiChu": "Chỗ trống Bàn 5 - Tổ 2"
+  },
+  {
+    "hang": 5,
+    "cot": 7,
+    "loaiO": "ghe",
+    "maHS": "HS39"
+  },
+  {
+    "hang": 5,
+    "cot": 8,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 5,
+    "cot": 9,
+    "loaiO": "ghe",
+    "maHS": "HS20"
+  },
+  {
+    "hang": 5,
+    "cot": 10,
+    "loaiO": "ghe",
+    "maHS": "HS16"
+  },
+  {
+    "hang": 6,
+    "cot": 0,
+    "loaiO": "ghe",
+    "maHS": "HS06"
+  },
+  {
+    "hang": 6,
+    "cot": 1,
+    "loaiO": "trong",
+    "ghiChu": "Chỗ trống Bàn 6 - Tổ 4"
+  },
+  {
+    "hang": 6,
+    "cot": 2,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 6,
+    "cot": 3,
+    "loaiO": "trong",
+    "ghiChu": "Chỗ trống Bàn 6 - Tổ 3"
+  },
+  {
+    "hang": 6,
+    "cot": 4,
+    "loaiO": "ghe",
+    "maHS": "HS32"
+  },
+  {
+    "hang": 6,
+    "cot": 5,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 6,
+    "cot": 6,
+    "loaiO": "ghe",
+    "maHS": "HS15"
+  },
+  {
+    "hang": 6,
+    "cot": 7,
+    "loaiO": "trong",
+    "ghiChu": "Chỗ trống Bàn 6 - Tổ 2"
+  },
+  {
+    "hang": 6,
+    "cot": 8,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 6,
+    "cot": 9,
+    "loaiO": "trong",
+    "ghiChu": "Chỗ trống Bàn 6 - Tổ 1"
+  },
+  {
+    "hang": 6,
+    "cot": 10,
+    "loaiO": "trong",
+    "ghiChu": "Chỗ trống Bàn 6 - Tổ 1"
+  },
+  {
+    "hang": 7,
+    "cot": 0,
+    "loaiO": "cua",
+    "ghiChu": "Cửa sau"
+  },
+  {
+    "hang": 7,
+    "cot": 1,
+    "loaiO": "trong"
+  },
+  {
+    "hang": 7,
+    "cot": 2,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 7,
+    "cot": 3,
+    "loaiO": "trong"
+  },
+  {
+    "hang": 7,
+    "cot": 4,
+    "loaiO": "trong"
+  },
+  {
+    "hang": 7,
+    "cot": 5,
+    "loaiO": "trong",
+    "ghiChu": "Khoảng trống cuối lớp"
+  },
+  {
+    "hang": 7,
+    "cot": 6,
+    "loaiO": "trong"
+  },
+  {
+    "hang": 7,
+    "cot": 7,
+    "loaiO": "trong"
+  },
+  {
+    "hang": 7,
+    "cot": 8,
+    "loaiO": "loidi"
+  },
+  {
+    "hang": 7,
+    "cot": 9,
+    "loaiO": "trong"
+  },
+  {
+    "hang": 7,
+    "cot": 10,
+    "loaiO": "trong"
+  }
 ];
 
 // Danh sách các mã bản ghi mẫu cũ cần loại bỏ khỏi bộ nhớ để đảm bảo chỉ lưu dữ liệu thật của lớp

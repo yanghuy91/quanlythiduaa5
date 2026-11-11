@@ -283,6 +283,8 @@ export async function saveCloudClassState(state: ClassroomFullState): Promise<bo
   }
 }
 
+let lastAppliedRemoteUpdatedAt = '';
+
 /**
  * Real-time listener for Cloud updates (RTDB onValue without self-echo)
  */
@@ -295,9 +297,12 @@ export function subscribeToCloudClassState(onUpdate: (state: ClassroomFullState)
       if (snap.exists()) {
         const data = snap.val() as ClassroomFullState;
         if (data && Array.isArray(data.students) && data.students.length > 0) {
-          // Bỏ qua echo nếu dữ liệu trùng với mốc vừa được lưu bởi chính phiên này
-          if (data.updatedAt && data.updatedAt === lastSavedUpdatedAt) {
+          // Bỏ qua echo nếu dữ liệu trùng với mốc vừa được lưu hoặc vừa áp dụng
+          if (data.updatedAt && (data.updatedAt === lastSavedUpdatedAt || data.updatedAt === lastAppliedRemoteUpdatedAt)) {
             return;
+          }
+          if (data.updatedAt) {
+            lastAppliedRemoteUpdatedAt = data.updatedAt;
           }
           onUpdate(data);
         }

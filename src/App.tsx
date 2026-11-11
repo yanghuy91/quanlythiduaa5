@@ -486,20 +486,6 @@ export default function App() {
       saveAcademicRecords(reconciledGrades);
     }
 
-    // Nếu dữ liệu trên mây trước đó bị dư học sinh ngoài Sơ đồ lớp (VD: 50 HS trong khi Sơ đồ lớp có 48 HS),
-    // tự động lưu lại bản chuẩn 48 HS lên mây để đồng bộ vĩnh viễn.
-    if (wasTrimmedToSeating && masterStudents && masterLayout) {
-      saveServerState(
-        {
-          ...cloudState,
-          students: masterStudents,
-          layout: masterLayout,
-          records: finalRecords || [],
-          academicRecords: finalAcademicRecords || [],
-        },
-        true
-      );
-    }
     if (cloudState.settings) {
       setSettings(prev => {
         const merged = { ...prev, ...cloudState.settings };
@@ -612,10 +598,10 @@ export default function App() {
     scheduleServerSync(buildFullStateSnapshot());
   }, [students, records, academicRecords, settings, layout, rules, teacherAvatar, teacherProfile, currentWeek, buildFullStateSnapshot]);
 
-  // Sync badges & passwords immediately on student/teacher change events
+  // Sync badges & passwords on student/teacher change events
   useEffect(() => {
     const handleImmediateEventSync = () => {
-      saveServerState(buildFullStateSnapshot(), true);
+      scheduleServerSync(buildFullStateSnapshot());
     };
     window.addEventListener('lop10a5:badge_change', handleImmediateEventSync);
     window.addEventListener('lop10a5:password_change', handleImmediateEventSync);
