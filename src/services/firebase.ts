@@ -283,6 +283,43 @@ export async function saveCloudClassState(state: ClassroomFullState): Promise<bo
   }
 }
 
+/**
+ * Lưu trữ bản sao lưu chuẩn Sơ đồ lớp (Canonical Seating Master) trên Firebase
+ * để làm mốc quy chiếu vĩnh viễn, ngăn ngừa mọi trường hợp bị cập nhật đè làm mất.
+ */
+export async function saveCanonicalSeatingBackup(students: any[], layout: any[]): Promise<boolean> {
+  const payload = sanitizeForFirebase({
+    students,
+    layout,
+    backupCreatedAt: new Date().toISOString(),
+    version: Date.now(),
+    note: 'Bản lưu trữ chuẩn Sơ đồ lớp 10A5 (Canonical Master)',
+  });
+
+  try {
+    const res = await fetch('https://thiduaa5-default-rtdb.firebaseio.com/classes/10a5_canonical_seating_backup.json', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      console.info('[Firebase] Đã lưu bản sao lưu chuẩn Sơ đồ lớp (Canonical Backup) thành công.');
+      return true;
+    }
+  } catch (err: any) {
+    console.warn('[Firebase] Lỗi lưu bản sao lưu chuẩn qua REST:', err);
+  }
+
+  try {
+    const backupRef = rtdbRef(rtdb, 'classes/10a5_canonical_seating_backup');
+    await rtdbSet(backupRef, payload);
+    return true;
+  } catch (err) {
+    console.warn('[Firebase] Lỗi lưu bản sao lưu chuẩn qua SDK:', err);
+    return false;
+  }
+}
+
 let lastAppliedRemoteUpdatedAt = '';
 
 /**

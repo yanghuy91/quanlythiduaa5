@@ -55,6 +55,8 @@ import {
   isValidStudentName,
   isTemplateSampleStudent,
 } from '../../utils/seatingMaster';
+import { StandardSeatingImportModal } from './StandardSeatingImportModal';
+import { AI_SEATING_PROMPT_GUIDE } from '../../utils/aiSeatingPrompt';
 
 interface UniversalSmartImportSectionProps {
   students: Student[];
@@ -239,6 +241,8 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
   const [parsedPackage, setParsedPackage] = useState<UnifiedParsedPackage | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [statusBanner, setStatusBanner] = useState<{ title: string; sub?: string } | null>(null);
+  const [isStandardSeatingModalOpen, setIsStandardSeatingModalOpen] = useState(false);
+  const [copiedPrompt3Col, setCopiedPrompt3Col] = useState(false);
 
   // Danh sách học sinh chuẩn đã đồng bộ với Sơ đồ lớp hiện tại (`layout`)
   const currentSeatingMaster = React.useMemo(() => {
@@ -260,6 +264,13 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
     setCopiedPrompt(true);
     triggerToast('Đã sao chép Câu lệnh AI chuẩn!', 'Thầy hãy dán kèm ảnh/tài liệu vào ChatGPT hoặc Gemini.');
     setTimeout(() => setCopiedPrompt(false), 3000);
+  };
+
+  const handleCopyPrompt3Col = () => {
+    navigator.clipboard.writeText(AI_SEATING_PROMPT_GUIDE);
+    setCopiedPrompt3Col(true);
+    triggerToast('Đã sao chép Prompt AI Chuẩn 3 Cột (Chống ngược hướng)!', 'Dán vào ChatGPT/Gemini kèm ảnh chụp sơ đồ lớp.');
+    setTimeout(() => setCopiedPrompt3Col(false), 3000);
   };
 
   const handleExportFullJson = () => {
@@ -1242,6 +1253,52 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
         </div>
 
         <div className="p-5 space-y-5">
+          {/* KHỐI ĐẶC BIỆT: NHẬP DỮ LIỆU CHUẨN TỪ SƠ ĐỒ LỚP (3 CỘT: STT | HỌ TÊN | VỊ TRÍ) */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-900 text-white shadow-lg border-2 border-amber-400/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shrink-0 shadow-md">
+                <Sparkles className="w-6 h-6 text-purple-900" />
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h4 className="text-sm sm:text-base font-black tracking-tight text-white">
+                    Nhập Dữ Liệu Chuẩn Từ Sơ Đồ Lớp (Chỉ Cần 3 Thông Tin)
+                  </h4>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-400 text-slate-950">
+                    Mới · Tiện Lợi
+                  </span>
+                </div>
+                <p className="text-xs text-blue-200 mt-1 leading-relaxed">
+                  Chỉ cần 3 cột: <strong>STT | Họ và tên | Vị trí</strong> (Tổ - Bàn - Ghế). Có sẵn Prompt AI chuẩn mốc phòng học để chụp ảnh sơ đồ đưa AI phân tích mà không bao giờ bị ngược hướng!
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={handleCopyPrompt3Col}
+                className={`px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-sm cursor-pointer ${
+                  copiedPrompt3Col
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-white/15 hover:bg-white/25 text-white border border-white/25'
+                }`}
+              >
+                {copiedPrompt3Col ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4 text-amber-300" />}
+                <span>{copiedPrompt3Col ? 'Đã copy Prompt AI!' : 'Copy Prompt AI (3 Cột)'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsStandardSeatingModalOpen(true)}
+                className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center gap-2 shadow-md transition-all cursor-pointer active:scale-95"
+              >
+                <Upload className="w-4 h-4 text-purple-900" />
+                <span>Mở Cửa Sổ Nhập Chuẩn (3 Cột)</span>
+              </button>
+            </div>
+          </div>
+
           {/* Thông báo nguyên tắc Sơ đồ lớp làm chuẩn */}
           <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-300/90 text-amber-950 flex items-start gap-3">
             <div className="w-8 h-8 rounded-lg bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shrink-0 mt-0.5">
@@ -1727,6 +1784,18 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
           </div>
         </div>
       </div>
+
+      {/* Standard Seating Import Modal (3 Cột) */}
+      <StandardSeatingImportModal
+        isOpen={isStandardSeatingModalOpen}
+        onClose={() => setIsStandardSeatingModalOpen(false)}
+        existingStudents={students}
+        onApplyStandardSeating={(newStudents, newLayout) => {
+          onUpdateStudentsAndLayout(newStudents, newLayout, true);
+          setIsStandardSeatingModalOpen(false);
+          triggerToast('Đã áp dụng Sơ đồ chuẩn 3 cột & đồng bộ lên Firebase!', `${newStudents.length} học sinh`);
+        }}
+      />
     </div>
   );
 };

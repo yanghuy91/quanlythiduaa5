@@ -21,6 +21,7 @@ import { Student, SeatLayoutNode, SeatNodeType, RoleCode } from '../../types';
 import { CADRE_ROLES_INFO } from '../../data/badgeData';
 import { ROLE_CONFIG } from '../../data/mockData';
 import { getSeatingMapDisplayName, getStudentAvatarInitial } from '../../utils/vietnamese';
+import { StandardSeatingImportModal } from './StandardSeatingImportModal';
 
 interface ClassroomLayoutEditorProps {
   initialLayout: SeatLayoutNode[];
@@ -66,6 +67,7 @@ export const ClassroomLayoutEditor: React.FC<ClassroomLayoutEditorProps> = ({
   const [formRole, setFormRole] = useState<RoleCode>('HS');
   const [formError, setFormError] = useState<string | null>(null);
 
+  const [isStandardImportModalOpen, setIsStandardImportModalOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
 
@@ -502,6 +504,16 @@ export const ClassroomLayoutEditor: React.FC<ClassroomLayoutEditorProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsStandardImportModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+              title="Nhập danh sách học sinh chuẩn 3 cột từ AI (STT, Họ tên, Vị trí)"
+            >
+              <Sparkles className="w-4 h-4 text-purple-700" />
+              <span>Nhập Chuẩn AI (3 Cột)</span>
+            </button>
+
             <button
               type="button"
               onClick={() => handleOpenAddModal()}
@@ -1390,6 +1402,20 @@ export const ClassroomLayoutEditor: React.FC<ClassroomLayoutEditorProps> = ({
           </div>
         </div>
       )}
+
+      {/* Standard Seating Import Modal (3 Cột từ AI) */}
+      <StandardSeatingImportModal
+        isOpen={isStandardImportModalOpen}
+        onClose={() => setIsStandardImportModalOpen(false)}
+        existingStudents={students}
+        onApplyStandardSeating={(newStudents, newLayout) => {
+          setLayout(newLayout);
+          setStudents(newStudents);
+          setHasChanges(true);
+          onSave(newLayout, newStudents);
+          setIsStandardImportModalOpen(false);
+        }}
+      />
     </div>
   );
 };

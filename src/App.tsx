@@ -62,7 +62,8 @@ import {
   subscribeToCloudClassState, 
   logoutFirebase, 
   onFirebaseAuthStateChanged, 
-  isAuthorizedTeacherEmail 
+  isAuthorizedTeacherEmail,
+  saveCanonicalSeatingBackup 
 } from './services/firebase';
 import {
   initRealtimeClockSync,
@@ -380,6 +381,9 @@ export default function App() {
       }),
       true
     );
+
+    // Tự động sao lưu bản Canonical Seating Master vĩnh viễn trên Firebase
+    saveCanonicalSeatingBackup(normalized, syncedLayout);
   }, [academicRecords, records, buildFullStateSnapshot]);
 
   // Sync to local storage
@@ -823,6 +827,9 @@ export default function App() {
       }),
       true
     );
+
+    // Tự động sao lưu bản Canonical Seating Master vĩnh viễn trên Firebase
+    saveCanonicalSeatingBackup(normalized, syncedLayout);
   }, [academicRecords, records, buildFullStateSnapshot]);
 
   // Student or Teacher updates a student's avatar
