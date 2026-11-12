@@ -2,7 +2,7 @@ import React from 'react';
 import logo3dImg from '../../assets/logo_10a5_3d.png';
 
 interface Logo10A5Props {
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   showText?: boolean;
   className?: string;
   animate?: boolean;
@@ -15,6 +15,7 @@ export const Logo10A5: React.FC<Logo10A5Props> = ({
   animate = false,
 }) => {
   const sizeMap = {
+    xs: { box: 'w-7 h-7 sm:w-8 sm:h-8', imgSize: 30, textClass: 'text-[11px]' },
     sm: { box: 'w-9 h-9', imgSize: 36, textClass: 'text-xs' },
     md: { box: 'w-11 h-11', imgSize: 44, textClass: 'text-sm' },
     lg: { box: 'w-14 h-14', imgSize: 56, textClass: 'text-base' },

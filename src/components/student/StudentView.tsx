@@ -828,9 +828,9 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
   return (
     <div className="w-full flex flex-col gap-4 animate-fadeIn">
-      {/* Integrated Banner Header (Replaces separate top header on mobile & desktop) */}
-      <div className="relative overflow-hidden rounded-3xl border border-token shadow-md bg-surface">
-        <div className="relative min-h-[155px] sm:min-h-[165px] w-full overflow-hidden flex flex-col justify-between p-3.5 sm:p-4 gap-3">
+      {/* Integrated Banner Header (Compact, edge-aligned 4-corner layout for clear focal space) */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-token shadow-md bg-surface">
+        <div className="relative min-h-[142px] sm:min-h-[158px] w-full overflow-hidden flex flex-col justify-between p-2 sm:p-3 gap-2">
           {studentBanner.imageSrc ? (
             <img
               src={studentBanner.imageSrc}
@@ -840,64 +840,63 @@ export const StudentView: React.FC<StudentViewProps> = ({
           ) : (
             <div className={`absolute inset-0 w-full h-full bg-gradient-to-r ${studentBanner.gradientFallback}`} />
           )}
-          {/* Balanced gradient overlay so background artwork and foreground text/badges stand out crisply */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-900/40 to-black/20" />
+          {/* Edge-focused vignette so the center of the banner stays airy while top/bottom edges are crisp */}
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/60 via-slate-900/15 to-slate-950/80" />
 
-          {/* Top Row: Logo, Title horizontal, and Logout button */}
-          <div className="relative z-10 flex items-center justify-between gap-1.5 sm:gap-2">
+          {/* Top Edge Row: Logo + School Name (Top-Left) & Account/Logout (Top-Right) */}
+          <div className="relative z-10 flex items-start justify-between gap-1.5">
             <div 
-              className="flex items-center gap-1.5 sm:gap-2 min-w-0 cursor-pointer group select-none"
+              className="flex items-center gap-1.5 min-w-0 cursor-pointer group select-none"
               onClick={() => setActiveTab('my_score')}
               title="Bấm vào logo để về màn hình chính"
             >
-              <Logo10A5 size="sm" animate={false} />
-              <div className="flex flex-col min-w-0">
-                <span className="text-[10.5px] xs:text-[11px] sm:text-sm font-black tracking-tighter sm:tracking-tight text-white drop-shadow-md uppercase whitespace-nowrap group-hover:text-amber-300 transition-colors">
+              <Logo10A5 size="xs" animate={false} />
+              <div className="flex flex-col min-w-0 leading-tight">
+                <span className="text-[10px] xs:text-[10.5px] sm:text-xs font-black tracking-tight text-white drop-shadow-md uppercase whitespace-nowrap group-hover:text-amber-300 transition-colors">
                   TRƯỜNG THPT SỐ 2 ĐỨC PHỔ
                 </span>
-                <span className="text-[9px] sm:text-[10px] font-bold text-amber-100 drop-shadow leading-none whitespace-nowrap">
-                  Năm học 2026-2027 · Lớp 10A5
+                <span className="text-[8.5px] sm:text-[9.5px] font-bold text-amber-200 drop-shadow whitespace-nowrap">
+                  Lớp 10A5 · 2026-2027
                 </span>
               </div>
             </div>
 
-            {/* Quick Settings & Logout Buttons */}
-            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-              <PWAInstallButton variant="banner" />
+            {/* Top-Right Compact Controls */}
+            <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
                 onClick={() => setShowSettingsModal(true)}
-                className="px-2 sm:px-2.5 py-1 rounded-xl bg-white/95 hover:bg-white border border-amber-300 text-slate-900 text-[10.5px] sm:text-[11px] font-extrabold transition-all flex items-center gap-1 cursor-pointer shadow-sm active:scale-95 shrink-0"
+                className="px-2 py-0.5 sm:py-1 rounded-lg bg-white/95 hover:bg-white border border-amber-300 text-slate-900 text-[10px] sm:text-[10.5px] font-extrabold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 shrink-0 leading-tight"
                 title="Cài đặt tài khoản & đổi ảnh đại diện"
               >
-                <Settings className="w-3.5 h-3.5 text-amber-600" />
-                <span className="hidden xs:inline">Tài khoản</span>
+                <Settings className="w-3 h-3 text-amber-600 shrink-0" />
+                <span>Tài khoản</span>
               </button>
 
               {onLogout && (
                 <button
                   type="button"
                   onClick={onLogout}
-                  className="px-2 sm:px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 border border-rose-300 text-white text-[10.5px] sm:text-[11px] font-extrabold transition-all flex items-center gap-1 cursor-pointer shadow-sm active:scale-95 shrink-0"
+                  className="px-2 py-0.5 sm:py-1 rounded-lg bg-rose-600/95 hover:bg-rose-500 border border-rose-300 text-white text-[10px] sm:text-[10.5px] font-extrabold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 shrink-0 leading-tight"
                   title="Đăng xuất khỏi tài khoản"
                 >
-                  <LogOut className="w-3.5 h-3.5 text-white" />
+                  <LogOut className="w-3 h-3 text-white shrink-0" />
                   <span>Thoát</span>
                 </button>
               )}
             </div>
           </div>
 
-          {/* Middle & Bottom Area: Student/Cadre Identity Pill + Week Badge + Slogan */}
-          <div className="relative z-10 flex flex-col gap-2">
-            <div className="flex items-center justify-between gap-2.5 flex-wrap">
-              {/* Student / Cadre Identity Pill on Banner - High contrast so avatar & name pop */}
+          {/* Bottom Edge Row: Compact Identity + Slogan (Bottom-Left) & Week + Tải app (Bottom-Right) */}
+          <div className="relative z-10 flex items-end justify-between gap-1.5 pt-2">
+            {/* Bottom-Left: Student/Cadre Identity Pill + Slogan hugged to left edge */}
+            <div className="flex flex-col items-start gap-1 min-w-0 flex-1">
               <div
                 onClick={() => setShowAvatarModal(true)}
-                className="flex items-center gap-2.5 min-w-0 cursor-pointer group bg-slate-900/80 hover:bg-slate-900/95 border-2 border-amber-300/80 hover:border-amber-300 rounded-2xl p-1.5 pr-3.5 backdrop-blur-md transition-all shadow-lg"
+                className="inline-flex items-center gap-1.5 sm:gap-2 max-w-full cursor-pointer group bg-slate-950/75 hover:bg-slate-950/90 border border-amber-300/80 hover:border-amber-300 rounded-xl p-1 pr-2 sm:pr-2.5 backdrop-blur-md transition-all shadow-md"
                 title="Bấm để đổi ảnh đại diện"
               >
-                <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden border-2 border-amber-300 bg-white shrink-0 shadow-sm flex items-center justify-center">
+                <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden border border-amber-300 bg-white shrink-0 flex items-center justify-center">
                   {currentStudent.avatarUrl ? (
                     <img
                       src={resolveStudentAvatar(currentStudent.avatarUrl)}
@@ -905,53 +904,54 @@ export const StudentView: React.FC<StudentViewProps> = ({
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-xs font-black text-slate-900">
+                    <span className="text-[10px] font-black text-slate-900">
                       {getStudentAvatarInitial(currentStudent.hoTen)}
                     </span>
                   )}
-                  <div className="absolute bottom-0 right-0 w-4 h-4 rounded-tl-md bg-amber-400 text-slate-950 flex items-center justify-center">
-                    <Camera className="w-2.5 h-2.5" />
+                  <div className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-tl bg-amber-400 text-slate-950 flex items-center justify-center">
+                    <Camera className="w-2 h-2" />
                   </div>
                 </div>
 
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs sm:text-sm font-black text-white group-hover:text-amber-300 transition-colors truncate max-w-[175px] sm:max-w-[260px] drop-shadow-sm">
-                      {currentStudent.hoTen}
-                    </span>
+                <div className="min-w-0 leading-tight">
+                  <div className="text-[11px] sm:text-xs font-black text-white group-hover:text-amber-300 transition-colors truncate max-w-[135px] xs:max-w-[165px] sm:max-w-[230px]">
+                    {currentStudent.hoTen}
                   </div>
-                  <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border shadow-xs ${studentBanner.accentBadge}`}>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-md border leading-tight ${studentBanner.accentBadge}`}>
                       {studentBanner.roleName}
                     </span>
-                    <span className="text-[10.5px] font-extrabold text-amber-200 drop-shadow-xs">
+                    <span className="text-[9.5px] font-extrabold text-amber-200 whitespace-nowrap">
                       · Tổ {currentStudent.to}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Current Week Badge (Read-only for Cadres & Students; automatically advances on Mondays) */}
-              <div
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 border-2 border-white font-black text-[11px] shadow-md shrink-0"
-                title="Tuần học hiện tại (Tự động chuyển sang tuần tiếp theo vào mỗi Thứ 2 đầu tuần)"
-              >
-                <Calendar className="w-3.5 h-3.5 text-slate-950 shrink-0" />
-                <span>Tuần {currentWeek} {currentWeek <= 19 ? '(HK1)' : '(HK2)'}</span>
+              {/* Compact Slogan flush bottom-left */}
+              <div className="text-[9.5px] sm:text-[10.5px] text-white/95 font-semibold drop-shadow truncate max-w-full pl-0.5 leading-tight">
+                <span
+                  style={{
+                    color: settings?.bannerSloganColor || '#ffffff',
+                    fontStyle: (settings?.bannerSloganStyle ?? 'italic') === 'italic' ? 'italic' : 'normal',
+                    fontWeight: (settings?.bannerSloganStyle ?? 'italic') === 'bold' ? 800 : 600,
+                  }}
+                >
+                  "{settings?.bannerSloganText || 'Chăm ngoan - Sáng tạo - Đoàn kết vững bước tương lai'} {settings?.bannerSloganIcon || '🌟'}"
+                </span>
               </div>
             </div>
 
-            {/* Slogan with customizable text, icon, color, style */}
-            <div className="flex items-center gap-1.5 text-[11px] text-white/95 font-semibold drop-shadow-md">
-              <span
-                style={{
-                  color: settings?.bannerSloganColor || '#ffffff',
-                  fontStyle: (settings?.bannerSloganStyle ?? 'italic') === 'italic' ? 'italic' : 'normal',
-                  fontWeight: (settings?.bannerSloganStyle ?? 'italic') === 'bold' ? 800 : 600,
-                }}
+            {/* Bottom-Right: Week Badge on top + Tải app button directly underneath */}
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              <div
+                className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-amber-400 text-slate-950 border border-white font-black text-[10px] sm:text-[10.5px] shadow-sm shrink-0 leading-tight"
+                title="Tuần học hiện tại (Tự động chuyển sang tuần tiếp theo vào mỗi Thứ 2 đầu tuần)"
               >
-                "{settings?.bannerSloganText || 'Chăm ngoan - Sáng tạo - Đoàn kết vững bước tương lai'} {settings?.bannerSloganIcon || '🌟'}"
-              </span>
+                <Calendar className="w-3 h-3 text-slate-950 shrink-0" />
+                <span className="whitespace-nowrap">Tuần {currentWeek} {currentWeek <= 19 ? '(HK1)' : '(HK2)'}</span>
+              </div>
+              <PWAInstallButton variant="banner" />
             </div>
           </div>
         </div>

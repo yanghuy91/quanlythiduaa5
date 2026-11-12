@@ -685,62 +685,59 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   return (
     <div className="w-full flex flex-col gap-4">
-      {/* Integrated Hero Banner Header (Synchronized with Student/Cadre Banner Style & Mobile Friendly) */}
-      <div className="relative overflow-hidden rounded-3xl border border-token shadow-md bg-surface">
-        <div className="relative min-h-[155px] sm:min-h-[165px] w-full overflow-hidden flex flex-col justify-between p-3.5 sm:p-4 gap-3">
+      {/* Integrated Hero Banner Header (Compact, edge-aligned 4-corner layout for clear focal space) */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-token shadow-md bg-surface">
+        <div className="relative min-h-[142px] sm:min-h-[158px] w-full overflow-hidden flex flex-col justify-between p-2 sm:p-3 gap-2">
           <img
             src={bannerGv}
             alt="Giáo viên Chủ nhiệm - Lớp 10A5"
             className="absolute inset-0 w-full h-full object-cover object-center"
             referrerPolicy="no-referrer"
           />
-          {/* Balanced gradient overlay so background artwork and foreground text/badges stand out crisply */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-900/40 to-black/20" />
+          {/* Edge-focused vignette so the center of the banner stays airy while top/bottom edges are crisp */}
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/60 via-slate-900/15 to-slate-950/80" />
 
-          {/* Top Row: School Logo + Name on the Left; Logout on the Right (Clean, never overflows on mobile) */}
-          <div className="relative z-10 flex items-center justify-between gap-1.5 sm:gap-2">
+          {/* Top Edge Row: School Logo + Name (Top-Left) & Logout (Top-Right) */}
+          <div className="relative z-10 flex items-start justify-between gap-1.5">
             <div 
-              className="flex items-center gap-1.5 sm:gap-2 min-w-0 cursor-pointer group select-none"
+              className="flex items-center gap-1.5 min-w-0 cursor-pointer group select-none"
               onClick={() => setActiveTab('overview')}
               title="Bấm vào logo để về màn hình Tổng quan"
             >
-              <Logo10A5 size="sm" animate={false} />
-              <div className="flex flex-col min-w-0">
-                <span className="text-[10.5px] xs:text-[11px] sm:text-sm font-black tracking-tighter sm:tracking-tight text-white drop-shadow-md uppercase whitespace-nowrap group-hover:text-amber-300 transition-colors">
+              <Logo10A5 size="xs" animate={false} />
+              <div className="flex flex-col min-w-0 leading-tight">
+                <span className="text-[10px] xs:text-[10.5px] sm:text-xs font-black tracking-tight text-white drop-shadow-md uppercase whitespace-nowrap group-hover:text-amber-300 transition-colors">
                   TRƯỜNG THPT SỐ 2 ĐỨC PHỔ
                 </span>
-                <span className="text-[9px] sm:text-[10px] font-bold text-amber-100 drop-shadow leading-none whitespace-nowrap">
-                  Năm học 2026-2027 · Lớp 10A5
+                <span className="text-[8.5px] sm:text-[9.5px] font-bold text-amber-200 drop-shadow whitespace-nowrap">
+                  Lớp 10A5 · 2026-2027
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-              <PWAInstallButton variant="banner" />
-              {onLogout && (
-                <button
-                  type="button"
-                  onClick={onLogout}
-                  className="px-2 sm:px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 border border-rose-300 text-white text-[10.5px] sm:text-[11px] font-extrabold transition-all flex items-center gap-1 cursor-pointer shadow-sm active:scale-95 shrink-0"
-                  title="Đăng xuất khỏi Bảng điều khiển Giáo viên"
-                >
-                  <LogOut className="w-3.5 h-3.5 text-white" />
-                  <span>Thoát</span>
-                </button>
-              )}
-            </div>
+            {onLogout && (
+              <button
+                type="button"
+                onClick={onLogout}
+                className="px-2 py-0.5 sm:py-1 rounded-lg bg-rose-600/95 hover:bg-rose-500 border border-rose-300 text-white text-[10px] sm:text-[10.5px] font-extrabold transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 shrink-0 leading-tight"
+                title="Đăng xuất khỏi Bảng điều khiển Giáo viên"
+              >
+                <LogOut className="w-3 h-3 text-white shrink-0" />
+                <span>Thoát</span>
+              </button>
+            )}
           </div>
 
-          {/* Middle & Bottom Area: Teacher Avatar + Name + Week Selector + Slogan */}
-          <div className="relative z-10 flex flex-col gap-2">
-            {/* Teacher Identity Bar on Banner - High contrast so avatar & name pop */}
-            <div className="flex items-center justify-between gap-2.5 flex-wrap">
+          {/* Bottom Edge Row: Compact Teacher Identity + Slogan (Bottom-Left) & Week Selector + Tải app (Bottom-Right) */}
+          <div className="relative z-10 flex items-end justify-between gap-1.5 pt-2">
+            {/* Bottom-Left: Teacher Identity Pill + Slogan hugged to left edge */}
+            <div className="flex flex-col items-start gap-1 min-w-0 flex-1">
               <div
                 onClick={() => setIsTeacherProfileModalOpen(true)}
-                className="flex items-center gap-2.5 min-w-0 cursor-pointer group bg-slate-900/80 hover:bg-slate-900/95 border-2 border-amber-300/80 hover:border-amber-300 rounded-2xl p-1.5 pr-3.5 backdrop-blur-md transition-all shadow-lg"
+                className="inline-flex items-center gap-1.5 sm:gap-2 max-w-full cursor-pointer group bg-slate-950/75 hover:bg-slate-950/90 border border-amber-300/80 hover:border-amber-300 rounded-xl p-1 pr-2 sm:pr-2.5 backdrop-blur-md transition-all shadow-md"
                 title="Bấm để đổi ảnh đại diện và thông tin hồ sơ Giáo viên"
               >
-                <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden border-2 border-amber-300 bg-white shrink-0 shadow-sm">
+                <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden border border-amber-300 bg-white shrink-0">
                   <img
                     src={resolveTeacherAvatar(teacherAvatarUrl)}
                     alt={internalTeacherProfile.hoTen || 'Giáo viên Chủ nhiệm'}
@@ -749,24 +746,24 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                       (e.target as HTMLImageElement).src = DEFAULT_TEACHER_AVATAR;
                     }}
                   />
-                  <div className="absolute bottom-0 right-0 w-4 h-4 rounded-tl-md bg-amber-400 text-slate-950 flex items-center justify-center">
-                    <Camera className="w-2.5 h-2.5" />
+                  <div className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-tl bg-amber-400 text-slate-950 flex items-center justify-center">
+                    <Camera className="w-2 h-2" />
                   </div>
                 </div>
 
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs sm:text-sm font-black text-white group-hover:text-amber-300 transition-colors truncate max-w-[175px] sm:max-w-[260px] drop-shadow-sm">
+                <div className="min-w-0 leading-tight">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[11px] sm:text-xs font-black text-white group-hover:text-amber-300 transition-colors truncate max-w-[135px] xs:max-w-[165px] sm:max-w-[230px]">
                       {internalTeacherProfile.hoTen || 'Giáo viên chủ nhiệm'}
                     </span>
-                    <Edit3 className="w-3 h-3 text-amber-300 shrink-0 opacity-90 group-hover:opacity-100" />
+                    <Edit3 className="w-2.5 h-2.5 text-amber-300 shrink-0 opacity-90 group-hover:opacity-100" />
                   </div>
-                  <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 border border-white shadow-xs">
-                      GV Chủ nhiệm 10A5
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-[9px] font-black px-1.5 py-0.2 rounded-md bg-amber-400 text-slate-950 border border-white leading-tight whitespace-nowrap">
+                      GVCN 10A5
                     </span>
                     {internalTeacherProfile.statusText && (
-                      <span className="text-[10px] font-bold text-amber-100 truncate max-w-[140px] sm:max-w-[220px] hidden xs:inline">
+                      <span className="text-[9.5px] font-bold text-amber-100 truncate max-w-[110px] sm:max-w-[190px] hidden xs:inline">
                         · {internalTeacherProfile.statusText}
                       </span>
                     )}
@@ -774,14 +771,29 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 </div>
               </div>
 
-              {/* Interactive Week Capsule Selector for Teacher */}
-              <div className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 border-2 border-white text-slate-950 font-black text-[11px] shadow-md transition-all shrink-0">
-                <Calendar className="w-3.5 h-3.5 text-slate-950 shrink-0" />
+              {/* Compact Slogan flush bottom-left */}
+              <div className="text-[9.5px] sm:text-[10.5px] text-white/95 font-semibold drop-shadow truncate max-w-full pl-0.5 leading-tight">
+                <span
+                  style={{
+                    color: settings?.bannerSloganColor || '#ffffff',
+                    fontStyle: (settings?.bannerSloganStyle ?? 'italic') === 'italic' ? 'italic' : 'normal',
+                    fontWeight: (settings?.bannerSloganStyle ?? 'italic') === 'bold' ? 800 : 600,
+                  }}
+                >
+                  "{settings?.bannerSloganText || 'Tận tâm - Thấu hiểu - Định hướng tương lai'} {settings?.bannerSloganIcon || '🎓'}"
+                </span>
+              </div>
+            </div>
+
+            {/* Bottom-Right: Week Selector on top + Tải app button directly underneath */}
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-amber-400 hover:bg-amber-300 border border-white text-slate-950 font-black text-[10px] sm:text-[10.5px] shadow-sm transition-all shrink-0 leading-tight">
+                <Calendar className="w-3 h-3 text-slate-950 shrink-0" />
                 {onChangeCurrentWeek ? (
                   <select
                     value={currentWeek}
                     onChange={e => onChangeCurrentWeek(Number(e.target.value))}
-                    className="bg-transparent text-slate-950 font-black cursor-pointer focus:outline-none pr-0.5 text-[11px]"
+                    className="bg-transparent text-slate-950 font-black cursor-pointer focus:outline-none pr-0.5 text-[10px] sm:text-[10.5px]"
                     title="Chạm để chuyển tuần học"
                   >
                     {Array.from({ length: 38 }, (_, i) => i + 1).map(w => (
@@ -791,22 +803,10 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     ))}
                   </select>
                 ) : (
-                  <span>Tuần {currentWeek} {currentWeek <= 19 ? '(HK1)' : '(HK2)'}</span>
+                  <span className="whitespace-nowrap">Tuần {currentWeek} {currentWeek <= 19 ? '(HK1)' : '(HK2)'}</span>
                 )}
               </div>
-            </div>
-
-            {/* Slogan with customizable text, icon, color, style */}
-            <div className="flex items-center gap-1.5 text-[11px] text-white/95 font-semibold drop-shadow-md">
-              <span
-                style={{
-                  color: settings?.bannerSloganColor || '#ffffff',
-                  fontStyle: (settings?.bannerSloganStyle ?? 'italic') === 'italic' ? 'italic' : 'normal',
-                  fontWeight: (settings?.bannerSloganStyle ?? 'italic') === 'bold' ? 800 : 600,
-                }}
-              >
-                "{settings?.bannerSloganText || 'Tận tâm - Thấu hiểu - Định hướng tương lai'} {settings?.bannerSloganIcon || '🎓'}"
-              </span>
+              <PWAInstallButton variant="banner" />
             </div>
           </div>
         </div>

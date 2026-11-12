@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, Share, PlusSquare, Smartphone, X, CheckCircle2, MoreVertical } from 'lucide-react';
+import { Download, Share, PlusSquare, Smartphone, X, CheckCircle2, MoreVertical, Info } from 'lucide-react';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
 import logo10A5Img from '../../assets/logo_10a5_3d.png';
 
@@ -36,13 +36,13 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 'b
         onClick={handleInstallClick}
         className={
           variant === 'banner'
-            ? 'px-2 sm:px-2.5 py-1 rounded-xl bg-amber-400 hover:bg-amber-300 border border-white text-slate-950 text-[10.5px] sm:text-[11px] font-black transition-all flex items-center gap-1 cursor-pointer shadow-sm active:scale-95 shrink-0'
-            : 'px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 shrink-0'
+            ? 'px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-white/95 hover:bg-white border border-amber-300 text-slate-950 text-[10px] sm:text-[10.5px] font-black transition-all inline-flex items-center gap-1 cursor-pointer shadow-sm active:scale-95 shrink-0 leading-tight'
+            : 'px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-extrabold transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 shrink-0'
         }
         title="Tạo ứng dụng 10A5 ngoài màn hình chính điện thoại (iPhone / Android)"
       >
-        <Download className="w-3.5 h-3.5 shrink-0" />
-        <span>Tải App 10A5</span>
+        <Download className="w-3 h-3 text-indigo-700 shrink-0" />
+        <span className="whitespace-nowrap">Tải app</span>
       </button>
 
       {showGuideModal && (
@@ -68,11 +68,11 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 'b
                   <div className="flex items-center gap-1.5">
                     <span className="font-black text-base tracking-tight text-white">10A5</span>
                     <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-400 text-slate-950">
-                      PWA App
+                      App Lớp
                     </span>
                   </div>
                   <p className="text-[11px] text-amber-100/90 font-medium truncate">
-                    Cài đặt ứng dụng 10A5 ra màn hình chính
+                    Tạo ứng dụng 10A5 ra màn hình chính
                   </p>
                 </div>
               </div>
@@ -120,14 +120,21 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 'b
             <div className="p-4 space-y-3 text-xs text-main">
               {activeDeviceTab === 'ios' ? (
                 <div className="space-y-2.5">
+                  <div className="p-2.5 rounded-2xl bg-amber-50 border border-amber-200 flex items-start gap-2 text-[11px] text-amber-900">
+                    <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <span>
+                      Do bảo mật của Apple trên iPhone, trình duyệt không tự cài ngầm mà bạn chỉ cần bấm <strong>2 chạm trên thanh Safari</strong> bên dưới:
+                    </span>
+                  </div>
+
                   <div className="p-3 rounded-2xl bg-surface-2 border border-token flex items-start gap-2.5">
                     <span className="w-5 h-5 rounded-full bg-indigo-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">
                       1
                     </span>
                     <div>
-                      <p className="font-bold text-main">Mở bằng trình duyệt Safari trên iPhone</p>
+                      <p className="font-bold text-main">Nhấn nút "Chia sẻ" ở cạnh dưới Safari</p>
                       <p className="text-[11px] text-muted mt-0.5">
-                        Nhấn vào biểu tượng <span className="inline-flex items-center gap-0.5 font-extrabold text-indigo-600"><Share className="w-3.5 h-3.5 inline" /> Chia sẻ</span> ở thanh công cụ phía dưới màn hình.
+                        Bấm vào biểu tượng <span className="inline-flex items-center gap-0.5 font-extrabold text-indigo-600"><Share className="w-3.5 h-3.5 inline" /> Chia sẻ</span> ở thanh công cụ dưới cùng của trình duyệt Safari.
                       </p>
                     </div>
                   </div>
@@ -137,9 +144,9 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 'b
                       2
                     </span>
                     <div>
-                      <p className="font-bold text-main">Chọn "Thêm vào MH chính"</p>
+                      <p className="font-bold text-main">Chọn "Thêm vào MH chính" ➔ "Thêm"</p>
                       <p className="text-[11px] text-muted mt-0.5">
-                        Kéo xuống và chọn <span className="inline-flex items-center gap-0.5 font-extrabold text-indigo-600"><PlusSquare className="w-3.5 h-3.5 inline" /> Thêm vào MH chính</span> (Add to Home Screen).
+                        Chọn dòng <span className="inline-flex items-center gap-0.5 font-extrabold text-indigo-600"><PlusSquare className="w-3.5 h-3.5 inline" /> Thêm vào MH chính</span> (Add to Home Screen) rồi bấm <strong>Thêm</strong> ở góc trên phải.
                       </p>
                     </div>
                   </div>
@@ -147,7 +154,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 'b
                   <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center gap-2.5">
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                     <p className="text-[11px] font-bold text-emerald-900">
-                      Nhấn <span className="underline">Thêm</span> ở góc phải trên cùng — biểu tượng logo <span className="font-black">10A5</span> với tên <span className="font-black">10A5</span> sẽ xuất hiện ngay trên màn hình iPhone!
+                      App sẽ tự động lấy sẵn logo <span className="font-black">10A5</span> và tên <span className="font-black">10A5</span> ngoài màn hình iPhone!
                     </p>
                   </div>
                 </div>
@@ -163,7 +170,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 'b
                       className="w-full py-2.5 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all"
                     >
                       <Download className="w-4 h-4" />
-                      <span>Cài đặt tự động App 10A5 ngay</span>
+                      <span>Bấm để cài đặt tự động App 10A5 ngay</span>
                     </button>
                   )}
 
@@ -174,7 +181,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 'b
                     <div>
                       <p className="font-bold text-main">Mở bằng trình duyệt Chrome trên Android</p>
                       <p className="text-[11px] text-muted mt-0.5">
-                        Nhấn vào biểu tượng menu <span className="inline-flex items-center gap-0.5 font-extrabold text-indigo-600"><MoreVertical className="w-3.5 h-3.5 inline" /> 3 chấm</span> ở góc trên bên phải trình duyệt.
+                        Nếu hộp thoại cài đặt chưa tự bật, nhấn biểu tượng <span className="inline-flex items-center gap-0.5 font-extrabold text-indigo-600"><MoreVertical className="w-3.5 h-3.5 inline" /> 3 chấm</span> ở góc trên bên phải.
                       </p>
                     </div>
                   </div>
