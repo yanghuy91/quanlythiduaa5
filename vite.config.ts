@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
 import { defineConfig, Plugin } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
 function stateStoragePlugin(): Plugin {
   return {
@@ -61,7 +62,54 @@ process.env.CI = 'true';
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss(), stateStoragePlugin()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      stateStoragePlugin(),
+      VitePWA({
+        registerType: 'autoUpdate',
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
+        manifest: {
+          id: '/',
+          name: '10A5',
+          short_name: '10A5',
+          description: 'Ứng dụng Quản lý Nề nếp & Thi đua Lớp 10A5 - THPT Số 2 Đức Phổ',
+          theme_color: '#1e1b4b',
+          background_color: '#F6F6F3',
+          display: 'standalone',
+          start_url: '/',
+          scope: '/',
+          icons: [
+            {
+              src: '/pwa-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'any',
+            },
+            {
+              src: '/pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any',
+            },
+            {
+              src: '/pwa-maskable-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable',
+            },
+          ],
+        },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        },
+        devOptions: {
+          enabled: true,
+          type: 'module',
+        },
+      }),
+    ],
     resolve: {
       alias: {
         '@': path.resolve(process.cwd(), '.'),

@@ -19,6 +19,7 @@ import { StudentPicker } from '../student-picker/StudentPicker';
 import { getStudentAvatarInitial } from '../../utils/vietnamese';
 import { verifyStudentPassword } from '../../utils/authService';
 import { Logo10A5 } from '../common/Logo10A5';
+import { PWAInstallButton } from '../common/PWAInstallButton';
 import { 
   loginWithGoogleFirebase, 
   loginWithGoogleRedirect, 
@@ -232,6 +233,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <span className="font-bold text-accent">Lớp 10A5</span>
             <span>·</span>
             <span>THPT Số 2 Đức Phổ</span>
+          </div>
+          <div className="flex justify-center pt-1">
+            <PWAInstallButton variant="header" />
           </div>
         </div>
 

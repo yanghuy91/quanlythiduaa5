@@ -16,6 +16,7 @@ import { Student, RoleCode } from '../../types';
 import { ROLE_CONFIG } from '../../data/mockData';
 import { getStudentAvatarInitial } from '../../utils/vietnamese';
 import { Logo10A5 } from './Logo10A5';
+import { PWAInstallButton } from './PWAInstallButton';
 import { resolveTeacherAvatar, DEFAULT_TEACHER_AVATAR } from '../../data/teacherAvatars';
 import { resolveStudentAvatar } from '../../data/avatarPresets';
 
@@ -113,6 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Side: Calling Games, Theme & Profile Controls */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          <PWAInstallButton variant="header" />
 
           {/* 10 Calling Games Quick Button (Teacher Only) */}
           {onOpenCallingGames && currentRole === 'GV' && (

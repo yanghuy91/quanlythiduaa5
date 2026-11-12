@@ -28,6 +28,7 @@ import {
   Mail
 } from 'lucide-react';
 import { Logo10A5 } from '../common/Logo10A5';
+import { PWAInstallButton } from '../common/PWAInstallButton';
 import { resolveTeacherAvatar, DEFAULT_TEACHER_AVATAR } from '../../data/teacherAvatars';
 import { resolveStudentAvatar } from '../../data/avatarPresets';
 import { StudentImportModal } from './StudentImportModal';
@@ -714,17 +715,20 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               </div>
             </div>
 
-            {onLogout && (
-              <button
-                type="button"
-                onClick={onLogout}
-                className="px-2 sm:px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 border border-rose-300 text-white text-[10.5px] sm:text-[11px] font-extrabold transition-all flex items-center gap-1 cursor-pointer shadow-sm active:scale-95 shrink-0"
-                title="Đăng xuất khỏi Bảng điều khiển Giáo viên"
-              >
-                <LogOut className="w-3.5 h-3.5 text-white" />
-                <span>Thoát</span>
-              </button>
-            )}
+            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+              <PWAInstallButton variant="banner" />
+              {onLogout && (
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="px-2 sm:px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 border border-rose-300 text-white text-[10.5px] sm:text-[11px] font-extrabold transition-all flex items-center gap-1 cursor-pointer shadow-sm active:scale-95 shrink-0"
+                  title="Đăng xuất khỏi Bảng điều khiển Giáo viên"
+                >
+                  <LogOut className="w-3.5 h-3.5 text-white" />
+                  <span>Thoát</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Middle & Bottom Area: Teacher Avatar + Name + Week Selector + Slogan */}

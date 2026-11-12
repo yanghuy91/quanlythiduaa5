@@ -54,6 +54,7 @@ import {
   MailMessage
 } from '../../types';
 import { Logo10A5 } from '../common/Logo10A5';
+import { PWAInstallButton } from '../common/PWAInstallButton';
 import { StudentGradeCard } from '../grades/StudentGradeCard';
 import { ClassroomMailbox } from '../common/ClassroomMailbox';
 import { EmulationMultiWeekViewExport } from '../common/EmulationMultiWeekViewExport';
@@ -862,6 +863,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
             {/* Quick Settings & Logout Buttons */}
             <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+              <PWAInstallButton variant="banner" />
               <button
                 type="button"
                 onClick={() => setShowSettingsModal(true)}
