@@ -3,13 +3,32 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
 import { defineConfig, Plugin } from 'vite';
-import { VitePWA } from 'vite-plugin-pwa';
 
 function stateStoragePlugin(): Plugin {
   return {
     name: 'state-storage-plugin',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
+        // Self-healing cleanup for any mobile device that previously registered dev-sw.js or workbox
+        if (req.url && (req.url.startsWith('/dev-sw.js') || req.url.startsWith('/@vite-plugin-pwa'))) {
+          res.setHeader('Content-Type', 'application/javascript');
+          res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+          res.end(`
+            if (typeof self !== 'undefined' && self.registration) {
+              self.addEventListener('install', () => self.skipWaiting());
+              self.addEventListener('activate', (event) => {
+                event.waitUntil(
+                  caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+                    .then(() => self.registration.unregister())
+                    .then(() => self.clients.matchAll())
+                    .then((clients) => clients.forEach((client) => client.navigate(client.url)))
+                );
+              });
+            }
+          `);
+          return;
+        }
+
         if (req.url === '/api/state') {
           const filePath = path.resolve(process.cwd(), 'data', 'classroom_state.json');
           if (req.method === 'GET') {
@@ -62,54 +81,7 @@ process.env.CI = 'true';
 
 export default defineConfig(() => {
   return {
-    plugins: [
-      react(),
-      tailwindcss(),
-      stateStoragePlugin(),
-      VitePWA({
-        registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
-        manifest: {
-          id: '/',
-          name: '10A5',
-          short_name: '10A5',
-          description: 'Ứng dụng Quản lý Nề nếp & Thi đua Lớp 10A5 - THPT Số 2 Đức Phổ',
-          theme_color: '#1e1b4b',
-          background_color: '#F6F6F3',
-          display: 'standalone',
-          start_url: '/',
-          scope: '/',
-          icons: [
-            {
-              src: '/pwa-192x192.png',
-              sizes: '192x192',
-              type: 'image/png',
-              purpose: 'any',
-            },
-            {
-              src: '/pwa-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any',
-            },
-            {
-              src: '/pwa-maskable-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'maskable',
-            },
-          ],
-        },
-        workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        },
-        devOptions: {
-          enabled: true,
-          type: 'module',
-        },
-      }),
-    ],
+    plugins: [react(), tailwindcss(), stateStoragePlugin()],
     resolve: {
       alias: {
         '@': path.resolve(process.cwd(), '.'),
@@ -123,7 +95,7 @@ export default defineConfig(() => {
       watch: process.env.DISABLE_HMR === 'true'
         ? null
         : {
-            ignored: ['**/node_modules/**', '**/dist/**', '**/dist-single/**', '**/data/**', '**/.git/**', '**/src/assets/**'],
+            ignored: ['**/node_modules/**', '**/dist/**', '**/dist-single/**', '**/dev-dist/**', '**/data/**', '**/.git/**', '**/src/assets/**'],
           },
     },
   };
