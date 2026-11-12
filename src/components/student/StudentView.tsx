@@ -2079,7 +2079,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
       {/* TAB 4: BẢNG THI ĐUA CÁ NHÂN / TỔNG QUAN THI ĐUA HỌC SINH */}
       {activeTab === 'ranking' && (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           <PeriodFilterComponent
             filter={periodFilter}
             onChangeFilter={setPeriodFilter}
@@ -2088,38 +2088,36 @@ export const StudentView: React.FC<StudentViewProps> = ({
             onToggleNoDataWeek={hasDelegatedPerm('QUAN_LY_TUAN') ? handleToggleNoDataWeek : undefined}
             compact={true}
           />
-          <div className="bg-surface rounded-3xl border border-token overflow-hidden shadow-xs space-y-0">
-          {/* Header */}
-          <div className="p-4 sm:p-5 border-b border-token flex flex-col md:flex-row md:items-center justify-between gap-3 bg-surface-2/40">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="p-1.5 rounded-xl bg-amber-500/15 text-amber-500 border border-amber-500/30">
-                  <Trophy className="w-4 h-4" />
-                </span>
-                <h3 className="text-sm font-bold text-main uppercase tracking-wider">
-                  Bảng tổng quan thi đua lớp 10A5
-                </h3>
-              </div>
+          <div className="bg-surface rounded-2xl border border-token overflow-hidden shadow-xs space-y-0">
+          {/* Header gọn */}
+          <div className="p-2.5 sm:p-3.5 border-b border-token flex flex-wrap items-center justify-between gap-2 bg-surface-2/40">
+            <div className="flex items-center gap-1.5">
+              <span className="p-1 rounded-lg bg-amber-500/15 text-amber-500 border border-amber-500/30">
+                <Trophy className="w-3.5 h-3.5" />
+              </span>
+              <h3 className="text-xs sm:text-sm font-bold text-main uppercase tracking-wider">
+                Bảng thi đua lớp 10A5
+              </h3>
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap shrink-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <button
                 type="button"
                 onClick={() => setShowMultiWeekExportInRanking(prev => !prev)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border shadow-xs ${
+                className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 border shadow-2xs ${
                   showMultiWeekExportInRanking
                     ? 'bg-emerald-600 text-white border-emerald-600 font-black'
                     : 'bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-900'
                 }`}
               >
                 <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
-                <span>{showMultiWeekExportInRanking ? 'Ẩn Bảng Xem & Xuất Nhiều Tuần' : 'Xem & Xuất Điểm Theo Tuần'}</span>
+                <span>{showMultiWeekExportInRanking ? 'Ẩn Xuất Điểm' : 'Xem & Xuất Điểm'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setRankingOnlyMe(prev => !prev)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border shadow-xs ${
+                className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 border shadow-2xs ${
                   rankingOnlyMe
                     ? 'bg-accent text-on-accent border-accent'
                     : 'bg-surface hover:bg-surface-2 border-token text-main hover:border-accent'
@@ -2127,91 +2125,89 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 title="Bấm để lọc nhanh xem riêng vị trí thi đua của bạn"
               >
                 <span>
-                  ⭐ Vị trí của bạn:{' '}
+                  ⭐{' '}
                   {myPeriodSummary.chuaCoDiem
                     ? myPeriodSummary.lyDoChuaCoDiem === 'no_data'
-                      ? '⊘ Tuần không có dữ liệu'
-                      : '⏳ Tuần chưa học'
-                    : `${myRank === 1 ? '🥇 Hạng 1' : myRank === 2 ? '🥈 Hạng 2' : myRank === 3 ? '🥉 Hạng 3' : `Hạng #${myRank}`}${myRankItem?.isTied ? ' (Đồng hạng)' : ''} (${myPeriodSummary.diemTrungBinh}đ)`}
+                      ? '⊘ Không tính điểm'
+                      : '⏳ Chưa học'
+                    : `${myRank === 1 ? '🥇 Hạng 1' : myRank === 2 ? '🥈 Hạng 2' : myRank === 3 ? '🥉 Hạng 3' : `Hạng #${myRank}`} (${myPeriodSummary.diemTrungBinh}đ)`}
                 </span>
               </button>
             </div>
           </div>
 
           {showMultiWeekExportInRanking && (
-            <div className="p-3 sm:p-4 border-b border-token bg-surface-2/30">
+            <div className="p-2.5 sm:p-3.5 border-b border-token bg-surface-2/30">
               <EmulationMultiWeekViewExport
                 students={allStudents}
                 records={records}
                 settings={settings}
                 currentWeek={currentWeek}
+                currentStudent={currentStudent}
+                isRestrictedToOwnExport={!isCadre}
               />
             </div>
           )}
 
-          {/* Sắp xếp & Lọc Tổ Toolbar (Gọn gàng) */}
-          <div className="p-3 sm:p-4 border-b border-token bg-surface space-y-2.5">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <span className="text-xs font-bold text-main flex items-center gap-1 shrink-0">
-                  <ArrowUpDown className="w-3.5 h-3.5 text-accent" />
-                  <span>Sắp xếp:</span>
-                </span>
-                <select
-                  value={rankingSortBy}
-                  onChange={e => setRankingSortBy(e.target.value as RankingSortOption)}
-                  className="w-full sm:w-auto px-3 py-1.5 rounded-xl bg-surface-2 border border-token text-xs font-bold text-main focus:outline-none focus:ring-2 focus:ring-accent/40 cursor-pointer"
-                >
-                  <option value="score_desc">🏆 Điểm thi đua cao nhất (Hạng 1 → 42)</option>
-                  <option value="score_asc">📉 Điểm thi đua thấp nhất (Cần cố gắng)</option>
-                  <option value="stt">🔢 Theo Số thứ tự danh sách (STT)</option>
-                  <option value="name_asc">🔤 Theo Tên học sinh (A → Z)</option>
-                  <option value="name_desc">🔤 Theo Tên học sinh (Z → A)</option>
-                  <option value="to">👥 Gom theo Tổ (Tổ 1 → 4)</option>
-                </select>
-              </div>
+          {/* Sắp xếp & Lọc Tổ Toolbar gọn gàng */}
+          <div className="p-2.5 sm:p-3 border-b border-token bg-surface space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-main flex items-center gap-1 shrink-0">
+                <ArrowUpDown className="w-3 h-3 text-accent" />
+                <span>Sắp xếp:</span>
+              </span>
+              <select
+                value={rankingSortBy}
+                onChange={e => setRankingSortBy(e.target.value as RankingSortOption)}
+                className="flex-1 sm:flex-initial px-2.5 py-1 rounded-xl bg-surface-2 border border-token text-xs font-bold text-main focus:outline-none focus:ring-2 focus:ring-accent/40 cursor-pointer"
+              >
+                <option value="score_desc">🏆 Điểm cao nhất (Hạng 1 → 42)</option>
+                <option value="score_asc">📉 Điểm thấp nhất</option>
+                <option value="stt">🔢 Số thứ tự (STT)</option>
+                <option value="name_asc">🔤 Tên học sinh (A → Z)</option>
+                <option value="name_desc">🔤 Tên học sinh (Z → A)</option>
+                <option value="to">👥 Theo Tổ (Tổ 1 → 4)</option>
+              </select>
             </div>
 
-            {/* Lọc theo Tổ: Cả lớp ở trên, 4 Tổ ở hàng dưới dóng đều 4 cột */}
-            <div className="flex flex-col gap-1.5 pt-1.5 border-t border-token/60">
+            {/* Lọc theo Tổ: Cả lớp + 4 Tổ trên cùng 1 hàng 5 cột gọn gàng */}
+            <div className="grid grid-cols-5 gap-1">
               <button
                 type="button"
                 onClick={() => setRankingToFilter('all')}
-                className={`w-full py-1.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-center whitespace-nowrap ${
+                className={`py-1 px-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer text-center whitespace-nowrap ${
                   rankingToFilter === 'all'
-                    ? 'bg-blue-600 text-white shadow-xs font-extrabold'
+                    ? 'bg-blue-600 text-white shadow-2xs font-extrabold'
                     : 'bg-surface-2 text-muted hover:text-main hover:bg-surface border border-token'
                 }`}
               >
                 Cả lớp
               </button>
-              <div className="grid grid-cols-4 gap-1.5">
-                {[1, 2, 3, 4].map(toNum => {
-                  const isSelected = rankingToFilter === toNum;
-                  return (
-                    <button
-                      key={toNum}
-                      type="button"
-                      onClick={() => setRankingToFilter(toNum)}
-                      className={`py-1.5 px-1 rounded-xl text-xs font-bold transition-all cursor-pointer text-center whitespace-nowrap ${
-                        isSelected
-                          ? 'bg-blue-600 text-white shadow-xs font-extrabold'
-                          : 'bg-surface-2 text-muted hover:text-main hover:bg-surface border border-token'
-                      }`}
-                    >
-                      Tổ {toNum}
-                    </button>
-                  );
-                })}
-              </div>
+              {[1, 2, 3, 4].map(toNum => {
+                const isSelected = rankingToFilter === toNum;
+                return (
+                  <button
+                    key={toNum}
+                    type="button"
+                    onClick={() => setRankingToFilter(toNum)}
+                    className={`py-1 px-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer text-center whitespace-nowrap ${
+                      isSelected
+                        ? 'bg-blue-600 text-white shadow-2xs font-extrabold'
+                        : 'bg-surface-2 text-muted hover:text-main hover:bg-surface border border-token'
+                    }`}
+                  >
+                    Tổ {toNum}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Danh sách học sinh */}
+          {/* Danh sách học sinh xếp sát, gọn gàng, không mất chữ tên HS trên điện thoại */}
           <div className="divide-y divide-token max-h-[640px] overflow-y-auto">
             {displayedRankings.length === 0 ? (
-              <div className="p-8 text-center space-y-2">
-                <p className="text-xs text-muted">Không tìm thấy học sinh nào phù hợp với bộ lọc hiện tại.</p>
+              <div className="p-6 text-center space-y-2">
+                <p className="text-xs text-muted">Không tìm thấy học sinh phù hợp.</p>
                 <button
                   type="button"
                   onClick={() => {
@@ -2221,7 +2217,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                   }}
                   className="px-3 py-1.5 rounded-xl bg-accent text-on-accent text-xs font-bold hover:opacity-90 cursor-pointer shadow-xs"
                 >
-                  Xóa bộ lọc &amp; Hiện lại cả lớp
+                  Hiện lại cả lớp
                 </button>
               </div>
             ) : (
@@ -2230,12 +2226,11 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 const officialRank = item.officialRank;
                 const frameConfig = getFrameForStudent(officialRank, item.score, item.student.customFrameId);
 
-                // Indicator on the left depends on sort mode
                 let rankLabel: React.ReactNode;
                 if (rankingSortBy === 'score_desc') {
                   rankLabel = officialRank === 1 ? '🥇' : officialRank === 2 ? '🥈' : officialRank === 3 ? '🥉' : `#${officialRank}`;
                 } else if (rankingSortBy === 'stt') {
-                  rankLabel = `#${item.student.viTriGhe < 10 ? '0' : ''}${item.student.viTriGhe}`;
+                  rankLabel = `${item.student.viTriGhe < 10 ? '0' : ''}${item.student.viTriGhe}`;
                 } else {
                   rankLabel = `${idx + 1}`;
                 }
@@ -2243,100 +2238,65 @@ export const StudentView: React.FC<StudentViewProps> = ({
                 return (
                   <div
                     key={item.student.maHS}
-                    className={`px-4 py-3 flex items-center justify-between transition-colors ${
+                    className={`px-2 sm:px-3.5 py-1.5 sm:py-2 flex items-center justify-between gap-1.5 transition-colors ${
                       isMe 
-                        ? 'bg-accent/12 border-l-4 border-l-accent font-semibold shadow-xs' 
+                        ? 'bg-accent/12 border-l-3 border-l-accent font-semibold' 
                         : 'hover:bg-surface-2'
                     }`}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1">
                       {/* Left Rank / Order badge */}
-                      <span className={`w-8 text-center text-xs font-bold shrink-0 ${
-                        rankingSortBy === 'score_desc' && officialRank === 1 ? 'text-amber-500 font-extrabold text-base' :
-                        rankingSortBy === 'score_desc' && officialRank === 2 ? 'text-slate-400 font-bold text-sm' :
-                        rankingSortBy === 'score_desc' && officialRank === 3 ? 'text-amber-700 font-bold text-sm' :
+                      <span className={`w-6 sm:w-7 text-center text-[11px] sm:text-xs font-bold shrink-0 ${
+                        rankingSortBy === 'score_desc' && officialRank === 1 ? 'text-amber-500 font-extrabold text-sm' :
+                        rankingSortBy === 'score_desc' && officialRank === 2 ? 'text-slate-400 font-bold text-xs' :
+                        rankingSortBy === 'score_desc' && officialRank === 3 ? 'text-amber-700 font-bold text-xs' :
                         'text-muted font-bold'
                       }`}>
                         {rankLabel}
                       </span>
 
                       {/* Avatar with Frame */}
-                      <AvatarFrame frame={frameConfig} size="sm">
-                        {item.student.avatarUrl ? (
-                          <img
-                            src={resolveStudentAvatar(item.student.avatarUrl)}
-                            alt={item.student.hoTen}
-                            className="w-full h-full object-cover rounded-full"
-                          />
-                        ) : (
-                          <div
-                            className={`w-full h-full rounded-full flex items-center justify-center font-bold text-[10px] text-center px-0.5 leading-tight truncate ${
-                              item.student.gioiTinh === 'Nu'
-                                ? 'bg-rose-100 text-rose-700'
-                                : 'bg-sky-100 text-sky-700'
-                            }`}
-                          >
-                            {item.student.tenRutGon || item.student.hoTen.split(' ').slice(-1)[0]}
-                          </div>
-                        )}
-                      </AvatarFrame>
+                      <div className="shrink-0">
+                        <AvatarFrame frame={frameConfig} size="sm">
+                          {item.student.avatarUrl ? (
+                            <img
+                              src={resolveStudentAvatar(item.student.avatarUrl)}
+                              alt={item.student.hoTen}
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            <div
+                              className={`w-full h-full rounded-full flex items-center justify-center font-bold text-[10px] text-center px-0.5 leading-tight truncate ${
+                                item.student.gioiTinh === 'Nu'
+                                  ? 'bg-rose-100 text-rose-700'
+                                  : 'bg-sky-100 text-sky-700'
+                              }`}
+                            >
+                              {item.student.tenRutGon || item.student.hoTen.split(' ').slice(-1)[0]}
+                            </div>
+                          )}
+                        </AvatarFrame>
+                      </div>
 
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <button
-                            type="button"
-                            onClick={() => setInspectingStudent(item.student)}
-                            className={`text-xs font-bold truncate flex items-center gap-1 cursor-pointer hover:text-accent transition-colors ${isMe ? 'text-accent' : 'text-main'}`}
-                            title="Bấm để xem chi tiết vi phạm trong tuần đang chọn"
-                          >
-                            <span>{item.student.hoTen}</span>
-                            <Eye className="w-3 h-3 text-muted hover:text-accent shrink-0" />
-                          </button>
-                          
+                      <div className="min-w-0 flex-1">
+                        <button
+                          type="button"
+                          onClick={() => setInspectingStudent(item.student)}
+                          className={`text-xs sm:text-sm font-bold leading-snug text-left flex items-center gap-1 cursor-pointer hover:text-accent transition-colors ${isMe ? 'text-accent' : 'text-main'}`}
+                          title="Bấm để xem chi tiết vi phạm"
+                        >
+                          <span className="break-words">{item.student.hoTen}</span>
                           {isMe && (
-                            <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-accent text-on-accent shadow-xs">
+                            <span className="text-[9px] font-black px-1 py-0.2 rounded bg-accent text-on-accent shrink-0">
                               BẠN
                             </span>
                           )}
+                        </button>
 
-                          {/* When sorted by something other than score_desc, explicitly display official emulation rank */}
-                          {rankingSortBy !== 'score_desc' && (
-                            <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
-                              officialRank === 1 ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30' :
-                              officialRank <= 3 ? 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30' :
-                              'bg-surface-2 text-muted border border-token'
-                            }`}>
-                              {officialRank === 1 ? (item.isTied ? '🥇 Đồng hạng 1' : '🥇 Hạng 1') :
-                               officialRank === 2 ? (item.isTied ? '🥈 Đồng hạng 2' : '🥈 Hạng 2') :
-                               officialRank === 3 ? (item.isTied ? '🥉 Đồng hạng 3' : '🥉 Hạng 3') :
-                               (item.isTied ? `Đồng hạng #${officialRank}` : `Hạng #${officialRank}`)}
-                            </span>
-                          )}
-
-                          {officialRank === 1 && rankingSortBy === 'score_desc' && (
-                            <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
-                              {item.isTied ? 'ĐỒNG HẠNG 1' : 'TOP 1'}
-                            </span>
-                          )}
-                          {(officialRank === 2 || officialRank === 3) && rankingSortBy === 'score_desc' && (
-                            <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30">
-                              {item.isTied ? `ĐỒNG HẠNG ${officialRank}` : 'TOP 2-3'}
-                            </span>
-                          )}
-                          {officialRank >= 4 && officialRank <= 10 && rankingSortBy === 'score_desc' && (
-                            <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                              {item.isTied ? `ĐỒNG HẠNG ${officialRank}` : 'TOP 10'}
-                            </span>
-                          )}
-                          {officialRank > 10 && item.isTied && rankingSortBy === 'score_desc' && (
-                            <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/30">
-                              ĐỒNG HẠNG #{officialRank}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="text-[10px] font-medium text-muted flex items-center gap-1.5 mt-0.5">
+                        <div className="text-[10px] font-medium text-muted flex items-center gap-1 flex-wrap leading-tight mt-0.5">
                           <span className="font-semibold text-token">Tổ {item.student.to}</span>
+                          <span>·</span>
+                          <span>Hạng #{officialRank}{item.isTied ? ' (ĐH)' : ''}</span>
                           {item.student.vaiTro.some(r => r !== 'HS') && (
                             <>
                               <span>·</span>
@@ -2348,7 +2308,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
                                  item.student.vaiTro.includes('LP_LD') ? 'LP Lao động' :
                                  item.student.vaiTro.includes('LP_VT') ? 'LP Văn thể' :
                                  item.student.vaiTro.includes('CD') ? 'Cờ đỏ' :
-                                 item.student.vaiTro.includes('TT') ? `Tổ trưởng T${item.student.to}` : ''}
+                                 item.student.vaiTro.includes('TT') ? `TT Tổ ${item.student.to}` : ''}
                               </span>
                             </>
                           )}
@@ -2356,12 +2316,12 @@ export const StudentView: React.FC<StudentViewProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                       {item.deductions > 0 && (
                         <button
                           type="button"
                           onClick={() => setInspectingStudent(item.student)}
-                          className="text-[10px] font-bold text-[var(--st-bad)] bg-rose-500/10 hover:bg-rose-500/20 px-2 py-0.5 rounded-lg border border-rose-500/25 cursor-pointer"
+                          className="text-[10px] font-bold text-[var(--st-bad)] bg-rose-500/10 hover:bg-rose-500/20 px-1.5 py-0.5 rounded-md border border-rose-500/25 cursor-pointer"
                           title="Xem chi tiết các lỗi bị trừ điểm"
                         >
                           -{item.deductions}đ
@@ -2374,20 +2334,20 @@ export const StudentView: React.FC<StudentViewProps> = ({
                       )}
 
                       {item.chuaCoDiem ? (
-                        <span className="text-[10.5px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-dashed border-amber-300">
-                          {item.lyDoChuaCoDiem === 'no_data' ? '⊘ Không có dữ liệu' : '⏳ Tuần chưa học'}
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-dashed border-amber-300">
+                          {item.lyDoChuaCoDiem === 'no_data' ? '⊘ Nghỉ' : '⏳ Chưa học'}
                         </span>
                       ) : (
                         <>
-                          <span className="text-xs font-black tabular-nums text-main">
-                            {item.score} đ
+                          <span className="text-xs font-black tabular-nums text-main whitespace-nowrap">
+                            {item.score}đ
                           </span>
 
                           {(() => {
                             const tierInfo = getRatingTierInfo(item.xepLoai, item.score, settings);
                             const colorCls = getRatingColorClasses(tierInfo.color);
                             return (
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${colorCls.badgeBg} ${colorCls.badgeText} ${colorCls.badgeBorder}`}>
+                              <span className={`hidden sm:inline-flex text-[10px] font-bold px-2 py-0.5 rounded-full border ${colorCls.badgeBg} ${colorCls.badgeText} ${colorCls.badgeBorder}`}>
                                 {tierInfo.icon ? `${tierInfo.icon} ` : ''}{tierInfo.label}
                               </span>
                             );
@@ -2398,8 +2358,8 @@ export const StudentView: React.FC<StudentViewProps> = ({
                       <button
                         type="button"
                         onClick={() => setInspectingStudent(item.student)}
-                        className="p-1.5 rounded-lg bg-surface-2 hover:bg-surface-3 text-muted hover:text-main border border-token cursor-pointer transition-colors"
-                        title="Xem chi tiết lỗi vi phạm theo tuần đang chọn"
+                        className="p-1 rounded-lg bg-surface-2 hover:bg-surface-3 text-muted hover:text-main border border-token cursor-pointer transition-colors"
+                        title="Xem chi tiết"
                       >
                         <Eye className="w-3.5 h-3.5 text-accent" />
                       </button>

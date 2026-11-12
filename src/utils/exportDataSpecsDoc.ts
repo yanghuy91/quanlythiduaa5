@@ -8,6 +8,7 @@ import {
   RuleItem,
   PointType,
   SeverityLevel,
+  TeacherSettings,
 } from '../types';
 import { DEFAULT_SUBJECTS } from '../data/academicCatalog';
 import {
@@ -20,6 +21,8 @@ import {
   classifySeverityByPoints,
   normalizeRuleCategory,
   STANDARD_RULE_CATEGORIES,
+  calculateStudentWeekSummary,
+  getRatingTierInfo,
 } from './emulation';
 
 /**
@@ -588,7 +591,9 @@ export function exportCurrentClassToUnifiedExcel(
   layout: SeatLayoutNode[],
   records: DisciplineRecord[],
   academicRecords: StudentAcademicRecord[],
-  rules?: RuleItem[]
+  rules?: RuleItem[],
+  currentWeek: number = 1,
+  settings?: TeacherSettings
 ): void {
   const wb = XLSX.utils.book_new();
 
@@ -615,7 +620,7 @@ export function exportCurrentClassToUnifiedExcel(
     XLSX.utils.book_append_sheet(wb, ws0, '0_SoDoLop_Chuan');
   }
 
-  // Sheet 1: Danh sách học sinh & chỗ ngồi (Quy chiếu từ Sơ đồ lớp - gọn nhẹ, chỉ xoay quanh nề nếp/thi đua)
+  // Sheet 1: Danh sách học sinh, chỗ ngồi & Điểm thi đua hiện tại
   const sheet1Headers = [
     'STT',
     'Mã HS',
@@ -625,18 +630,55 @@ export function exportCurrentClassToUnifiedExcel(
     'Chức vụ',
     'Dãy bàn',
     'Số bàn',
+    `Điểm thi đua (T${currentWeek})`,
+    'Xếp loại',
   ];
 
-  const sheet1Rows = masterStudents.map((s, idx) => [
-    idx + 1,
-    s.maHS,
-    s.hoTen,
-    s.gioiTinh === 'Nu' ? 'Nữ' : 'Nam',
-    s.to,
-    formatRolesForExcel(s.vaiTro),
-    s.dayBan || s.to,
-    s.soBan || Math.min(6, Math.floor(idx / 8) + 1),
-  ]);
+  const defaultSettings: TeacherSettings = settings || {
+    diemKhoiDau: 100,
+    nguongTot: 90,
+    nguongKha: 75,
+    nguongDat: 60,
+    batDiemCong: true,
+    batDiemThuongGoLoi: false,
+    tranDiemBu: 50,
+    thoiHanSuaHuyPhut: 1440,
+    toTruongTuCham: false,
+    hocSinhThayMau: 'CaLop',
+    hanGuiGiaiTrinhNgay: 7,
+    nguoiDuyetGiaiTrinh: 'GV',
+    mocBuoiSang: '06:30-11:30',
+    mocBuoiChieu: '12:30-17:30',
+    khoaKhanCap: false,
+    maLop: '10A5DP',
+    choPhepXemDiemMon: true,
+    choPhepTrungAvatar: true,
+  };
+
+  const sheet1Rows = masterStudents.map((s, idx) => {
+    const summary = calculateStudentWeekSummary(
+      s.maHS,
+      s.hoTen,
+      s.to,
+      currentWeek,
+      records || [],
+      defaultSettings,
+      currentWeek
+    );
+    const tierInfo = getRatingTierInfo(summary.xepLoai, summary.diemHienTai, defaultSettings);
+    return [
+      idx + 1,
+      s.maHS,
+      s.hoTen,
+      s.gioiTinh === 'Nu' ? 'Nữ' : 'Nam',
+      s.to,
+      formatRolesForExcel(s.vaiTro),
+      s.dayBan || s.to,
+      s.soBan || Math.min(6, Math.floor(idx / 8) + 1),
+      summary.diemHienTai,
+      tierInfo.label,
+    ];
+  });
 
   const ws1 = XLSX.utils.aoa_to_sheet([sheet1Headers, ...sheet1Rows]);
   ws1['!cols'] = [
@@ -648,10 +690,12 @@ export function exportCurrentClassToUnifiedExcel(
     { wch: 12 },
     { wch: 10 },
     { wch: 10 },
+    { wch: 18 },
+    { wch: 14 },
   ];
   XLSX.utils.book_append_sheet(wb, ws1, '1_DanhSach_Chongoi');
 
-  // Sheet 2: Nhật ký nề nếp (Quy chiếu theo Sơ đồ lớp)
+  // Sheet 2: Nhật ký nề nếp
   const sheet2Headers = [
     'Ngày học',
     'Buổi',
@@ -669,18 +713,21 @@ export function exportCurrentClassToUnifiedExcel(
     masterStudents,
     (records || []).filter(r => r.trangThai !== 'DaHuy')
   );
-  const sheet2Rows = activeRecords.map(r => [
-    r.ngayHoc,
-    r.buoi === 'Chieu' ? 'Chiều' : 'Sáng',
-    r.tuanHoc,
-    r.hoTen || r.maHS,
-    r.to,
-    r.nhomHanhVi,
-    r.tenHanhVi,
-    r.loaiDiem === 'Cong' ? 'Cộng' : 'Trừ',
-    r.diemSo,
-    r.ghiChu || '',
-  ]);
+  const sheet2Rows =
+    activeRecords.length > 0
+      ? activeRecords.map(r => [
+          r.ngayHoc,
+          r.buoi === 'Chieu' ? 'Chiều' : 'Sáng',
+          r.tuanHoc,
+          r.hoTen || r.maHS,
+          r.to,
+          r.nhomHanhVi,
+          r.tenHanhVi,
+          r.loaiDiem === 'Cong' ? 'Cộng' : 'Trừ',
+          r.diemSo,
+          r.ghiChu || '',
+        ])
+      : [['(Chưa có lượt ghi nhận vi phạm/điểm cộng)', '', currentWeek, '', '', '', '', '', '', '']];
 
   const ws2 = XLSX.utils.aoa_to_sheet([sheet2Headers, ...sheet2Rows]);
   ws2['!cols'] = [
@@ -697,7 +744,7 @@ export function exportCurrentClassToUnifiedExcel(
   ];
   XLSX.utils.book_append_sheet(wb, ws2, '2_NhatKy_NeNep');
 
-  // Sheet 3: Nội quy lớp (Cơ sở trừ điểm)
+  // Sheet 3: Nội quy lớp
   const ws3Rows = buildRulesSheetAoA(rules);
   const ws3 = XLSX.utils.aoa_to_sheet(ws3Rows);
   ws3['!cols'] = [
@@ -712,22 +759,8 @@ export function exportCurrentClassToUnifiedExcel(
   ];
   XLSX.utils.book_append_sheet(wb, ws3, '3_NoiQuy_Lop');
 
-  // Sheet 4: Hướng dẫn nhanh bổ sung các thay đổi mới
-  const sheet4Guide = [
-    ['HƯỚNG DẪN NHANH (1 FILE DUY NHẤT) - LỚP 10A5 (CẬP NHẬT MỚI)'],
-    ['1. Sheet "0_SoDoLop_Chuan": Sơ đồ lớp 4 Tổ x 6 Bàn làm chuẩn gốc (chế độ Sơ đồ chọn trực tiếp vị trí bàn, đã lược bỏ thanh tìm kiếm).'],
-    ['2. Sheet "1_DanhSach_Chongoi_Diem": Danh sách học sinh, chức vụ (LT, BT, PBT, LP_HT, LP_LD, LP_VT, CD, TT) và điểm môn học.'],
-    ['3. Sheet "2_NhatKy_NeNep": Ghi nhận vi phạm / điểm cộng theo tuần.'],
-    [`4. Sheet "3_NoiQuy_Lop": Phân loại vi phạm chia thành 4 nhóm: ${STANDARD_RULE_CATEGORIES.join('; ')} (và nhóm "Điểm cộng").`],
-    ['5. Mục "★ Hay dùng" (thay thế mục Tất cả): Các lỗi có cột "Ghim hay dùng" = "Có" sẽ hiện trong tab "★ Hay dùng" để Ban cán sự bấm chọn nhanh.'],
-    ['6. Mức độ vi phạm: Căn cứ vào quy định file hoặc điểm trừ: Trừ 1–2đ = Nhẹ (viền đen), Trừ 3–4đ = Vừa (viền cam), Trừ ≥5đ = Nặng (viền đỏ).'],
-  ];
-  const ws4 = XLSX.utils.aoa_to_sheet(sheet4Guide);
-  ws4['!cols'] = [{ wch: 115 }];
-  XLSX.utils.book_append_sheet(wb, ws4, '4_HuongDan');
-
   const dateTag = new Date().toISOString().split('T')[0];
-  XLSX.writeFile(wb, `Du_Lieu_Lop_10A5_Chuan_SoDoLop_${dateTag}.xlsx`);
+  XLSX.writeFile(wb, `Du_Lieu_Lop_10A5_${dateTag}.xlsx`);
 }
 
 /**

@@ -1201,176 +1201,93 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
         onShowToast={triggerToast}
       />
 
-      {/* KHỐI 1: NGUYÊN TẮC 1 FILE DUY NHẤT & TẢI FILE MẪU / HƯỚNG DẪN */}
-      <div className="bg-surface rounded-2xl border-2 border-indigo-500/30 shadow-md overflow-hidden">
-        <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 px-5 py-4 text-white flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/25 shrink-0 shadow-inner">
-              <Layers className="w-6 h-6 text-amber-300" />
+      {/* KHỐI 1: TRUNG TÂM NHẬP / XUẤT DỮ LIỆU LỚP */}
+      <div className="bg-surface rounded-2xl border border-indigo-500/30 shadow-xs overflow-hidden">
+        <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 px-4 py-3 text-white flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center border border-white/25 shrink-0">
+              <Layers className="w-4 h-4 text-amber-300" />
             </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-base sm:text-lg font-black tracking-tight uppercase">
-                  Trung Tâm Nhập / Xuất Dữ Liệu Nề Nếp &amp; Sơ Đồ Lớp
-                </h3>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-400 text-slate-950">
-                  Sơ Đồ Lớp Làm Chuẩn
-                </span>
-              </div>
-              <p className="text-xs text-indigo-100 mt-0.5">
-                Đơn giản hóa tối đa: Chỉ xoay quanh <b>Sơ đồ lớp, Nội quy và Thi đua Nề nếp</b> (lấy Sơ đồ lớp làm chuẩn gốc).
-              </p>
-            </div>
+            <h3 className="text-xs sm:text-sm font-black tracking-tight uppercase">
+              Nhập / Xuất Dữ Liệu Lớp &amp; Sơ Đồ Chỗ Ngồi
+            </h3>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={() => {
                 downloadUnifiedExcelTemplate(currentSeatingMaster.students, currentSeatingMaster.layout, rules);
-                triggerToast(
-                  'Đã tải File Excel Mẫu Chuẩn (Theo Sơ Đồ Lớp)!',
-                  'File đã có sẵn Sheet Sơ đồ lớp chuẩn, Danh sách quy chiếu và Sheet Nội quy lớp 10A5.'
-                );
+                triggerToast('Đã tải File Excel Mẫu (.xlsx)!');
               }}
-              className="px-3.5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
             >
-              <FileSpreadsheet className="w-4 h-4" />
-              <span>1. Tải File Excel Mẫu (Chuẩn Sơ Đồ Lớp)</span>
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>Tải File Mẫu (.xlsx)</span>
             </button>
 
             <button
               type="button"
               onClick={() => {
                 downloadRulesExcelTemplate(rules);
-                triggerToast(
-                  'Đã tải File Mẫu Nội Quy Lớp (.xlsx)!',
-                  'Thầy có thể chỉnh sửa mức điểm trừ/cộng rồi thả lại vào ô bên dưới để cập nhật cơ sở trừ điểm.'
-                );
+                triggerToast('Đã tải Mẫu Nội Quy Lớp (.xlsx)!');
               }}
-              className="px-3.5 py-2.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
             >
-              <ClipboardList className="w-4 h-4" />
-              <span>Tải Mẫu Nội Quy Lớp (.xlsx)</span>
+              <ClipboardList className="w-3.5 h-3.5" />
+              <span>Mẫu Nội Quy (.xlsx)</span>
             </button>
 
             <button
               type="button"
               onClick={() => {
                 exportDataSpecsWordDocument();
-                triggerToast(
-                  'Đã tải File Hướng Dẫn (.doc)!',
-                  'Tài liệu Word giải thích nguyên tắc lấy Sơ đồ lớp làm chuẩn và quy chiếu 1 file.'
-                );
+                triggerToast('Đã tải File Hướng Dẫn (.doc)!');
               }}
-              className="px-3.5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs flex items-center gap-1.5 border border-white/25 transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs flex items-center gap-1.5 border border-white/25 transition-all cursor-pointer"
             >
-              <BookOpen className="w-4 h-4 text-amber-300" />
-              <span>Tải File Hướng Dẫn (.doc)</span>
+              <BookOpen className="w-3.5 h-3.5 text-amber-300" />
+              <span>Hướng Dẫn (.doc)</span>
             </button>
           </div>
         </div>
 
-        <div className="p-5 space-y-5">
-          {/* KHỐI ĐẶC BIỆT: NHẬP DỮ LIỆU CHUẨN TỪ SƠ ĐỒ LỚP (3 CỘT: STT | HỌ TÊN | VỊ TRÍ) */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-50 via-blue-50 to-amber-50/70 text-slate-900 shadow-sm border-2 border-indigo-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-start sm:items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shrink-0 shadow-sm">
-                <Sparkles className="w-6 h-6 text-indigo-900" />
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h4 className="text-sm sm:text-base font-black tracking-tight text-slate-900">
-                    Nhập Dữ Liệu Chuẩn Từ Sơ Đồ Lớp (Chỉ Cần 3 Thông Tin)
-                  </h4>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-400 text-slate-950">
-                    Mới · Tiện Lợi
-                  </span>
-                </div>
-                <p className="text-xs text-slate-700 mt-1 leading-relaxed">
-                  Chỉ cần 3 cột: <strong>STT | Họ và tên | Vị trí</strong> (Tổ - Bàn - Ghế). Có sẵn Prompt AI chuẩn mốc phòng học để chụp ảnh sơ đồ đưa AI phân tích mà không bao giờ bị ngược hướng!
-                </p>
-              </div>
+        <div className="p-3.5 sm:p-4 space-y-3.5">
+          {/* Thanh công cụ nhập nhanh Sơ đồ lớp (3 cột) */}
+          <div className="p-3 rounded-xl bg-indigo-50/60 border border-indigo-200 flex flex-wrap items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-700 shrink-0" />
+              <span className="text-xs font-black text-slate-900">
+                Nhập Sơ Đồ Lớp Chuẩn (3 Cột: STT | Họ tên | Vị trí)
+              </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={handleCopyPrompt3Col}
-                className={`px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-2xs cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
                   copiedPrompt3Col
                     ? 'bg-emerald-600 text-white'
                     : 'bg-white hover:bg-indigo-50 text-indigo-900 border border-indigo-200'
                 }`}
               >
-                {copiedPrompt3Col ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4 text-indigo-600" />}
-                <span>{copiedPrompt3Col ? 'Đã copy Prompt AI!' : 'Copy Prompt AI (3 Cột)'}</span>
+                {copiedPrompt3Col ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5 text-indigo-600" />}
+                <span>{copiedPrompt3Col ? 'Đã chép Prompt!' : 'Copy Prompt AI'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setIsStandardSeatingModalOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95"
+                className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
               >
-                <Upload className="w-4 h-4 text-amber-300" />
-                <span>Mở Cửa Sổ Nhập Chuẩn (3 Cột)</span>
+                <Upload className="w-3.5 h-3.5 text-amber-300" />
+                <span>Nhập Chuẩn (3 Cột)</span>
               </button>
             </div>
           </div>
 
-          {/* Thông báo nguyên tắc Sơ đồ lớp làm chuẩn */}
-          <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-300/90 text-amber-950 flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shrink-0 mt-0.5">
-              <Grid className="w-4 h-4" />
-            </div>
-              <div className="text-xs leading-relaxed">
-              <span className="font-black uppercase text-amber-900">
-                Nguyên tắc Chuẩn Hóa &amp; Quy Chiếu Tự Động:
-              </span>{' '}
-              <b>Sơ đồ lớp hiện tại ({currentSeatingMaster.students.length} học sinh · 4 Tổ)</b> được dùng làm gốc chuẩn duy nhất. Khi thầy thả file Danh sách, Sổ nề nếp hoặc Nội quy lớp vào, hệ thống sẽ <b>tự động đối chiếu theo Họ tên / Mã HS</b> để gắn thông tin vào đúng học sinh, đúng Tổ và đúng vị trí ghế trên Sơ đồ lớp.
-            </div>
-          </div>
-
-          {/* Tóm tắt 3 bước trực quan */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200/80 flex items-start gap-3">
-              <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0">
-                1
-              </div>
-              <div>
-                <h4 className="text-xs font-black text-indigo-950">Sơ Đồ Lớp Là Gốc Chuẩn</h4>
-                <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                  Tổ 1–4, Dãy bàn, Số bàn và Mã HS của học sinh luôn được bảo toàn theo <b>Sơ đồ lớp</b>.
-                </p>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200/80 flex items-start gap-3">
-              <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0">
-                2
-              </div>
-              <div>
-                <h4 className="text-xs font-black text-indigo-950">Thả File Nội Quy / Nề Nếp Vào Ô Dưới</h4>
-                <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                  Dù là <b>File Nội quy, File Nề nếp, File Sơ đồ</b> hay <b>File Tổng hợp</b>, hệ thống đều tự quy chiếu từ Sơ đồ lớp.
-                </p>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-start gap-3">
-              <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-black text-xs flex items-center justify-center shrink-0">
-                3
-              </div>
-              <div>
-                <h4 className="text-xs font-black text-emerald-950">Bấm "Áp Dụng Ngay" (Lưu Lên Mây)</h4>
-                <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                  Xem trước kết quả quy chiếu và bấm <b>1 nút duy nhất</b> để đồng bộ toàn bộ lên Firebase.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* KHU VỰC KÉO THẢ 1 FILE DUY NHẤT */}
+          {/* KHU VỰC KÉO THẢ FILE */}
           <div
             onDragOver={e => {
               e.preventDefault();
@@ -1384,7 +1301,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
               if (file) processUploadedFile(file);
             }}
             onClick={() => universalFileInputRef.current?.click()}
-            className={`relative border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
+            className={`relative border-2 border-dashed rounded-2xl p-5 text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
               isDragging
                 ? 'border-indigo-600 bg-indigo-50/60 scale-[0.99]'
                 : 'border-indigo-300 hover:border-indigo-500 bg-surface-2/40 hover:bg-indigo-50/30'
@@ -1402,69 +1319,66 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
               className="hidden"
             />
 
-            <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 mb-3 shadow-inner">
+            <div className="w-11 h-11 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 mb-2">
               {isAnalyzing ? (
-                <RefreshCw className="w-8 h-8 animate-spin" />
+                <RefreshCw className="w-5 h-5 animate-spin" />
               ) : (
-                <Upload className="w-8 h-8" />
+                <Upload className="w-5 h-5" />
               )}
             </div>
 
-            <p className="text-sm sm:text-base font-black text-main">
+            <p className="text-xs sm:text-sm font-black text-main">
               {isAnalyzing
-                ? 'Đang đọc file và quy chiếu dữ liệu theo Sơ đồ lớp...'
-                : 'Kéo thả File Excel (.xlsx), CSV hoặc JSON vào đây (Hoặc nhấn để chọn file)'}
-            </p>
-            <p className="text-xs text-muted mt-1 max-w-xl">
-              Lấy <b>Sơ đồ lớp làm chuẩn</b>: Tự động quy chiếu Điểm các môn học, Nhật ký nề nếp, Ngày sinh, Giới tính, Chức vụ từ file vào đúng học sinh trên Sơ đồ lớp.
+                ? 'Đang đọc và xử lý dữ liệu...'
+                : 'Kéo thả File Excel (.xlsx), CSV hoặc JSON vào đây'}
             </p>
 
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-4" onClick={e => e.stopPropagation()}>
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-3" onClick={e => e.stopPropagation()}>
               <button
                 type="button"
                 onClick={() => universalFileInputRef.current?.click()}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
               >
                 <Upload className="w-3.5 h-3.5" />
-                <span>Chọn 1 File Từ Máy Tính</span>
+                <span>Chọn File</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowPasteBox(prev => !prev)}
-                className="px-3.5 py-2 rounded-xl bg-surface hover:bg-surface-2 text-main border border-token text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                className="px-3 py-1.5 rounded-xl bg-surface hover:bg-surface-2 text-main border border-token text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <FileText className="w-3.5 h-3.5 text-indigo-600" />
-                <span>{showPasteBox ? 'Ẩn ô dán văn bản / AI' : 'Hoặc Dán Bảng Từ Excel / AI'}</span>
+                <span>{showPasteBox ? 'Ẩn ô dán' : 'Dán văn bản'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleCopyPrompt}
-                className="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 {copiedPrompt ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Đã chép câu lệnh AI!</span>
+                    <span>Đã chép!</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Copy Câu Lệnh AI Chuẩn</span>
+                    <span>Copy Prompt AI</span>
                   </>
                 )}
               </button>
             </div>
           </div>
 
-          {/* Ô DÁN VĂN BẢN TRỰC TIẾP (TÙY CHỌN) */}
+          {/* Ô DÁN VĂN BẢN TRỰC TIẾP */}
           {showPasteBox && (
-            <div className="p-4 rounded-2xl bg-surface-2/70 border border-token space-y-3">
+            <div className="p-3.5 rounded-2xl bg-surface-2/70 border border-token space-y-2.5">
               <div className="flex items-center justify-between gap-2">
                 <label className="text-xs font-black text-main flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-indigo-600" />
-                  <span>Dán bảng dữ liệu từ Excel hoặc kết quả từ ChatGPT / Gemini vào đây:</span>
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Dán bảng dữ liệu từ Excel hoặc AI:</span>
                 </label>
                 {pastedText && (
                   <button
@@ -1477,20 +1391,20 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                 )}
               </div>
               <textarea
-                rows={5}
+                rows={4}
                 value={pastedText}
                 onChange={e => setPastedText(e.target.value)}
-                placeholder={`Ví dụ dán trực tiếp từ Excel hoặc bảng AI:\nSTT\tMã HS\tHọ và tên\tGiới tính\tNgày sinh\tTổ\tChức vụ\tToán\tNgữ văn\tTiếng Anh\n1\tHS01\tNguyễn Minh Khôi\tNam\t15/03/2011\t1\tLT\t9.2\t8.5\t9.0`}
-                className="w-full p-3 rounded-xl bg-surface border border-token text-xs font-mono text-main focus:outline-none focus:border-indigo-500"
+                placeholder={`STT\tMã HS\tHọ và tên\tGiới tính\tTổ\tChức vụ\n1\tHS01\tNguyễn Minh Khôi\tNam\t1\tLT`}
+                className="w-full p-2.5 rounded-xl bg-surface border border-token text-xs font-mono text-main focus:outline-none focus:border-indigo-500"
               />
               <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={() => handleParseRawTextString(pastedText)}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow-sm cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow-2xs cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Đọc &amp; Quy Chiếu Theo Sơ Đồ Lớp</span>
+                  <span>Đọc Dữ Liệu</span>
                 </button>
               </div>
             </div>
@@ -1498,8 +1412,8 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
 
           {/* HIỂN THỊ LỖI NẾU CÓ */}
           {errorMsg && (
-            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
               <div className="text-xs">
                 <p className="font-black">Không thể đọc dữ liệu:</p>
                 <p className="mt-0.5">{errorMsg}</p>
@@ -1507,24 +1421,19 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
             </div>
           )}
 
-          {/* BẢNG XEM TRƯỚC & NÚT ÁP DỤNG NGAY (1 CLICK) */}
+          {/* BẢNG XEM TRƯỚC & NÚT ÁP DỤNG NGAY */}
           {parsedPackage && (
-            <div className="rounded-2xl border-2 border-emerald-500 bg-emerald-50/40 p-4 sm:p-5 space-y-4 shadow-md">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-200 pb-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="w-6 h-6" />
+            <div className="rounded-2xl border-2 border-emerald-500 bg-emerald-50/40 p-3.5 sm:p-4 space-y-3 shadow-xs">
+              <div className="flex items-center justify-between gap-2 border-b border-emerald-200 pb-2.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h4 className="text-sm sm:text-base font-black text-emerald-950">
-                        Đã Đọc &amp; Quy Chiếu File: {parsedPackage.sourceName}
-                      </h4>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-600 text-white uppercase">
-                        Chuẩn Sơ Đồ Lớp
-                      </span>
-                    </div>
-                    <p className="text-xs text-emerald-800 mt-0.5 font-medium">
+                    <h4 className="text-xs sm:text-sm font-black text-emerald-950">
+                      Đã đọc file: {parsedPackage.sourceName}
+                    </h4>
+                    <p className="text-[11px] text-emerald-800 font-medium">
                       {parsedPackage.summaryNotes.join(' • ')}
                     </p>
                   </div>
@@ -1533,65 +1442,14 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                 <button
                   type="button"
                   onClick={() => setParsedPackage(null)}
-                  className="text-xs font-bold text-slate-500 hover:text-rose-600 self-end sm:self-center cursor-pointer"
+                  className="text-xs font-bold text-slate-500 hover:text-rose-600 cursor-pointer"
                 >
-                  Hủy bỏ
+                  Hủy
                 </button>
               </div>
 
-              {/* Thẻ tóm tắt số lượng từng phần trong 1 file */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3 rounded-xl bg-white border border-emerald-200 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">
-                    <Users className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-bold text-slate-500">Sơ đồ lớp &amp; Học sinh</div>
-                    <div className="text-sm font-black text-slate-900">
-                      {parsedPackage.has2DSeatingSheet
-                        ? `Sơ đồ 2D chuẩn (${parsedPackage.students.length} HS)`
-                        : parsedPackage.students.length > 0
-                        ? `Đối chiếu ${parsedPackage.students.length} HS với Sơ đồ lớp`
-                        : `Giữ chuẩn Sơ đồ lớp (${currentSeatingMaster.students.length} HS)`}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-white border border-emerald-200 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-black">
-                    <GraduationCap className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-bold text-slate-500">Bảng điểm (Quy chiếu Sơ đồ lớp)</div>
-                    <div className="text-sm font-black text-slate-900">
-                      {parsedPackage.gradesCount > 0
-                        ? `${parsedPackage.gradesCount} bảng điểm HS`
-                        : 'Không có cột điểm'}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-white border border-emerald-200 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-black">
-                    <ClipboardList className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-bold text-slate-500">Nề nếp (Quy chiếu Sơ đồ lớp)</div>
-                    <div className="text-sm font-black text-slate-900">
-                      {parsedPackage.disciplineRecords.length > 0
-                        ? `${parsedPackage.disciplineRecords.length} lượt ghi nhận`
-                        : 'Không có lượt ghi mới'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tuỳ chọn chế độ Quy chiếu theo Sơ đồ lớp */}
               {!parsedPackage.isJsonBackup && parsedPackage.hasStudentRoster && !parsedPackage.has2DSeatingSheet && (
-                <div className="flex flex-col gap-2 bg-white p-3.5 rounded-xl border border-emerald-200">
-                  <span className="text-xs font-black text-slate-800">
-                    Nguyên tắc xử lý Sơ đồ lớp khi nạp file này:
-                  </span>
+                <div className="flex flex-col gap-1.5 bg-white p-3 rounded-xl border border-emerald-200">
                   <label className="flex items-start gap-2 text-xs font-bold text-slate-800 cursor-pointer">
                     <input
                       type="radio"
@@ -1600,9 +1458,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                       onChange={() => setRosterImportMode('reconcile_seating')}
                       className="accent-emerald-600 mt-0.5"
                     />
-                    <span>
-                      <b>Lấy Sơ đồ lớp hiện tại làm chuẩn gốc</b> &amp; chỉ quy chiếu điểm số, nề nếp, thông tin bổ sung từ file vào Sơ đồ lớp (Giữ nguyên 100% vị trí chỗ ngồi và Tổ trên Sơ đồ lớp — <b>Khuyên dùng</b>)
-                    </span>
+                    <span>Giữ nguyên vị trí Sơ đồ lớp hiện tại, chỉ cập nhật dữ liệu mới</span>
                   </label>
                   <label className="flex items-start gap-2 text-xs font-bold text-slate-700 cursor-pointer">
                     <input
@@ -1612,94 +1468,63 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                       onChange={() => setRosterImportMode('replace')}
                       className="accent-indigo-600 mt-0.5"
                     />
-                    <span>
-                      Cập nhật / Tạo mới lại Sơ đồ lớp theo danh sách trong file này, sau đó quy chiếu các danh sách khác theo Sơ đồ lớp mới
-                    </span>
+                    <span>Cập nhật lại danh sách &amp; Sơ đồ lớp theo file này</span>
                   </label>
                 </div>
               )}
 
-              {/* Xem trước 8 dòng học sinh đầu tiên */}
               {parsedPackage.students.length > 0 && (
                 <div className="bg-white rounded-xl border border-emerald-200 overflow-hidden">
-                  <div className="px-3.5 py-2 bg-emerald-100/60 border-b border-emerald-200 flex items-center justify-between">
-                    <span className="text-[11px] font-black text-emerald-950 uppercase">
-                      Xem trước kết quả quy chiếu theo Sơ đồ lớp ({parsedPackage.students.length} HS)
-                    </span>
-                  </div>
-                  <div className="overflow-x-auto max-h-56">
+                  <div className="overflow-x-auto max-h-48">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600">
-                          <th className="py-2 px-3">Mã HS (Chuẩn SĐL)</th>
-                          <th className="py-2 px-3">Họ và tên</th>
-                          <th className="py-2 px-2">Phái</th>
-                          <th className="py-2 px-2">Tổ (SĐL)</th>
-                          <th className="py-2 px-2">Chức vụ</th>
-                          <th className="py-2 px-2">Chỗ ngồi (SĐL)</th>
-                          <th className="py-2 px-3">ĐTB Chung / Học lực</th>
+                          <th className="py-1.5 px-2.5">Mã HS</th>
+                          <th className="py-1.5 px-2.5">Họ và tên</th>
+                          <th className="py-1.5 px-2">Phái</th>
+                          <th className="py-1.5 px-2">Tổ</th>
+                          <th className="py-1.5 px-2">Chức vụ</th>
+                          <th className="py-1.5 px-2">Chỗ ngồi</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {parsedPackage.students.slice(0, 10).map(stu => {
-                          const ar = parsedPackage.academicRecords.find(
-                            a =>
-                              a.maHS === stu.maHS ||
-                              normalizeHeader(a.hoTen) === normalizeHeader(stu.hoTen)
-                          );
-                          return (
-                            <tr key={stu.maHS} className="hover:bg-slate-50/80">
-                              <td className="py-1.5 px-3 font-mono font-bold text-indigo-600">{stu.maHS}</td>
-                              <td className="py-1.5 px-3 font-bold text-slate-900">{stu.hoTen}</td>
-                              <td className="py-1.5 px-2 text-slate-600">{stu.gioiTinh === 'Nu' ? 'Nữ' : 'Nam'}</td>
-                              <td className="py-1.5 px-2 font-bold text-slate-700">Tổ {stu.to}</td>
-                              <td className="py-1.5 px-2">
-                                <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold text-[10px]">
-                                  {stu.vaiTro.filter(r => r !== 'HS').join(', ') || 'HS'}
-                                </span>
-                              </td>
-                              <td className="py-1.5 px-2 text-slate-600 text-[11px]">
-                                Dãy {stu.dayBan} - Bàn {stu.soBan}
-                              </td>
-                              <td className="py-1.5 px-3">
-                                {ar && ar.diemTBChung !== null ? (
-                                  <span className="font-bold text-emerald-700">
-                                    {ar.diemTBChung} ({ar.hocLuc || 'Đạt'})
-                                  </span>
-                                ) : (
-                                  <span className="text-slate-400 italic">Giữ nguyên / Chưa nhập</span>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })}
+                        {parsedPackage.students.slice(0, 10).map(stu => (
+                          <tr key={stu.maHS} className="hover:bg-slate-50/80">
+                            <td className="py-1.5 px-2.5 font-mono font-bold text-indigo-600">{stu.maHS}</td>
+                            <td className="py-1.5 px-2.5 font-bold text-slate-900">{stu.hoTen}</td>
+                            <td className="py-1.5 px-2 text-slate-600">{stu.gioiTinh === 'Nu' ? 'Nữ' : 'Nam'}</td>
+                            <td className="py-1.5 px-2 font-bold text-slate-700">Tổ {stu.to}</td>
+                            <td className="py-1.5 px-2">
+                              <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold text-[10px]">
+                                {stu.vaiTro.filter(r => r !== 'HS').join(', ') || 'HS'}
+                              </span>
+                            </td>
+                            <td className="py-1.5 px-2 text-slate-600 text-[11px]">
+                              Dãy {stu.dayBan} - Bàn {stu.soBan}
+                            </td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>
-                  {parsedPackage.students.length > 10 && (
-                    <div className="px-3 py-1.5 bg-slate-50 text-center text-[11px] font-semibold text-slate-500 border-t border-slate-200">
-                      ... và {parsedPackage.students.length - 10} học sinh khác được quy chiếu theo Sơ đồ lớp
-                    </div>
-                  )}
                 </div>
               )}
 
-              {/* Nút Xác Nhận Nạp Tất Cả (1 Chạm) */}
-              <div className="flex flex-wrap items-center justify-end gap-3 pt-1">
+              <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => setParsedPackage(null)}
-                  className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-bold cursor-pointer"
+                  className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-bold cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="button"
                   onClick={handleApplyUnifiedPackage}
-                  className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-black flex items-center gap-2 shadow-md transition-all cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Quy Chiếu Theo Sơ Đồ Lớp &amp; Lưu Lên Mây</span>
+                  <span>Áp Dụng &amp; Lưu Dữ Liệu</span>
                 </button>
               </div>
             </div>
@@ -1707,25 +1532,20 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
         </div>
       </div>
 
-      {/* KHỐI 2: XUẤT DỮ LIỆU LỚP RA 1 FILE CHUẨN & CÔNG CỤ CHỈNH SỬA CHI TIẾT */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* KHỐI 2: XUẤT DỮ LIỆU LỚP & CHỈNH SỬA TRỰC TIẾP */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Xuất dữ liệu lớp hiện tại */}
-        <div className="bg-surface rounded-2xl border border-token p-4 sm:p-5 shadow-xs flex flex-col justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
-              <Download className="w-5 h-5" />
+        <div className="bg-surface rounded-2xl border border-token p-3.5 sm:p-4 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+              <Download className="w-4 h-4" />
             </div>
-            <div>
-              <h4 className="text-sm font-black text-main uppercase">
-                Xuất Toàn Bộ Dữ Liệu Lớp Hiện Tại Ra 1 File (Chuẩn Sơ Đồ Lớp)
-              </h4>
-              <p className="text-xs text-muted mt-0.5">
-                File Excel xuất ra có sẵn <b>Sheet 0: Sơ đồ lớp 2D chuẩn</b> cùng các Sheet Danh sách, Điểm số và Nề nếp đã quy chiếu đồng nhất từ Sơ đồ lớp.
-              </p>
-            </div>
+            <h4 className="text-xs sm:text-sm font-black text-main uppercase">
+              Xuất Toàn Bộ Dữ Liệu Lớp
+            </h4>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-token">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => {
@@ -1733,63 +1553,58 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                   currentSeatingMaster.students,
                   currentSeatingMaster.layout,
                   records,
-                  academicRecords
+                  academicRecords,
+                  rules,
+                  currentWeek,
+                  settings
                 );
-                onShowToast(
-                  'Đã xuất toàn bộ dữ liệu lớp (Chuẩn Sơ Đồ Lớp) ra 1 file Excel (.xlsx)!',
-                  'Thầy có thể mở chỉnh sửa trên Excel và nạp lại bất cứ lúc nào.'
-                );
+                onShowToast('Đã xuất dữ liệu lớp ra file Excel (.xlsx)!');
               }}
-              className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
             >
-              <FileSpreadsheet className="w-4 h-4" />
-              <span>Xuất Ra 1 File Excel Đầy Đủ (.xlsx)</span>
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>Xuất Excel (.xlsx)</span>
             </button>
 
             <button
               type="button"
               onClick={handleExportFullJson}
-              className="px-3.5 py-2.5 rounded-xl bg-surface-2 hover:bg-surface-3 text-main border border-token text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-3 py-2 rounded-xl bg-surface-2 hover:bg-surface-3 text-main border border-token text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
             >
-              <Database className="w-4 h-4 text-indigo-600" />
-              <span>Sao Lưu Dự Phòng (.json)</span>
+              <Database className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Sao Lưu (.json)</span>
             </button>
           </div>
         </div>
 
         {/* Công cụ chỉnh sửa thủ công từng phần */}
-        <div className="bg-surface rounded-2xl border border-token p-4 sm:p-5 shadow-xs flex flex-col justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center shrink-0">
-              <Grid className="w-5 h-5" />
+        <div className="bg-surface rounded-2xl border border-token p-3.5 sm:p-4 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center shrink-0">
+              <Grid className="w-4 h-4" />
             </div>
-            <div>
-              <h4 className="text-sm font-black text-main uppercase">
-                Chỉnh Sửa Thủ Công Trên Giao Diện
-              </h4>
-              <p className="text-xs text-muted mt-0.5">
-                Sau khi nạp 1 file tổng hợp, thầy có thể kéo thả đổi chỗ ngồi trực quan hoặc sửa điểm từng học sinh tại đây:
-              </p>
-            </div>
+            <h4 className="text-xs sm:text-sm font-black text-main uppercase">
+              Chỉnh Sửa Trực Tiếp
+            </h4>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-token">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={onOpenLayoutEditor}
-              className="px-3.5 py-2 rounded-xl bg-surface-2 hover:bg-indigo-50 text-main hover:text-indigo-700 border border-token text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-3 py-2 rounded-xl bg-surface-2 hover:bg-indigo-50 text-main hover:text-indigo-700 border border-token text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <Grid className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Sơ Đồ Chỗ Ngồi &amp; Ban Cán Sự</span>
+              <span>Sơ Đồ &amp; Cán Sự</span>
             </button>
 
             <button
               type="button"
               onClick={onOpenStudentImportModal}
-              className="px-3.5 py-2 rounded-xl bg-surface-2 hover:bg-indigo-50 text-main hover:text-indigo-700 border border-token text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-3 py-2 rounded-xl bg-surface-2 hover:bg-indigo-50 text-main hover:text-indigo-700 border border-token text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <Users className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Nhập Nhanh Riêng Danh Sách HS</span>
+              <span>Danh Sách HS</span>
             </button>
           </div>
         </div>
@@ -1803,7 +1618,7 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
         onApplyStandardSeating={(newStudents, newLayout) => {
           onUpdateStudentsAndLayout(newStudents, newLayout, true);
           setIsStandardSeatingModalOpen(false);
-          triggerToast('Đã áp dụng Sơ đồ chuẩn 3 cột & đồng bộ lên Firebase!', `${newStudents.length} học sinh`);
+          triggerToast('Đã cập nhật Sơ đồ lớp!', `${newStudents.length} học sinh`);
         }}
       />
     </div>

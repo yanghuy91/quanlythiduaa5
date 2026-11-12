@@ -4,6 +4,7 @@
  */
 import { Student, StudentWeekSummary, DisciplineRecord, TeacherSettings } from '../types';
 import { calculateDenseRankings, getRatingTierInfo, getScoreRatingTiers, getRatingColorClasses } from './emulation';
+import { getTeacherProfile } from '../data/teacherProfile';
 
 export function exportClassroomHtmlReport(
   students: Student[],
@@ -14,6 +15,8 @@ export function exportClassroomHtmlReport(
 ) {
   const tiers = getScoreRatingTiers(settings);
   const topTier = tiers[0];
+  const classMonitorName = students.find(s => s.vaiTro.includes('LT'))?.hoTen || '';
+  const teacherName = getTeacherProfile().hoTen || '';
   const rankedStudents = calculateDenseRankings(
     students.map(student => ({
       student,
@@ -280,11 +283,11 @@ export function exportClassroomHtmlReport(
     <div class="footer">
       <div class="signature">
         <div class="signature-title">LỚP TRƯỞNG</div>
-        <div class="signature-name">Nguyễn Kim Huy</div>
+        <div class="signature-name">${classMonitorName}</div>
       </div>
       <div class="signature">
         <div class="signature-title">GIÁO VIÊN CHỦ NHIỆM</div>
-        <div class="signature-name">Trần Văn Bình</div>
+        <div class="signature-name">${teacherName}</div>
       </div>
     </div>
   </div>

@@ -111,42 +111,39 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
   };
 
   return (
-    <div className="w-full bg-surface rounded-2xl border border-token p-3 sm:p-3.5 space-y-2.5 shadow-xs text-xs">
+    <div className="w-full bg-surface rounded-2xl border border-token p-2.5 sm:p-3 space-y-2 shadow-xs text-xs">
       {/* Top Header: Current Hierarchy Breadcrumb & Current Week / No-Data Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-token">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-7 h-7 rounded-lg bg-accent/15 text-accent flex items-center justify-center shrink-0">
+      <div className="flex flex-wrap items-center justify-between gap-1.5 pb-1.5 border-b border-token">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-6 h-6 rounded-lg bg-accent/15 text-accent flex items-center justify-center shrink-0">
             <Layers className="w-3.5 h-3.5" />
           </div>
-          <div className="min-w-0">
-            <div className="text-[10px] font-bold text-muted uppercase tracking-wider flex items-center gap-1.5 flex-wrap">
-              <span>Thời gian theo dõi:</span>
-              {isSelectedWeekFuture && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-500/15 text-slate-600 border border-slate-400/40 text-[9px] font-extrabold">
-                  <Clock className="w-2.5 h-2.5" />
-                  Tuần chưa học
-                </span>
-              )}
-              {!isSelectedWeekFuture && isSelectedWeekNoData && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 border border-amber-500/40 text-[9px] font-extrabold">
-                  <Ban className="w-2.5 h-2.5" />
-                  Tuần không có dữ liệu (Không tính điểm)
-                </span>
-              )}
-            </div>
-            <div className="font-extrabold text-main truncate text-xs sm:text-sm">
+          <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
+            <span className="font-extrabold text-main truncate text-xs sm:text-sm">
               {currentLabel()}
-            </div>
+            </span>
+            {isSelectedWeekFuture && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-500/15 text-slate-600 border border-slate-400/40 text-[9px] font-extrabold">
+                <Clock className="w-2.5 h-2.5" />
+                Chưa học
+              </span>
+            )}
+            {!isSelectedWeekFuture && isSelectedWeekNoData && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 border border-amber-500/40 text-[9px] font-extrabold">
+                <Ban className="w-2.5 h-2.5" />
+                Không tính điểm
+              </span>
+            )}
           </div>
         </div>
 
         {/* Action Buttons: Mark No-Data Week, Set Current Week, Quick Jump, Auto-Advance Week */}
-        <div className="flex items-center gap-1.5 flex-wrap self-start sm:self-auto">
+        <div className="flex items-center gap-1 flex-wrap">
           {onToggleNoDataWeek && selectedWeekNumber !== null && (
             <button
               type="button"
               onClick={() => onToggleNoDataWeek(selectedWeekNumber)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border font-bold text-xs cursor-pointer transition-all shadow-2xs ${
+              className={`flex items-center gap-1 px-2 py-1 rounded-xl border font-bold text-[11px] cursor-pointer transition-all shadow-2xs ${
                 isSelectedWeekNoData
                   ? 'bg-amber-500 text-white border-amber-600 hover:bg-amber-600'
                   : 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/35 text-amber-800'
@@ -157,11 +154,11 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
                   : `Đánh dấu Tuần ${selectedWeekNumber} là không có dữ liệu (nghỉ lễ/chưa học, không tính điểm)`
               }
             >
-              <Ban className="w-3.5 h-3.5" />
+              <Ban className="w-3 h-3" />
               <span>
                 {isSelectedWeekNoData
-                  ? `Mở lại điểm Tuần ${selectedWeekNumber}`
-                  : `Đánh dấu Tuần ${selectedWeekNumber} không có dữ liệu`}
+                  ? `Mở lại T${selectedWeekNumber}`
+                  : `Nghỉ T${selectedWeekNumber}`}
               </span>
             </button>
           )}
@@ -170,22 +167,21 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
             <button
               type="button"
               onClick={() => onChangeCurrentWeek(selectedWeekNumber)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-700 font-bold text-xs cursor-pointer transition-colors shadow-2xs"
+              className="flex items-center gap-1 px-2 py-1 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-700 font-bold text-[11px] cursor-pointer transition-colors shadow-2xs"
               title={`Đặt Tuần ${selectedWeekNumber} làm tuần hiện tại của lớp`}
             >
-              <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
-              <span>Đặt Tuần {selectedWeekNumber} là hiện tại</span>
+              <CheckCircle2 className="w-3 h-3 text-blue-600" />
+              <span>Đặt T{selectedWeekNumber} hiện tại</span>
             </button>
           )}
 
           <button
             type="button"
             onClick={() => handleSelectWeek(currentWeek)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-700 font-bold text-xs cursor-pointer transition-colors shadow-2xs"
-            title="Bấm để chuyển nhanh về tuần hiện tại của lớp"
+            className="flex items-center gap-1 px-2 py-1 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-700 font-bold text-[11px] cursor-pointer transition-colors shadow-2xs"
+            title="Chuyển nhanh về tuần hiện tại của lớp"
           >
-            <CalendarCheck2 className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Tuần hiện tại:</span>
+            <CalendarCheck2 className="w-3 h-3 text-emerald-500" />
             <span className="px-1.5 py-0.2 rounded bg-emerald-500 text-white font-extrabold">
               Tuần {currentWeek}
             </span>
@@ -195,57 +191,57 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
             <button
               type="button"
               onClick={() => onToggleAutoAdvanceWeek(!autoAdvanceWeek)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border font-bold text-[11px] cursor-pointer transition-all shadow-2xs ${
+              className={`flex items-center gap-1 px-2 py-1 rounded-xl border font-bold text-[11px] cursor-pointer transition-all shadow-2xs ${
                 autoAdvanceWeek
                   ? 'bg-indigo-50 text-indigo-700 border-indigo-300 hover:bg-indigo-100'
                   : 'bg-surface-2 text-muted border-token hover:text-main'
               }`}
-              title={`Hôm nay: ${vnNow.weekdayLabel}, ${vnNow.displayDateStr}. Khi bật, cứ đến Thứ 2 hàng tuần (${nextMondayStr}) hệ thống thời gian thực tự động tăng sang Tuần ${Math.min(38, currentWeek + 1)}`}
+              title={`Hôm nay: ${vnNow.weekdayLabel}, ${vnNow.displayDateStr}. Tự động tăng tuần vào Thứ 2 (${nextMondayStr})`}
             >
               <RefreshCw className={`w-3 h-3 ${autoAdvanceWeek ? 'text-indigo-600' : 'text-muted'}`} />
               <span>
                 {autoAdvanceWeek
-                  ? `Tự sang T${Math.min(38, currentWeek + 1)} vào Thứ 2 (${nextMondayStr.slice(0, 5)})`
-                  : 'Tự chuyển tuần Thứ 2: TẮT'}
+                  ? `Tự sang T${Math.min(38, currentWeek + 1)} (${nextMondayStr.slice(0, 5)})`
+                  : 'Tự chuyển tuần: TẮT'}
               </span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Level 2: Semester & Session Selector */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-1 p-0.5 bg-surface-2 rounded-xl border border-token text-xs font-semibold">
+      {/* Level 2: Semester & Session Selector on the SAME single compact row */}
+      <div className="flex items-center justify-between gap-1.5 flex-nowrap overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-0.5 p-0.5 bg-surface-2 rounded-xl border border-token text-[11px] sm:text-xs font-semibold shrink-0">
           <button
             type="button"
             onClick={() => handleSelectSemester(1)}
-            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+            className={`px-2 sm:px-2.5 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
               filter.hocKi === 1 
                 ? 'bg-surface text-main font-bold shadow-xs' 
                 : 'text-muted hover:text-main'
             }`}
           >
-            Học kì 1 (1 - 19)
+            Học kì 1
           </button>
           <button
             type="button"
             onClick={() => handleSelectSemester(2)}
-            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+            className={`px-2 sm:px-2.5 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
               filter.hocKi === 2 
                 ? 'bg-surface text-main font-bold shadow-xs' 
                 : 'text-muted hover:text-main'
             }`}
           >
-            Học kì 2 (20 - 38)
+            Học kì 2
           </button>
         </div>
 
-        {/* Buổi Selector (Sáng / Chiều / Cả ngày) */}
-        <div className="flex items-center gap-0.5 p-0.5 bg-surface-2 rounded-xl border border-token text-xs font-semibold">
+        {/* Buổi Selector (Cả ngày / Sáng / Chiều) */}
+        <div className="flex items-center gap-0.5 p-0.5 bg-surface-2 rounded-xl border border-token text-[11px] sm:text-xs font-semibold shrink-0">
           <button
             type="button"
             onClick={() => handleSelectBuoi('all')}
-            className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+            className={`px-2 sm:px-2.5 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
               filter.buoi === 'all' 
                 ? 'bg-surface text-main font-bold shadow-xs' 
                 : 'text-muted hover:text-main'
@@ -256,7 +252,7 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
           <button
             type="button"
             onClick={() => handleSelectBuoi('Sang')}
-            className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+            className={`px-2 sm:px-2.5 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
               filter.buoi === 'Sang' 
                 ? 'bg-surface text-main font-bold shadow-xs' 
                 : 'text-muted hover:text-main'
@@ -267,7 +263,7 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
           <button
             type="button"
             onClick={() => handleSelectBuoi('Chieu')}
-            className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+            className={`px-2 sm:px-2.5 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
               filter.buoi === 'Chieu' 
                 ? 'bg-surface text-main font-bold shadow-xs' 
                 : 'text-muted hover:text-main'
@@ -278,9 +274,9 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
         </div>
       </div>
 
-      {/* Level 3: Compact Circular Week Chips with Distinct Colors */}
-      <div className="pt-0.5 space-y-2">
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+      {/* Level 3: Compact Circular Week Chips */}
+      <div className="pt-0.5">
+        <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
           {weeksToDisplay.map(w => {
             const isSelected = filter.tuanHoc === w;
             const isCurrentWeekOfClass = w === currentWeek;
@@ -309,11 +305,11 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
             }
 
             const statusNote = isNoData
-              ? ' (Tuần không có dữ liệu - Không tính điểm)'
+              ? ' (Không tính điểm)'
               : isCurrentWeekOfClass
-                ? ' (Tuần hiện tại của lớp)'
+                ? ' (Tuần hiện tại)'
                 : isFuture
-                  ? ' (Tuần chưa học)'
+                  ? ' (Chưa học)'
                   : '';
 
             return (
@@ -323,19 +319,19 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
                 onClick={() => handleSelectWeek(w)}
                 title={`Tuần ${w}${statusNote}`}
                 aria-label={`Tuần ${w}${statusNote}`}
-                className={`relative w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full text-xs transition-all cursor-pointer flex items-center justify-center tabular-nums shrink-0 active:scale-95 shadow-2xs ${chipStyle}`}
+                className={`relative w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full text-xs transition-all cursor-pointer flex items-center justify-center tabular-nums shrink-0 active:scale-95 shadow-2xs ${chipStyle}`}
               >
                 <span className={isNoData && !isSelected ? 'line-through decoration-amber-600/80' : ''}>{w}</span>
                 {isCurrentWeekOfClass && !isSelected && !isNoData && (
                   <span
-                    className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-surface animate-pulse"
-                    title="Tuần hiện tại của lớp"
+                    className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-surface animate-pulse"
+                    title="Tuần hiện tại"
                   />
                 )}
                 {isNoData && (
                   <span
                     className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-500 text-white text-[8px] font-black flex items-center justify-center ring-2 ring-surface"
-                    title="Tuần không có dữ liệu"
+                    title="Không tính điểm"
                   >
                     ⊘
                   </span>
@@ -343,26 +339,6 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
               </button>
             );
           })}
-        </div>
-
-        {/* Legend for week colors */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-[10px] text-muted border-t border-token/50">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
-            <span>Tuần hiện tại (Tuần {currentWeek})</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-surface-2 border border-token inline-block" />
-            <span>Tuần đã học (Có tính điểm)</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500/30 border border-dashed border-amber-500 inline-block" />
-            <span>Tuần không có dữ liệu (Không tính điểm)</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-slate-200 border border-dashed border-slate-400 inline-block" />
-            <span>Tuần chưa học</span>
-          </span>
         </div>
       </div>
     </div>

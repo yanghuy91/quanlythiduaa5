@@ -269,7 +269,7 @@ export const TeacherGradeManager: React.FC<TeacherGradeManagerProps> = ({
             {/* Export Current Class Grades */}
             <button
               type="button"
-              onClick={() => exportClassGrades(semesterRecords, selectedHocKi)}
+              onClick={() => exportClassGrades(semesterRecords, selectedHocKi, students)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-2 border border-token text-main text-xs font-bold hover:bg-surface-3 cursor-pointer transition-all"
               title="Xuất bảng điểm lớp hiện tại ra file Excel"
             >

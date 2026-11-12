@@ -242,8 +242,17 @@ export function exportGradeTemplate(masterStudents?: Student[]): void {
 /**
  * Xuất toàn bộ bảng điểm hiện tại của lớp ra file Excel (.xlsx)
  */
-export function exportClassGrades(records: StudentAcademicRecord[], hocKi: 1 | 2 = 1): void {
+export function exportClassGrades(
+  records: StudentAcademicRecord[],
+  hocKi: 1 | 2 = 1,
+  masterStudents?: Student[]
+): void {
   const wb = XLSX.utils.book_new();
+  const roster =
+    Array.isArray(masterStudents) && masterStudents.length > 0
+      ? masterStudents
+      : MOCK_STUDENTS;
+  const syncedRecords = reconcileAcademicRecordsWithSeating(roster, records || [], hocKi);
 
   const headers = [
     'STT',
@@ -272,12 +281,12 @@ export function exportClassGrades(records: StudentAcademicRecord[], hocKi: 1 | 2
 
   const rows: any[] = [headers];
 
-  records.forEach((rec, idx) => {
+  syncedRecords.forEach((rec, idx) => {
     rows.push([
       idx + 1,
       rec.maHS,
       rec.hoTen,
-      rec.to,
+      `Tổ ${rec.to}`,
       rec.subjects['toan']?.tb ?? '',
       rec.subjects['van']?.tb ?? '',
       rec.subjects['anh']?.tb ?? '',
@@ -300,7 +309,13 @@ export function exportClassGrades(records: StudentAcademicRecord[], hocKi: 1 | 2
   });
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, `Bảng Điểm HK${hocKi}`);
+  ws['!cols'] = [
+    { wch: 6 },
+    { wch: 12 },
+    { wch: 26 },
+    { wch: 8 },
+  ];
+  XLSX.utils.book_append_sheet(wb, ws, `Bang_Diem_HK${hocKi}`);
   XLSX.writeFile(wb, `Bang_Diem_Hoc_Ky_${hocKi}_Lop_10A5.xlsx`);
 }
 

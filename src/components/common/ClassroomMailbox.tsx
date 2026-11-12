@@ -1151,7 +1151,7 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
           >
             <HardDrive className="w-3.5 h-3.5 text-amber-600 shrink-0" />
             <span>
-              Dung lượng Firebase: <b>{formatBytes(storageStats.totalBytes)}</b> (Quản lý / Xóa)
+              Dung lượng: <b>{formatBytes(storageStats.totalBytes)}</b> (Quản lý)
             </span>
           </button>
         )}
@@ -1375,7 +1375,7 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
               <div className="space-y-2 pt-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs font-black text-main">
-                    4. Đính kèm ảnh / file (Lưu Firebase, tối đa 5MB):
+                    4. Đính kèm ảnh / tệp (tối đa 5MB):
                   </span>
                   <div className="flex items-center gap-1.5">
                     <button
@@ -1514,7 +1514,7 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
               <div className="flex items-center gap-2">
                 <HardDrive className="w-4 h-4" />
                 <span className="text-xs sm:text-sm font-black uppercase">
-                  Quản Lý Dung Lượng Lưu Trữ Firebase
+                  Quản Lý Dung Lượng Lưu Trữ
                 </span>
               </div>
               <button
@@ -1531,7 +1531,7 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
               <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-amber-950">
-                    Tổng dung lượng dữ liệu lớp trên Firebase:
+                    Tổng dung lượng dữ liệu lớp:
                   </span>
                   <span className="text-sm font-black text-amber-900">
                     {formatBytes(storageStats.totalBytes)}
@@ -1549,7 +1549,7 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
                   />
                 </div>
                 <div className="text-[11px] text-amber-800">
-                  Tích chọn các mục bên dưới để xóa và giải phóng dung lượng trên Firebase:
+                  Chọn mục cần xóa để giải phóng dung lượng:
                 </div>
               </div>
 

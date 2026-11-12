@@ -1403,11 +1403,11 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               </div>
             </div>
 
-            {/* Danh sách bảng thi đua học sinh */}
+            {/* Danh sách bảng thi đua học sinh (xếp sát, gọn gàng, không mất tên HS trên điện thoại) */}
             <div className="divide-y divide-token max-h-[600px] overflow-y-auto">
               {displayedTeacherRankings.length === 0 ? (
-                <div className="p-8 text-center space-y-2">
-                  <p className="text-xs text-muted">Không tìm thấy học sinh nào phù hợp với bộ lọc.</p>
+                <div className="p-6 text-center space-y-2">
+                  <p className="text-xs text-muted">Không tìm thấy học sinh phù hợp.</p>
                   <button
                     type="button"
                     onClick={() => {
@@ -1418,7 +1418,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     }}
                     className="px-3 py-1.5 rounded-xl bg-accent text-on-accent text-xs font-bold hover:opacity-90 cursor-pointer shadow-xs"
                   >
-                    Xóa bộ lọc &amp; Hiện cả lớp ({students.length} HS)
+                    Hiện cả lớp ({students.length} HS)
                   </button>
                 </div>
               ) : (
@@ -1430,24 +1430,22 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   if (rankingSortBy === 'score_desc') {
                     rankLabel = officialRank === 1 ? '🥇' : officialRank === 2 ? '🥈' : officialRank === 3 ? '🥉' : `#${officialRank}`;
                   } else if (rankingSortBy === 'stt') {
-                    rankLabel = `#${item.student.viTriGhe < 10 ? '0' : ''}${item.student.viTriGhe}`;
+                    rankLabel = `${item.student.viTriGhe < 10 ? '0' : ''}${item.student.viTriGhe}`;
                   } else {
                     rankLabel = `${idx + 1}`;
                   }
 
-                  const studentViolations = records.filter(r => isRecordMatchingStudent(r, item.student.maHS, item.student.hoTen) && r.trangThai === 'HieuLuc');
-
                   return (
                     <div
                       key={item.student.maHS}
-                      className="px-3 sm:px-4 py-2.5 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-surface-2 transition-colors gap-2"
+                      className="px-2 sm:px-3.5 py-1.5 sm:py-2 flex items-center justify-between hover:bg-surface-2 transition-colors gap-1.5"
                     >
-                      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                      <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1">
                         {/* Order indicator */}
-                        <span className={`w-7 sm:w-8 text-center text-xs font-bold shrink-0 ${
-                          rankingSortBy === 'score_desc' && officialRank === 1 ? 'text-amber-500 font-extrabold text-base' :
-                          rankingSortBy === 'score_desc' && officialRank === 2 ? 'text-slate-400 font-bold text-sm' :
-                          rankingSortBy === 'score_desc' && officialRank === 3 ? 'text-amber-700 font-bold text-sm' :
+                        <span className={`w-6 sm:w-7 text-center text-[11px] sm:text-xs font-bold shrink-0 ${
+                          rankingSortBy === 'score_desc' && officialRank === 1 ? 'text-amber-500 font-extrabold text-sm' :
+                          rankingSortBy === 'score_desc' && officialRank === 2 ? 'text-slate-400 font-bold text-xs' :
+                          rankingSortBy === 'score_desc' && officialRank === 3 ? 'text-amber-700 font-bold text-xs' :
                           'text-muted font-bold'
                         }`}>
                           {rankLabel}
@@ -1457,7 +1455,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                           type="button"
                           onClick={() => setEditingStudentForAvatar(item.student)}
                           className="cursor-pointer group relative active:scale-95 transition-transform shrink-0"
-                          title={`Bấm để đổi avatar cho ${item.student.hoTen}`}
+                          title={`Đổi avatar cho ${item.student.hoTen}`}
                         >
                           <AvatarFrame frame={frameConfig} size="sm">
                             {item.student.avatarUrl ? (
@@ -1484,54 +1482,19 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                         </button>
 
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <button
-                              type="button"
-                              onClick={() => setInspectingStudent(item.student)}
-                              className="text-xs sm:text-sm font-bold text-main hover:text-accent transition-colors text-left flex items-center gap-1 cursor-pointer"
-                              title="Bấm để xem lịch sử vi phạm & người ghi nhận"
-                            >
-                              <span>{item.student.hoTen}</span>
-                              <Eye className="w-3 h-3 text-muted hover:text-accent shrink-0" />
-                            </button>
+                          <button
+                            type="button"
+                            onClick={() => setInspectingStudent(item.student)}
+                            className="text-xs sm:text-sm font-bold text-main hover:text-accent transition-colors text-left leading-snug cursor-pointer block"
+                            title="Xem lịch sử vi phạm"
+                          >
+                            <span className="break-words">{item.student.hoTen}</span>
+                          </button>
 
-                            {rankingSortBy !== 'score_desc' && (
-                              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
-                                officialRank === 1 ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30' :
-                                officialRank <= 3 ? 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30' :
-                                'bg-surface-2 text-muted border border-token'
-                              }`}>
-                                {officialRank === 1 ? (item.isTied ? '🥇 Đồng hạng 1' : '🥇 Hạng 1') :
-                                 officialRank === 2 ? (item.isTied ? '🥈 Đồng hạng 2' : '🥈 Hạng 2') :
-                                 officialRank === 3 ? (item.isTied ? '🥉 Đồng hạng 3' : '🥉 Hạng 3') :
-                                 (item.isTied ? `Đồng hạng #${officialRank}` : `Hạng #${officialRank}`)}
-                              </span>
-                            )}
-
-                            {officialRank === 1 && rankingSortBy === 'score_desc' && (
-                              <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
-                                {item.isTied ? 'ĐỒNG HẠNG 1' : 'TOP 1'}
-                              </span>
-                            )}
-                            {(officialRank === 2 || officialRank === 3) && rankingSortBy === 'score_desc' && (
-                              <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30">
-                                {item.isTied ? `ĐỒNG HẠNG ${officialRank}` : 'TOP 2-3'}
-                              </span>
-                            )}
-                            {officialRank >= 4 && officialRank <= 10 && rankingSortBy === 'score_desc' && (
-                              <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                                {item.isTied ? `ĐỒNG HẠNG ${officialRank}` : 'TOP 10'}
-                              </span>
-                            )}
-                            {officialRank > 10 && item.isTied && rankingSortBy === 'score_desc' && (
-                              <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/30">
-                                ĐỒNG HẠNG #{officialRank}
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="text-[10px] font-medium text-muted flex items-center gap-1.5 mt-0.5">
+                          <div className="text-[10px] font-medium text-muted flex items-center gap-1 flex-wrap leading-tight mt-0.5">
                             <span className="font-semibold text-token">Tổ {item.student.to}</span>
+                            <span>·</span>
+                            <span>Hạng #{officialRank}{item.isTied ? ' (ĐH)' : ''}</span>
                             {item.student.vaiTro.some(r => r !== 'HS') && (
                               <>
                                 <span>·</span>
@@ -1542,7 +1505,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                    item.student.vaiTro.includes('LP_HT') ? 'LP Học tập' :
                                    item.student.vaiTro.includes('LP_VT') ? 'LP Văn thể' :
                                    item.student.vaiTro.includes('LP_LD') ? 'LP Lao động' :
-                                   item.student.vaiTro.includes('TT') ? `Tổ trưởng T${item.student.to}` :
+                                   item.student.vaiTro.includes('TT') ? `TT Tổ ${item.student.to}` :
                                    item.student.vaiTro.includes('CD') ? 'Cờ đỏ' : ''}
                                 </span>
                               </>
@@ -1551,44 +1514,42 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0 pl-9 sm:pl-0 flex-wrap">
+                      <div className="flex items-center justify-end gap-1 sm:gap-1.5 shrink-0">
                         {item.deductions > 0 && (
                           <button
                             type="button"
                             onClick={() => setInspectingStudent(item.student)}
-                            className="text-[10.5px] sm:text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-xl border border-rose-500/25 flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-2xs"
-                            title="Bấm để xem chi tiết các lỗi vi phạm & cán sự ghi nhận"
+                            className="text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-1.5 py-0.5 rounded-lg border border-rose-500/25 flex items-center gap-0.5 cursor-pointer transition-all active:scale-95"
+                            title="Xem chi tiết các lỗi vi phạm"
                           >
-                            <ShieldAlert className="w-3 h-3 text-rose-500" />
                             <span>-{item.deductions}đ</span>
-                            <span className="text-[10px] opacity-75 font-normal underline hidden xs:inline">Chi tiết</span>
                           </button>
                         )}
                         {item.bonuses > 0 && (
-                          <span className="text-[10px] font-bold text-[var(--st-ok)]">
+                          <span className="text-[10px] font-bold text-[var(--st-ok)] hidden sm:inline">
                             +{item.bonuses}đ
                           </span>
                         )}
 
                         {item.chuaCoDiem ? (
-                          <span className={`text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border ${
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                             item.lyDoChuaCoDiem === 'no_data'
                               ? 'bg-amber-50 text-amber-800 border-amber-300 border-dashed'
                               : 'bg-slate-100 text-slate-600 border-slate-300 border-dashed'
                           }`}>
-                            {item.lyDoChuaCoDiem === 'no_data' ? '⊘ Tuần không có dữ liệu' : '⏳ Tuần chưa học'}
+                            {item.lyDoChuaCoDiem === 'no_data' ? '⊘ Nghỉ' : '⏳ Chưa học'}
                           </span>
                         ) : (
                           <>
-                            <span className="text-xs font-black tabular-nums text-main">
-                              {item.score} đ
+                            <span className="text-xs font-black tabular-nums text-main whitespace-nowrap">
+                              {item.score}đ
                             </span>
 
                             {(() => {
                               const tierInfo = getRatingTierInfo(item.xepLoai, item.score, settings);
                               const colorCls = getRatingColorClasses(tierInfo.color);
                               return (
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${colorCls.badgeBg} ${colorCls.badgeText} ${colorCls.badgeBorder}`}>
+                                <span className={`hidden sm:inline-flex text-[10px] font-bold px-2 py-0.5 rounded-full border ${colorCls.badgeBg} ${colorCls.badgeText} ${colorCls.badgeBorder}`}>
                                   {tierInfo.icon ? `${tierInfo.icon} ` : ''}{tierInfo.label}
                                 </span>
                               );
@@ -1596,24 +1557,22 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                           </>
                         )}
 
-                        {/* Nút Xem lỗi & Người ghi nhận */}
                         <button
                           type="button"
                           onClick={() => setInspectingStudent(item.student)}
-                          className="px-2 py-1 rounded-lg bg-surface-2 hover:bg-surface-3 text-muted hover:text-main text-[11px] font-semibold transition-all cursor-pointer border border-token flex items-center gap-1 shadow-2xs"
-                          title="Xem chi tiết các lỗi vi phạm và ai đã ghi nhận"
+                          className="p-1 rounded-lg bg-surface-2 hover:bg-surface-3 text-muted hover:text-main transition-all cursor-pointer border border-token"
+                          title="Xem lỗi"
                         >
                           <Eye className="w-3.5 h-3.5 text-accent" />
-                          <span className="hidden md:inline">Xem lỗi</span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => handleSelectStudent(item.student)}
-                          title="Ghi nhận vi phạm cho học sinh này"
-                          className="px-2.5 py-1 rounded-lg bg-accent/15 hover:bg-accent text-accent hover:text-on-accent text-[10.5px] sm:text-[11px] font-bold transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                          title="Ghi nhận vi phạm"
+                          className="px-2 py-1 rounded-lg bg-accent/15 hover:bg-accent text-accent hover:text-on-accent text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer shadow-2xs whitespace-nowrap"
                         >
-                          + Ghi nhận
+                          + Ghi
                         </button>
                       </div>
                     </div>
@@ -2732,28 +2691,18 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </div>
           </div>
 
-          {/* Card Sao lưu dự phòng ngoại tuyến (Tùy chọn) */}
-          <div className="p-4 rounded-2xl bg-surface border border-token shadow-2xs space-y-3 max-w-xl mx-auto">
+          {/* Card Sao lưu dự phòng ngoại tuyến */}
+          <div className="p-3.5 rounded-2xl bg-surface border border-token shadow-2xs space-y-2.5 max-w-xl mx-auto">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-primary/10 text-accent flex items-center justify-center">
+                <div className="w-7 h-7 rounded-xl bg-primary/10 text-accent flex items-center justify-center">
                   <Database className="w-4 h-4" />
                 </div>
-                <div>
-                  <h4 className="text-xs font-bold text-main uppercase tracking-wider">
-                    Sao lưu dữ liệu ngoại tuyến (Tùy chọn)
-                  </h4>
-                  <p className="text-[11px] text-emerald-600 font-medium flex items-center gap-1">
-                    <span>☁️</span>
-                    <span>Tự động đồng bộ thời gian thực trên Firebase Cloud</span>
-                  </p>
-                </div>
+                <h4 className="text-xs font-bold text-main uppercase tracking-wider">
+                  Sao lưu &amp; Khôi phục dữ liệu (.json)
+                </h4>
               </div>
             </div>
-
-            <p className="text-[11px] text-muted leading-relaxed">
-              Mọi thay đổi của lớp học (học sinh, nề nếp, điểm số, ảnh đại diện) đều được lưu vĩnh viễn trên máy chủ đám mây của Google Firebase. Thầy có thể tải thêm 1 file JSON về máy tính bất cứ lúc nào để làm bản lưu dự phòng ngoại tuyến.
-            </p>
 
             <div className="flex items-center gap-2 flex-wrap pt-1">
               <button

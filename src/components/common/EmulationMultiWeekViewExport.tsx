@@ -26,6 +26,8 @@ interface EmulationMultiWeekViewExportProps {
   records: DisciplineRecord[];
   settings: TeacherSettings;
   currentWeek: number;
+  currentStudent?: Student;
+  isRestrictedToOwnExport?: boolean;
   onShowToast?: (msg: string, sub?: string) => void;
 }
 
@@ -34,11 +36,13 @@ export const EmulationMultiWeekViewExport: React.FC<EmulationMultiWeekViewExport
   records,
   settings,
   currentWeek,
+  currentStudent,
+  isRestrictedToOwnExport = false,
   onShowToast,
 }) => {
   // Mặc định tích chọn tuần hiện tại
   const [selectedWeeks, setSelectedWeeks] = useState<number[]>(() => [currentWeek]);
-  // Chế độ sắp xếp: 'order' (Theo thứ tự danh sách) | 'ranking' (Theo xếp hạng thi đua)
+  // Chế độ sắp xếp: 'order' (Theo thứ tự) | 'ranking' (Theo xếp hạng)
   const [sortMode, setSortMode] = useState<'order' | 'ranking'>('order');
   const [showAll35Weeks, setShowAll35Weeks] = useState(false);
 
@@ -109,7 +113,7 @@ export const EmulationMultiWeekViewExport: React.FC<EmulationMultiWeekViewExport
       };
     });
 
-    // Tính thứ hạng chuẩn (đồng hạng nhảy bậc: 10 HS 100đ hạng 1 -> HS 98đ tiếp theo hạng 11)
+    // Tính thứ hạng chuẩn
     const ranked = calculateDenseRankings(baseList, item => item.finalEmulationScore);
     const rankByMa = new Map<string, number>();
     ranked.forEach(r => rankByMa.set(r.maHS, r.officialRank));
@@ -131,46 +135,61 @@ export const EmulationMultiWeekViewExport: React.FC<EmulationMultiWeekViewExport
     return enriched;
   }, [students, records, settings, currentWeek, sortedSelectedWeeks, sortMode]);
 
-  // Xuất file Excel (.xlsx) chỉ gồm STT, Họ tên HS và Điểm thi đua (theo thứ tự hoặc theo xếp hạng)
+  // Xuất file Excel (.xlsx)
   const handleExportSimpleEmulationExcel = () => {
     const activeWeeks = sortedSelectedWeeks.length > 0 ? sortedSelectedWeeks : [currentWeek];
     const isSingleWeek = activeWeeks.length === 1;
 
-    const headers: string[] =
-      sortMode === 'ranking'
-        ? isSingleWeek
-          ? ['STT', 'Họ và tên học sinh', `Điểm thi đua (Tuần ${activeWeeks[0]})`, 'Xếp hạng']
-          : [
-              'STT',
-              'Họ và tên học sinh',
-              ...activeWeeks.map(w => `Tuần ${w}`),
-              'Điểm thi đua (TB)',
-              'Xếp hạng',
-            ]
-        : isSingleWeek
-        ? ['STT', 'Họ và tên học sinh', `Điểm thi đua (Tuần ${activeWeeks[0]})`]
+    // Nếu là học sinh không phải Ban cán sự: chỉ xuất điểm của chính mình
+    const rowsToExport =
+      isRestrictedToOwnExport && currentStudent
+        ? computedRows.filter(
+            r => r.maHS === currentStudent.maHS || r.hoTen === currentStudent.hoTen
+          )
+        : computedRows;
+
+    const includeRank = sortMode === 'ranking' || (isRestrictedToOwnExport && !!currentStudent);
+
+    const headers: string[] = includeRank
+      ? isSingleWeek
+        ? ['STT', 'Họ và tên học sinh', `Điểm thi đua (Tuần ${activeWeeks[0]})`, 'Xếp hạng']
         : [
             'STT',
             'Họ và tên học sinh',
             ...activeWeeks.map(w => `Tuần ${w}`),
             'Điểm thi đua (TB)',
-          ];
+            'Xếp hạng',
+          ]
+      : isSingleWeek
+      ? ['STT', 'Họ và tên học sinh', `Điểm thi đua (Tuần ${activeWeeks[0]})`]
+      : [
+          'STT',
+          'Họ và tên học sinh',
+          ...activeWeeks.map(w => `Tuần ${w}`),
+          'Điểm thi đua (TB)',
+        ];
 
-    const dataRows = computedRows.map((row, idx) => {
-      const displayStt = sortMode === 'order' ? row.originalStt : idx + 1;
+    const dataRows = rowsToExport.map((row, idx) => {
+      const displayStt =
+        isRestrictedToOwnExport && currentStudent
+          ? row.originalStt
+          : sortMode === 'order'
+          ? row.originalStt
+          : idx + 1;
+
       if (isSingleWeek) {
         const wScore = row.weekScores[activeWeeks[0]];
         const scoreCell = wScore !== null && wScore !== undefined ? wScore : row.finalEmulationScore;
-        return sortMode === 'ranking'
-          ? [displayStt, row.hoTen, scoreCell, row.rank]
+        return includeRank
+          ? [displayStt, row.hoTen, scoreCell, `Hạng ${row.rank}`]
           : [displayStt, row.hoTen, scoreCell];
       }
 
       const perWeekCells = activeWeeks.map(w =>
         row.weekScores[w] !== null && row.weekScores[w] !== undefined ? row.weekScores[w] : '-'
       );
-      return sortMode === 'ranking'
-        ? [displayStt, row.hoTen, ...perWeekCells, row.finalEmulationScore, row.rank]
+      return includeRank
+        ? [displayStt, row.hoTen, ...perWeekCells, row.finalEmulationScore, `Hạng ${row.rank}`]
         : [displayStt, row.hoTen, ...perWeekCells, row.finalEmulationScore];
     });
 
@@ -187,15 +206,20 @@ export const EmulationMultiWeekViewExport: React.FC<EmulationMultiWeekViewExport
     const weekLabel = isSingleWeek
       ? `Tuan_${activeWeeks[0]}`
       : `Tuan_${activeWeeks[0]}_den_${activeWeeks[activeWeeks.length - 1]}`;
-    const modeLabel = sortMode === 'ranking' ? 'Theo_Xep_Hang' : 'Theo_Thu_Tu';
+    const modeLabel =
+      isRestrictedToOwnExport && currentStudent
+        ? `Ca_Nhan_${currentStudent.maHS}`
+        : sortMode === 'ranking'
+        ? 'Theo_Xep_Hang'
+        : 'Theo_Thu_Tu';
+
     XLSX.utils.book_append_sheet(wb, ws, 'Diem_Thi_Dua_10A5');
     XLSX.writeFile(wb, `Diem_Thi_Dua_10A5_${weekLabel}_${modeLabel}.xlsx`);
 
     onShowToast?.(
-      `Đã xuất File Excel Điểm Thi Đua (${activeWeeks.length} tuần)!`,
-      sortMode === 'ranking'
-        ? 'Danh sách xuất theo thứ tự Xếp hạng thi đua từ cao xuống thấp.'
-        : 'Danh sách xuất theo đúng STT danh sách lớp.'
+      isRestrictedToOwnExport && currentStudent
+        ? `Đã xuất điểm thi đua cá nhân (${currentStudent.hoTen})!`
+        : `Đã xuất File Excel Điểm Thi Đua (${activeWeeks.length} tuần)!`
     );
   };
 
@@ -203,70 +227,62 @@ export const EmulationMultiWeekViewExport: React.FC<EmulationMultiWeekViewExport
   const weekNumbers = Array.from({ length: maxVisibleWeek }, (_, i) => i + 1);
 
   return (
-    <div className="bg-surface rounded-2xl border-2 border-emerald-500/30 shadow-md overflow-hidden">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 px-4 sm:px-5 py-3.5 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center shrink-0">
-            <Eye className="w-5 h-5 text-amber-300" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-sm sm:text-base font-black uppercase tracking-tight">
-                Xem &amp; Xuất Điểm Thi Đua Nề Nếp Theo Tuần
-              </h3>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-950 uppercase">
-                Đơn Giản · Gọn Nhẹ
-              </span>
-            </div>
-            <p className="text-[11px] text-emerald-100 mt-0.5">
-              Chỉ gồm <b>STT, Họ tên học sinh và Điểm thi đua</b> — Tích chọn các tuần muốn xem/xuất và chọn theo Thứ tự hoặc theo Xếp hạng
-            </p>
-          </div>
+    <div className="bg-surface rounded-2xl border border-emerald-500/30 shadow-xs overflow-hidden">
+      {/* Header gọn gàng */}
+      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 px-3.5 py-2.5 text-white flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <Eye className="w-4 h-4 text-amber-300 shrink-0" />
+          <h3 className="text-xs sm:text-sm font-black uppercase tracking-tight truncate">
+            Điểm Thi Đua Theo Tuần
+          </h3>
         </div>
 
         <button
           type="button"
           onClick={handleExportSimpleEmulationExcel}
-          className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95 shrink-0"
+          className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95 shrink-0"
         >
-          <Download className="w-4 h-4" />
-          <span>Xuất Excel Điểm Thi Đua ({sortedSelectedWeeks.length} tuần)</span>
+          <Download className="w-3.5 h-3.5" />
+          <span>
+            {isRestrictedToOwnExport && currentStudent
+              ? `Xuất điểm của tôi (${sortedSelectedWeeks.length} tuần)`
+              : `Xuất Excel (${sortedSelectedWeeks.length} tuần)`}
+          </span>
         </button>
       </div>
 
       {/* Controls: Week Checkboxes & Sort Mode */}
-      <div className="p-4 space-y-4 bg-surface-2/60 border-b border-token">
-        {/* Bước 1: Tích chọn các tuần muốn xem hoặc xuất */}
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 text-xs font-black text-main">
-              <Calendar className="w-4 h-4 text-emerald-600" />
-              <span>1. Tích chọn các tuần muốn xem hoặc xuất ({sortedSelectedWeeks.length} tuần đã chọn):</span>
+      <div className="p-3 space-y-2.5 bg-surface-2/60 border-b border-token">
+        {/* Tích chọn tuần */}
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center justify-between gap-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-main">
+              <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Chọn tuần ({sortedSelectedWeeks.length}):</span>
             </div>
 
             {/* Quick select buttons */}
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1">
               <button
                 type="button"
                 onClick={() => setSelectedWeeks([currentWeek])}
-                className="px-2.5 py-1 rounded-lg bg-surface hover:bg-emerald-50 text-emerald-700 border border-emerald-300 text-[11px] font-bold cursor-pointer"
+                className="px-2 py-1 rounded-lg bg-surface hover:bg-emerald-50 text-emerald-700 border border-emerald-300 text-[11px] font-bold cursor-pointer"
               >
-                Tuần hiện tại (T{currentWeek})
+                Tuần {currentWeek}
               </button>
               <button
                 type="button"
                 onClick={() => selectRange(1, currentWeek)}
-                className="px-2.5 py-1 rounded-lg bg-surface hover:bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold cursor-pointer"
+                className="px-2 py-1 rounded-lg bg-surface hover:bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold cursor-pointer"
               >
-                Từ T1 → T{currentWeek}
+                T1 → T{currentWeek}
               </button>
               <button
                 type="button"
                 onClick={() => selectRange(1, 18)}
-                className="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-3 text-main border border-token text-[11px] font-bold cursor-pointer"
+                className="px-2 py-1 rounded-lg bg-surface hover:bg-surface-3 text-main border border-token text-[11px] font-bold cursor-pointer"
               >
-                Học kỳ 1 (T1–18)
+                HK 1
               </button>
               <button
                 type="button"
@@ -274,22 +290,22 @@ export const EmulationMultiWeekViewExport: React.FC<EmulationMultiWeekViewExport
                   setShowAll35Weeks(true);
                   selectRange(19, 35);
                 }}
-                className="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-3 text-main border border-token text-[11px] font-bold cursor-pointer"
+                className="px-2 py-1 rounded-lg bg-surface hover:bg-surface-3 text-main border border-token text-[11px] font-bold cursor-pointer"
               >
-                Học kỳ 2 (T19–35)
+                HK 2
               </button>
               <button
                 type="button"
                 onClick={() => setShowAll35Weeks(prev => !prev)}
-                className="px-2.5 py-1 rounded-lg bg-surface-3 text-muted hover:text-main text-[11px] font-semibold cursor-pointer"
+                className="px-2 py-1 rounded-lg bg-surface-3 text-muted hover:text-main text-[11px] font-semibold cursor-pointer"
               >
-                {showAll35Weeks ? 'Thu gọn tuần' : 'Hiện đủ 35 tuần'}
+                {showAll35Weeks ? 'Thu gọn' : '35 tuần'}
               </button>
             </div>
           </div>
 
           {/* Grid of week checkboxes */}
-          <div className="grid grid-cols-6 sm:grid-cols-9 md:grid-cols-12 gap-1.5 pt-1">
+          <div className="grid grid-cols-6 sm:grid-cols-9 md:grid-cols-12 gap-1 pt-0.5">
             {weekNumbers.map(w => {
               const isChecked = selectedWeeks.includes(w);
               const isCurrent = w === currentWeek;
@@ -298,7 +314,7 @@ export const EmulationMultiWeekViewExport: React.FC<EmulationMultiWeekViewExport
                   key={w}
                   type="button"
                   onClick={() => toggleWeek(w)}
-                  className={`py-1.5 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border transition-all cursor-pointer ${
+                  className={`py-1 px-1.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 border transition-all cursor-pointer ${
                     isChecked
                       ? 'bg-emerald-600 text-white border-emerald-600 font-black shadow-2xs'
                       : isCurrent
@@ -307,9 +323,9 @@ export const EmulationMultiWeekViewExport: React.FC<EmulationMultiWeekViewExport
                   }`}
                 >
                   {isChecked ? (
-                    <CheckSquare className="w-3.5 h-3.5 shrink-0" />
+                    <CheckSquare className="w-3 h-3 shrink-0" />
                   ) : (
-                    <Square className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <Square className="w-3 h-3 text-slate-400 shrink-0" />
                   )}
                   <span>T{w}</span>
                 </button>
@@ -318,38 +334,38 @@ export const EmulationMultiWeekViewExport: React.FC<EmulationMultiWeekViewExport
           </div>
         </div>
 
-        {/* Bước 2: Chọn chế độ xem & xuất (Theo thứ tự danh sách hay Theo xếp hạng) */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-token">
-          <div className="flex items-center gap-1.5 text-xs font-black text-main">
-            <ArrowUpDown className="w-4 h-4 text-indigo-600" />
-            <span>2. Chọn kiểu sắp xếp khi xem &amp; xuất file:</span>
+        {/* Chế độ sắp xếp */}
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-token">
+          <div className="flex items-center gap-1 text-xs font-bold text-main shrink-0">
+            <ArrowUpDown className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Sắp xếp:</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+          <div className="grid grid-cols-2 gap-1.5 sm:flex sm:items-center">
             <button
               type="button"
               onClick={() => setSortMode('order')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+              className={`px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 border transition-all cursor-pointer ${
                 sortMode === 'order'
                   ? 'bg-indigo-600 text-white border-indigo-600 font-black shadow-2xs'
                   : 'bg-surface text-main border-token hover:bg-surface-3'
               }`}
             >
-              <ListOrdered className="w-4 h-4 shrink-0" />
-              <span>Theo thứ tự danh sách</span>
+              <ListOrdered className="w-3.5 h-3.5 shrink-0" />
+              <span>Theo thứ tự</span>
             </button>
 
             <button
               type="button"
               onClick={() => setSortMode('ranking')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+              className={`px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 border transition-all cursor-pointer ${
                 sortMode === 'ranking'
                   ? 'bg-amber-500 text-slate-950 border-amber-500 font-black shadow-2xs'
                   : 'bg-surface text-main border-token hover:bg-surface-3'
               }`}
             >
-              <Trophy className="w-4 h-4 shrink-0" />
-              <span>Theo xếp hạng thi đua</span>
+              <Trophy className="w-3.5 h-3.5 shrink-0" />
+              <span>Theo xếp hạng</span>
             </button>
           </div>
         </div>
