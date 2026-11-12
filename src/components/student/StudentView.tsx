@@ -1865,7 +1865,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
           currentUserRole={primaryCadreRole}
           currentStudent={currentStudent}
           allStudents={allStudents}
-          teacherName={teacherName || 'Thầy Dương Văn Huy'}
+          teacherName={teacherName || 'Giáo viên chủ nhiệm'}
           messages={mailMessages ?? localMailMessages}
           onUpdateMessages={(next) => {
             setLocalMailMessages(next);

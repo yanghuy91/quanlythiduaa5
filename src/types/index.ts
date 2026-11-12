@@ -223,6 +223,15 @@ export type ActiveTab = 'my_page' | 'seating' | 'personal_log' | 'overview' | 'r
 // --- MÔ ĐUN HỘP THƯ LỚP HỌC (CLASSROOM MAILBOX) ---
 export type MailRecipientType = 'GV' | 'ALL_STUDENTS' | 'CADRES' | 'GROUP' | 'STUDENT';
 
+export interface MailAttachment {
+  id: string;
+  name: string;
+  mimeType: string;
+  sizeBytes: number;
+  dataUrl: string;
+  isImage: boolean;
+}
+
 export interface MailMessage {
   id: string;
   senderId: string; // 'GV' hoặc maHS (vd: 'HS01')
@@ -232,13 +241,15 @@ export interface MailMessage {
   senderAvatar?: string;
   recipientType: MailRecipientType;
   recipientIds: string[]; // ['GV'], ['ALL'], ['GROUP_1'], hoặc danh sách maHS ['HS01', 'HS02']
-  recipientLabel: string; // Chuỗi hiển thị người nhận: vd "Thầy Dương Văn Huy (GVCN)", "Cả lớp 10A5", "Tổ 1", "Nguyễn Minh Khôi"
+  recipientLabel: string; // Chuỗi hiển thị người nhận: vd "Giáo viên chủ nhiệm", "Cả lớp 10A5", "Tổ 1"
   subject: string;
   body: string;
   createdAt: string; // ISO string
   readBy: string[]; // Danh sách userId ('GV' hoặc maHS) đã đọc
   starredBy: string[]; // Danh sách userId đã đánh dấu sao
-  deletedBy: string[]; // Danh sách userId đã xóa vào thùng rác
+  deletedBy: string[]; // Danh sách userId đã chuyển vào thùng rác
+  permanentlyDeletedBy?: string[]; // Danh sách userId đã xóa vĩnh viễn khỏi thùng rác
+  attachments?: MailAttachment[]; // Danh sách ảnh hoặc file đính kèm (lưu trên Firebase, tối đa 5MB)
   replyToId?: string;
 }
 

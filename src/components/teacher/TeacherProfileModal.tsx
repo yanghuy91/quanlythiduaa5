@@ -40,14 +40,14 @@ export const TeacherProfileModal: React.FC<TeacherProfileModalProps> = ({
   onSaveSuccess,
   onSaveProfile,
 }) => {
-  const [hoTen, setHoTen] = useState(currentProfile?.hoTen || 'Thầy Dương Văn Huy');
+  const [hoTen, setHoTen] = useState(currentProfile?.hoTen || 'Giáo viên chủ nhiệm');
   const [statusText, setStatusText] = useState(currentProfile?.statusText || 'Giáo viên chủ nhiệm Lớp 10A5');
   const [school, setSchool] = useState(currentProfile?.school || 'THPT Số 2 Đức Phổ');
 
   // Always sync internal state when modal opens or currentProfile changes
   useEffect(() => {
     if (isOpen && currentProfile) {
-      setHoTen(currentProfile.hoTen || 'Thầy Dương Văn Huy');
+      setHoTen(currentProfile.hoTen || 'Giáo viên chủ nhiệm');
       setStatusText(currentProfile.statusText || 'Giáo viên chủ nhiệm Lớp 10A5');
       setSchool(currentProfile.school || 'THPT Số 2 Đức Phổ');
     }
@@ -65,7 +65,8 @@ export const TeacherProfileModal: React.FC<TeacherProfileModalProps> = ({
       hoTen: hoTen.trim(),
       statusText: statusText.trim(),
       school: school.trim(),
-    });
+      isCustomName: true,
+    }, true);
 
     onSaveSuccess?.(updated);
     onSaveProfile?.(updated);
@@ -160,7 +161,7 @@ export const TeacherProfileModal: React.FC<TeacherProfileModalProps> = ({
               required
               value={hoTen}
               onChange={e => setHoTen(e.target.value)}
-              placeholder="Ví dụ: Thầy Dương Văn Huy, Thầy Huy (GVCN)..."
+              placeholder="Ví dụ: Giáo viên chủ nhiệm, Cô/Thầy GVCN..."
               className="w-full px-3.5 py-2.5 rounded-xl bg-surface-2 border border-token focus:border-accent focus:ring-2 focus:ring-accent/20 text-xs sm:text-sm font-bold text-main outline-none transition-all"
             />
           </div>

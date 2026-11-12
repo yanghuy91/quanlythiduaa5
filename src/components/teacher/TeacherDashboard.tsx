@@ -753,7 +753,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs sm:text-sm font-black text-white group-hover:text-amber-300 transition-colors truncate max-w-[175px] sm:max-w-[260px] drop-shadow-sm">
-                      {internalTeacherProfile.hoTen || 'Thầy Dương Văn Huy'}
+                      {internalTeacherProfile.hoTen || 'Giáo viên chủ nhiệm'}
                     </span>
                     <Edit3 className="w-3 h-3 text-amber-300 shrink-0 opacity-90 group-hover:opacity-100" />
                   </div>
@@ -1779,14 +1779,24 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       {activeTab === 'mailbox' && (
         <ClassroomMailbox
           currentUserId="GV"
-          currentUserName={internalTeacherProfile.hoTen || 'Thầy Dương Văn Huy'}
+          currentUserName={internalTeacherProfile.hoTen || 'Giáo viên chủ nhiệm'}
           currentUserRole="GV"
           allStudents={students}
-          teacherName={internalTeacherProfile.hoTen || 'Thầy Dương Văn Huy'}
+          teacherName={internalTeacherProfile.hoTen || 'Giáo viên chủ nhiệm'}
           messages={mailMessages ?? localMailMessages}
           onUpdateMessages={(next) => {
             setLocalMailMessages(next);
             onUpdateMailMessages?.(next);
+          }}
+          records={records}
+          onUpdateRecords={onImportRecords}
+          onResetCustomAvatars={() => {
+            const cleanedStudents = students.map(s =>
+              s.avatarUrl && s.avatarUrl.startsWith('data:image/')
+                ? { ...s, avatarUrl: undefined }
+                : s
+            );
+            onUpdateLayout(layout, cleanedStudents);
           }}
         />
       )}

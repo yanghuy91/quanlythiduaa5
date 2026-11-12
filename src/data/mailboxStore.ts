@@ -1,60 +1,89 @@
-import { MailMessage, Student } from '../types';
+import { MailAttachment, MailMessage, Student } from '../types';
 
 const MAILBOX_STORAGE_KEY = 'app_mailbox_10a5_v1';
 
-export const DEFAULT_MAIL_MESSAGES: MailMessage[] = [
-  {
-    id: 'mail-welcome-1',
-    senderId: 'GV',
-    senderName: 'Thầy Dương Văn Huy (GVCN)',
-    senderRole: 'GV',
-    recipientType: 'ALL_STUDENTS',
-    recipientIds: ['ALL'],
-    recipientLabel: 'Cả lớp 10A5',
-    subject: '🌟 Chào mừng tập thể lớp 10A5 đến với Hộp thư lớp học!',
-    body: 'Chào các em học sinh lớp 10A5!\n\nTừ nay các em có thể sử dụng Hộp thư lớp học để:\n- Gửi ý kiến đóng góp, tâm tư, nguyện vọng hoặc xin phép trực tiếp cho Thầy (GVCN).\n- Trao đổi công việc lớp, nhắc nhở thi đua, hỗ trợ học tập giữa Ban cán sự, Tổ trưởng và các bạn trong lớp.\n\nChúc tập thể 10A5 luôn đoàn kết, nề nếp tốt và dẫn đầu phong trào thi đua!',
-    createdAt: new Date(Date.now() - 3600 * 1000 * 12).toISOString(),
-    readBy: ['GV'],
-    starredBy: [],
-    deletedBy: [],
-  },
-];
+export const MAX_MAIL_ATTACHMENT_BYTES = 5 * 1024 * 1024; // 5MB
+
+export function normalizeMailAttachments(raw: any): MailAttachment[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter(a => a && typeof a === 'object' && a.dataUrl)
+    .map((a, idx) => ({
+      id: String(a.id || `att-${idx}-${Date.now()}`),
+      name: String(a.name || 'Tệp đính kèm'),
+      mimeType: String(a.mimeType || 'application/octet-stream'),
+      sizeBytes: Number(a.sizeBytes) || Math.round((String(a.dataUrl).length * 3) / 4),
+      dataUrl: String(a.dataUrl),
+      isImage:
+        typeof a.isImage === 'boolean'
+          ? a.isImage
+          : String(a.mimeType || '').startsWith('image/') ||
+            String(a.dataUrl || '').startsWith('data:image/'),
+    }));
+}
 
 export function normalizeMailMessages(raw: any): MailMessage[] {
   if (!Array.isArray(raw)) return [];
   return raw
-    .filter(m => m && typeof m === 'object' && m.id && m.senderId)
-    .map(m => ({
-      id: String(m.id),
-      senderId: String(m.senderId),
-      senderName: String(m.senderName || ''),
-      senderRole: m.senderRole || 'HS',
-      senderGroup: typeof m.senderGroup === 'number' ? m.senderGroup : undefined,
-      senderAvatar: m.senderAvatar ? String(m.senderAvatar) : undefined,
-      recipientType: m.recipientType || 'STUDENT',
-      recipientIds: Array.isArray(m.recipientIds) ? m.recipientIds.map(String) : [],
-      recipientLabel: String(m.recipientLabel || ''),
-      subject: String(m.subject || '(Không có tiêu đề)'),
-      body: String(m.body || ''),
-      createdAt: String(m.createdAt || new Date().toISOString()),
-      readBy: Array.isArray(m.readBy) ? m.readBy.map(String) : [],
-      starredBy: Array.isArray(m.starredBy) ? m.starredBy.map(String) : [],
-      deletedBy: Array.isArray(m.deletedBy) ? m.deletedBy.map(String) : [],
-      replyToId: m.replyToId ? String(m.replyToId) : undefined,
-    }));
+    .filter(
+      m =>
+        m &&
+        typeof m === 'object' &&
+        m.id &&
+        m.id !== 'mail-welcome-1' && // Loại bỏ vĩnh viễn thư chào mừng mặc định cũ
+        m.senderId
+    )
+    .map(m => {
+      const rawSenderName = String(m.senderName || '');
+      const cleanSenderName =
+        rawSenderName === 'Thầy Dương Văn Huy (GVCN)' || rawSenderName === 'Thầy Dương Văn Huy'
+          ? 'Giáo viên chủ nhiệm'
+          : rawSenderName;
+      const rawRecipientLabel = String(m.recipientLabel || '');
+      const cleanRecipientLabel =
+        rawRecipientLabel === 'Thầy Dương Văn Huy (GVCN)' || rawRecipientLabel === 'Thầy Dương Văn Huy'
+          ? 'Giáo viên chủ nhiệm'
+          : rawRecipientLabel;
+
+      return {
+        id: String(m.id),
+        senderId: String(m.senderId),
+        senderName: cleanSenderName,
+        senderRole: m.senderRole || 'HS',
+        senderGroup: typeof m.senderGroup === 'number' ? m.senderGroup : undefined,
+        senderAvatar: m.senderAvatar ? String(m.senderAvatar) : undefined,
+        recipientType: m.recipientType || 'STUDENT',
+        recipientIds: Array.isArray(m.recipientIds) ? m.recipientIds.map(String) : [],
+        recipientLabel: cleanRecipientLabel,
+        subject: String(m.subject || '(Không có tiêu đề)'),
+        body: String(m.body || ''),
+        createdAt: String(m.createdAt || new Date().toISOString()),
+        readBy: Array.isArray(m.readBy) ? m.readBy.map(String) : [],
+        starredBy: Array.isArray(m.starredBy) ? m.starredBy.map(String) : [],
+        deletedBy: Array.isArray(m.deletedBy) ? m.deletedBy.map(String) : [],
+        permanentlyDeletedBy: Array.isArray(m.permanentlyDeletedBy)
+          ? m.permanentlyDeletedBy.map(String)
+          : [],
+        attachments: normalizeMailAttachments(m.attachments),
+        replyToId: m.replyToId ? String(m.replyToId) : undefined,
+      };
+    });
 }
 
 export function getMailMessages(): MailMessage[] {
   try {
     const saved = localStorage.getItem(MAILBOX_STORAGE_KEY);
     if (!saved) {
-      localStorage.setItem(MAILBOX_STORAGE_KEY, JSON.stringify(DEFAULT_MAIL_MESSAGES));
-      return DEFAULT_MAIL_MESSAGES;
+      return [];
     }
     const parsed = JSON.parse(saved);
-    return normalizeMailMessages(parsed);
+    const normalized = normalizeMailMessages(parsed);
+    if (normalized.length !== (Array.isArray(parsed) ? parsed.length : 0)) {
+      localStorage.setItem(MAILBOX_STORAGE_KEY, JSON.stringify(normalized));
+    }
+    return normalized;
   } catch {
-    return DEFAULT_MAIL_MESSAGES;
+    return [];
   }
 }
 
@@ -76,6 +105,9 @@ export function isMessageForUser(
   userId: string,
   studentObj?: Student
 ): boolean {
+  if ((msg.permanentlyDeletedBy || []).includes(userId)) {
+    return false;
+  }
   if (userId === 'GV') {
     return msg.recipientType === 'GV' || msg.recipientIds.includes('GV');
   }
@@ -112,9 +144,22 @@ export function countUnreadMailForUser(
   studentObj?: Student
 ): number {
   return (messages || []).filter(msg => {
+    if ((msg.permanentlyDeletedBy || []).includes(userId)) return false;
     if ((msg.deletedBy || []).includes(userId)) return false;
     if (msg.senderId === userId) return false;
     if (!isMessageForUser(msg, userId, studentObj)) return false;
     return !(msg.readBy || []).includes(userId);
   }).length;
+}
+
+/**
+ * Định dạng kích thước byte sang KB / MB dễ đọc
+ */
+export function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 KB';
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  const mb = kb / 1024;
+  return `${mb.toFixed(2)} MB`;
 }

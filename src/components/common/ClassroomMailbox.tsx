@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Mail,
   Send,
@@ -6,7 +6,6 @@ import {
   Star,
   Trash2,
   Plus,
-  Search,
   Reply,
   Users,
   UserCheck,
@@ -17,17 +16,28 @@ import {
   X,
   Check,
   Sparkles,
+  Paperclip,
+  Image as ImageIcon,
+  FileText,
+  Download,
+  RotateCcw,
+  HardDrive,
+  AlertTriangle,
 } from 'lucide-react';
 import {
+  MailAttachment,
   MailMessage,
   MailRecipientType,
   RoleCode,
   Student,
+  DisciplineRecord,
 } from '../../types';
 import {
   getMailMessages,
   saveMailMessages,
   isMessageForUser,
+  MAX_MAIL_ATTACHMENT_BYTES,
+  formatBytes,
 } from '../../data/mailboxStore';
 
 interface ClassroomMailboxProps {
@@ -39,17 +49,19 @@ interface ClassroomMailboxProps {
   teacherName?: string;
   messages?: MailMessage[];
   onUpdateMessages?: (nextMessages: MailMessage[]) => void;
+  records?: DisciplineRecord[];
+  onUpdateRecords?: (nextRecords: DisciplineRecord[]) => void;
+  onResetCustomAvatars?: () => void;
 }
 
 type MailFolder = 'inbox' | 'sent' | 'starred' | 'trash';
 
 const QUICK_SUBJECT_SUGGESTIONS = [
-  'Báo cáo nề nếp / thi đua',
-  'Xin phép nghỉ học / đi muộn',
-  'Góp ý xây dựng lớp 10A5',
-  'Phản ánh / Giải trình vi phạm',
-  'Trao đổi công việc Tổ / Lớp',
-  'Khen ngợi / Động viên',
+  'Báo cáo thi đua',
+  'Xin phép nghỉ học',
+  'Góp ý lớp học',
+  'Giải trình vi phạm',
+  'Trao đổi công việc',
 ];
 
 export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
@@ -58,9 +70,12 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
   currentUserRole,
   currentStudent,
   allStudents,
-  teacherName = 'Thầy Dương Văn Huy (GVCN)',
+  teacherName = 'Giáo viên chủ nhiệm',
   messages: externalMessages,
   onUpdateMessages,
+  records = [],
+  onUpdateRecords,
+  onResetCustomAvatars,
 }) => {
   const [internalMessages, setInternalMessages] = useState<MailMessage[]>(() =>
     getMailMessages()
@@ -92,7 +107,6 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
 
   const [activeFolder, setActiveFolder] = useState<MailFolder>('inbox');
   const [selectedMailId, setSelectedMailId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   // Compose modal state
   const [isComposing, setIsComposing] = useState(false);
@@ -106,13 +120,40 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
   const [studentSearchTerm, setStudentSearchTerm] = useState('');
   const [composeSubject, setComposeSubject] = useState('');
   const [composeBody, setComposeBody] = useState('');
+  const [composeAttachments, setComposeAttachments] = useState<MailAttachment[]>([]);
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
+
+  // Reply state
   const [replyText, setReplyText] = useState('');
+  const [replyAttachments, setReplyAttachments] = useState<MailAttachment[]>([]);
   const [sendSuccessBanner, setSendSuccessBanner] = useState<string | null>(null);
+
+  // Firebase Storage Manager modal state (for Teacher)
+  const [showStorageModal, setShowStorageModal] = useState(false);
+  const [selectedCleanupTargets, setSelectedCleanupTargets] = useState<string[]>([
+    'mail_images',
+  ]);
+
+  const composeFileInputRef = useRef<HTMLInputElement>(null);
+  const composeImageInputRef = useRef<HTMLInputElement>(null);
+  const replyFileInputRef = useRef<HTMLInputElement>(null);
+
+  const effectiveTeacherLabel =
+    teacherName &&
+    teacherName !== 'Thầy Dương Văn Huy' &&
+    teacherName !== 'Thầy Dương Văn Huy (GVCN)'
+      ? teacherName
+      : 'Giáo viên chủ nhiệm';
 
   // Filter messages for current user and folder
   const userMessages = useMemo(() => {
     return allMessages
       .filter(msg => {
+        // Nếu người dùng đã xóa vĩnh viễn khỏi thùng rác thì không bao giờ hiện lại nữa
+        if ((msg.permanentlyDeletedBy || []).includes(currentUserId)) {
+          return false;
+        }
+
         const isDeleted = (msg.deletedBy || []).includes(currentUserId);
         const isSender = msg.senderId === currentUserId;
         const isRecipient = isMessageForUser(msg, currentUserId, currentStudent);
@@ -130,28 +171,29 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
         if (activeFolder === 'sent') {
           return isSender;
         }
-        // inbox: received messages (or self-sent broadcast)
+        // inbox: received messages
         return isRecipient && (!isSender || msg.recipientIds.includes(currentUserId));
       })
-      .filter(msg => {
-        if (!searchQuery.trim()) return true;
-        const q = searchQuery.toLowerCase();
-        return (
-          msg.subject.toLowerCase().includes(q) ||
-          msg.body.toLowerCase().includes(q) ||
-          msg.senderName.toLowerCase().includes(q) ||
-          msg.recipientLabel.toLowerCase().includes(q)
-        );
-      })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [allMessages, currentUserId, currentStudent, activeFolder, searchQuery]);
+  }, [allMessages, currentUserId, currentStudent, activeFolder]);
 
   const unreadInboxCount = useMemo(() => {
     return allMessages.filter(msg => {
+      if ((msg.permanentlyDeletedBy || []).includes(currentUserId)) return false;
       if ((msg.deletedBy || []).includes(currentUserId)) return false;
       if (msg.senderId === currentUserId) return false;
       if (!isMessageForUser(msg, currentUserId, currentStudent)) return false;
       return !(msg.readBy || []).includes(currentUserId);
+    }).length;
+  }, [allMessages, currentUserId, currentStudent]);
+
+  const trashCount = useMemo(() => {
+    return allMessages.filter(msg => {
+      if ((msg.permanentlyDeletedBy || []).includes(currentUserId)) return false;
+      const isSender = msg.senderId === currentUserId;
+      const isRecipient = isMessageForUser(msg, currentUserId, currentStudent);
+      if (!isSender && !isRecipient) return false;
+      return (msg.deletedBy || []).includes(currentUserId);
     }).length;
   }, [allMessages, currentUserId, currentStudent]);
 
@@ -164,6 +206,8 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
   const handleSelectMail = (mail: MailMessage) => {
     setSelectedMailId(mail.id);
     setReplyText('');
+    setReplyAttachments([]);
+    setAttachmentError(null);
     if (!(mail.readBy || []).includes(currentUserId)) {
       const updated = allMessages.map(m =>
         m.id === mail.id
@@ -187,22 +231,38 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
     commitMessages(updated);
   };
 
-  const handleDeleteOrRestore = (mailId: string, e?: React.MouseEvent) => {
+  // Xóa vào thùng rác HOẶC Xóa vĩnh viễn khi đang ở trong Thùng rác
+  const handleDeleteMail = (mailId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
     const target = allMessages.find(m => m.id === mailId);
     if (!target) return;
 
-    const isAlreadyInTrash = (target.deletedBy || []).includes(currentUserId);
-    if (isAlreadyInTrash && activeFolder === 'trash') {
-      // Restore from trash
-      const updated = allMessages.map(m =>
-        m.id === mailId
-          ? { ...m, deletedBy: (m.deletedBy || []).filter(id => id !== currentUserId) }
-          : m
-      );
+    const isInTrash = (target.deletedBy || []).includes(currentUserId);
+    if (isInTrash || activeFolder === 'trash') {
+      // Đang ở trong Thùng rác -> Xóa vĩnh viễn (không bao giờ quay lại hộp thư đến)
+      let updated: MailMessage[];
+      if (currentUserId === 'GV' && target.senderId === 'GV') {
+        updated = allMessages.filter(m => m.id !== mailId);
+      } else {
+        updated = allMessages.map(m =>
+          m.id === mailId
+            ? {
+                ...m,
+                permanentlyDeletedBy: Array.from(
+                  new Set([...(m.permanentlyDeletedBy || []), currentUserId])
+                ),
+              }
+            : m
+        );
+      }
       commitMessages(updated);
+      if (selectedMailId === mailId) {
+        setSelectedMailId(null);
+      }
+      setSendSuccessBanner('Đã xóa vĩnh viễn thư khỏi thùng rác!');
+      setTimeout(() => setSendSuccessBanner(null), 3000);
     } else {
-      // Move to trash
+      // Chuyển vào thùng rác
       const updated = allMessages.map(m =>
         m.id === mailId
           ? { ...m, deletedBy: Array.from(new Set([...(m.deletedBy || []), currentUserId])) }
@@ -215,7 +275,102 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
     }
   };
 
-  const openComposeModal = (presetRecipientType?: MailRecipientType, presetStudentId?: string, presetSubject?: string) => {
+  // Khôi phục thư từ Thùng rác (nút riêng biệt)
+  const handleRestoreFromTrash = (mailId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const updated = allMessages.map(m =>
+      m.id === mailId
+        ? { ...m, deletedBy: (m.deletedBy || []).filter(id => id !== currentUserId) }
+        : m
+    );
+    commitMessages(updated);
+    if (selectedMailId === mailId) {
+      setSelectedMailId(null);
+    }
+    setSendSuccessBanner('Đã khôi phục thư khỏi thùng rác!');
+    setTimeout(() => setSendSuccessBanner(null), 3000);
+  };
+
+  // Dọn sạch toàn bộ thùng rác của người dùng hiện tại
+  const handleEmptyTrash = () => {
+    const updated = allMessages.map(m => {
+      if ((m.deletedBy || []).includes(currentUserId)) {
+        return {
+          ...m,
+          permanentlyDeletedBy: Array.from(
+            new Set([...(m.permanentlyDeletedBy || []), currentUserId])
+          ),
+        };
+      }
+      return m;
+    });
+    commitMessages(updated);
+    setSelectedMailId(null);
+    setSendSuccessBanner('Đã dọn sạch toàn bộ Thùng rác!');
+    setTimeout(() => setSendSuccessBanner(null), 3000);
+  };
+
+  // Xử lý chọn file / hình ảnh đính kèm (Giới hạn 5MB)
+  const handleFilesSelected = async (
+    files: FileList | null,
+    targetMode: 'compose' | 'reply'
+  ) => {
+    if (!files || files.length === 0) return;
+    setAttachmentError(null);
+
+    const existingList = targetMode === 'compose' ? composeAttachments : replyAttachments;
+    const currentTotalBytes = existingList.reduce((acc, a) => acc + a.sizeBytes, 0);
+
+    let addedBytes = 0;
+    const newAttachments: MailAttachment[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.size > MAX_MAIL_ATTACHMENT_BYTES) {
+        setAttachmentError(
+          `Tệp "${file.name}" (${formatBytes(file.size)}) vượt quá giới hạn 5MB!`
+        );
+        continue;
+      }
+      if (currentTotalBytes + addedBytes + file.size > MAX_MAIL_ATTACHMENT_BYTES) {
+        setAttachmentError(
+          'Tổng dung lượng đính kèm trong 1 thư không được vượt quá 5MB!'
+        );
+        break;
+      }
+
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Lỗi đọc file'));
+        reader.readAsDataURL(file);
+      });
+
+      addedBytes += file.size;
+      newAttachments.push({
+        id: `att-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        name: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        sizeBytes: file.size,
+        dataUrl,
+        isImage: file.type.startsWith('image/'),
+      });
+    }
+
+    if (newAttachments.length > 0) {
+      if (targetMode === 'compose') {
+        setComposeAttachments(prev => [...prev, ...newAttachments]);
+      } else {
+        setReplyAttachments(prev => [...prev, ...newAttachments]);
+      }
+    }
+  };
+
+  const openComposeModal = (
+    presetRecipientType?: MailRecipientType,
+    presetStudentId?: string,
+    presetSubject?: string
+  ) => {
     if (presetRecipientType) {
       setRecipientType(presetRecipientType);
     } else {
@@ -228,6 +383,8 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
     }
     setComposeSubject(presetSubject || '');
     setComposeBody('');
+    setComposeAttachments([]);
+    setAttachmentError(null);
     setStudentSearchTerm('');
     setIsComposing(true);
   };
@@ -235,14 +392,14 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
   const handleSendMail = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedBody = composeBody.trim();
-    if (!trimmedBody) return;
+    if (!trimmedBody && composeAttachments.length === 0) return;
 
     let finalRecipientIds: string[] = [];
     let finalRecipientLabel = '';
 
     if (recipientType === 'GV') {
       finalRecipientIds = ['GV'];
-      finalRecipientLabel = `${teacherName} (GVCN)`;
+      finalRecipientLabel = effectiveTeacherLabel;
     } else if (recipientType === 'ALL_STUDENTS') {
       finalRecipientIds = ['ALL'];
       finalRecipientLabel = 'Cả lớp 10A5';
@@ -269,7 +426,7 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
       senderId: currentUserId,
       senderName:
         currentUserId === 'GV'
-          ? `${teacherName} (GVCN)`
+          ? effectiveTeacherLabel
           : `${currentUserName}${currentStudent ? ` (Tổ ${currentStudent.to})` : ''}`,
       senderRole: currentUserRole,
       senderGroup: currentStudent?.to,
@@ -277,24 +434,27 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
       recipientIds: finalRecipientIds,
       recipientLabel: finalRecipientLabel,
       subject: composeSubject.trim() || 'Thư trao đổi lớp 10A5',
-      body: trimmedBody,
+      body: trimmedBody || '(Đính kèm tệp/hình ảnh)',
       createdAt: new Date().toISOString(),
       readBy: [currentUserId],
       starredBy: [],
       deletedBy: [],
+      permanentlyDeletedBy: [],
+      attachments: composeAttachments,
     };
 
     commitMessages([newMsg, ...allMessages]);
     setIsComposing(false);
     setComposeSubject('');
     setComposeBody('');
-    setSendSuccessBanner(`Đã gửi thư tới "${finalRecipientLabel}" thành công!`);
-    setTimeout(() => setSendSuccessBanner(null), 4000);
+    setComposeAttachments([]);
+    setSendSuccessBanner(`Đã gửi thư tới "${finalRecipientLabel}"!`);
+    setTimeout(() => setSendSuccessBanner(null), 3500);
   };
 
   const handleQuickReply = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedMail || !replyText.trim()) return;
+    if (!selectedMail || (!replyText.trim() && replyAttachments.length === 0)) return;
 
     const isReplyToTeacher = selectedMail.senderId === 'GV';
     const replyRecipientType: MailRecipientType = isReplyToTeacher ? 'GV' : 'STUDENT';
@@ -309,7 +469,7 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
       senderId: currentUserId,
       senderName:
         currentUserId === 'GV'
-          ? `${teacherName} (GVCN)`
+          ? effectiveTeacherLabel
           : `${currentUserName}${currentStudent ? ` (Tổ ${currentStudent.to})` : ''}`,
       senderRole: currentUserRole,
       senderGroup: currentStudent?.to,
@@ -317,16 +477,19 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
       recipientIds: replyRecipientIds,
       recipientLabel: replyRecipientLabel,
       subject: baseSubj,
-      body: replyText.trim(),
+      body: replyText.trim() || '(Đính kèm tệp/hình ảnh)',
       createdAt: new Date().toISOString(),
       readBy: [currentUserId],
       starredBy: [],
       deletedBy: [],
+      permanentlyDeletedBy: [],
+      attachments: replyAttachments,
       replyToId: selectedMail.id,
     };
 
     commitMessages([replyMsg, ...allMessages]);
     setReplyText('');
+    setReplyAttachments([]);
     setSendSuccessBanner(`Đã gửi phản hồi tới "${replyRecipientLabel}"!`);
     setTimeout(() => setSendSuccessBanner(null), 3500);
   };
@@ -340,7 +503,7 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
         hour: '2-digit',
         minute: '2-digit',
       });
-      if (isToday) return `Hôm nay, ${timePart}`;
+      if (isToday) return timePart;
       return `${d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })} ${timePart}`;
     } catch {
       return '';
@@ -361,46 +524,138 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
       });
   }, [allStudents, currentUserId, studentSearchTerm]);
 
+  // Tính toán chi tiết dung lượng lưu trữ trên Firebase (dành cho Giáo viên)
+  const storageStats = useMemo(() => {
+    let mailImagesCount = 0;
+    let mailImagesBytes = 0;
+    let mailFilesCount = 0;
+    let mailFilesBytes = 0;
+    let mailTextBytes = 0;
+    let trashMailCount = 0;
+    let trashMailBytes = 0;
+
+    allMessages.forEach(m => {
+      const baseTextSize = new Blob([
+        JSON.stringify({ ...m, attachments: undefined }),
+      ]).size;
+      mailTextBytes += baseTextSize;
+
+      let msgAttachmentBytes = 0;
+      (m.attachments || []).forEach(att => {
+        const sz = att.sizeBytes || Math.round((att.dataUrl.length * 3) / 4);
+        msgAttachmentBytes += sz;
+        if (att.isImage) {
+          mailImagesCount += 1;
+          mailImagesBytes += sz;
+        } else {
+          mailFilesCount += 1;
+          mailFilesBytes += sz;
+        }
+      });
+
+      if ((m.deletedBy || []).length > 0) {
+        trashMailCount += 1;
+        trashMailBytes += baseTextSize + msgAttachmentBytes;
+      }
+    });
+
+    let customAvatarCount = 0;
+    let customAvatarBytes = 0;
+    allStudents.forEach(s => {
+      if (s.avatarUrl && s.avatarUrl.startsWith('data:image/')) {
+        customAvatarCount += 1;
+        customAvatarBytes += Math.round((s.avatarUrl.length * 3) / 4);
+      }
+    });
+
+    const voidedRecords = (records || []).filter(r => r.trangThai === 'DaHuy');
+    const voidedRecordsBytes = new Blob([JSON.stringify(voidedRecords)]).size;
+    const allRecordsBytes = new Blob([JSON.stringify(records || [])]).size;
+    const studentsRosterBytes = new Blob([
+      JSON.stringify(allStudents.map(s => ({ ...s, avatarUrl: undefined }))),
+    ]).size;
+
+    const totalBytes =
+      mailTextBytes +
+      mailImagesBytes +
+      mailFilesBytes +
+      customAvatarBytes +
+      allRecordsBytes +
+      studentsRosterBytes;
+
+    return {
+      totalBytes,
+      mailImagesCount,
+      mailImagesBytes,
+      mailFilesCount,
+      mailFilesBytes,
+      mailTextBytes,
+      trashMailCount,
+      trashMailBytes,
+      allMailCount: allMessages.length,
+      allMailBytes: mailTextBytes + mailImagesBytes + mailFilesBytes,
+      customAvatarCount,
+      customAvatarBytes,
+      voidedRecordsCount: voidedRecords.length,
+      voidedRecordsBytes,
+    };
+  }, [allMessages, allStudents, records]);
+
+  const toggleCleanupTarget = (key: string) => {
+    setSelectedCleanupTargets(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    );
+  };
+
+  const handleExecuteStorageCleanup = () => {
+    if (selectedCleanupTargets.length === 0) return;
+
+    let nextMessages = [...allMessages];
+
+    if (selectedCleanupTargets.includes('mail_all')) {
+      nextMessages = [];
+      setSelectedMailId(null);
+    } else {
+      if (selectedCleanupTargets.includes('mail_trash')) {
+        nextMessages = nextMessages.filter(m => (m.deletedBy || []).length === 0);
+      }
+      if (selectedCleanupTargets.includes('mail_images')) {
+        nextMessages = nextMessages.map(m => ({
+          ...m,
+          attachments: (m.attachments || []).filter(att => !att.isImage),
+        }));
+      }
+      if (selectedCleanupTargets.includes('mail_files')) {
+        nextMessages = nextMessages.map(m => ({
+          ...m,
+          attachments: (m.attachments || []).filter(att => att.isImage),
+        }));
+      }
+    }
+
+    commitMessages(nextMessages);
+
+    if (selectedCleanupTargets.includes('voided_records') && onUpdateRecords) {
+      const cleanedRecs = (records || []).filter(r => r.trangThai !== 'DaHuy');
+      onUpdateRecords(cleanedRecs);
+    }
+
+    if (selectedCleanupTargets.includes('student_avatars') && onResetCustomAvatars) {
+      onResetCustomAvatars();
+    }
+
+    setShowStorageModal(false);
+    setSendSuccessBanner('Đã xóa dữ liệu đã chọn và giải phóng dung lượng Firebase!');
+    setTimeout(() => setSendSuccessBanner(null), 4000);
+  };
+
   return (
-    <div className="bg-surface rounded-2xl border border-token shadow-sm overflow-hidden">
-      {/* Top Header Banner */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-4 py-3.5 text-white flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center shrink-0">
-            <Mail className="w-5 h-5 text-amber-300" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm sm:text-base font-black tracking-tight uppercase">
-                Hộp Thư Lớp 10A5
-              </h3>
-              {unreadInboxCount > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white shadow-2xs">
-                  {unreadInboxCount} thư mới
-                </span>
-              )}
-            </div>
-            <p className="text-[11px] text-indigo-100">
-              Gửi và nhận thư trực tiếp giữa Học sinh, Ban cán sự và Giáo viên chủ nhiệm
-            </p>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => openComposeModal()}
-          className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span>Soạn Thư Mới</span>
-        </button>
-      </div>
-
+    <div className="bg-surface rounded-2xl border border-token shadow-xs overflow-hidden">
       {/* Notification toast inside mailbox */}
       {sendSuccessBanner && (
-        <div className="px-4 py-2.5 bg-emerald-600 text-white text-xs font-bold flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
+        <div className="px-3.5 py-2 bg-emerald-600 text-white text-xs font-bold flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
             <span>{sendSuccessBanner}</span>
           </div>
           <button
@@ -413,26 +668,26 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
         </div>
       )}
 
-      {/* Folder Tabs & Search Bar */}
-      <div className="p-3 bg-surface-2 border-b border-token flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-        <div className="grid grid-cols-4 sm:flex items-center gap-1.5">
+      {/* Thanh danh mục Hộp thư gọn gàng cho điện thoại (4 nút vừa khít, không mất chữ) */}
+      <div className="p-2 bg-surface-2 border-b border-token flex items-center justify-between gap-1.5">
+        <div className="grid grid-cols-4 gap-1 w-full">
           <button
             type="button"
             onClick={() => {
               setActiveFolder('inbox');
               setSelectedMailId(null);
             }}
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-1.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
               activeFolder === 'inbox'
                 ? 'bg-indigo-600 text-white font-black shadow-2xs'
                 : 'bg-surface text-main hover:bg-surface-3 border border-token'
             }`}
           >
             <Inbox className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Hộp thư đến</span>
+            <span>Hộp thư đến</span>
             {unreadInboxCount > 0 && (
               <span
-                className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${
                   activeFolder === 'inbox'
                     ? 'bg-white text-indigo-700'
                     : 'bg-rose-500 text-white'
@@ -449,14 +704,14 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
               setActiveFolder('sent');
               setSelectedMailId(null);
             }}
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-1.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
               activeFolder === 'sent'
                 ? 'bg-indigo-600 text-white font-black shadow-2xs'
                 : 'bg-surface text-main hover:bg-surface-3 border border-token'
             }`}
           >
             <Send className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Đã gửi</span>
+            <span>Đã gửi</span>
           </button>
 
           <button
@@ -465,14 +720,14 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
               setActiveFolder('starred');
               setSelectedMailId(null);
             }}
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-1.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
               activeFolder === 'starred'
                 ? 'bg-amber-500 text-white font-black shadow-2xs'
                 : 'bg-surface text-main hover:bg-surface-3 border border-token'
             }`}
           >
             <Star className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Quan trọng</span>
+            <span>Đánh sao</span>
           </button>
 
           <button
@@ -481,49 +736,45 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
               setActiveFolder('trash');
               setSelectedMailId(null);
             }}
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-1.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
               activeFolder === 'trash'
                 ? 'bg-rose-600 text-white font-black shadow-2xs'
                 : 'bg-surface text-main hover:bg-surface-3 border border-token'
             }`}
           >
             <Trash2 className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Thùng rác</span>
+            <span>Thùng rác{trashCount > 0 ? ` (${trashCount})` : ''}</span>
           </button>
-        </div>
-
-        <div className="relative w-full sm:w-64">
-          <Search className="w-3.5 h-3.5 text-muted absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Tìm theo tên, tiêu đề, nội dung..."
-            className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-surface border border-token text-xs text-main focus:outline-none focus:border-indigo-500"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-main text-xs"
-            >
-              ✕
-            </button>
-          )}
         </div>
       </div>
 
+      {/* Thanh thông báo khi đang ở trong Thùng rác */}
+      {activeFolder === 'trash' && userMessages.length > 0 && !selectedMail && (
+        <div className="px-3 py-2 bg-rose-50/80 border-b border-rose-200 flex items-center justify-between gap-2">
+          <span className="text-[11px] font-semibold text-rose-800">
+            Bấm biểu tượng thùng rác để xóa vĩnh viễn hoặc mũi tên để khôi phục.
+          </span>
+          <button
+            type="button"
+            onClick={handleEmptyTrash}
+            className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-black shrink-0 cursor-pointer"
+          >
+            Dọn sạch thùng rác
+          </button>
+        </div>
+      )}
+
       {/* Main Content: Either Message Detail View or Message List */}
       {selectedMail ? (
-        <div className="p-4 sm:p-5 space-y-4">
-          <div className="flex items-center justify-between gap-2 border-b border-token pb-3">
+        <div className="p-3.5 sm:p-4 space-y-3.5">
+          <div className="flex items-center justify-between gap-2 border-b border-token pb-2.5">
             <button
               type="button"
               onClick={() => setSelectedMailId(null)}
-              className="px-3 py-1.5 rounded-xl bg-surface-2 hover:bg-surface-3 text-main text-xs font-bold flex items-center gap-1.5 border border-token cursor-pointer"
+              className="px-2.5 py-1.5 rounded-xl bg-surface-2 hover:bg-surface-3 text-main text-xs font-bold flex items-center gap-1 border border-token cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Quay lại danh sách thư</span>
+              <span>Quay lại</span>
             </button>
 
             <div className="flex items-center gap-1.5">
@@ -535,32 +786,44 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
                     ? 'bg-amber-50 text-amber-500 border-amber-300'
                     : 'bg-surface text-muted hover:text-main'
                 }`}
-                title="Đánh dấu quan trọng"
+                title="Đánh dấu sao"
               >
                 <Star className="w-4 h-4 fill-current" />
               </button>
+
+              {activeFolder === 'trash' && (
+                <button
+                  type="button"
+                  onClick={e => handleRestoreFromTrash(selectedMail.id, e)}
+                  className="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Khôi phục</span>
+                </button>
+              )}
+
               <button
                 type="button"
-                onClick={e => handleDeleteOrRestore(selectedMail.id, e)}
+                onClick={e => handleDeleteMail(selectedMail.id, e)}
                 className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold flex items-center gap-1 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>{activeFolder === 'trash' ? 'Khôi phục' : 'Xóa'}</span>
+                <span>{activeFolder === 'trash' ? 'Xóa vĩnh viễn' : 'Xóa'}</span>
               </button>
             </div>
           </div>
 
           {/* Mail Subject & Metadata */}
           <div className="space-y-2">
-            <h4 className="text-base sm:text-lg font-black text-main leading-snug">
+            <h4 className="text-sm sm:text-base font-black text-main leading-snug">
               {selectedMail.subject}
             </h4>
-            <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-surface-2/80 border border-token text-xs">
-              <div className="space-y-0.5">
+            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-surface-2/80 border border-token text-xs">
+              <div className="space-y-0.5 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-muted font-semibold">Từ:</span>
                   <span
-                    className={`font-black px-2 py-0.5 rounded-md ${
+                    className={`font-black px-2 py-0.5 rounded-md text-[11px] ${
                       selectedMail.senderId === 'GV'
                         ? 'bg-indigo-600 text-white'
                         : 'bg-indigo-50 text-indigo-900 border border-indigo-200'
@@ -575,48 +838,172 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
                 </div>
               </div>
               <div className="flex items-center gap-1 text-[11px] text-muted font-semibold">
-                <Clock className="w-3.5 h-3.5" />
+                <Clock className="w-3 h-3" />
                 <span>{formatMailTime(selectedMail.createdAt)}</span>
               </div>
             </div>
           </div>
 
           {/* Mail Body */}
-          <div className="p-4 rounded-2xl bg-surface border border-token text-sm text-main whitespace-pre-wrap leading-relaxed min-h-[120px] shadow-2xs">
+          <div className="p-3.5 rounded-2xl bg-surface border border-token text-xs sm:text-sm text-main whitespace-pre-wrap leading-relaxed min-h-[90px] shadow-2xs">
             {selectedMail.body}
           </div>
+
+          {/* Attachments Display (Images & Files stored on Firebase) */}
+          {Array.isArray(selectedMail.attachments) && selectedMail.attachments.length > 0 && (
+            <div className="space-y-2 pt-1">
+              <div className="text-[11px] font-black text-muted uppercase flex items-center gap-1.5">
+                <Paperclip className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Tệp &amp; Hình ảnh đính kèm ({selectedMail.attachments.length}):</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {selectedMail.attachments.map(att =>
+                  att.isImage ? (
+                    <div
+                      key={att.id}
+                      className="rounded-xl border border-token bg-surface-2 overflow-hidden flex flex-col"
+                    >
+                      <img
+                        src={att.dataUrl}
+                        alt={att.name}
+                        className="w-full max-h-60 object-contain bg-slate-900/5"
+                      />
+                      <div className="px-3 py-1.5 flex items-center justify-between gap-2 border-t border-token text-[11px]">
+                        <span className="font-bold text-main truncate">
+                          {att.name} ({formatBytes(att.sizeBytes)})
+                        </span>
+                        <a
+                          href={att.dataUrl}
+                          download={att.name}
+                          className="px-2 py-0.5 rounded bg-indigo-600 text-white font-bold flex items-center gap-1 shrink-0"
+                        >
+                          <Download className="w-3 h-3" />
+                          <span>Tải</span>
+                        </a>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      key={att.id}
+                      className="p-2.5 rounded-xl border border-token bg-surface-2 flex items-center justify-between gap-2"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileText className="w-4 h-4 text-indigo-600 shrink-0" />
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-main truncate">
+                            {att.name}
+                          </div>
+                          <div className="text-[10px] text-muted">
+                            {formatBytes(att.sizeBytes)}
+                          </div>
+                        </div>
+                      </div>
+                      <a
+                        href={att.dataUrl}
+                        download={att.name}
+                        className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold flex items-center gap-1 shrink-0"
+                      >
+                        <Download className="w-3 h-3" />
+                        <span>Tải về</span>
+                      </a>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Quick Reply Box */}
           {activeFolder !== 'trash' && (
             <form
               onSubmit={handleQuickReply}
-              className="p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-200/80 space-y-2.5"
+              className="p-3 rounded-2xl bg-indigo-50/50 border border-indigo-200/80 space-y-2"
             >
-              <div className="flex items-center gap-1.5 text-xs font-black text-indigo-950">
-                <Reply className="w-4 h-4 text-indigo-600" />
-                <span>
-                  Trả lời nhanh cho{' '}
-                  {selectedMail.senderId === currentUserId
-                    ? selectedMail.recipientLabel
-                    : selectedMail.senderName}
-                  :
-                </span>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 text-xs font-black text-indigo-950 truncate">
+                  <Reply className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  <span className="truncate">
+                    Trả lời{' '}
+                    {selectedMail.senderId === currentUserId
+                      ? selectedMail.recipientLabel
+                      : selectedMail.senderName}
+                  </span>
+                </div>
+
+                {/* Nút chèn ảnh / file khi trả lời */}
+                <button
+                  type="button"
+                  onClick={() => replyFileInputRef.current?.click()}
+                  className="px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold flex items-center gap-1 shrink-0 cursor-pointer"
+                >
+                  <Paperclip className="w-3 h-3" />
+                  <span>Đính kèm ảnh/file (≤5MB)</span>
+                </button>
+                <input
+                  ref={replyFileInputRef}
+                  type="file"
+                  multiple
+                  onChange={e => {
+                    handleFilesSelected(e.target.files, 'reply');
+                    e.target.value = '';
+                  }}
+                  className="hidden"
+                />
               </div>
+
+              {attachmentError && (
+                <div className="text-[11px] font-bold text-rose-600 bg-rose-50 px-2.5 py-1.5 rounded-lg border border-rose-200">
+                  ⚠️ {attachmentError}
+                </div>
+              )}
+
+              {replyAttachments.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {replyAttachments.map(att => (
+                    <div
+                      key={att.id}
+                      className="px-2 py-1 rounded-lg bg-white border border-indigo-200 text-[11px] flex items-center gap-1.5"
+                    >
+                      {att.isImage ? (
+                        <ImageIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      ) : (
+                        <FileText className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                      )}
+                      <span className="font-semibold text-slate-800 truncate max-w-[140px]">
+                        {att.name}
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        ({formatBytes(att.sizeBytes)})
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setReplyAttachments(prev => prev.filter(x => x.id !== att.id))
+                        }
+                        className="text-rose-500 hover:text-rose-700 font-bold cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <textarea
-                rows={3}
+                rows={2}
                 value={replyText}
                 onChange={e => setReplyText(e.target.value)}
-                placeholder="Nhập nội dung phản hồi tại đây..."
-                className="w-full p-2.5 rounded-xl bg-white border border-indigo-200 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-indigo-500"
+                placeholder="Nhập nội dung phản hồi..."
+                className="w-full p-2.5 rounded-xl bg-white border border-indigo-200 text-xs text-slate-900 focus:outline-none focus:border-indigo-500"
               />
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  disabled={!replyText.trim()}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-black flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                  disabled={!replyText.trim() && replyAttachments.length === 0}
+                  className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-black flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>Gửi Phản Hồi</span>
+                  <span>Gửi phản hồi</span>
                 </button>
               </div>
             </form>
@@ -624,24 +1011,20 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
         </div>
       ) : (
         /* Mail List View */
-        <div className="divide-y divide-token max-h-[480px] overflow-y-auto">
+        <div className="divide-y divide-token max-h-[380px] overflow-y-auto">
           {userMessages.length === 0 ? (
-            <div className="py-12 px-4 text-center space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mx-auto">
-                <Mail className="w-6 h-6" />
+            <div className="py-10 px-4 text-center space-y-1.5">
+              <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mx-auto">
+                <Mail className="w-5 h-5" />
               </div>
-              <p className="text-xs sm:text-sm font-bold text-main">
+              <p className="text-xs font-bold text-main">
                 {activeFolder === 'inbox'
-                  ? 'Hộp thư đến hiện đang trống'
+                  ? 'Chưa có thư nào trong Hộp thư đến'
                   : activeFolder === 'sent'
-                  ? 'Chưa có thư nào đã gửi'
+                  ? 'Chưa có thư đã gửi'
                   : activeFolder === 'starred'
-                  ? 'Chưa có thư nào được đánh dấu quan trọng'
+                  ? 'Chưa có thư đánh dấu sao'
                   : 'Thùng rác trống'}
-              </p>
-              <p className="text-[11px] text-muted">
-                Nhấn nút &quot;Soạn Thư Mới&quot; ở góc trên để gửi thư cho{' '}
-                {currentUserId === 'GV' ? 'học sinh hoặc cả lớp' : 'Giáo viên chủ nhiệm hoặc các bạn trong lớp'}.
               </p>
             </div>
           ) : (
@@ -651,39 +1034,38 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
                 !(mail.readBy || []).includes(currentUserId);
               const isStarred = (mail.starredBy || []).includes(currentUserId);
               const isFromTeacher = mail.senderId === 'GV';
+              const attCount = (mail.attachments || []).length;
 
               return (
                 <div
                   key={mail.id}
                   onClick={() => handleSelectMail(mail)}
-                  className={`px-3.5 py-3 flex items-start sm:items-center justify-between gap-3 transition-all cursor-pointer hover:bg-indigo-50/40 ${
+                  className={`px-3 py-2.5 flex items-center justify-between gap-2 transition-all cursor-pointer hover:bg-indigo-50/40 ${
                     isUnread ? 'bg-indigo-50/25' : 'bg-surface'
                   }`}
                 >
-                  <div className="flex items-start sm:items-center gap-2.5 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
                     {/* Star button */}
                     <button
                       type="button"
                       onClick={e => handleToggleStar(mail.id, e)}
-                      className={`mt-0.5 sm:mt-0 shrink-0 cursor-pointer ${
+                      className={`shrink-0 cursor-pointer ${
                         isStarred
                           ? 'text-amber-500'
                           : 'text-slate-300 hover:text-amber-400'
                       }`}
                     >
-                      <Star className={`w-4 h-4 ${isStarred ? 'fill-current' : ''}`} />
+                      <Star className={`w-3.5 h-3.5 ${isStarred ? 'fill-current' : ''}`} />
                     </button>
 
-                    {/* Unread indicator dot */}
-                    <div className="w-2 shrink-0 flex items-center justify-center mt-1.5 sm:mt-0">
-                      {isUnread && (
-                        <span className="w-2 h-2 rounded-full bg-indigo-600 block" />
-                      )}
-                    </div>
+                    {/* Unread dot */}
+                    {isUnread && (
+                      <span className="w-2 h-2 rounded-full bg-indigo-600 shrink-0" />
+                    )}
 
                     {/* Content */}
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
+                      <div className="flex items-center gap-1.5">
                         <span
                           className={`text-xs truncate ${
                             isUnread ? 'font-black text-slate-950' : 'font-bold text-slate-700'
@@ -698,34 +1080,47 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
                             GVCN
                           </span>
                         )}
+                        {attCount > 0 && (
+                          <span className="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 text-[10px] font-bold flex items-center gap-0.5 shrink-0">
+                            <Paperclip className="w-2.5 h-2.5" />
+                            {attCount}
+                          </span>
+                        )}
                       </div>
 
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2 mt-0.5">
+                      <div className="text-[11px] truncate mt-0.5">
                         <span
-                          className={`text-xs truncate ${
+                          className={
                             isUnread ? 'font-black text-indigo-950' : 'font-semibold text-main'
-                          }`}
+                          }
                         >
                           {mail.subject}
                         </span>
-                        <span className="hidden sm:inline text-muted text-xs">-</span>
-                        <span className="text-[11px] text-muted truncate">
-                          {mail.body.replace(/\n+/g, ' ')}
-                        </span>
+                        <span className="text-muted"> — {mail.body.replace(/\n+/g, ' ')}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Right side: Time & Delete */}
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[10px] sm:text-[11px] font-semibold text-muted whitespace-nowrap">
+                  {/* Right side: Time & Restore/Delete */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className="text-[10px] font-semibold text-muted whitespace-nowrap">
                       {formatMailTime(mail.createdAt)}
                     </span>
+                    {activeFolder === 'trash' && (
+                      <button
+                        type="button"
+                        onClick={e => handleRestoreFromTrash(mail.id, e)}
+                        className="p-1 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-all cursor-pointer"
+                        title="Khôi phục về hộp thư"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={e => handleDeleteOrRestore(mail.id, e)}
+                      onClick={e => handleDeleteMail(mail.id, e)}
                       className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
-                      title={activeFolder === 'trash' ? 'Khôi phục' : 'Xóa thư'}
+                      title={activeFolder === 'trash' ? 'Xóa vĩnh viễn' : 'Chuyển vào thùng rác'}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -737,15 +1132,40 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
         </div>
       )}
 
-      {/* COMPOSE NEW MAIL MODAL */}
+      {/* Thanh công cụ phía dưới: Nút Soạn thư mới (đưa xuống dưới theo yêu cầu) + Quản lý dung lượng Firebase cho GV */}
+      <div className="p-2.5 bg-surface-2 border-t border-token flex flex-wrap items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => openComposeModal()}
+          className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>Soạn Thư Mới</span>
+        </button>
+
+        {currentUserId === 'GV' && (
+          <button
+            type="button"
+            onClick={() => setShowStorageModal(true)}
+            className="px-3 py-2 rounded-xl bg-surface hover:bg-amber-50 text-slate-800 border border-token text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+          >
+            <HardDrive className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span>
+              Dung lượng Firebase: <b>{formatBytes(storageStats.totalBytes)}</b> (Quản lý / Xóa)
+            </span>
+          </button>
+        )}
+      </div>
+
+      {/* MODAL SOẠN THƯ MỚI (HỖ TRỢ ĐÍNH KÈM ẢNH / FILE LƯU FIREBASE ≤ 5MB) */}
       {isComposing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-surface rounded-2xl border border-token shadow-2xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden">
             {/* Modal Header */}
-            <div className="px-4 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white flex items-center justify-between shrink-0">
+            <div className="px-4 py-2.5 bg-indigo-600 text-white flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-amber-300" />
-                <span className="text-sm font-black">Soạn Thư Mới — Lớp 10A5</span>
+                <span className="text-xs sm:text-sm font-black">Soạn Thư Mới</span>
               </div>
               <button
                 type="button"
@@ -757,60 +1177,60 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleSendMail} className="p-4 space-y-3.5 overflow-y-auto flex-1">
+            <form onSubmit={handleSendMail} className="p-3.5 sm:p-4 space-y-3 overflow-y-auto flex-1">
               {/* Recipient Type Selection */}
               <div className="space-y-1.5">
                 <label className="text-xs font-black text-main block">
-                  1. Chọn người nhận (Gửi đến):
+                  1. Gửi đến:
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                   {currentUserId !== 'GV' && (
                     <button
                       type="button"
                       onClick={() => setRecipientType('GV')}
-                      className={`py-2 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                      className={`py-1.5 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 border transition-all cursor-pointer ${
                         recipientType === 'GV'
-                          ? 'bg-indigo-600 text-white border-indigo-600 font-black shadow-2xs'
+                          ? 'bg-indigo-600 text-white border-indigo-600 font-black'
                           : 'bg-surface-2 text-main border-token hover:bg-surface-3'
                       }`}
                     >
                       <Shield className="w-3.5 h-3.5 shrink-0" />
-                      <span className="truncate">Giáo viên (GVCN)</span>
+                      <span className="truncate">Giáo viên</span>
                     </button>
                   )}
 
                   <button
                     type="button"
                     onClick={() => setRecipientType('STUDENT')}
-                    className={`py-2 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                    className={`py-1.5 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 border transition-all cursor-pointer ${
                       recipientType === 'STUDENT'
-                        ? 'bg-indigo-600 text-white border-indigo-600 font-black shadow-2xs'
+                        ? 'bg-indigo-600 text-white border-indigo-600 font-black'
                         : 'bg-surface-2 text-main border-token hover:bg-surface-3'
                     }`}
                   >
                     <UserCheck className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">Học sinh trong lớp</span>
+                    <span className="truncate">Học sinh</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setRecipientType('GROUP')}
-                    className={`py-2 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                    className={`py-1.5 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 border transition-all cursor-pointer ${
                       recipientType === 'GROUP'
-                        ? 'bg-indigo-600 text-white border-indigo-600 font-black shadow-2xs'
+                        ? 'bg-indigo-600 text-white border-indigo-600 font-black'
                         : 'bg-surface-2 text-main border-token hover:bg-surface-3'
                     }`}
                   >
                     <Users className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">Theo Tổ (1–4)</span>
+                    <span className="truncate">Theo Tổ</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setRecipientType('CADRES')}
-                    className={`py-2 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                    className={`py-1.5 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 border transition-all cursor-pointer ${
                       recipientType === 'CADRES'
-                        ? 'bg-indigo-600 text-white border-indigo-600 font-black shadow-2xs'
+                        ? 'bg-indigo-600 text-white border-indigo-600 font-black'
                         : 'bg-surface-2 text-main border-token hover:bg-surface-3'
                     }`}
                   >
@@ -821,29 +1241,29 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
                   <button
                     type="button"
                     onClick={() => setRecipientType('ALL_STUDENTS')}
-                    className={`py-2 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                    className={`py-1.5 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 border transition-all cursor-pointer ${
                       recipientType === 'ALL_STUDENTS'
-                        ? 'bg-indigo-600 text-white border-indigo-600 font-black shadow-2xs'
+                        ? 'bg-indigo-600 text-white border-indigo-600 font-black'
                         : 'bg-surface-2 text-main border-token hover:bg-surface-3'
                     }`}
                   >
                     <Users className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">Cả lớp 10A5</span>
+                    <span className="truncate">Cả lớp</span>
                   </button>
                 </div>
               </div>
 
-              {/* Group Picker if recipientType === 'GROUP' */}
+              {/* Group Picker */}
               {recipientType === 'GROUP' && (
-                <div className="p-2.5 rounded-xl bg-surface-2 border border-token flex items-center gap-2">
-                  <span className="text-xs font-bold text-main">Chọn Tổ nhận thư:</span>
-                  <div className="flex items-center gap-1.5">
+                <div className="p-2 rounded-xl bg-surface-2 border border-token flex items-center gap-2">
+                  <span className="text-xs font-bold text-main">Chọn Tổ:</span>
+                  <div className="flex items-center gap-1">
                     {[1, 2, 3, 4].map(g => (
                       <button
                         key={g}
                         type="button"
                         onClick={() => setSelectedGroupNum(g)}
-                        className={`px-3 py-1 rounded-lg text-xs font-black cursor-pointer ${
+                        className={`px-2.5 py-1 rounded-lg text-xs font-black cursor-pointer ${
                           selectedGroupNum === g
                             ? 'bg-indigo-600 text-white'
                             : 'bg-surface text-main border border-token'
@@ -856,12 +1276,12 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
                 </div>
               )}
 
-              {/* Student Multi-Picker if recipientType === 'STUDENT' */}
+              {/* Student Multi-Picker */}
               {recipientType === 'STUDENT' && (
                 <div className="p-2.5 rounded-xl bg-surface-2 border border-token space-y-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-bold text-main">
-                      Chọn học sinh nhận thư ({selectedStudentIds.length} đã chọn):
+                    <span className="text-[11px] font-bold text-main">
+                      Chọn học sinh ({selectedStudentIds.length} đã chọn):
                     </span>
                     {selectedStudentIds.length > 0 && (
                       <button
@@ -877,10 +1297,10 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
                     type="text"
                     value={studentSearchTerm}
                     onChange={e => setStudentSearchTerm(e.target.value)}
-                    placeholder="Gõ tên học sinh hoặc tổ để lọc nhanh..."
+                    placeholder="Lọc nhanh tên học sinh..."
                     className="w-full px-2.5 py-1.5 rounded-lg bg-surface border border-token text-xs text-main focus:outline-none focus:border-indigo-500"
                   />
-                  <div className="max-h-36 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-1 pr-1">
+                  <div className="max-h-32 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-1 pr-1">
                     {filteredStudentsForPicker.map(st => {
                       const isChecked = selectedStudentIds.includes(st.maHS);
                       return (
@@ -894,14 +1314,14 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
                                 : [...prev, st.maHS]
                             );
                           }}
-                          className={`px-2.5 py-1.5 rounded-lg text-left text-xs flex items-center justify-between gap-1.5 border transition-all cursor-pointer ${
+                          className={`px-2 py-1.5 rounded-lg text-left text-xs flex items-center justify-between gap-1 border transition-all cursor-pointer ${
                             isChecked
                               ? 'bg-indigo-50 border-indigo-500 text-indigo-950 font-black'
                               : 'bg-surface border-token text-main hover:bg-surface-3'
                           }`}
                         >
                           <span className="truncate">
-                            {st.hoTen} <span className="text-[10px] text-muted">(Tổ {st.to})</span>
+                            {st.hoTen} <span className="text-[10px] text-muted">(T{st.to})</span>
                           </span>
                           {isChecked && <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />}
                         </button>
@@ -912,16 +1332,16 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
               )}
 
               {/* Subject Input & Quick Chips */}
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <label className="text-xs font-black text-main block">
-                  2. Tiêu đề thư:
+                  2. Tiêu đề:
                 </label>
                 <input
                   type="text"
                   value={composeSubject}
                   onChange={e => setComposeSubject(e.target.value)}
-                  placeholder="Nhập tiêu đề thư (hoặc bấm gợi ý bên dưới)..."
-                  className="w-full px-3 py-2 rounded-xl bg-surface border border-token text-xs sm:text-sm text-main font-semibold focus:outline-none focus:border-indigo-500"
+                  placeholder="Nhập tiêu đề thư..."
+                  className="w-full px-3 py-1.5 rounded-xl bg-surface border border-token text-xs text-main font-semibold focus:outline-none focus:border-indigo-500"
                 />
                 <div className="flex flex-wrap gap-1 pt-0.5">
                   {QUICK_SUBJECT_SUGGESTIONS.map(sug => (
@@ -938,18 +1358,126 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
               </div>
 
               {/* Body Textarea */}
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <label className="text-xs font-black text-main block">
                   3. Nội dung thư:
                 </label>
                 <textarea
-                  rows={5}
-                  required
+                  rows={4}
                   value={composeBody}
                   onChange={e => setComposeBody(e.target.value)}
-                  placeholder="Nhập nội dung thư cần gửi..."
-                  className="w-full p-3 rounded-xl bg-surface border border-token text-xs sm:text-sm text-main focus:outline-none focus:border-indigo-500"
+                  placeholder="Nhập nội dung thư..."
+                  className="w-full p-2.5 rounded-xl bg-surface border border-token text-xs text-main focus:outline-none focus:border-indigo-500"
                 />
+              </div>
+
+              {/* Chèn hình ảnh hoặc file đính kèm (Lưu trên Firebase, giới hạn 5MB) */}
+              <div className="space-y-2 pt-1">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs font-black text-main">
+                    4. Đính kèm ảnh / file (Lưu Firebase, tối đa 5MB):
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => composeImageInputRef.current?.click()}
+                      className="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <ImageIcon className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Chèn ảnh</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => composeFileInputRef.current?.click()}
+                      className="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Paperclip className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Đính kèm file</span>
+                    </button>
+                  </div>
+                </div>
+
+                <input
+                  ref={composeImageInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={e => {
+                    handleFilesSelected(e.target.files, 'compose');
+                    e.target.value = '';
+                  }}
+                  className="hidden"
+                />
+                <input
+                  ref={composeFileInputRef}
+                  type="file"
+                  multiple
+                  onChange={e => {
+                    handleFilesSelected(e.target.files, 'compose');
+                    e.target.value = '';
+                  }}
+                  className="hidden"
+                />
+
+                {attachmentError && (
+                  <div className="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-bold">
+                    ⚠️ {attachmentError}
+                  </div>
+                )}
+
+                {composeAttachments.length > 0 && (
+                  <div className="space-y-1.5 bg-surface-2 p-2.5 rounded-xl border border-token">
+                    <div className="text-[11px] font-bold text-muted flex items-center justify-between">
+                      <span>Đã chọn {composeAttachments.length} tệp:</span>
+                      <span>
+                        Tổng:{' '}
+                        {formatBytes(
+                          composeAttachments.reduce((s, a) => s + a.sizeBytes, 0)
+                        )}{' '}
+                        / 5 MB
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 gap-1.5">
+                      {composeAttachments.map(att => (
+                        <div
+                          key={att.id}
+                          className="p-1.5 rounded-lg bg-surface border border-token flex items-center justify-between gap-2 text-xs"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            {att.isImage ? (
+                              <img
+                                src={att.dataUrl}
+                                alt={att.name}
+                                className="w-8 h-8 rounded object-cover border border-token shrink-0"
+                              />
+                            ) : (
+                              <FileText className="w-4 h-4 text-indigo-600 shrink-0" />
+                            )}
+                            <div className="min-w-0">
+                              <div className="font-bold text-main truncate text-[11px]">
+                                {att.name}
+                              </div>
+                              <div className="text-[10px] text-muted">
+                                {formatBytes(att.sizeBytes)}
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setComposeAttachments(prev =>
+                                prev.filter(x => x.id !== att.id)
+                              )
+                            }
+                            className="p-1 text-rose-500 hover:bg-rose-50 rounded cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Submit / Cancel */}
@@ -957,23 +1485,238 @@ export const ClassroomMailbox: React.FC<ClassroomMailboxProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsComposing(false)}
-                  className="px-4 py-2 rounded-xl bg-surface-2 hover:bg-surface-3 text-main text-xs font-bold border border-token cursor-pointer"
+                  className="px-3.5 py-2 rounded-xl bg-surface-2 hover:bg-surface-3 text-main text-xs font-bold border border-token cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={
-                    !composeBody.trim() ||
+                    (!composeBody.trim() && composeAttachments.length === 0) ||
                     (recipientType === 'STUDENT' && selectedStudentIds.length === 0)
                   }
                   className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-black flex items-center gap-1.5 shadow-sm cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>Gửi Thư Ngay</span>
+                  <span>Gửi Thư</span>
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL QUẢN LÝ DUNG LƯỢNG FIREBASE & CHỌN MỤC XÓA DỮ LIỆU (DÀNH CHO GIÁO VIÊN) */}
+      {showStorageModal && currentUserId === 'GV' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-surface rounded-2xl border border-token shadow-2xl w-full max-w-md max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <HardDrive className="w-4 h-4" />
+                <span className="text-xs sm:text-sm font-black uppercase">
+                  Quản Lý Dung Lượng Lưu Trữ Firebase
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowStorageModal(false)}
+                className="p-1 rounded-lg bg-white/15 hover:bg-white/25 text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3.5 overflow-y-auto flex-1">
+              {/* Tổng dung lượng */}
+              <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-950">
+                    Tổng dung lượng dữ liệu lớp trên Firebase:
+                  </span>
+                  <span className="text-sm font-black text-amber-900">
+                    {formatBytes(storageStats.totalBytes)}
+                  </span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-amber-200/70 overflow-hidden">
+                  <div
+                    className="h-full bg-amber-600 rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        Math.max(4, (storageStats.totalBytes / (20 * 1024 * 1024)) * 100)
+                      )}%`,
+                    }}
+                  />
+                </div>
+                <div className="text-[11px] text-amber-800">
+                  Tích chọn các mục bên dưới để xóa và giải phóng dung lượng trên Firebase:
+                </div>
+              </div>
+
+              {/* Danh sách các mục có thể chọn để xóa */}
+              <div className="space-y-2">
+                {/* 1. Ảnh trong hộp thư */}
+                <label className="p-2.5 rounded-xl border border-token bg-surface-2 hover:bg-surface-3 flex items-center justify-between gap-2 cursor-pointer">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedCleanupTargets.includes('mail_images')}
+                      onChange={() => toggleCleanupTarget('mail_images')}
+                      className="w-4 h-4 accent-rose-600 rounded shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <div className="text-xs font-black text-main">
+                        Ảnh đính kèm trong Hộp thư ({storageStats.mailImagesCount} ảnh)
+                      </div>
+                      <div className="text-[10px] text-muted">
+                        Chỉ xóa hình ảnh đính kèm, giữ nguyên nội dung chữ của thư
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-xs font-mono font-bold text-rose-600 shrink-0">
+                    {formatBytes(storageStats.mailImagesBytes)}
+                  </span>
+                </label>
+
+                {/* 2. File đính kèm trong hộp thư */}
+                <label className="p-2.5 rounded-xl border border-token bg-surface-2 hover:bg-surface-3 flex items-center justify-between gap-2 cursor-pointer">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedCleanupTargets.includes('mail_files')}
+                      onChange={() => toggleCleanupTarget('mail_files')}
+                      className="w-4 h-4 accent-rose-600 rounded shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <div className="text-xs font-black text-main">
+                        Tệp (File) đính kèm trong Hộp thư ({storageStats.mailFilesCount} file)
+                      </div>
+                      <div className="text-[10px] text-muted">
+                        Xóa các tệp tài liệu đính kèm trong hộp thư
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-xs font-mono font-bold text-rose-600 shrink-0">
+                    {formatBytes(storageStats.mailFilesBytes)}
+                  </span>
+                </label>
+
+                {/* 3. Thư trong thùng rác */}
+                <label className="p-2.5 rounded-xl border border-token bg-surface-2 hover:bg-surface-3 flex items-center justify-between gap-2 cursor-pointer">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedCleanupTargets.includes('mail_trash')}
+                      onChange={() => toggleCleanupTarget('mail_trash')}
+                      className="w-4 h-4 accent-rose-600 rounded shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <div className="text-xs font-black text-main">
+                        Thư đã xóa trong Thùng rác ({storageStats.trashMailCount} thư)
+                      </div>
+                      <div className="text-[10px] text-muted">
+                        Xóa vĩnh viễn toàn bộ thư đang nằm trong thùng rác
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-xs font-mono font-bold text-rose-600 shrink-0">
+                    {formatBytes(storageStats.trashMailBytes)}
+                  </span>
+                </label>
+
+                {/* 4. Toàn bộ hộp thư */}
+                <label className="p-2.5 rounded-xl border border-token bg-surface-2 hover:bg-surface-3 flex items-center justify-between gap-2 cursor-pointer">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedCleanupTargets.includes('mail_all')}
+                      onChange={() => toggleCleanupTarget('mail_all')}
+                      className="w-4 h-4 accent-rose-600 rounded shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <div className="text-xs font-black text-main">
+                        Toàn bộ thư trong Hộp thư ({storageStats.allMailCount} thư)
+                      </div>
+                      <div className="text-[10px] text-muted">
+                        Làm trống hoàn toàn hộp thư của lớp (cả chữ và tệp)
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-xs font-mono font-bold text-rose-600 shrink-0">
+                    {formatBytes(storageStats.allMailBytes)}
+                  </span>
+                </label>
+
+                {/* 5. Ảnh Avatar tải lên của học sinh */}
+                {onResetCustomAvatars && (
+                  <label className="p-2.5 rounded-xl border border-token bg-surface-2 hover:bg-surface-3 flex items-center justify-between gap-2 cursor-pointer">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <input
+                        type="checkbox"
+                        checked={selectedCleanupTargets.includes('student_avatars')}
+                        onChange={() => toggleCleanupTarget('student_avatars')}
+                        className="w-4 h-4 accent-rose-600 rounded shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <div className="text-xs font-black text-main">
+                          Ảnh đại diện tải lên ({storageStats.customAvatarCount} HS)
+                        </div>
+                        <div className="text-[10px] text-muted">
+                          Đặt lại ảnh tải lên nặng về biểu tượng mặc định nhẹ
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-rose-600 shrink-0">
+                      {formatBytes(storageStats.customAvatarBytes)}
+                    </span>
+                  </label>
+                )}
+
+                {/* 6. Bản ghi vi phạm đã hủy */}
+                {onUpdateRecords && (
+                  <label className="p-2.5 rounded-xl border border-token bg-surface-2 hover:bg-surface-3 flex items-center justify-between gap-2 cursor-pointer">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <input
+                        type="checkbox"
+                        checked={selectedCleanupTargets.includes('voided_records')}
+                        onChange={() => toggleCleanupTarget('voided_records')}
+                        className="w-4 h-4 accent-rose-600 rounded shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <div className="text-xs font-black text-main">
+                          Bản ghi vi phạm đã hủy ({storageStats.voidedRecordsCount} mục)
+                        </div>
+                        <div className="text-[10px] text-muted">
+                          Dọn các lượt ghi đã hủy không còn tính điểm
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-rose-600 shrink-0">
+                      {formatBytes(storageStats.voidedRecordsBytes)}
+                    </span>
+                  </label>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-token">
+                <button
+                  type="button"
+                  onClick={() => setShowStorageModal(false)}
+                  className="px-3.5 py-2 rounded-xl bg-surface-2 hover:bg-surface-3 text-main text-xs font-bold border border-token cursor-pointer"
+                >
+                  Đóng
+                </button>
+                <button
+                  type="button"
+                  disabled={selectedCleanupTargets.length === 0}
+                  onClick={handleExecuteStorageCleanup}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white text-xs font-black flex items-center gap-1.5 shadow-sm cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Xóa mục đã chọn ({selectedCleanupTargets.length})</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

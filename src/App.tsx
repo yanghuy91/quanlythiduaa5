@@ -561,13 +561,13 @@ export default function App() {
       setCurrentUser(prev => prev && prev.vaiTro.includes('GV') ? { ...prev, avatarUrl: resolved } : prev);
     }
     if (cloudState.teacherProfile && typeof cloudState.teacherProfile === 'object') {
-      latestStateRef.current.teacherProfile = cloudState.teacherProfile;
-      setTeacherProfileState(cloudState.teacherProfile);
-      saveTeacherProfile(cloudState.teacherProfile);
+      const sanitizedProf = saveTeacherProfile(cloudState.teacherProfile);
+      latestStateRef.current.teacherProfile = sanitizedProf;
+      setTeacherProfileState(sanitizedProf);
       setCurrentUser(prev => prev && prev.vaiTro.includes('GV') ? {
         ...prev,
-        hoTen: cloudState.teacherProfile.hoTen || prev.hoTen,
-        statusText: cloudState.teacherProfile.statusText || (prev as any).statusText,
+        hoTen: sanitizedProf.hoTen || prev.hoTen,
+        statusText: sanitizedProf.statusText || (prev as any).statusText,
       } : prev);
     }
     if (typeof cloudState.currentWeek === 'number' && cloudState.currentWeek >= 1) {
@@ -589,8 +589,8 @@ export default function App() {
       cloudState.teacherPassword
     );
 
-    // Đồng bộ Hộp thư lớp 10A5
-    if (Array.isArray(cloudState.mailMessages) && cloudState.mailMessages.length > 0) {
+    // Đồng bộ Hộp thư lớp 10A5 (kể cả khi xóa trống `[]`)
+    if (Array.isArray(cloudState.mailMessages)) {
       const normalizedMail = normalizeMailMessages(cloudState.mailMessages);
       latestStateRef.current.mailMessages = normalizedMail;
       setMailMessages(normalizedMail);
@@ -660,7 +660,7 @@ export default function App() {
       if (firebaseUser && firebaseUser.email) {
         if (isAuthorizedTeacherEmail(firebaseUser.email)) {
           const prof = getTeacherProfile();
-          const effectiveName = prof.hoTen || firebaseUser.displayName || 'Thầy Dương Văn Huy';
+          const effectiveName = prof.hoTen || firebaseUser.displayName || 'Giáo viên chủ nhiệm';
           const resolvedAvatar = resolveTeacherAvatar(teacherAvatar || firebaseUser.photoURL);
           const teacherUser = {
             hoTen: effectiveName,
@@ -951,7 +951,7 @@ export default function App() {
     setCurrentRole(role);
     if (role === 'GV') {
       setCurrentUser({
-        hoTen: teacherProfile.hoTen || 'Thầy Dương Văn Huy (GVCN)',
+        hoTen: teacherProfile.hoTen || 'Giáo viên chủ nhiệm',
         vaiTro: ['GV'],
         avatarUrl: teacherAvatar,
       });
@@ -988,7 +988,7 @@ export default function App() {
   // Teacher login from modal (supports Google Profile)
   const handleLoginTeacher = (remember = true, teacherInfo?: { hoTen?: string; email?: string; avatarUrl?: string }) => {
     const prof = getTeacherProfile();
-    const effectiveName = prof.hoTen || teacherInfo?.hoTen || 'Thầy Dương Văn Huy';
+    const effectiveName = prof.hoTen || teacherInfo?.hoTen || 'Giáo viên chủ nhiệm';
     const effectiveAvatar = resolveTeacherAvatar(teacherAvatar || teacherInfo?.avatarUrl);
 
     const teacherUser = {
