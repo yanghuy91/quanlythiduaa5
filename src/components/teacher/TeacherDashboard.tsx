@@ -24,7 +24,8 @@ import {
   LogOut,
   Edit3,
   FileText,
-  Calendar
+  Calendar,
+  Mail
 } from 'lucide-react';
 import { Logo10A5 } from '../common/Logo10A5';
 import { resolveTeacherAvatar, DEFAULT_TEACHER_AVATAR } from '../../data/teacherAvatars';
@@ -44,9 +45,12 @@ import {
   StudentAcademicRecord,
   CadreDelegatedPermission,
   ScoreRatingTier,
-  RatingColorKey
+  RatingColorKey,
+  MailMessage
 } from '../../types';
 import { TeacherGradeManager } from '../grades/TeacherGradeManager';
+import { ClassroomMailbox } from '../common/ClassroomMailbox';
+import { getMailMessages, countUnreadMailForUser } from '../../data/mailboxStore';
 import { getAcademicRecords, saveAcademicRecords } from '../../data/academicCatalog';
 import { StudentPicker } from '../student-picker/StudentPicker';
 import { RecordBottomSheet } from '../record/RecordBottomSheet';
@@ -137,6 +141,8 @@ interface TeacherDashboardProps {
   onUpdateTeacherProfile?: (profile: TeacherProfile) => void;
   onImportStudents?: (newStudents: Student[], newLayout: SeatLayoutNode[], isReplace: boolean) => void;
   onOpenTeacherProfile?: () => void;
+  mailMessages?: MailMessage[];
+  onUpdateMailMessages?: (messages: MailMessage[]) => void;
 }
 
 export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
@@ -169,6 +175,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   onUpdateTeacherProfile,
   onImportStudents,
   onOpenTeacherProfile,
+  mailMessages,
+  onUpdateMailMessages,
 }) => {
   const [internalTeacherProfile, setInternalTeacherProfile] = useState<TeacherProfile>(() => {
     return teacherProfile || getTeacherProfile();
@@ -179,7 +187,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [rulesUploadNotice, setRulesUploadNotice] = useState<string | null>(null);
   const [showAddRuleForm, setShowAddRuleForm] = useState(false);
   const [newRuleName, setNewRuleName] = useState('');
-  const [newRuleGroup, setNewRuleGroup] = useState('Chuyên cần');
+  const [newRuleGroup, setNewRuleGroup] = useState('Học tập');
   const [newRuleType, setNewRuleType] = useState<'Tru' | 'Cong'>('Tru');
   const [newRuleScore, setNewRuleScore] = useState<number>(2);
 
@@ -240,7 +248,25 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     setInternalTeacherProfile(updated);
     onUpdateTeacherProfile?.(updated);
   };
-  const [activeTab, setActiveTab] = useState<'overview' | 'record' | 'explanations' | 'roster' | 'grades' | 'rules' | 'import_export' | 'ai_gemini' | 'settings' | 'apps'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'record' | 'explanations' | 'roster' | 'grades' | 'mailbox' | 'rules' | 'import_export' | 'ai_gemini' | 'settings' | 'apps'>('overview');
+
+  const [localMailMessages, setLocalMailMessages] = useState<MailMessage[]>(() => getMailMessages());
+  React.useEffect(() => {
+    if (Array.isArray(mailMessages)) {
+      setLocalMailMessages(mailMessages);
+    }
+  }, [mailMessages]);
+  React.useEffect(() => {
+    const syncMail = () => {
+      if (!mailMessages) setLocalMailMessages(getMailMessages());
+    };
+    window.addEventListener('mailbox_updated', syncMail);
+    return () => window.removeEventListener('mailbox_updated', syncMail);
+  }, [mailMessages]);
+  const unreadMailCount = useMemo(
+    () => countUnreadMailForUser(mailMessages ?? localMailMessages, 'GV'),
+    [mailMessages, localMailMessages]
+  );
 
   const [internalAcademicRecords, setInternalAcademicRecords] = useState<StudentAcademicRecord[]>(() => {
     return academicRecords || getAcademicRecords();
@@ -814,15 +840,20 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
           <button
             type="button"
-            onClick={() => setActiveTab('grades')}
+            onClick={() => setActiveTab('mailbox')}
             className={`py-2 px-1 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'grades'
-                ? 'bg-surface text-accent font-black shadow-xs ring-2 ring-accent'
-                : 'bg-surface/80 text-main hover:bg-surface'
+              activeTab === 'mailbox'
+                ? 'bg-indigo-600 text-white font-black shadow-xs'
+                : 'bg-surface/80 text-indigo-700 hover:bg-surface border border-indigo-200/70'
             }`}
           >
-            <GraduationCap className="w-3.5 h-3.5 text-accent shrink-0" />
-            <span className="truncate">Bảng điểm</span>
+            <Mail className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Hộp thư</span>
+            {unreadMailCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-black shrink-0">
+                {unreadMailCount}
+              </span>
+            )}
           </button>
 
           <button
@@ -869,7 +900,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             }`}
           >
             <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span className="truncate">Nhập / Xuất</span>
+            <span className="truncate">Xem &amp; Xuất</span>
           </button>
 
           <button
@@ -954,7 +985,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             <span>← Quay lại Tổng quan</span>
           </button>
           <span className="text-xs font-bold text-muted">
-            {activeTab === 'apps' ? '10 Trò chơi gọi học sinh lên bảng' : activeTab === 'roster' ? 'Sơ đồ lớp (Ghi nhận vi phạm)' : activeTab === 'grades' ? 'Bảng điểm môn học (Excel)' : activeTab === 'rules' ? 'Nội quy lớp' : activeTab === 'import_export' ? 'Nhập & Xuất dữ liệu' : activeTab === 'ai_gemini' ? 'Trợ lý AI Gemini (Cấu hình & Phân tích)' : activeTab === 'explanations' ? 'Duyệt giải trình' : 'Cài đặt hệ thống'}
+            {activeTab === 'apps' ? '10 Trò chơi gọi học sinh lên bảng' : activeTab === 'roster' ? 'Sơ đồ lớp (Ghi nhận vi phạm)' : activeTab === 'mailbox' ? 'Hộp thư lớp 10A5' : activeTab === 'grades' ? 'Bảng điểm môn học' : activeTab === 'rules' ? 'Nội quy lớp' : activeTab === 'import_export' ? 'Xem & Xuất điểm thi đua / Nội quy' : activeTab === 'ai_gemini' ? 'Trợ lý AI Gemini (Cấu hình & Phân tích)' : activeTab === 'explanations' ? 'Duyệt giải trình' : 'Cài đặt hệ thống'}
           </span>
         </div>
       )}
@@ -1742,6 +1773,22 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </div>
           )}
         </div>
+      )}
+
+      {/* 4.4. CLASSROOM MAILBOX (HỘP THƯ LỚP 10A5) */}
+      {activeTab === 'mailbox' && (
+        <ClassroomMailbox
+          currentUserId="GV"
+          currentUserName={internalTeacherProfile.hoTen || 'Thầy Dương Văn Huy'}
+          currentUserRole="GV"
+          allStudents={students}
+          teacherName={internalTeacherProfile.hoTen || 'Thầy Dương Văn Huy'}
+          messages={mailMessages ?? localMailMessages}
+          onUpdateMessages={(next) => {
+            setLocalMailMessages(next);
+            onUpdateMailMessages?.(next);
+          }}
+        />
       )}
 
       {/* 4.5. ACADEMIC GRADEBOOK (EXCEL) */}

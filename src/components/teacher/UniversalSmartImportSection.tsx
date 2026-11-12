@@ -58,6 +58,7 @@ import {
 import { StandardSeatingImportModal } from './StandardSeatingImportModal';
 import { AI_SEATING_PROMPT_GUIDE } from '../../utils/aiSeatingPrompt';
 import { findMatchingRule, classifySeverityByPoints, normalizeRuleCategory } from '../../utils/emulation';
+import { EmulationMultiWeekViewExport } from '../common/EmulationMultiWeekViewExport';
 
 interface UniversalSmartImportSectionProps {
   students: Student[];
@@ -1191,6 +1192,15 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
         </div>
       )}
 
+      {/* KHỐI 0: CHẾ ĐỘ XEM & XUẤT FILE ĐIỂM THI ĐUA THEO TUẦN (TÍCH CHỌN TUẦN, THEO THỨ TỰ HOẶC XẾP HẠNG) */}
+      <EmulationMultiWeekViewExport
+        students={currentSeatingMaster.students}
+        records={records}
+        settings={settings}
+        currentWeek={currentWeek}
+        onShowToast={triggerToast}
+      />
+
       {/* KHỐI 1: NGUYÊN TẮC 1 FILE DUY NHẤT & TẢI FILE MẪU / HƯỚNG DẪN */}
       <div className="bg-surface rounded-2xl border-2 border-indigo-500/30 shadow-md overflow-hidden">
         <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 px-5 py-4 text-white flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -1201,14 +1211,14 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-base sm:text-lg font-black tracking-tight uppercase">
-                  Trung Tâm Nhập / Xuất Hợp Nhất (Lấy Sơ Đồ Lớp Làm Chuẩn)
+                  Trung Tâm Nhập / Xuất Dữ Liệu Nề Nếp &amp; Sơ Đồ Lớp
                 </h3>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-400 text-slate-950">
                   Sơ Đồ Lớp Làm Chuẩn
                 </span>
               </div>
               <p className="text-xs text-indigo-100 mt-0.5">
-                Dù lấy dữ liệu từ file nào, hệ thống luôn <b>lấy Sơ đồ lớp làm chuẩn gốc</b> và tự động <b>quy chiếu</b> Bảng điểm môn học, Nề nếp, Hồ sơ theo đúng Sơ đồ lớp.
+                Đơn giản hóa tối đa: Chỉ xoay quanh <b>Sơ đồ lớp, Nội quy và Thi đua Nề nếp</b> (lấy Sơ đồ lớp làm chuẩn gốc).
               </p>
             </div>
           </div>
@@ -1313,11 +1323,11 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
             <div className="w-8 h-8 rounded-lg bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shrink-0 mt-0.5">
               <Grid className="w-4 h-4" />
             </div>
-            <div className="text-xs leading-relaxed">
+              <div className="text-xs leading-relaxed">
               <span className="font-black uppercase text-amber-900">
                 Nguyên tắc Chuẩn Hóa &amp; Quy Chiếu Tự Động:
               </span>{' '}
-              <b>Sơ đồ lớp hiện tại ({currentSeatingMaster.students.length} học sinh · 4 Tổ)</b> được dùng làm gốc chuẩn duy nhất. Khi thầy thả bất kỳ file nào vào (Bảng điểm vnEdu/SMAS, Danh sách trích ngang, Sổ nề nếp...), hệ thống sẽ <b>tự động đối chiếu theo Họ tên / Mã HS</b> để gắn điểm và thông tin vào đúng học sinh, đúng Tổ và đúng vị trí ghế trên Sơ đồ lớp.
+              <b>Sơ đồ lớp hiện tại ({currentSeatingMaster.students.length} học sinh · 4 Tổ)</b> được dùng làm gốc chuẩn duy nhất. Khi thầy thả file Danh sách, Sổ nề nếp hoặc Nội quy lớp vào, hệ thống sẽ <b>tự động đối chiếu theo Họ tên / Mã HS</b> để gắn thông tin vào đúng học sinh, đúng Tổ và đúng vị trí ghế trên Sơ đồ lớp.
             </div>
           </div>
 
@@ -1340,9 +1350,9 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
                 2
               </div>
               <div>
-                <h4 className="text-xs font-black text-indigo-950">Thả Bất Kỳ File Nào Vào Ô Dưới</h4>
+                <h4 className="text-xs font-black text-indigo-950">Thả File Nội Quy / Nề Nếp Vào Ô Dưới</h4>
                 <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                  Dù là <b>File Bảng điểm, File Nề nếp, File Hồ sơ</b> hay <b>File Tổng hợp</b>, hệ thống đều tự quy chiếu từ Sơ đồ lớp.
+                  Dù là <b>File Nội quy, File Nề nếp, File Sơ đồ</b> hay <b>File Tổng hợp</b>, hệ thống đều tự quy chiếu từ Sơ đồ lớp.
                 </p>
               </div>
             </div>
@@ -1771,15 +1781,6 @@ export const UniversalSmartImportSection: React.FC<UniversalSmartImportSectionPr
             >
               <Grid className="w-3.5 h-3.5 text-indigo-600" />
               <span>Sơ Đồ Chỗ Ngồi &amp; Ban Cán Sự</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onSwitchToGradesTab}
-              className="px-3.5 py-2 rounded-xl bg-surface-2 hover:bg-indigo-50 text-main hover:text-indigo-700 border border-token text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
-            >
-              <GraduationCap className="w-3.5 h-3.5 text-amber-600" />
-              <span>Bảng Điểm Môn Học</span>
             </button>
 
             <button

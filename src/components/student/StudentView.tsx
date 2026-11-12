@@ -36,7 +36,9 @@ import {
   AlertTriangle,
   Trash2,
   Eye,
-  Edit3
+  Edit3,
+  Mail,
+  FileSpreadsheet
 } from 'lucide-react';
 import { 
   Student, 
@@ -48,10 +50,14 @@ import {
   StudentAcademicRecord,
   RoleCode,
   RuleItem,
-  CadreDelegatedPermission
+  CadreDelegatedPermission,
+  MailMessage
 } from '../../types';
 import { Logo10A5 } from '../common/Logo10A5';
 import { StudentGradeCard } from '../grades/StudentGradeCard';
+import { ClassroomMailbox } from '../common/ClassroomMailbox';
+import { EmulationMultiWeekViewExport } from '../common/EmulationMultiWeekViewExport';
+import { getMailMessages, countUnreadMailForUser } from '../../data/mailboxStore';
 import { SeatGrid } from '../student-picker/SeatGrid';
 import { StudentPicker } from '../student-picker/StudentPicker';
 import { RecordBottomSheet } from '../record/RecordBottomSheet';
@@ -118,6 +124,9 @@ interface StudentViewProps {
   onUpdateSettings?: (newSettings: Partial<TeacherSettings>) => void;
   onResolveExplanation?: (recordId: string, result: 'ChapNhan' | 'TuChoi', reason: string) => void;
   onOpenCallingGames?: () => void;
+  mailMessages?: MailMessage[];
+  onUpdateMailMessages?: (messages: MailMessage[]) => void;
+  teacherName?: string;
 }
 
 export const StudentView: React.FC<StudentViewProps> = ({
@@ -141,6 +150,9 @@ export const StudentView: React.FC<StudentViewProps> = ({
   onUpdateSettings,
   onResolveExplanation,
   onOpenCallingGames,
+  mailMessages,
+  onUpdateMailMessages,
+  teacherName,
 }) => {
   const primaryCadreRole = cadreRole || currentStudent.vaiTro.find(r => r !== 'HS') || 'HS';
   const isCadre = primaryCadreRole !== 'HS';
@@ -157,7 +169,26 @@ export const StudentView: React.FC<StudentViewProps> = ({
   const [showDelegatedBadgeModal, setShowDelegatedBadgeModal] = useState(false);
   const [showDelegatedExplanationsModal, setShowDelegatedExplanationsModal] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'my_score' | 'grades' | 'badges' | 'seating' | 'ranking' | 'record' | 'my_log'>('my_score');
+  const [activeTab, setActiveTab] = useState<'my_score' | 'grades' | 'mailbox' | 'badges' | 'seating' | 'ranking' | 'record' | 'my_log'>('my_score');
+  const [showMultiWeekExportInRanking, setShowMultiWeekExportInRanking] = useState(false);
+
+  const [localMailMessages, setLocalMailMessages] = useState<MailMessage[]>(() => getMailMessages());
+  useEffect(() => {
+    if (Array.isArray(mailMessages)) {
+      setLocalMailMessages(mailMessages);
+    }
+  }, [mailMessages]);
+  useEffect(() => {
+    const syncMail = () => {
+      if (!mailMessages) setLocalMailMessages(getMailMessages());
+    };
+    window.addEventListener('mailbox_updated', syncMail);
+    return () => window.removeEventListener('mailbox_updated', syncMail);
+  }, [mailMessages]);
+  const unreadMailCount = useMemo(
+    () => countUnreadMailForUser(mailMessages ?? localMailMessages, currentStudent.maHS, currentStudent),
+    [mailMessages, localMailMessages, currentStudent]
+  );
 
   useEffect(() => {
     if (!canRecord && (activeTab === 'record' || activeTab === 'my_log')) {
@@ -966,19 +997,23 @@ export const StudentView: React.FC<StudentViewProps> = ({
             </button>
           </div>
 
-          {/* HÀNG 2 (Xem chung lớp học): Điểm | Huy hiệu | Sơ đồ | Thi đua */}
+          {/* HÀNG 2 (Xem chung lớp học): Hộp thư | Huy hiệu | Sơ đồ | Thi đua */}
           <div className="grid grid-cols-4 gap-1 w-full pt-1 border-t border-token/50">
             <button
-              onClick={() => setActiveTab('grades')}
+              onClick={() => setActiveTab('mailbox')}
               className={`py-1.5 px-1 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'grades'
-                  ? 'bg-surface text-main shadow-xs ring-1 ring-token font-black text-accent'
-                  : 'text-muted hover:text-main'
+                activeTab === 'mailbox'
+                  ? 'bg-indigo-600 text-white shadow-xs font-black'
+                  : 'text-indigo-700 hover:text-indigo-900 bg-indigo-50/70'
               }`}
             >
-              <GraduationCap className="w-3.5 h-3.5 text-accent shrink-0" />
-              <span>Điểm</span>
-              {!settings.choPhepXemDiemMon && <Lock className="w-2.5 h-2.5 text-amber-500 shrink-0" />}
+              <Mail className="w-3.5 h-3.5 shrink-0" />
+              <span>Hộp thư</span>
+              {unreadMailCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-black shrink-0">
+                  {unreadMailCount}
+                </span>
+              )}
             </button>
 
             <button
@@ -1035,17 +1070,19 @@ export const StudentView: React.FC<StudentViewProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveTab('grades')}
+              onClick={() => setActiveTab('mailbox')}
               className={`py-2 px-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'grades' 
-                  ? 'bg-surface text-accent shadow-xs ring-2 ring-accent font-black' 
-                  : 'bg-surface/75 text-muted hover:text-main'
+                activeTab === 'mailbox' 
+                  ? 'bg-indigo-600 text-white shadow-xs font-black' 
+                  : 'bg-surface/75 text-indigo-700 hover:text-indigo-900'
               }`}
             >
-              <GraduationCap className="w-3.5 h-3.5 text-accent shrink-0" />
-              <span>Điểm</span>
-              {!settings.choPhepXemDiemMon && (
-                <Lock className="w-2.5 h-2.5 text-amber-500 shrink-0" />
+              <Mail className="w-3.5 h-3.5 shrink-0" />
+              <span>Hộp thư</span>
+              {unreadMailCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-black shrink-0">
+                  {unreadMailCount}
+                </span>
               )}
             </button>
 
@@ -1820,6 +1857,23 @@ export const StudentView: React.FC<StudentViewProps> = ({
         </div>
       )}
 
+      {/* TAB: HỘP THƯ LỚP 10A5 */}
+      {activeTab === 'mailbox' && (
+        <ClassroomMailbox
+          currentUserId={currentStudent.maHS}
+          currentUserName={currentStudent.hoTen}
+          currentUserRole={primaryCadreRole}
+          currentStudent={currentStudent}
+          allStudents={allStudents}
+          teacherName={teacherName || 'Thầy Dương Văn Huy'}
+          messages={mailMessages ?? localMailMessages}
+          onUpdateMessages={(next) => {
+            setLocalMailMessages(next);
+            onUpdateMailMessages?.(next);
+          }}
+        />
+      )}
+
       {/* TAB: ĐIỂM MÔN HỌC */}
       {activeTab === 'grades' && (
         <StudentGradeCard
@@ -2049,6 +2103,19 @@ export const StudentView: React.FC<StudentViewProps> = ({
             <div className="flex items-center gap-2 flex-wrap shrink-0">
               <button
                 type="button"
+                onClick={() => setShowMultiWeekExportInRanking(prev => !prev)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border shadow-xs ${
+                  showMultiWeekExportInRanking
+                    ? 'bg-emerald-600 text-white border-emerald-600 font-black'
+                    : 'bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-900'
+                }`}
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
+                <span>{showMultiWeekExportInRanking ? 'Ẩn Bảng Xem & Xuất Nhiều Tuần' : 'Xem & Xuất Điểm Theo Tuần'}</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setRankingOnlyMe(prev => !prev)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border shadow-xs ${
                   rankingOnlyMe
@@ -2068,6 +2135,17 @@ export const StudentView: React.FC<StudentViewProps> = ({
               </button>
             </div>
           </div>
+
+          {showMultiWeekExportInRanking && (
+            <div className="p-3 sm:p-4 border-b border-token bg-surface-2/30">
+              <EmulationMultiWeekViewExport
+                students={allStudents}
+                records={records}
+                settings={settings}
+                currentWeek={currentWeek}
+              />
+            </div>
+          )}
 
           {/* Sắp xếp & Lọc Tổ Toolbar (Gọn gàng) */}
           <div className="p-3 sm:p-4 border-b border-token bg-surface space-y-2.5">

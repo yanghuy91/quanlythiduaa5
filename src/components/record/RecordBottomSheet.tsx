@@ -62,7 +62,7 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
   existingRecords = [],
 }) => {
   const [selectedRuleId, setSelectedRuleId] = useState<string>('');
-  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [activeCategory, setActiveCategory] = useState<string>('frequent');
   const [ruleSearch, setRuleSearch] = useState<string>('');
   const [showTimeCustomizer, setShowTimeCustomizer] = useState<boolean>(false);
   const [showHistoryAccordion, setShowHistoryAccordion] = useState<boolean>(false);
@@ -70,7 +70,7 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
   // Entry mode: 'preset' (Chọn lỗi có sẵn) | 'custom' (Ban cán sự/GV tự ghi lỗi vào)
   const [entryMode, setEntryMode] = useState<'preset' | 'custom'>('preset');
   const [customRuleName, setCustomRuleName] = useState<string>('');
-  const [customCategory, setCustomCategory] = useState<string>('Nề nếp');
+  const [customCategory, setCustomCategory] = useState<string>('Học tập');
   const [customPointType, setCustomPointType] = useState<'Tru' | 'Cong'>('Tru');
   const [customPoints, setCustomPoints] = useState<number>(2);
 
@@ -104,63 +104,65 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
     setHocKi(getSemesterFromWeek(newWeek));
   };
 
-  // Available categories aligned with latest rules (xếp gọn thành 2 hàng trên điện thoại)
+  // Pinned "Hay dùng" rules (nếu chưa ghim mục nào thì lấy 8 mục đầu tiên)
+  const frequentRules = useMemo(() => {
+    const allowed = rules.filter(r => allowBonus || r.loaiDiem !== 'Cong');
+    const pinned = allowed.filter(r => r.ghim);
+    return pinned.length > 0 ? pinned : allowed.slice(0, 8);
+  }, [rules, allowBonus]);
+
+  // Danh mục phân loại vi phạm: Bỏ "Tất cả", thay bằng "Hay dùng" + 4 mục chuẩn: Học tập; Hoạt động/Lao động; Tác phong; Nề nếp/Đạo đức
   const categories = useMemo(() => {
-    const base: string[] = ['all', ...STANDARD_RULE_CATEGORIES];
+    const base: string[] = ['frequent', ...STANDARD_RULE_CATEGORIES];
     if (allowBonus) {
       base.push('Điểm cộng');
     }
-    // Bổ sung các nhóm tùy chỉnh khác nếu có trong nội quy mới nhất
-    rules.forEach(r => {
-      if (!allowBonus && r.loaiDiem === 'Cong') return;
-      const normCat = normalizeRuleCategory(r.nhomHanhVi, r.tenHanhVi, r.loaiDiem);
-      if (normCat && !base.includes(normCat)) {
-        base.push(normCat);
-      }
-    });
     return base;
-  }, [allowBonus, rules]);
+  }, [allowBonus]);
 
   // Count rules per category
   const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: 0 };
+    const counts: Record<string, number> = { frequent: frequentRules.length };
+    STANDARD_RULE_CATEGORIES.forEach(c => {
+      counts[c] = 0;
+    });
+    if (allowBonus) {
+      counts['Điểm cộng'] = 0;
+    }
     rules.forEach(r => {
       if (!allowBonus && r.loaiDiem === 'Cong') return;
-      counts.all = (counts.all || 0) + 1;
       const normCat = normalizeRuleCategory(r.nhomHanhVi, r.tenHanhVi, r.loaiDiem);
       counts[normCat] = (counts[normCat] || 0) + 1;
     });
     return counts;
-  }, [rules, allowBonus]);
-
-  // Pinned "Hay dùng" rules
-  const frequentRules = useMemo(() => {
-    return rules.filter(r => r.ghim && (allowBonus || r.loaiDiem !== 'Cong'));
-  }, [rules, allowBonus]);
+  }, [rules, allowBonus, frequentRules.length]);
 
   // Filtered rules
   const filteredRules = useMemo(() => {
-    return rules.filter(r => {
-      // Hide bonus rules if disabled
-      if (!allowBonus && r.loaiDiem === 'Cong') return false;
+    const allowed = rules.filter(r => allowBonus || r.loaiDiem !== 'Cong');
 
-      // Category filter (chuẩn hóa nhóm hành vi để luôn khớp với nội quy mới nhất)
-      const normCat = normalizeRuleCategory(r.nhomHanhVi, r.tenHanhVi, r.loaiDiem);
-      if (activeCategory !== 'all' && normCat !== activeCategory && r.nhomHanhVi !== activeCategory) {
-        return false;
-      }
-
-      // Search filter
-      if (ruleSearch.trim()) {
-        const cleanSearch = removeVietnameseAccents(ruleSearch);
+    // Khi đang gõ tìm kiếm: tìm trên toàn bộ danh sách nội quy
+    if (ruleSearch.trim()) {
+      const cleanSearch = removeVietnameseAccents(ruleSearch);
+      return allowed.filter(r => {
+        const normCat = normalizeRuleCategory(r.nhomHanhVi, r.tenHanhVi, r.loaiDiem);
         const cleanName = removeVietnameseAccents(r.tenHanhVi);
         const cleanGroup = removeVietnameseAccents(normCat);
         return cleanName.includes(cleanSearch) || cleanGroup.includes(cleanSearch);
-      }
+      });
+    }
 
-      return true;
+    // Khi chọn tab "Hay dùng"
+    if (activeCategory === 'frequent') {
+      return frequentRules;
+    }
+
+    // Khi chọn 1 trong 4 nhóm chuẩn (hoặc Điểm cộng)
+    return allowed.filter(r => {
+      const normCat = normalizeRuleCategory(r.nhomHanhVi, r.tenHanhVi, r.loaiDiem);
+      return normCat === activeCategory || r.nhomHanhVi === activeCategory;
     });
-  }, [rules, allowBonus, activeCategory, ruleSearch]);
+  }, [rules, allowBonus, activeCategory, ruleSearch, frequentRules]);
 
   const selectedRule = useMemo(() => {
     return rules.find(r => r.maNoiQuy === selectedRuleId);
@@ -443,18 +445,18 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
                 />
               </div>
 
-              {/* 2. Nhóm hành vi (Xếp 2 hàng gọn gàng dễ chọn trên điện thoại) */}
+              {/* 2. Nhóm hành vi (4 nhóm chuẩn xếp 2 hàng gọn gàng trên điện thoại) */}
               <div>
                 <label className="block text-[11px] font-bold text-muted mb-1">
                   Nhóm hành vi:
                 </label>
-                <div className="grid grid-cols-3 gap-1">
+                <div className="grid grid-cols-2 gap-1.5">
                   {[...STANDARD_RULE_CATEGORIES, ...(allowBonus ? ['Điểm cộng'] : [])].map(cat => (
                     <button
                       key={cat}
                       type="button"
                       onClick={() => setCustomCategory(cat)}
-                      className={`py-1.5 px-1 rounded-lg text-[10.5px] sm:text-xs font-bold text-center truncate transition-all cursor-pointer border ${
+                      className={`py-1.5 px-2 rounded-lg text-[10.5px] sm:text-xs font-bold text-center whitespace-nowrap transition-all cursor-pointer border ${
                         customCategory === cat
                           ? 'bg-primary text-on-primary border-primary shadow-xs'
                           : 'bg-surface-2 border-token text-muted hover:text-main'
@@ -567,19 +569,23 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
                   </button>
                 )}
 
-                {/* Category Filter Tabs: Xếp gọn thành 2 hàng (3 cột/hàng), tên ngắn gọn tránh mất chữ trên ĐT */}
-                <div className="grid grid-cols-3 gap-1">
+                {/* Category Filter Tabs: Thay "Tất cả" bằng "Hay dùng", gồm: Hay dùng | Học tập | Hoạt động/Lao động | Tác phong | Nề nếp/Đạo đức */}
+                <div className="flex flex-wrap gap-1">
                   {categories.map(cat => {
                     const cnt = categoryCounts[cat] ?? 0;
-                    const label = cat === 'all' ? 'Tất cả' : cat;
+                    const label = cat === 'frequent' ? '★ Hay dùng' : cat;
+                    const isSelectedTab = !ruleSearch.trim() && activeCategory === cat;
                     return (
                       <button
                         key={cat}
                         type="button"
-                        onClick={() => setActiveCategory(cat)}
-                        className={`py-1.5 px-1 rounded-lg text-[10.5px] sm:text-[11px] text-center truncate transition-all cursor-pointer border ${
-                          activeCategory === cat 
-                            ? 'bg-primary text-on-primary border-primary font-extrabold shadow-xs' 
+                        onClick={() => {
+                          setRuleSearch('');
+                          setActiveCategory(cat);
+                        }}
+                        className={`flex-auto py-1.5 px-2 rounded-lg text-[10.5px] sm:text-[11px] text-center whitespace-nowrap transition-all cursor-pointer border ${
+                          isSelectedTab
+                            ? 'bg-primary text-on-primary border-primary font-extrabold shadow-xs'
                             : 'bg-surface-2 border-token text-muted hover:text-main font-semibold'
                         }`}
                       >
@@ -590,46 +596,8 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
                 </div>
               </div>
 
-              {/* Section: Hay dùng (Thu nhỏ gọn gàng) */}
-              {!ruleSearch && activeCategory === 'all' && frequentRules.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-1 text-[10.5px] font-bold text-muted mb-1">
-                    <Star className="w-3 h-3 text-accent fill-accent" />
-                    <span>Hay dùng</span>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
-                    {frequentRules.map(rule => {
-                      const isSelected = selectedRuleId === rule.maNoiQuy;
-                      const isBonus = rule.loaiDiem === 'Cong';
-                      const effectiveSeverity = rule.mucDo || classifySeverityByPoints(rule.diemSo, isBonus);
-                      const borderCls = getRuleBorderClass(rule.loaiDiem, effectiveSeverity);
-                      return (
-                        <button
-                          key={rule.maNoiQuy}
-                          type="button"
-                          onClick={() => handleSelectRule(rule)}
-                          className={`px-2 py-1 rounded-lg text-left flex items-center justify-between gap-1 transition-all cursor-pointer ${borderCls} ${
-                            isSelected 
-                              ? 'bg-accent/10 ring-1 ring-accent' 
-                              : 'bg-surface hover:bg-surface-2'
-                          }`}
-                        >
-                          <span className="text-[10.5px] sm:text-[11px] font-semibold text-main truncate leading-snug">
-                            {rule.tenHanhVi}
-                          </span>
-                          <span className={`text-[10px] font-extrabold shrink-0 ${isBonus ? 'text-[var(--st-ok)]' : 'text-[var(--st-bad)]'}`}>
-                            {isBonus ? `+${rule.diemSo}` : `-${rule.diemSo}`}đ
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
               {/* Rules List: Ghi nhỏ gọn để hiển thị được nhiều lỗi vi phạm cùng lúc */}
-              <div className="space-y-1 max-h-[42vh] sm:max-h-72 overflow-y-auto pr-0.5">
+              <div className="space-y-1 max-h-[48vh] sm:max-h-80 overflow-y-auto pr-0.5">
                 {filteredRules.map(rule => {
                   const isSelected = selectedRuleId === rule.maNoiQuy;
                   const isBonus = rule.loaiDiem === 'Cong';
@@ -652,7 +620,7 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
                         <span className="text-[11px] sm:text-xs font-semibold text-main leading-snug truncate">
                           {rule.tenHanhVi}
                         </span>
-                        {activeCategory === 'all' && (
+                        {(activeCategory === 'frequent' || Boolean(ruleSearch.trim())) && (
                           <span className="text-[9.5px] text-muted px-1 py-0.2 rounded bg-surface-2 shrink-0 hidden xs:inline">
                             {displayCategory}
                           </span>

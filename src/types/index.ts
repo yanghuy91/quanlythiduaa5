@@ -218,7 +218,29 @@ export interface TeacherSettings {
   bannerSloganStyle?: 'italic' | 'normal' | 'bold'; // Định dạng kiểu chữ
 }
 
-export type ActiveTab = 'my_page' | 'seating' | 'personal_log' | 'overview' | 'rules' | 'settings' | 'import_export' | 'audit_log' | 'apps' | 'grades';
+export type ActiveTab = 'my_page' | 'seating' | 'personal_log' | 'overview' | 'rules' | 'settings' | 'import_export' | 'audit_log' | 'apps' | 'grades' | 'mailbox';
+
+// --- MÔ ĐUN HỘP THƯ LỚP HỌC (CLASSROOM MAILBOX) ---
+export type MailRecipientType = 'GV' | 'ALL_STUDENTS' | 'CADRES' | 'GROUP' | 'STUDENT';
+
+export interface MailMessage {
+  id: string;
+  senderId: string; // 'GV' hoặc maHS (vd: 'HS01')
+  senderName: string;
+  senderRole: RoleCode;
+  senderGroup?: number;
+  senderAvatar?: string;
+  recipientType: MailRecipientType;
+  recipientIds: string[]; // ['GV'], ['ALL'], ['GROUP_1'], hoặc danh sách maHS ['HS01', 'HS02']
+  recipientLabel: string; // Chuỗi hiển thị người nhận: vd "Thầy Dương Văn Huy (GVCN)", "Cả lớp 10A5", "Tổ 1", "Nguyễn Minh Khôi"
+  subject: string;
+  body: string;
+  createdAt: string; // ISO string
+  readBy: string[]; // Danh sách userId ('GV' hoặc maHS) đã đọc
+  starredBy: string[]; // Danh sách userId đã đánh dấu sao
+  deletedBy: string[]; // Danh sách userId đã xóa vào thùng rác
+  replyToId?: string;
+}
 
 // --- MÔ ĐUN QUẢN LÝ ĐIỂM MÔN HỌC (ACADEMIC GRADEBOOK) ---
 export interface SubjectDefinition {
@@ -261,4 +283,5 @@ export type ViolationRecord = DisciplineRecord;
 export type AcademicRecord = StudentAcademicRecord;
 export type ClassSettings = TeacherSettings;
 export type ViolationRule = RuleItem;
+
 

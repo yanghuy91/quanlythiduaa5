@@ -255,6 +255,7 @@ function normalizeCloudStateFromFirebase(val: any): ClassroomFullState {
         ? val.studentPasswords
         : {},
     teacherPassword: typeof val?.teacherPassword === 'string' ? val.teacherPassword : undefined,
+    mailMessages: Array.isArray(val?.mailMessages) ? val.mailMessages : [],
     updatedAt: val?.updatedAt || new Date().toISOString(),
     version: typeof val?.version === 'number' ? val.version : Date.now(),
   };

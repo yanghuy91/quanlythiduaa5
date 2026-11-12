@@ -133,26 +133,28 @@ export const StudentPicker: React.FC<StudentPickerProps> = ({
         </div>
       </div>
 
-      {/* Clean Full-width Search Input */}
-      <div className="relative w-full">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          placeholder="Tìm tên hoặc chữ cái đầu (vd: huy, nkh)..."
-          className="w-full pl-9 pr-8 py-2 bg-surface border border-token rounded-xl text-xs text-main placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40 shadow-2xs"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-main p-0.5"
-            aria-label="Xóa tìm kiếm"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
+      {/* Clean Full-width Search Input (Chỉ hiện ở chế độ Danh sách, ẩn ở chế độ Sơ đồ) */}
+      {viewMode === 'list' && (
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Tìm tên hoặc chữ cái đầu (vd: huy, nkh)..."
+            className="w-full pl-9 pr-8 py-2 bg-surface border border-token rounded-xl text-xs text-main placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40 shadow-2xs"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-main p-0.5"
+              aria-label="Xóa tìm kiếm"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Main View Area */}
       {viewMode === 'grid' ? (

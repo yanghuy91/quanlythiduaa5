@@ -12,8 +12,10 @@ import {
   TeacherSettings,
   StudentWeekSummary,
   SeatLayoutNode,
-  StudentAcademicRecord
+  StudentAcademicRecord,
+  MailMessage
 } from './types';
+import { getMailMessages, saveMailMessages, normalizeMailMessages } from './data/mailboxStore';
 import { 
   MOCK_STUDENTS, 
   MOCK_RULES, 
@@ -156,6 +158,9 @@ export default function App() {
   const [academicRecords, setAcademicRecords] = useState<StudentAcademicRecord[]>(() => {
     return getAcademicRecords();
   });
+  const [mailMessages, setMailMessages] = useState<MailMessage[]>(() => {
+    return getMailMessages();
+  });
 
   // Current session & week (Persisted and changeable)
   const [currentWeek, setCurrentWeek] = useState<number>(() => {
@@ -225,6 +230,7 @@ export default function App() {
     teacherAvatar,
     teacherProfile,
     currentWeek,
+    mailMessages,
   });
   latestStateRef.current = {
     students,
@@ -236,6 +242,7 @@ export default function App() {
     teacherAvatar,
     teacherProfile,
     currentWeek,
+    mailMessages,
   };
 
   // Helper to construct a complete snapshot for immediate cloud persistence
@@ -258,6 +265,7 @@ export default function App() {
       badgeCatalog: badges.badgeCatalog,
       studentPasswords: passwords,
       teacherPassword: getTeacherPassword(),
+      mailMessages: cur.mailMessages,
       updatedAt: new Date().toISOString(),
       version: Date.now(),
       ...overrides,
@@ -272,6 +280,7 @@ export default function App() {
       teacherAvatar: nextSnapshot.teacherAvatar,
       teacherProfile: nextSnapshot.teacherProfile || cur.teacherProfile,
       currentWeek: nextSnapshot.currentWeek ?? cur.currentWeek,
+      mailMessages: nextSnapshot.mailMessages || cur.mailMessages,
     };
     return nextSnapshot;
   }, []);
@@ -292,6 +301,14 @@ export default function App() {
     setAcademicRecords(newRecords);
     saveAcademicRecords(newRecords);
     saveServerState(buildFullStateSnapshot({ academicRecords: newRecords }), true);
+  }, [buildFullStateSnapshot]);
+
+  const handleUpdateMailMessages = useCallback((nextMail: MailMessage[]) => {
+    const normalized = normalizeMailMessages(nextMail);
+    latestStateRef.current.mailMessages = normalized;
+    setMailMessages(normalized);
+    saveMailMessages(normalized);
+    saveServerState(buildFullStateSnapshot({ mailMessages: normalized }), true);
   }, [buildFullStateSnapshot]);
 
   const handleSetCurrentWeek = useCallback((week: number) => {
@@ -571,6 +588,14 @@ export default function App() {
       cloudState.studentPasswords || {},
       cloudState.teacherPassword
     );
+
+    // Đồng bộ Hộp thư lớp 10A5
+    if (Array.isArray(cloudState.mailMessages) && cloudState.mailMessages.length > 0) {
+      const normalizedMail = normalizeMailMessages(cloudState.mailMessages);
+      latestStateRef.current.mailMessages = normalizedMail;
+      setMailMessages(normalizedMail);
+      saveMailMessages(normalizedMail);
+    }
 
     setTimeout(() => {
       isApplyingRemoteUpdate.current = false;
@@ -1148,6 +1173,8 @@ export default function App() {
             onOpenTeacherAvatar={() => setIsTeacherAvatarModalOpen(true)}
             teacherAvatarUrl={teacherAvatar}
             onLogout={handleLogout}
+            mailMessages={mailMessages}
+            onUpdateMailMessages={handleUpdateMailMessages}
           />
         )}
 
@@ -1172,6 +1199,9 @@ export default function App() {
             onUpdateStudentAvatar={handleUpdateStudentAvatar}
             onOpenCallingGames={() => setShowCallingGamesModal(true)}
             onLogout={handleLogout}
+            mailMessages={mailMessages}
+            onUpdateMailMessages={handleUpdateMailMessages}
+            teacherName={teacherProfile.hoTen}
           />
         )}
 
@@ -1195,6 +1225,9 @@ export default function App() {
             onUpdateStudentAvatar={handleUpdateStudentAvatar}
             onOpenCallingGames={() => setShowCallingGamesModal(true)}
             onLogout={handleLogout}
+            mailMessages={mailMessages}
+            onUpdateMailMessages={handleUpdateMailMessages}
+            teacherName={teacherProfile.hoTen}
           />
         )}
 

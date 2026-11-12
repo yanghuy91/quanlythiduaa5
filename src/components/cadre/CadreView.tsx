@@ -7,7 +7,8 @@ import {
   StudentWeekSummary, 
   RoleCode, 
   TeacherSettings,
-  StudentAcademicRecord
+  StudentAcademicRecord,
+  MailMessage
 } from '../../types';
 import { StudentView } from '../student/StudentView';
 
@@ -32,13 +33,11 @@ interface CadreViewProps {
   onUpdateStudentAvatar?: (studentId: string, avatarUrl: string) => void;
   onOpenCallingGames?: () => void;
   onLogout?: () => void;
+  mailMessages?: MailMessage[];
+  onUpdateMailMessages?: (messages: MailMessage[]) => void;
+  teacherName?: string;
 }
 
-/**
- * CadreView - Màn hình dành cho Ban Cán Sự Lớp (Lớp trưởng, Bí thư, Lớp phó, Tổ trưởng)
- * Đã hợp nhất 100% cấu trúc giao diện với Học sinh bình thường (StudentView),
- * chỉ khác ở hình ảnh banner theo chức vụ và các chức năng đặc thù (Ghi vi phạm, Sổ ghi, Quyền được GVCN ủy nhiệm).
- */
 export const CadreView: React.FC<CadreViewProps> = ({
   currentCadre,
   cadreRole,
@@ -60,6 +59,9 @@ export const CadreView: React.FC<CadreViewProps> = ({
   onUpdateStudentAvatar,
   onOpenCallingGames,
   onLogout,
+  mailMessages,
+  onUpdateMailMessages,
+  teacherName,
 }) => {
   return (
     <StudentView
@@ -83,6 +85,10 @@ export const CadreView: React.FC<CadreViewProps> = ({
       onUpdateStudentAvatar={onUpdateStudentAvatar}
       onOpenCallingGames={onOpenCallingGames}
       onLogout={onLogout}
+      mailMessages={mailMessages}
+      onUpdateMailMessages={onUpdateMailMessages}
+      teacherName={teacherName}
     />
   );
 };
+

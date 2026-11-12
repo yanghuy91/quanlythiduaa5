@@ -4,7 +4,8 @@ import {
   AcademicRecord, 
   ClassSettings, 
   SeatLayoutNode, 
-  ViolationRule 
+  ViolationRule,
+  MailMessage
 } from '../types';
 import { fetchCloudClassState, saveCloudClassState } from './firebase';
 
@@ -23,6 +24,7 @@ export interface ClassroomFullState {
   badgeCatalog?: any[];
   studentPasswords?: Record<string, string>;
   teacherPassword?: string;
+  mailMessages?: MailMessage[];
   updatedAt: string;
   version: number;
 }
@@ -61,6 +63,7 @@ export function computeStateFingerprint(state: ClassroomFullState): string {
       badgeCatalog: state.badgeCatalog,
       studentPasswords: state.studentPasswords || {},
       teacherPassword: state.teacherPassword,
+      mailMessages: state.mailMessages || [],
     });
   } catch {
     return '';

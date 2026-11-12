@@ -206,22 +206,20 @@ export function formatRatingTiersSummary(settings?: TeacherSettings): string {
 }
 
 export const STANDARD_RULE_CATEGORIES = [
-  'Chuyên cần',
   'Học tập',
-  'Nề nếp',
-  'Phong trào',
-  'Lao động',
+  'Hoạt động/Lao động',
+  'Tác phong',
+  'Nề nếp/Đạo đức',
 ] as const;
 
 export type StandardRuleCategory = (typeof STANDARD_RULE_CATEGORIES)[number] | 'Điểm cộng';
 
 /**
- * Chuẩn hóa tên nhóm hành vi / nhóm vi phạm về đúng 5 nhóm chuẩn gọn gàng:
- * - Chuyên cần
+ * Chuẩn hóa tên nhóm hành vi / nhóm vi phạm về đúng 4 nhóm chuẩn:
  * - Học tập
- * - Nề nếp
- * - Phong trào
- * - Lao động
+ * - Hoạt động/Lao động
+ * - Tác phong
+ * - Nề nếp/Đạo đức
  * (Và "Điểm cộng" đối với các hành vi cộng điểm thưởng)
  */
 export function normalizeRuleCategory(
@@ -252,119 +250,88 @@ export function normalizeRuleCategory(
     return 'Điểm cộng';
   }
 
-  // 1. Khớp theo tên nhóm nhập vào
-  if (
-    g.includes('chuyen can') ||
-    g.includes('gio giac') ||
-    g.includes('di hoc') ||
-    g.includes('nghi hoc') ||
-    g.includes('di muon')
-  ) {
-    return 'Chuyên cần';
+  // 1. Nếu tên nhóm nhập vào đã khớp rõ với 4 phân loại mới
+  if (g === 'hoat dong/lao dong' || g.includes('hoat dong') || g.includes('lao dong') || g.includes('phong trao') || g.includes('ve sinh') || g.includes('truc nhat')) {
+    return 'Hoạt động/Lao động';
   }
-  if (
-    g.includes('hoc tap') ||
-    g.includes('bai tap') ||
-    g.includes('kiem tra') ||
-    g.includes('thi cu') ||
-    g.includes('sach vo')
-  ) {
+  if (g === 'tac phong' || g.includes('tac phong') || g.includes('dong phuc') || g.includes('trang phuc')) {
+    return 'Tác phong';
+  }
+  if (g === 'ne nep/dao duc' || g.includes('dao duc')) {
+    return 'Nề nếp/Đạo đức';
+  }
+  if (g === 'hoc tap' || g.includes('hoc tap') || g.includes('bai tap') || g.includes('kiem tra')) {
     return 'Học tập';
-  }
-  if (
-    g.includes('lao dong') ||
-    g.includes('ve sinh') ||
-    g.includes('truc nhat') ||
-    g.includes('co so vat chat') ||
-    g.includes('tai san')
-  ) {
-    return 'Lao động';
-  }
-  if (
-    g.includes('phong trao') ||
-    g.includes('hoat dong') ||
-    g.includes('doan') ||
-    g.includes('chao co') ||
-    g.includes('sinh hoat') ||
-    g.includes('ngoai khoa') ||
-    g.includes('van nghe') ||
-    g.includes('the thao') ||
-    g.includes('the duc')
-  ) {
-    return 'Phong trào';
-  }
-  if (
-    g.includes('ne nep') ||
-    g.includes('tac phong') ||
-    g.includes('dong phuc') ||
-    g.includes('trat tu') ||
-    g.includes('ky luat') ||
-    g.includes('dao duc') ||
-    g.includes('ung xu') ||
-    g.includes('noi quy') ||
-    g.includes('dien thoai') ||
-    g.includes('giao thong') ||
-    g.includes('an toan')
-  ) {
-    return 'Nề nếp';
   }
 
-  // 2. Suy luận thông minh từ tên hành vi nếu nhóm trống hoặc chưa chuẩn
+  // 2. Phân loại thông minh theo nội dung hành vi (bao gồm cả dữ liệu cũ từ nhóm Chuyên cần / Nề nếp cũ)
   if (
+    b.includes('dong phuc') ||
+    b.includes('trang phuc') ||
+    b.includes('phu hieu') ||
+    b.includes('the hoc sinh') ||
+    b.includes('bang ten') ||
+    b.includes('khan quang') ||
+    b.includes('nhuom toc') ||
+    b.includes('dau toc') ||
+    b.includes('mong tay') ||
+    b.includes('trang diem') ||
+    b.includes('tac phong') ||
     b.includes('di muon') ||
     b.includes('di hoc muon') ||
-    b.includes('tre gio') ||
     b.includes('vao lop tre') ||
-    b.includes('nghi hoc') ||
-    b.includes('tron tiet') ||
-    b.includes('bo tiet') ||
-    b.includes('bo gio') ||
-    b.includes('vang hoc')
+    b.includes('tre gio')
   ) {
-    return 'Chuyên cần';
+    return 'Tác phong';
   }
+
   if (
-    b.includes('bai tap') ||
-    b.includes('sach vo') ||
-    b.includes('dung cu hoc tap') ||
-    b.includes('ghi chep') ||
-    b.includes('gian lan') ||
-    b.includes('kiem tra') ||
-    b.includes('chuan bi bai') ||
-    b.includes('thuoc bai') ||
-    b.includes('phu dao') ||
-    b.includes('vang tiet')
-  ) {
-    return 'Học tập';
-  }
-  if (
+    b.includes('hoat dong') ||
+    b.includes('phong trao') ||
     b.includes('lao dong') ||
     b.includes('ve sinh') ||
     b.includes('truc nhat') ||
     b.includes('rac') ||
-    b.includes('qua vat') ||
-    b.includes('an uong') ||
-    b.includes('tat quat') ||
-    b.includes('tat den') ||
-    b.includes('viet ve') ||
-    b.includes('ban ghe')
-  ) {
-    return 'Lao động';
-  }
-  if (
-    b.includes('phong trao') ||
-    b.includes('hoat dong') ||
-    b.includes('chi doan') ||
+    b.includes('quet lop') ||
+    b.includes('lau bang') ||
     b.includes('chao co') ||
-    b.includes('quoc ca') ||
     b.includes('sinh hoat') ||
-    b.includes('the duc giua gio') ||
-    b.includes('ngoai khoa')
+    b.includes('quoc ca') ||
+    b.includes('the duc') ||
+    b.includes('chi doan') ||
+    b.includes('doan') ||
+    b.includes('ngoai khoa') ||
+    b.includes('van nghe') ||
+    b.includes('the thao') ||
+    b.includes('tat quat') ||
+    b.includes('tat den')
   ) {
-    return 'Phong trào';
+    return 'Hoạt động/Lao động';
   }
 
-  return 'Nề nếp';
+  if (
+    b.includes('bai tap') ||
+    b.includes('sach vo') ||
+    b.includes('dung cu') ||
+    b.includes('ghi chep') ||
+    b.includes('gian lan') ||
+    b.includes('kiem tra') ||
+    b.includes('thi cu') ||
+    b.includes('chuan bi bai') ||
+    b.includes('thuoc bai') ||
+    b.includes('phu dao') ||
+    b.includes('vang tiet') ||
+    b.includes('tron tiet') ||
+    b.includes('bo tiet') ||
+    b.includes('bo gio') ||
+    b.includes('nghi hoc') ||
+    b.includes('vang hoc') ||
+    b.includes('trong gio hoc')
+  ) {
+    return 'Học tập';
+  }
+
+  return 'Nề nếp/Đạo đức';
 }
 
 /**
