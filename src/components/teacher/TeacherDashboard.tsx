@@ -671,18 +671,18 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-900/40 to-black/20" />
 
           {/* Top Row: School Logo + Name on the Left; Logout on the Right (Clean, never overflows on mobile) */}
-          <div className="relative z-10 flex items-center justify-between gap-2">
+          <div className="relative z-10 flex items-center justify-between gap-1.5 sm:gap-2">
             <div 
-              className="flex items-center gap-2 min-w-0 cursor-pointer group select-none"
+              className="flex items-center gap-1.5 sm:gap-2 min-w-0 cursor-pointer group select-none"
               onClick={() => setActiveTab('overview')}
               title="Bấm vào logo để về màn hình Tổng quan"
             >
               <Logo10A5 size="sm" animate={false} />
               <div className="flex flex-col min-w-0">
-                <span className="text-xs sm:text-sm font-black tracking-tight text-white drop-shadow-md uppercase truncate group-hover:text-amber-300 transition-colors">
+                <span className="text-[10.5px] xs:text-[11px] sm:text-sm font-black tracking-tighter sm:tracking-tight text-white drop-shadow-md uppercase whitespace-nowrap group-hover:text-amber-300 transition-colors">
                   TRƯỜNG THPT SỐ 2 ĐỨC PHỔ
                 </span>
-                <span className="text-[9.5px] sm:text-[10px] font-bold text-amber-100 drop-shadow leading-none">
+                <span className="text-[9px] sm:text-[10px] font-bold text-amber-100 drop-shadow leading-none whitespace-nowrap">
                   Năm học 2026-2027 · Lớp 10A5
                 </span>
               </div>
@@ -692,7 +692,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               <button
                 type="button"
                 onClick={onLogout}
-                className="px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 border border-rose-300 text-white text-[11px] font-extrabold transition-all flex items-center gap-1 cursor-pointer shadow-sm active:scale-95 shrink-0"
+                className="px-2 sm:px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 border border-rose-300 text-white text-[10.5px] sm:text-[11px] font-extrabold transition-all flex items-center gap-1 cursor-pointer shadow-sm active:scale-95 shrink-0"
                 title="Đăng xuất khỏi Bảng điều khiển Giáo viên"
               >
                 <LogOut className="w-3.5 h-3.5 text-white" />
