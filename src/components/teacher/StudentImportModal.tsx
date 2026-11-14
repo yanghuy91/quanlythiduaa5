@@ -679,7 +679,7 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0" />
                   <span>
-                    Khi bấm xác nhận, hệ thống sẽ <strong>tự động tạo mã học sinh (HS01..HS{totalCount})</strong>, <strong>hiển thị tên học sinh</strong> và <strong>tự động xếp vào 4 dãy bàn ghế lớp học</strong> chuẩn mực.
+                    Hệ thống sẽ tự động cập nhật danh sách ({totalCount} học sinh) và đồng bộ sơ đồ lớp.
                   </span>
                 </div>
               </div>

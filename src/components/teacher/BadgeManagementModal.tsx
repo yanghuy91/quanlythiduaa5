@@ -72,8 +72,8 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'all' | BadgeCategory>('all');
 
-  // Panel đóng/mở cấu hình tự động & điều kiện theo nhóm
-  const [showAutoConfigPanel, setShowAutoConfigPanel] = useState(true);
+  // Panel đóng/mở cấu hình tự động & điều kiện theo nhóm (mặc định thu gọn để ưu tiên danh sách huy hiệu trên điện thoại)
+  const [showAutoConfigPanel, setShowAutoConfigPanel] = useState(false);
 
   // Thiết lập nhanh điều kiện cho cả Nhóm loại huy hiệu
   const [batchCategory, setBatchCategory] = useState<BadgeCategory>('discipline');
@@ -302,56 +302,53 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="relative w-full max-w-5xl max-h-[94vh] flex flex-col rounded-3xl bg-surface border border-token shadow-2xl overflow-hidden">
-        {/* Top Header */}
-        <div className="px-4 sm:px-5 py-3.5 border-b border-token flex items-center justify-between bg-surface-2/60 shrink-0 gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-600 flex items-center justify-center shadow-xs shrink-0">
-              <Award className="w-5 h-5" />
+        {/* Top Header (Compact on mobile) */}
+        <div className="px-3 sm:px-5 py-2.5 sm:py-3.5 border-b border-token flex items-center justify-between bg-surface-2/60 shrink-0 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-amber-500/15 text-amber-600 flex items-center justify-center shadow-xs shrink-0">
+              <Award className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-sm sm:text-lg font-extrabold text-main truncate">
-                  Quản Lý &amp; Cài Đặt Điều Kiện Trao Huy Hiệu ({catalog.length} Mẫu)
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h2 className="text-xs sm:text-base font-extrabold text-main truncate">
+                  Huy Hiệu Thi Đua ({catalog.length})
                 </h2>
-                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-800 border border-amber-500/30">
-                  Chế độ Tự động &amp; Thủ công
-                </span>
               </div>
-              <p className="text-[11px] text-muted truncate">
-                Chọn mốc thời gian bắt đầu tính điểm, thiết lập điều kiện trao cho từng loại huy hiệu hoặc vinh danh trực tiếp ({students.length} HS).
+              <p className="text-[10.5px] text-muted truncate hidden sm:block">
+                Thiết lập điều kiện trao tự động hoặc trao trực tiếp cho học sinh ({students.length} HS)
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             <button
               type="button"
               onClick={() => setShowRevokeAllConfirm(true)}
               title="Thu hồi toàn bộ huy hiệu đang có của học sinh cả lớp"
-              className="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs active:scale-95"
+              className="px-2 sm:px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs active:scale-95"
             >
-              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-              <span>Thu hồi tất cả huy hiệu</span>
+              <Trash2 className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+              <span className="hidden xs:inline">Thu hồi</span>
             </button>
 
             <button
               type="button"
               onClick={() => setShowAutoConfigPanel(!showAutoConfigPanel)}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+              className={`px-2 sm:px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center gap-1 border ${
                 showAutoConfigPanel
                   ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
                   : 'bg-surface border-token text-main hover:bg-surface-2'
               }`}
             >
-              <Sliders className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Cấu hình Mốc &amp; Điều kiện</span>
+              <Sliders className="w-3.5 h-3.5 shrink-0" />
+              <span>Cấu hình</span>
             </button>
 
             <button
               type="button"
               onClick={handleResetCatalog}
               title="Khôi phục thiết lập gốc"
-              className="p-2 rounded-xl text-muted hover:text-rose-600 hover:bg-rose-500/10 transition-all cursor-pointer text-xs font-bold flex items-center gap-1"
+              className="p-1.5 sm:p-2 rounded-xl text-muted hover:text-rose-600 hover:bg-rose-500/10 transition-all cursor-pointer text-xs font-bold flex items-center gap-1"
             >
               <RotateCcw className="w-4 h-4" />
               <span className="hidden md:inline">Khôi phục gốc</span>
@@ -360,7 +357,7 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-xl text-muted hover:text-main hover:bg-surface-2 transition-all cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-xl text-muted hover:text-main hover:bg-surface-2 transition-all cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -404,9 +401,11 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
           </div>
         )}
 
+        {/* Main Scrollable Content Area (ensures smooth scrolling on mobile phones even when AutoConfig is open) */}
+        <div className="flex-1 overflow-y-auto flex flex-col">
         {/* BẢNG CẤU HÌNH MỐC THỜI GIAN BẮT ĐẦU TÍNH ĐIỂM & ĐIỀU KIỆN TRAO TỰ ĐỘNG */}
         {showAutoConfigPanel && (
-          <div className="p-3.5 sm:p-4 bg-indigo-50/70 border-b border-indigo-200/80 space-y-3 shrink-0">
+          <div className="p-3 sm:p-4 bg-indigo-50/70 border-b border-indigo-200/80 space-y-3 shrink-0">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
               {/* Cột 1: Mốc thời gian bắt đầu tính điểm & Chế độ tự động (7 cột) */}
               <div className="lg:col-span-7 p-3 rounded-2xl bg-white border border-indigo-200 shadow-2xs space-y-2.5">
@@ -762,8 +761,8 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
         </div>
 
         {/* Badges Grid View */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        <div className="p-3 sm:p-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {filteredBadges.map(badge => {
               const awardedCount = Object.values(studentBadgesMap).filter(list =>
                 list.includes(badge.id)
@@ -865,6 +864,7 @@ export const BadgeManagementModal: React.FC<BadgeManagementModalProps> = ({
               );
             })}
           </div>
+        </div>
         </div>
 
         {/* Modal/Drawer 1: Edit Badge Details & Structured Condition */}

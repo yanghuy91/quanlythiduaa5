@@ -915,7 +915,7 @@ export const ClassroomLayoutEditor: React.FC<ClassroomLayoutEditorProps> = ({
         <div className="p-3.5 bg-surface-2 border-t border-token flex items-center justify-between shrink-0">
           <div className="text-xs text-muted flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[var(--st-ok)]" />
-            <span>4 Dãy bàn = 4 Tổ · 6 Bàn/dãy · Tối đa 48 vị trí</span>
+            <span>Sơ đồ chỗ ngồi lớp 10A5</span>
           </div>
 
           <div className="flex items-center gap-2">

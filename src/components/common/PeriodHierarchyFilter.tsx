@@ -274,9 +274,9 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
         </div>
       </div>
 
-      {/* Level 3: Compact Circular Week Chips */}
+      {/* Level 3: Compact Circular Week Chips (10 per row on mobile = max 2 rows) */}
       <div className="pt-0.5">
-        <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
+        <div className="grid grid-cols-10 sm:flex sm:flex-wrap items-center gap-1 sm:gap-1.5">
           {weeksToDisplay.map(w => {
             const isSelected = filter.tuanHoc === w;
             const isCurrentWeekOfClass = w === currentWeek;
@@ -319,18 +319,18 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
                 onClick={() => handleSelectWeek(w)}
                 title={`Tuần ${w}${statusNote}`}
                 aria-label={`Tuần ${w}${statusNote}`}
-                className={`relative w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full text-xs transition-all cursor-pointer flex items-center justify-center tabular-nums shrink-0 active:scale-95 shadow-2xs ${chipStyle}`}
+                className={`relative w-7 h-7 sm:w-8 sm:h-8 rounded-full text-[11px] sm:text-xs transition-all cursor-pointer flex items-center justify-center tabular-nums shrink-0 mx-auto sm:mx-0 active:scale-95 shadow-2xs ${chipStyle}`}
               >
                 <span className={isNoData && !isSelected ? 'line-through decoration-amber-600/80' : ''}>{w}</span>
                 {isCurrentWeekOfClass && !isSelected && !isNoData && (
                   <span
-                    className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-surface animate-pulse"
+                    className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 ring-1 ring-surface animate-pulse"
                     title="Tuần hiện tại"
                   />
                 )}
                 {isNoData && (
                   <span
-                    className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-500 text-white text-[8px] font-black flex items-center justify-center ring-2 ring-surface"
+                    className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-500 text-white text-[7px] font-black flex items-center justify-center ring-1 ring-surface"
                     title="Không tính điểm"
                   >
                     ⊘

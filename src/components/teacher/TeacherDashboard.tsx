@@ -110,8 +110,8 @@ import { downloadStateAsJson, parseImportedJsonState, saveServerState } from '..
 import { getAllStudentBadgesState } from '../../data/badgeCatalog';
 import * as XLSX from 'xlsx';
 import { exportDataSpecsWordDocument, downloadRulesExcelTemplate, parseRulesFromAoA } from '../../utils/exportDataSpecsDoc';
-import { Eye, EyeOff, Bot, Key, KeyRound, Copy, Check, ArrowLeft, Trash2, Plus, RefreshCw } from 'lucide-react';
-import { LoginAdminModal, TeacherAuthAdminPanel } from './LoginAdminModal';
+import { Eye, EyeOff, Bot, Key, Copy, Check, ArrowLeft, Trash2, Plus, RefreshCw } from 'lucide-react';
+import { TeacherAuthAdminPanel } from './LoginAdminModal';
 
 interface TeacherDashboardProps {
   students: Student[];
@@ -395,7 +395,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [overviewViewMode, setOverviewViewMode] = useState<'list' | 'grid'>('list');
   const [inspectingStudent, setInspectingStudent] = useState<Student | null>(null);
   const [activeKpiPanel, setActiveKpiPanel] = useState<'none' | 'week_violations' | 'attention_students'>('none');
-  const [showLoginAdminModal, setShowLoginAdminModal] = useState(false);
   const [pendingRecordPayload, setPendingRecordPayload] = useState<{
     students: Student[];
     rule: RuleItem;
@@ -838,8 +837,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
       {/* THANH CHỨC NĂNG GIÁO VIÊN: Bố trí thành 3 hàng gọn gàng giống Ban Cán Sự Lớp (Hiển thị đủ 100% trên điện thoại) */}
       <div className="flex flex-col gap-1.5 p-1.5 sm:p-2 bg-surface-2 rounded-2xl border border-token w-full shadow-2xs">
-        {/* HÀNG 1 (Quản lý & Theo dõi chính): Tổng quan | Sơ đồ lớp | Bảng điểm | Giải trình */}
-        <div className="grid grid-cols-4 gap-1 sm:gap-1.5 w-full">
+        {/* HÀNG 1 (Quản lý & Theo dõi chính): Tổng quan | Sơ đồ & Chấm | Hộp thư */}
+        <div className="grid grid-cols-3 gap-1 sm:gap-1.5 w-full">
           <button
             type="button"
             onClick={() => setActiveTab('overview')}
@@ -880,24 +879,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             {unreadMailCount > 0 && (
               <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-black shrink-0">
                 {unreadMailCount}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('explanations')}
-            className={`py-2 px-1 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'explanations'
-                ? 'bg-surface text-accent font-black shadow-xs ring-2 ring-accent'
-                : 'bg-surface/80 text-main hover:bg-surface'
-            }`}
-          >
-            <CheckSquare className="w-3.5 h-3.5 text-accent shrink-0" />
-            <span className="truncate">Giải trình</span>
-            {pendingExplanations.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-[var(--st-bad)] text-white text-[9px] font-black shrink-0">
-                {pendingExplanations.length}
               </span>
             )}
           </button>
@@ -958,12 +939,12 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           </button>
         </div>
 
-        {/* HÀNG 3 (Vinh danh & Cấu hình): Khung vinh danh | 30 Huy hiệu | Vinh danh BCS | Mật khẩu | Cài đặt */}
-        <div className="grid grid-cols-5 gap-1 sm:gap-1.5 w-full pt-1 border-t border-token/50">
+        {/* HÀNG 3 (Vinh danh & Cấu hình): Khung Top | Huy hiệu | Cán sự | Cài đặt */}
+        <div className="grid grid-cols-4 gap-1 sm:gap-1.5 w-full pt-1 border-t border-token/50">
           <button
             type="button"
             onClick={() => setShowFrameModal(true)}
-            className="py-1.5 px-1 sm:px-2 rounded-xl text-[10.5px] sm:text-xs font-bold flex items-center justify-center gap-1 text-muted hover:text-main hover:bg-surface/60 transition-all cursor-pointer whitespace-nowrap"
+            className="py-1.5 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 text-muted hover:text-main hover:bg-surface/60 transition-all cursor-pointer whitespace-nowrap"
           >
             <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
             <span className="truncate">Khung Top</span>
@@ -972,16 +953,16 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           <button
             type="button"
             onClick={() => setShowBadgeModal(true)}
-            className="py-1.5 px-1 sm:px-2 rounded-xl text-[10.5px] sm:text-xs font-bold flex items-center justify-center gap-1 text-muted hover:text-main hover:bg-surface/60 transition-all cursor-pointer whitespace-nowrap"
+            className="py-1.5 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 text-muted hover:text-main hover:bg-surface/60 transition-all cursor-pointer whitespace-nowrap"
           >
             <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-            <span className="truncate">30 Huy hiệu</span>
+            <span className="truncate">Huy hiệu</span>
           </button>
 
           <button
             type="button"
             onClick={() => setShowCadreModal(true)}
-            className="py-1.5 px-1 sm:px-2 rounded-xl text-[10.5px] sm:text-xs font-bold flex items-center justify-center gap-1 text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 transition-all cursor-pointer whitespace-nowrap"
+            className="py-1.5 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 transition-all cursor-pointer whitespace-nowrap"
           >
             <Trophy className="w-3.5 h-3.5 text-amber-600 shrink-0" />
             <span className="truncate">Cán sự</span>
@@ -989,18 +970,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
           <button
             type="button"
-            onClick={() => setShowLoginAdminModal(true)}
-            className="py-1.5 px-1 sm:px-2 rounded-xl text-[10.5px] sm:text-xs font-bold flex items-center justify-center gap-1 text-indigo-700 bg-indigo-500/10 hover:bg-indigo-500/20 transition-all cursor-pointer whitespace-nowrap"
-            title="Quản trị đăng nhập, mật khẩu và reset mật khẩu cho Giáo viên & Học sinh"
-          >
-            <KeyRound className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-            <span className="truncate">Mật khẩu</span>
-          </button>
-
-          <button
-            type="button"
             onClick={() => setActiveTab('settings')}
-            className={`py-1.5 px-1 sm:px-2 rounded-xl text-[10.5px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+            className={`py-1.5 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'settings'
                 ? 'bg-surface text-accent font-black shadow-xs ring-1 ring-token'
                 : 'text-muted hover:text-main hover:bg-surface/60'
@@ -1062,7 +1033,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 <Move className="w-3 h-3 text-muted group-hover:text-accent transition-colors" />
               </div>
               <div className="text-base sm:text-xl font-black text-main mt-0.5">{students.length} em</div>
-              <div className="text-[10px] text-muted mt-1">4 dãy bàn (= 4 tổ) · 6 bàn/dãy</div>
+              <div className="text-[10px] text-muted mt-1">{overviewViewMode === 'list' ? 'Chuyển sang Sơ đồ' : 'Chuyển sang Danh sách'}</div>
             </div>
 
             <div 
@@ -3835,15 +3806,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         onOpenAvatarPicker={onOpenTeacherAvatar || (() => {})}
         onSaveSuccess={handleProfileSaveSuccess}
         onSaveProfile={handleProfileSaveSuccess}
-      />
-
-      {/* Login & Password Administration Modal */}
-      <LoginAdminModal
-        isOpen={showLoginAdminModal}
-        onClose={() => setShowLoginAdminModal(false)}
-        students={students}
-        settings={settings}
-        onUpdateSettings={onUpdateSettings}
       />
     </div>
   );

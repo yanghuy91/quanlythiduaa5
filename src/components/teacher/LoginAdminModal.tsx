@@ -16,13 +16,9 @@ import { Student, TeacherSettings } from '../../types';
 import {
   getAllStudentPasswords,
   DEFAULT_STUDENT_PASS,
-  DEFAULT_TEACHER_PASSWORD,
   setStudentPasswordByAdmin,
   resetStudentPassword,
   resetAllStudentPasswords,
-  getTeacherPassword,
-  setTeacherPassword,
-  resetTeacherPassword
 } from '../../utils/authService';
 import { removeVietnameseAccents } from '../../utils/vietnamese';
 
@@ -40,9 +36,6 @@ export const TeacherAuthAdminPanel: React.FC<TeacherAuthAdminPanelProps> = ({
   onClose,
 }) => {
   const [passwordsMap, setPasswordsMap] = useState<Record<string, string>>(() => getAllStudentPasswords());
-  const [teacherPass, setTeacherPassState] = useState<string>(() => getTeacherPassword());
-  const [newTeacherPass, setNewTeacherPass] = useState<string>(() => getTeacherPassword());
-  const [showTeacherPass, setShowTeacherPass] = useState(false);
   const [showAllStudentPass, setShowAllStudentPass] = useState(true);
 
   const [classCodeInput, setClassCodeInput] = useState<string>(settings.maLop || '10A5');
@@ -64,9 +57,6 @@ export const TeacherAuthAdminPanel: React.FC<TeacherAuthAdminPanelProps> = ({
   useEffect(() => {
     const sync = () => {
       setPasswordsMap(getAllStudentPasswords());
-      const tp = getTeacherPassword();
-      setTeacherPassState(tp);
-      setNewTeacherPass(tp);
     };
     window.addEventListener('lop10a5:password_change', sync);
     window.addEventListener('storage', sync);
@@ -114,10 +104,6 @@ export const TeacherAuthAdminPanel: React.FC<TeacherAuthAdminPanelProps> = ({
   }, [students, passwordsMap, filterMode, searchQuery]);
 
   const handleSaveTeacherAuth = () => {
-    const cleanPass = newTeacherPass.trim() || DEFAULT_TEACHER_PASSWORD;
-    setTeacherPassword(cleanPass);
-    setTeacherPassState(cleanPass);
-
     const cleanCode = classCodeInput.trim().toUpperCase() || '10A5';
     const cleanEmail = teacherEmailInput.trim().toLowerCase();
     onUpdateSettings({
@@ -125,14 +111,7 @@ export const TeacherAuthAdminPanel: React.FC<TeacherAuthAdminPanelProps> = ({
       emailGiaoVien: cleanEmail || undefined,
     });
 
-    showTempNotice('Đã lưu thông tin đăng nhập Giáo viên & Mã lớp.');
-  };
-
-  const handleResetTeacherPass = () => {
-    resetTeacherPassword();
-    setTeacherPassState(DEFAULT_TEACHER_PASSWORD);
-    setNewTeacherPass(DEFAULT_TEACHER_PASSWORD);
-    showTempNotice(`Đã đặt lại mật khẩu GV về mặc định: ${DEFAULT_TEACHER_PASSWORD}`);
+    showTempNotice('Đã lưu cấu hình Email GVCN & Mã lớp.');
   };
 
   const handleResetOneStudent = (student: Student) => {
@@ -174,12 +153,12 @@ export const TeacherAuthAdminPanel: React.FC<TeacherAuthAdminPanelProps> = ({
         </div>
       )}
 
-      {/* Khối 1: Quản trị đăng nhập Giáo viên & Mã lớp */}
+      {/* Khối 1: Cấu hình Email Google GVCN & Mã lớp */}
       <div className="p-3 sm:p-3.5 rounded-2xl bg-surface border border-token shadow-2xs space-y-2.5">
         <div className="flex items-center justify-between gap-2 border-b border-token pb-2">
           <div className="flex items-center gap-1.5 font-extrabold text-main uppercase tracking-wider">
             <ShieldCheck className="w-4 h-4 text-accent shrink-0" />
-            <span>Tài khoản Giáo viên &amp; Mã lớp</span>
+            <span>Quản trị Đăng nhập &amp; Mã lớp</span>
           </div>
           {onClose && (
             <button
@@ -192,39 +171,7 @@ export const TeacherAuthAdminPanel: React.FC<TeacherAuthAdminPanelProps> = ({
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <div>
-            <label className="block text-[11px] font-bold text-muted mb-1">
-              Mật khẩu Giáo viên (Mặc định: {DEFAULT_TEACHER_PASSWORD})
-            </label>
-            <div className="flex items-center gap-1">
-              <div className="relative flex-1">
-                <input
-                  type={showTeacherPass ? 'text' : 'password'}
-                  value={newTeacherPass}
-                  onChange={e => setNewTeacherPass(e.target.value)}
-                  className="w-full pl-2.5 pr-8 py-1.5 rounded-xl bg-surface-2 border border-token font-bold text-main focus:outline-none focus:ring-2 focus:ring-accent/40"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowTeacherPass(prev => !prev)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-main cursor-pointer"
-                  title={showTeacherPass ? 'Ẩn' : 'Hiện'}
-                >
-                  {showTeacherPass ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-              <button
-                type="button"
-                onClick={handleResetTeacherPass}
-                className="px-2 py-1.5 rounded-xl bg-surface-2 hover:bg-surface border border-token text-[11px] font-bold text-muted hover:text-main cursor-pointer shrink-0"
-                title="Đặt lại mật khẩu GV về mặc định gvcn10a5"
-              >
-                Reset
-              </button>
-            </div>
-          </div>
-
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div>
             <label className="block text-[11px] font-bold text-muted mb-1">
               Email Google GVCN
@@ -254,7 +201,7 @@ export const TeacherAuthAdminPanel: React.FC<TeacherAuthAdminPanelProps> = ({
                 onClick={handleSaveTeacherAuth}
                 className="px-3 py-1.5 rounded-xl bg-accent text-on-accent font-extrabold whitespace-nowrap cursor-pointer shadow-2xs hover:opacity-95"
               >
-                Lưu cấu hình
+                Lưu
               </button>
             </div>
           </div>
