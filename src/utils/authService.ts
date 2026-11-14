@@ -35,6 +35,9 @@ export function setAllStudentPasswords(passwordsMap?: Record<string, string>, te
     if (typeof teacherPassword === 'string' && teacherPassword.trim()) {
       localStorage.setItem(STORAGE_KEY_TEACHER_PASSWORD, teacherPassword.trim());
     }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lop10a5:password_change', { detail: { fromCloud: true } }));
+    }
   } catch (e) {
     console.error('Error setting student passwords:', e);
   }
@@ -171,20 +174,90 @@ export function clearAuthSession(): void {
   }
 }
 
+export const DEFAULT_STUDENT_PASS = DEFAULT_STUDENT_PASSWORD;
+
+/**
+ * Teacher Admin: Set password for a specific student directly without requiring old password.
+ */
+export function setStudentPasswordByAdmin(
+  maHS: string,
+  newPass: string
+): { success: boolean; message: string } {
+  const clean = String(newPass || '').trim();
+  if (clean.length < 4) {
+    return { success: false, message: 'Mật khẩu phải có tối thiểu 4 ký tự.' };
+  }
+  try {
+    const all = getAllStudentPasswords();
+    if (clean === DEFAULT_STUDENT_PASSWORD) {
+      delete all[maHS];
+    } else {
+      all[maHS] = clean;
+    }
+    localStorage.setItem(STORAGE_KEY_PASSWORDS, JSON.stringify(all));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lop10a5:password_change'));
+    }
+    return { success: true, message: `Đã cập nhật mật khẩu cho học sinh (${clean}).` };
+  } catch (e) {
+    return { success: false, message: 'Lỗi khi lưu mật khẩu học sinh.' };
+  }
+}
+
+/**
+ * Teacher Admin: Reset a single student's password back to default '123456'.
+ */
+export function resetStudentPassword(maHS: string): void {
+  try {
+    const all = getAllStudentPasswords();
+    delete all[maHS];
+    localStorage.setItem(STORAGE_KEY_PASSWORDS, JSON.stringify(all));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lop10a5:password_change'));
+    }
+  } catch (e) {
+    console.error('Error resetting student password:', e);
+  }
+}
+
+/**
+ * Teacher Admin: Reset ALL students' passwords back to default '123456'.
+ */
+export function resetAllStudentPasswords(): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_PASSWORDS, JSON.stringify({}));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lop10a5:password_change'));
+    }
+  } catch (e) {
+    console.error('Error resetting all student passwords:', e);
+  }
+}
+
 const STORAGE_KEY_TEACHER_PASSWORD = 'app_teacher_password_10a5';
-const DEFAULT_TEACHER_PASSWORD = 'gvcn10a5';
+export const DEFAULT_TEACHER_PASSWORD = 'gvcn10a5';
 
 export function getTeacherPassword(): string {
   try {
     const saved = localStorage.getItem(STORAGE_KEY_TEACHER_PASSWORD);
-    if (saved) return saved;
+    if (saved && saved.trim()) return saved.trim();
   } catch (e) {}
   return DEFAULT_TEACHER_PASSWORD;
 }
 
 export function setTeacherPassword(newPass: string): void {
   try {
-    localStorage.setItem(STORAGE_KEY_TEACHER_PASSWORD, newPass);
+    const clean = String(newPass || '').trim() || DEFAULT_TEACHER_PASSWORD;
+    localStorage.setItem(STORAGE_KEY_TEACHER_PASSWORD, clean);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lop10a5:password_change'));
+    }
+  } catch (e) {}
+}
+
+export function resetTeacherPassword(): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_TEACHER_PASSWORD, DEFAULT_TEACHER_PASSWORD);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('lop10a5:password_change'));
     }
@@ -193,7 +266,7 @@ export function setTeacherPassword(newPass: string): void {
 
 export function verifyTeacherPassword(inputPass: string): boolean {
   const current = getTeacherPassword();
-  const trimmed = inputPass.trim();
-  // Valid if matches stored, or default passwords (gvcn10a5, 10a5gvcn, 123456)
-  return trimmed === current || trimmed.toLowerCase() === 'gvcn10a5' || trimmed.toLowerCase() === '10a5gvcn' || trimmed === '123456';
+  const trimmed = String(inputPass || '').trim();
+  if (!trimmed) return false;
+  return trimmed === current;
 }

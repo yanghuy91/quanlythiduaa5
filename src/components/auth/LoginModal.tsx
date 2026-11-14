@@ -17,7 +17,7 @@ import {
 import { Student, SeatLayoutNode, RoleCode } from '../../types';
 import { StudentPicker } from '../student-picker/StudentPicker';
 import { getStudentAvatarInitial } from '../../utils/vietnamese';
-import { verifyStudentPassword } from '../../utils/authService';
+import { verifyStudentPassword, verifyTeacherPassword } from '../../utils/authService';
 import { Logo10A5 } from '../common/Logo10A5';
 import { PWAInstallButton } from '../common/PWAInstallButton';
 import { 
@@ -328,6 +328,55 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 </div>
               )}
             </div>
+
+            {/* Đăng nhập bằng Mật khẩu Giáo viên */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!password.trim()) {
+                  setErrorMsg('Vui lòng nhập mật khẩu Giáo viên.');
+                  return;
+                }
+                if (verifyTeacherPassword(password)) {
+                  setErrorMsg('');
+                  onLoginTeacher(rememberLogin);
+                } else {
+                  setErrorMsg('Mật khẩu Giáo viên không chính xác.');
+                }
+              }}
+              className="p-3.5 rounded-2xl bg-surface-2 border border-token space-y-2.5"
+            >
+              <label className="block text-xs font-bold text-main">
+                Hoặc đăng nhập bằng Mật khẩu Giáo viên:
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="Nhập mật khẩu GV..."
+                    className="w-full pl-9 pr-9 py-2 bg-surface border border-token rounded-xl text-xs font-semibold text-main placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-main cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-primary text-on-primary text-xs font-bold hover:opacity-95 transition-opacity cursor-pointer shrink-0 flex items-center gap-1"
+                >
+                  <span>Đăng nhập</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </form>
 
             {/* Remember Login for Teacher */}
             <div className="flex items-center gap-2 pt-1 border-t border-token">

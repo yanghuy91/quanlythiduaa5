@@ -216,6 +216,7 @@ export interface TeacherSettings {
   bannerSloganIcon?: string; // Biểu tượng sinh động
   bannerSloganColor?: string; // Màu sắc chữ khẩu hiệu
   bannerSloganStyle?: 'italic' | 'normal' | 'bold'; // Định dạng kiểu chữ
+  emailGiaoVien?: string; // Email Google chính chủ của GVCN
 }
 
 export type ActiveTab = 'my_page' | 'seating' | 'personal_log' | 'overview' | 'rules' | 'settings' | 'import_export' | 'audit_log' | 'apps' | 'grades' | 'mailbox';

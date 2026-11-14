@@ -110,7 +110,8 @@ import { downloadStateAsJson, parseImportedJsonState, saveServerState } from '..
 import { getAllStudentBadgesState } from '../../data/badgeCatalog';
 import * as XLSX from 'xlsx';
 import { exportDataSpecsWordDocument, downloadRulesExcelTemplate, parseRulesFromAoA } from '../../utils/exportDataSpecsDoc';
-import { Eye, EyeOff, Bot, Key, Copy, Check, ArrowLeft, Trash2, Plus, RefreshCw } from 'lucide-react';
+import { Eye, EyeOff, Bot, Key, KeyRound, Copy, Check, ArrowLeft, Trash2, Plus, RefreshCw } from 'lucide-react';
+import { LoginAdminModal, TeacherAuthAdminPanel } from './LoginAdminModal';
 
 interface TeacherDashboardProps {
   students: Student[];
@@ -393,7 +394,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [fastSaveEnabled, setFastSaveEnabled] = useState(false);
   const [overviewViewMode, setOverviewViewMode] = useState<'list' | 'grid'>('list');
   const [inspectingStudent, setInspectingStudent] = useState<Student | null>(null);
-  const [showAttentionDetails, setShowAttentionDetails] = useState(false);
+  const [activeKpiPanel, setActiveKpiPanel] = useState<'none' | 'week_violations' | 'attention_students'>('none');
+  const [showLoginAdminModal, setShowLoginAdminModal] = useState(false);
   const [pendingRecordPayload, setPendingRecordPayload] = useState<{
     students: Student[];
     rule: RuleItem;
@@ -427,6 +429,21 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     return records.filter(r => r.ngayHoc === todayStr && r.trangThai !== 'DaHuy');
   }, [records]);
 
+  // Currently active week number for KPI cards & summaries
+  const selectedWeekNumber = typeof periodFilter.tuanHoc === 'number' ? periodFilter.tuanHoc : currentWeek;
+
+  // Violations recorded in the currently selected week (respecting day/session sub-filters if set)
+  const weekViolationRecords = useMemo(() => {
+    const weekFilter: HierarchyPeriodFilter = {
+      ...periodFilter,
+      tuanHoc: selectedWeekNumber,
+      hocKi: getSemesterFromWeek(selectedWeekNumber),
+    };
+    return filterRecordsByHierarchy(records, weekFilter)
+      .filter(r => r.trangThai !== 'DaHuy' && r.loaiDiem !== 'Cong')
+      .sort((a, b) => new Date(b.thoiGianMay).getTime() - new Date(a.thoiGianMay).getTime());
+  }, [records, periodFilter, selectedWeekNumber]);
+
   // Hierarchy Period Summaries for all students
   const teacherPeriodSummaries = useMemo(() => {
     const map: Record<string, ReturnType<typeof calculateStudentPeriodSummary>> = {};
@@ -438,7 +455,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   // Summaries mapped to StudentWeekSummary format for the currently selected week/period
   const selectedPeriodWeekSummaries = useMemo(() => {
-    const targetW = typeof periodFilter.tuanHoc === 'number' ? periodFilter.tuanHoc : currentWeek;
+    const targetW = selectedWeekNumber;
     const map: Record<string, StudentWeekSummary> = {};
     students.forEach(st => {
       const pSum = teacherPeriodSummaries[st.maHS];
@@ -464,13 +481,13 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       }
     });
     return map;
-  }, [students, teacherPeriodSummaries, studentSummaries, periodFilter.tuanHoc, currentWeek, settings.diemKhoiDau]);
+  }, [students, teacherPeriodSummaries, studentSummaries, selectedWeekNumber, settings.diemKhoiDau]);
 
-  // Students requiring attention (warn / bad) in currently selected week/period
+  // Students requiring attention (warn / bad or having deductions) in currently selected week/period
   const attentionStudents = useMemo(() => {
     return students.filter(s => {
       const summary = selectedPeriodWeekSummaries[s.maHS];
-      return summary && !summary.chuaCoDiem && (summary.mucMau === 'bad' || summary.mucMau === 'warn');
+      return summary && !summary.chuaCoDiem && (summary.mucMau === 'bad' || summary.mucMau === 'warn' || summary.tongDiemTru > 0);
     });
   }, [students, selectedPeriodWeekSummaries]);
 
@@ -941,12 +958,12 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           </button>
         </div>
 
-        {/* HÀNG 3 (Vinh danh & Cấu hình): Khung vinh danh | 30 Huy hiệu | Vinh danh BCS | Cài đặt */}
-        <div className="grid grid-cols-4 gap-1 sm:gap-1.5 w-full pt-1 border-t border-token/50">
+        {/* HÀNG 3 (Vinh danh & Cấu hình): Khung vinh danh | 30 Huy hiệu | Vinh danh BCS | Mật khẩu | Cài đặt */}
+        <div className="grid grid-cols-5 gap-1 sm:gap-1.5 w-full pt-1 border-t border-token/50">
           <button
             type="button"
             onClick={() => setShowFrameModal(true)}
-            className="py-1.5 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 text-muted hover:text-main hover:bg-surface/60 transition-all cursor-pointer whitespace-nowrap"
+            className="py-1.5 px-1 sm:px-2 rounded-xl text-[10.5px] sm:text-xs font-bold flex items-center justify-center gap-1 text-muted hover:text-main hover:bg-surface/60 transition-all cursor-pointer whitespace-nowrap"
           >
             <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
             <span className="truncate">Khung Top</span>
@@ -955,7 +972,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           <button
             type="button"
             onClick={() => setShowBadgeModal(true)}
-            className="py-1.5 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 text-muted hover:text-main hover:bg-surface/60 transition-all cursor-pointer whitespace-nowrap"
+            className="py-1.5 px-1 sm:px-2 rounded-xl text-[10.5px] sm:text-xs font-bold flex items-center justify-center gap-1 text-muted hover:text-main hover:bg-surface/60 transition-all cursor-pointer whitespace-nowrap"
           >
             <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
             <span className="truncate">30 Huy hiệu</span>
@@ -964,16 +981,26 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           <button
             type="button"
             onClick={() => setShowCadreModal(true)}
-            className="py-1.5 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 transition-all cursor-pointer whitespace-nowrap"
+            className="py-1.5 px-1 sm:px-2 rounded-xl text-[10.5px] sm:text-xs font-bold flex items-center justify-center gap-1 text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 transition-all cursor-pointer whitespace-nowrap"
           >
             <Trophy className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-            <span className="truncate">Cán sự lớp</span>
+            <span className="truncate">Cán sự</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowLoginAdminModal(true)}
+            className="py-1.5 px-1 sm:px-2 rounded-xl text-[10.5px] sm:text-xs font-bold flex items-center justify-center gap-1 text-indigo-700 bg-indigo-500/10 hover:bg-indigo-500/20 transition-all cursor-pointer whitespace-nowrap"
+            title="Quản trị đăng nhập, mật khẩu và reset mật khẩu cho Giáo viên & Học sinh"
+          >
+            <KeyRound className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <span className="truncate">Mật khẩu</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('settings')}
-            className={`py-1.5 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+            className={`py-1.5 px-1 sm:px-2 rounded-xl text-[10.5px] sm:text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'settings'
                 ? 'bg-surface text-accent font-black shadow-xs ring-1 ring-token'
                 : 'text-muted hover:text-main hover:bg-surface/60'
@@ -1039,44 +1066,211 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </div>
 
             <div 
-              onClick={() => setActiveTab('roster')}
-              className="p-2 sm:p-3 rounded-2xl bg-surface border border-token hover:border-accent/40 cursor-pointer transition-all shadow-2xs group"
-              title="Bấm để mở Sơ đồ lớp để Ghi nhận vi phạm"
+              onClick={() => setActiveKpiPanel(prev => prev === 'week_violations' ? 'none' : 'week_violations')}
+              className={`p-2.5 sm:p-3 rounded-2xl bg-surface border cursor-pointer transition-all shadow-2xs group ${
+                activeKpiPanel === 'week_violations'
+                  ? 'border-accent ring-2 ring-accent/25 bg-accent/5'
+                  : 'border-token hover:border-accent/40'
+              }`}
+              title="Bấm để xem chi tiết danh sách vi phạm trong tuần"
             >
               <div className="text-[11px] text-muted font-medium flex items-center justify-between">
-                <span>Vi phạm trong kỳ</span>
+                <span>Vi phạm trong tuần</span>
                 <ClipboardList className="w-3 h-3 text-muted group-hover:text-accent transition-colors" />
               </div>
-              <div className="text-base sm:text-xl font-black text-main mt-0.5">{records.filter(r => r.trangThai !== 'DaHuy').length} lượt</div>
-              <div className="text-[10px] text-muted mt-1">Phân cấp tuần/ngày/buổi</div>
+              <div className="text-base sm:text-xl font-black text-main mt-0.5">{weekViolationRecords.length} lượt</div>
+              <div className="text-[10px] text-accent font-bold mt-1">
+                Tuần {selectedWeekNumber} · {activeKpiPanel === 'week_violations' ? 'Thu gọn ▲' : 'Xem chi tiết ▼'}
+              </div>
             </div>
 
             <div 
               onClick={() => setActiveTab('explanations')}
-              className="p-2 sm:p-3 rounded-2xl bg-surface border border-token hover:border-accent/40 cursor-pointer transition-all shadow-2xs group"
+              className="p-2.5 sm:p-3 rounded-2xl bg-surface border border-token hover:border-accent/40 cursor-pointer transition-all shadow-2xs group"
               title="Bấm để mở duyệt giải trình"
             >
               <div className="text-[11px] text-muted font-medium flex items-center justify-between">
                 <span>Giải trình chờ duyệt</span>
                 <CheckSquare className="w-3 h-3 text-muted group-hover:text-accent transition-colors" />
               </div>
-              <div className="text-xl font-black text-accent mt-0.5">{pendingExplanations.length} đơn</div>
+              <div className="text-base sm:text-xl font-black text-accent mt-0.5">{pendingExplanations.length} đơn</div>
               <div className="text-[10px] text-muted mt-1">Hạn xử lý trong 7 ngày</div>
             </div>
 
             <div 
-              onClick={() => setShowAttentionDetails(!showAttentionDetails)}
-              className="p-3 sm:p-3.5 rounded-2xl bg-surface border border-token hover:border-rose-400/40 cursor-pointer transition-all shadow-2xs group"
-              title="Bấm để xem danh sách học sinh cần nhắc nhở"
+              onClick={() => setActiveKpiPanel(prev => prev === 'attention_students' ? 'none' : 'attention_students')}
+              className={`p-2.5 sm:p-3 rounded-2xl bg-surface border cursor-pointer transition-all shadow-2xs group ${
+                activeKpiPanel === 'attention_students'
+                  ? 'border-rose-500 ring-2 ring-rose-500/25 bg-rose-500/5'
+                  : 'border-token hover:border-rose-400/40'
+              }`}
+              title="Bấm để xem danh sách học sinh cần lưu ý trong tuần"
             >
               <div className="text-[11px] text-muted font-medium flex items-center justify-between">
                 <span>Học sinh cần lưu ý</span>
                 <AlertTriangle className="w-3 h-3 text-[var(--st-bad)] group-hover:scale-110 transition-transform" />
               </div>
-              <div className="text-xl font-black text-[var(--st-bad)] mt-0.5">{attentionStudents.length} em</div>
-              <div className="text-[10px] text-muted mt-1">Điểm trừ tuần này</div>
+              <div className="text-base sm:text-xl font-black text-[var(--st-bad)] mt-0.5">{attentionStudents.length} em</div>
+              <div className="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1">
+                Tuần {selectedWeekNumber} · {activeKpiPanel === 'attention_students' ? 'Thu gọn ▲' : 'Xem chi tiết ▼'}
+              </div>
             </div>
           </div>
+
+          {/* EXPANDABLE DETAIL PANEL FOR "VI PHẠM TRONG TUẦN" */}
+          {activeKpiPanel === 'week_violations' && (
+            <div className="rounded-2xl bg-surface border-2 border-accent/40 shadow-sm overflow-hidden">
+              <div className="px-3.5 py-2.5 bg-surface-2/70 border-b border-token flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="w-4 h-4 text-accent shrink-0" />
+                  <span className="text-xs font-black text-main uppercase tracking-wide">
+                    Danh sách vi phạm Tuần {selectedWeekNumber} ({weekViolationRecords.length} lượt)
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('roster')}
+                    className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold cursor-pointer transition-colors"
+                  >
+                    + Chấm vi phạm mới
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveKpiPanel('none')}
+                    className="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-2 border border-token text-[11px] font-bold text-muted hover:text-main cursor-pointer"
+                  >
+                    Đóng ✕
+                  </button>
+                </div>
+              </div>
+
+              {weekViolationRecords.length === 0 ? (
+                <div className="p-6 text-center text-xs text-muted">
+                  Chưa có vi phạm nào được ghi nhận trong Tuần {selectedWeekNumber}.
+                </div>
+              ) : (
+                <div className="divide-y divide-token max-h-[340px] overflow-y-auto">
+                  {weekViolationRecords.map(rec => {
+                    const matchedSt = students.find(s => isRecordMatchingStudent(rec, s.maHS, s.hoTen));
+                    return (
+                      <div
+                        key={rec.maGhiNhan}
+                        className="px-3.5 py-2.5 flex items-center justify-between gap-2 hover:bg-surface-2/40 transition-colors text-xs"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-extrabold text-main truncate">
+                              {matchedSt ? matchedSt.hoTen : rec.hoTen}
+                            </span>
+                            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-surface-2 border border-token text-muted">
+                              Tổ {matchedSt ? matchedSt.to : rec.to}
+                            </span>
+                            <span className="text-[10px] font-black px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-600">
+                              -{rec.diemSo}đ
+                            </span>
+                            <RecorderBadge vaiTro={rec.vaiTroNguoiGhi} nguoiGhi={rec.nguoiGhi} size="xs" />
+                          </div>
+                          <div className="text-[11px] text-main font-medium mt-0.5 truncate">
+                            {rec.tenHanhVi}
+                            {rec.ghiChu ? <span className="text-muted italic"> · "{rec.ghiChu}"</span> : null}
+                          </div>
+                          <div className="text-[10px] text-muted mt-0.5">
+                            Ngày {rec.ngayHoc} · Buổi {rec.buoi === 'Sang' ? 'Sáng' : 'Chiều'}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {matchedSt && (
+                            <button
+                              type="button"
+                              onClick={() => setInspectingStudent(matchedSt)}
+                              className="px-2.5 py-1 rounded-lg bg-surface-2 hover:bg-accent hover:text-white border border-token text-[10.5px] font-bold text-main transition-colors cursor-pointer"
+                            >
+                              Chi tiết / Sửa
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* EXPANDABLE DETAIL PANEL FOR "HỌC SINH CẦN LƯU Ý" */}
+          {activeKpiPanel === 'attention_students' && (
+            <div className="rounded-2xl bg-surface border-2 border-rose-400/50 shadow-sm overflow-hidden">
+              <div className="px-3.5 py-2.5 bg-rose-500/10 border-b border-rose-500/20 flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-[var(--st-bad)] shrink-0" />
+                  <span className="text-xs font-black text-main uppercase tracking-wide">
+                    Học sinh cần lưu ý Tuần {selectedWeekNumber} ({attentionStudents.length} học sinh)
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveKpiPanel('none')}
+                  className="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-2 border border-token text-[11px] font-bold text-muted hover:text-main cursor-pointer"
+                >
+                  Đóng ✕
+                </button>
+              </div>
+
+              {attentionStudents.length === 0 ? (
+                <div className="p-6 text-center text-xs text-muted">
+                  Tất cả học sinh đều giữ điểm tốt và chưa có điểm trừ trong Tuần {selectedWeekNumber}.
+                </div>
+              ) : (
+                <div className="divide-y divide-token max-h-[340px] overflow-y-auto">
+                  {attentionStudents.map(st => {
+                    const sum = selectedPeriodWeekSummaries[st.maHS];
+                    const tier = getRatingTierInfo(sum?.xepLoai || 'Tot', sum?.diemHienTai ?? settings.diemKhoiDau, settings);
+                    const tierColor = getRatingColorClasses(tier.color);
+                    return (
+                      <div
+                        key={st.maHS}
+                        className="px-3.5 py-2.5 flex items-center justify-between gap-2 hover:bg-surface-2/40 transition-colors text-xs"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-extrabold text-main truncate">{st.hoTen}</span>
+                            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-surface-2 border border-token text-muted">
+                              Tổ {st.to} · Bàn {st.viTriGhe}
+                            </span>
+                            <span className={`text-[10px] font-bold px-2 py-0.2 rounded-full ${tierColor.badge}`}>
+                              {tier.label} ({sum?.diemHienTai ?? settings.diemKhoiDau}đ)
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-rose-600 dark:text-rose-400 font-bold mt-0.5">
+                            Trừ {sum?.tongDiemTru || 0}đ ({sum?.soLoiTrongTuan || 0} lỗi trong Tuần {selectedWeekNumber})
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setInspectingStudent(st)}
+                            className="px-2.5 py-1 rounded-lg bg-surface-2 hover:bg-accent hover:text-white border border-token text-[10.5px] font-bold text-main transition-colors cursor-pointer"
+                          >
+                            Xem lỗi
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectStudent(st)}
+                            className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[10.5px] font-bold transition-colors cursor-pointer"
+                          >
+                            + Ghi lỗi
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* BẢNG TỔNG QUAN THI ĐUA HỌC SINH (CÓ TÙY CHỌN SẮP XẾP ĐỂ DỄ THEO DÕI) */}
           <div id="emulation-overview-table" className="bg-surface rounded-3xl border border-token overflow-hidden shadow-xs">
@@ -2069,10 +2263,20 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       )}
 
       {activeTab === 'settings' && (
-        <div className="p-4 rounded-2xl bg-surface border border-token space-y-4 shadow-xs max-w-xl mx-auto">
-          <h3 className="text-xs font-bold text-main uppercase tracking-wider border-b border-token pb-2">
-            Cấu hình tham số hệ thống (Lưu tại trang tính 7_CauHinh)
-          </h3>
+        <div className="space-y-4">
+          {/* Quản trị Đăng nhập & Mật khẩu (GV + Học sinh) */}
+          <div className="p-4 rounded-2xl bg-surface border border-token shadow-xs max-w-xl mx-auto">
+            <TeacherAuthAdminPanel
+              students={students}
+              settings={settings}
+              onUpdateSettings={onUpdateSettings}
+            />
+          </div>
+
+          <div className="p-4 rounded-2xl bg-surface border border-token space-y-4 shadow-xs max-w-xl mx-auto">
+            <h3 className="text-xs font-bold text-main uppercase tracking-wider border-b border-token pb-2">
+              Cấu hình tham số hệ thống (Lưu tại trang tính 7_CauHinh)
+            </h3>
 
           <div className="space-y-3 text-xs">
             <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200">
@@ -2571,6 +2775,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 <Edit3 className="w-3.5 h-3.5" />
                 <span>Đổi tên &amp; Ảnh</span>
               </button>
+            </div>
             </div>
           </div>
 
@@ -3630,6 +3835,15 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         onOpenAvatarPicker={onOpenTeacherAvatar || (() => {})}
         onSaveSuccess={handleProfileSaveSuccess}
         onSaveProfile={handleProfileSaveSuccess}
+      />
+
+      {/* Login & Password Administration Modal */}
+      <LoginAdminModal
+        isOpen={showLoginAdminModal}
+        onClose={() => setShowLoginAdminModal(false)}
+        students={students}
+        settings={settings}
+        onUpdateSettings={onUpdateSettings}
       />
     </div>
   );
