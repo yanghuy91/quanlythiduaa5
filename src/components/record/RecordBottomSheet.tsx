@@ -16,7 +16,7 @@ import {
   ListFilter
 } from 'lucide-react';
 import { Student, RuleItem, RoleCode, DisciplineRecord, SeverityLevel } from '../../types';
-import { getCurrentSession, classifySeverityByPoints, STANDARD_RULE_CATEGORIES, normalizeRuleCategory } from '../../utils/emulation';
+import { getCurrentSession, classifySeverityByPoints, STANDARD_RULE_CATEGORIES, normalizeRuleCategory, isRecordMatchingStudent } from '../../utils/emulation';
 import { removeVietnameseAccents } from '../../utils/vietnamese';
 import { RecorderBadge } from '../common/RecorderBadge';
 import { 
@@ -91,12 +91,19 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
   const [date, setDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
   const [note, setNote] = useState<string>('');
 
+  const studentKey = useMemo(() => students.map(s => `${s.maHS}:${s.hoTen}`).join('|'), [students]);
+
   React.useEffect(() => {
     if (isOpen) {
       setTuanHoc(initialWeek);
       setHocKi(initialSemester ?? getSemesterFromWeek(initialWeek));
+      setSelectedRuleId('');
+      setRuleSearch('');
+      setNote('');
+      setCustomRuleName('');
+      setShowHistoryAccordion(false);
     }
-  }, [isOpen, initialWeek, initialSemester]);
+  }, [isOpen, initialWeek, initialSemester, studentKey]);
 
   // Handle changing week directly (automatically syncs hocKi)
   const handleChangeWeek = (newWeek: number) => {
@@ -171,8 +178,9 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
   // Infractions previously recorded for selected students
   const studentPreviousRecords = useMemo(() => {
     if (!existingRecords || students.length === 0) return [];
-    const studentIds = new Set(students.map(s => s.maHS));
-    return existingRecords.filter(r => studentIds.has(r.maHS) && r.trangThai !== 'DaHuy');
+    return existingRecords.filter(
+      r => r.trangThai !== 'DaHuy' && students.some(s => isRecordMatchingStudent(r, s.maHS, s.hoTen))
+    );
   }, [existingRecords, students]);
 
   if (!isOpen || students.length === 0) return null;

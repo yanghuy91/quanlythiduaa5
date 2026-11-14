@@ -20,7 +20,10 @@ export const DuplicateWarningModal: React.FC<DuplicateWarningModalProps> = ({
   existingRecordsByStudent,
 }) => {
   // Track toggle "Vẫn ghi cho em này" per student
-  const [allowedStudentIds, setAllowedStudentIds] = useState<Record<string, boolean>>(() => {
+  const [allowedStudentIds, setAllowedStudentIds] = useState<Record<string, boolean>>({});
+
+  React.useEffect(() => {
+    if (!isOpen) return;
     const map: Record<string, boolean> = {};
     selectedStudents.forEach(s => {
       const records = existingRecordsByStudent[s.maHS] || [];
@@ -28,8 +31,8 @@ export const DuplicateWarningModal: React.FC<DuplicateWarningModalProps> = ({
       // Mặc định TẮT nếu trùng hành vi, BẬT nếu khác hành vi
       map[s.maHS] = !hasIdentical;
     });
-    return map;
-  });
+    setAllowedStudentIds(map);
+  }, [isOpen, selectedStudents, existingRecordsByStudent, selectedRule.maNoiQuy]);
 
   if (!isOpen) return null;
 

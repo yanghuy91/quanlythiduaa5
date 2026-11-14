@@ -299,9 +299,11 @@ export function findStudentInSeatingMaster(
   const cleanId = maHS ? String(maHS).trim().toUpperCase() : '';
   const normName = normalizeStudentNameForMatch(hoTen);
   const asciiName = normalizeAccentInsensitiveName(hoTen);
+  const hasRealName = Boolean(normName && normName !== cleanId.toLowerCase() && !/^hs\d+$/i.test(normName));
 
-  // 1. Nếu có Họ và tên: Ưu tiên đối chiếu chính xác theo Họ và tên với Sơ đồ lớp
-  if (normName) {
+  // 1. Nếu có Họ và tên thực: BẮT BUỘC đối chiếu theo Họ và tên với Sơ đồ lớp
+  // Tuyệt đối không lấy Mã HS (HS01..HS48) của người khác đè sang nếu tên khác nhau
+  if (hasRealName) {
     const exactByName = masterStudents.filter(s => normalizeStudentNameForMatch(s.hoTen) === normName);
     if (exactByName.length === 1) return exactByName[0];
     if (exactByName.length > 1 && cleanId) {
@@ -313,16 +315,34 @@ export function findStudentInSeatingMaster(
     // 2. Đối chiếu tên không dấu (nếu duy nhất)
     const accentMatches = masterStudents.filter(s => normalizeAccentInsensitiveName(s.hoTen) === asciiName);
     if (accentMatches.length === 1) return accentMatches[0];
+    if (accentMatches.length > 1 && cleanId) {
+      const accentBoth = accentMatches.find(s => s.maHS.trim().toUpperCase() === cleanId);
+      if (accentBoth) return accentBoth;
+      return accentMatches[0];
+    }
+
+    // 3. Nếu truyền cả chuỗi "HS01 - Nguyễn Văn A" vào hoTen
+    if (normName.length >= 4) {
+      const partialMatch = masterStudents.filter(s => {
+        const sNorm = normalizeStudentNameForMatch(s.hoTen);
+        return sNorm === normName || (sNorm.length >= 5 && normName.includes(sNorm));
+      });
+      if (partialMatch.length === 1) return partialMatch[0];
+    }
+
+    // Có tên cụ thể nhưng không khớp học sinh nào trong lớp -> trả về undefined,
+    // KHÔNG khớp mù theo Mã HS để tránh gán nhầm lỗi/điểm của HS này sang HS khác có cùng mã thứ tự HSxx
+    return undefined;
   }
 
-  // 3. Đối chiếu theo Mã HS (khi file chỉ nhập Mã HS hoặc tên bị viết tắt)
+  // 4. Chỉ đối chiếu theo Mã HS khi bản ghi không có Họ tên (hoặc chỉ lưu mỗi Mã HS)
   if (cleanId) {
     const byId = masterStudents.find(s => s.maHS.trim().toUpperCase() === cleanId);
     if (byId) return byId;
   }
 
-  // 4. Dự phòng: Nếu raw input truyền cả chuỗi "HS01 - Nguyễn Văn A" vào maHS hoặc hoTen
-  const combinedNorm = normName || normalizeStudentNameForMatch(maHS);
+  // 5. Dự phòng: Nếu raw input truyền cả chuỗi "HS01 - Nguyễn Văn A" vào maHS
+  const combinedNorm = normalizeStudentNameForMatch(maHS);
   if (combinedNorm && combinedNorm.length >= 4) {
     const partialMatch = masterStudents.filter(s => {
       const sNorm = normalizeStudentNameForMatch(s.hoTen);
@@ -596,8 +616,14 @@ export function reconcileDisciplineRecordsWithSeating(
   if (!masterStudents || masterStudents.length === 0) return records;
 
   const reconciled: DisciplineRecord[] = [];
+  const seenIds = new Set<string>();
+
   for (const rec of records) {
     if (!rec) continue;
+    if (rec.maGhiNhan) {
+      if (seenIds.has(rec.maGhiNhan)) continue;
+      seenIds.add(rec.maGhiNhan);
+    }
     if (rec.doiTuong === 'To') {
       reconciled.push(rec);
       continue;

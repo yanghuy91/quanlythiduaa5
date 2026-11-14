@@ -212,6 +212,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [duplicateWarningData, setDuplicateWarningData] = useState<{
+    targetStudents: Student[];
     pendingRule: RuleItem;
     duplicateStudents: { student: Student; existingRecords: DisciplineRecord[] }[];
     safeStudentIds: string[];
@@ -242,6 +243,13 @@ export const StudentView: React.FC<StudentViewProps> = ({
       tuanHoc: currentWeek,
     }));
   }, [currentWeek]);
+
+  useEffect(() => {
+    if (activeTab !== 'record' && !isBottomSheetOpen) {
+      setIsMultiSelect(false);
+      setSelectedStudentIds([]);
+    }
+  }, [activeTab, isBottomSheetOpen]);
 
   const selectedStudents = useMemo(() => {
     return allStudents.filter(s => selectedStudentIds.includes(s.maHS));
@@ -315,6 +323,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
     });
 
     setSelectedStudentIds([]);
+    setIsMultiSelect(false);
     setIsBottomSheetOpen(false);
     setDuplicateWarningData(null);
   };
@@ -325,9 +334,12 @@ export const StudentView: React.FC<StudentViewProps> = ({
     date?: string, 
     buoi?: 'Sang' | 'Chieu',
     hocKi: 1 | 2 = 1,
-    tuanHoc: number = currentWeek
+    tuanHoc: number = currentWeek,
+    explicitStudents?: Student[]
   ) => {
-    const targetStudents = isMultiSelect ? selectedStudents : (singleSelectedStudent ? [singleSelectedStudent] : []);
+    const targetStudents = explicitStudents && explicitStudents.length > 0
+      ? explicitStudents
+      : (isMultiSelect ? selectedStudents : (singleSelectedStudent ? [singleSelectedStudent] : []));
     if (targetStudents.length === 0) return;
 
     const duplicates: { student: Student; existingRecords: DisciplineRecord[] }[] = [];
@@ -341,7 +353,8 @@ export const StudentView: React.FC<StudentViewProps> = ({
         st.maHS,
         targetDate,
         targetBuoi,
-        rule.maNoiQuy
+        rule.maNoiQuy,
+        st.hoTen
       );
 
       if (dupCheck.isDuplicate) {
@@ -353,6 +366,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
     if (duplicates.length > 0) {
       setDuplicateWarningData({
+        targetStudents,
         pendingRule: rule,
         duplicateStudents: duplicates,
         safeStudentIds: safeIds,
@@ -2661,7 +2675,8 @@ export const StudentView: React.FC<StudentViewProps> = ({
             payload.date, 
             payload.session, 
             payload.hocKi, 
-            payload.tuanHoc
+            payload.tuanHoc,
+            payload.students
           );
         }}
         currentUserRole={primaryCadreRole}
@@ -2685,7 +2700,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
               duplicateWarningData.tuanHoc ?? recordingWeek
             );
           }}
-          selectedStudents={isMultiSelect ? selectedStudents : (singleSelectedStudent ? [singleSelectedStudent] : [])}
+          selectedStudents={duplicateWarningData.targetStudents}
           selectedRule={duplicateWarningData.pendingRule}
           existingRecordsByStudent={
             duplicateWarningData.duplicateStudents.reduce((acc, item) => {
@@ -2773,6 +2788,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
         settings={settings}
         viewerRole={primaryCadreRole}
         onAddRecordForStudent={isCadre && canRecord ? (st) => {
+          setIsMultiSelect(false);
           setSelectedStudentIds([st.maHS]);
           setIsBottomSheetOpen(true);
         } : undefined}

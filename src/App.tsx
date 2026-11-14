@@ -78,7 +78,8 @@ import {
 import {
   syncStudentsWithSeatingLayout,
   reconcileAcademicRecordsWithSeating,
-  reconcileDisciplineRecordsWithSeating
+  reconcileDisciplineRecordsWithSeating,
+  findStudentInSeatingMaster
 } from './utils/seatingMaster';
 
 function normalizeStudentsList(list: Student[]): Student[] {
@@ -492,10 +493,11 @@ export default function App() {
       localStorage.setItem('app_students_10a5_v4', JSON.stringify(synced.students));
       localStorage.setItem('app_layout_10a5_v4', JSON.stringify(synced.layout));
 
-      // Keep logged-in Student/Cadre session synchronized with latest cloud student data
+      // Keep logged-in Student/Cadre session synchronized with latest cloud student data (ưu tiên khớp theo Họ tên chuẩn)
       setCurrentUser(prev => {
         if (prev && 'maHS' in prev) {
-          const freshStudent = synced.students.find(s => s.maHS === (prev as Student).maHS);
+          const prevStu = prev as Student;
+          const freshStudent = findStudentInSeatingMaster(synced.students, prevStu.maHS, prevStu.hoTen);
           if (freshStudent) {
             const session = getSavedAuthSession();
             saveAuthSession(freshStudent, session?.role || 'HS', session?.remember ?? true);
@@ -511,7 +513,17 @@ export default function App() {
     }
 
     const incomingRecords = Array.isArray(cloudState.records) ? cloudState.records : [];
-    const cleanedRecords = filterOutLegacyDemoRecords(incomingRecords);
+    const incomingIds = new Set(incomingRecords.map(r => r?.maGhiNhan).filter(Boolean));
+    const recentLocalUnsynced = (latestStateRef.current.records || []).filter(r => {
+      if (!r || !r.maGhiNhan || incomingIds.has(r.maGhiNhan)) return false;
+      const t = new Date(r.thoiGianMay || r.thoiGianMayChu || 0).getTime();
+      return Number.isFinite(t) && Date.now() - t < 12000;
+    });
+    const mergedIncoming = recentLocalUnsynced.length > 0
+      ? [...recentLocalUnsynced, ...incomingRecords]
+      : incomingRecords;
+
+    const cleanedRecords = filterOutLegacyDemoRecords(mergedIncoming);
     const reconciledRecords = masterStudents
       ? reconcileDisciplineRecordsWithSeating(masterStudents, cleanedRecords)
       : cleanedRecords;
@@ -798,27 +810,38 @@ export default function App() {
     });
   }, [isCloudReady, currentRole, students, records, academicRecords, settings, currentWeek]);
 
-  // Add record handler
+  // Add record handler (sử dụng latestStateRef để ghi nhiều học sinh liên tiếp không bị mất bản ghi do stale closure)
   const handleAddRecord = useCallback((newRecordData: Omit<DisciplineRecord, 'maGhiNhan' | 'thoiGianMayChu' | 'thoiGianMay'>) => {
     const id = `REC-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const nowISO = new Date().toISOString();
 
+    const masterStudents = latestStateRef.current.students || [];
+    const matchedStudent = newRecordData.doiTuong !== 'To'
+      ? findStudentInSeatingMaster(masterStudents, newRecordData.maHS, newRecordData.hoTen)
+      : undefined;
+
     const record: DisciplineRecord = {
       ...newRecordData,
+      maHS: matchedStudent ? matchedStudent.maHS : newRecordData.maHS,
+      hoTen: matchedStudent ? matchedStudent.hoTen : newRecordData.hoTen,
+      to: matchedStudent ? matchedStudent.to : newRecordData.to,
       maGhiNhan: id,
       thoiGianMayChu: nowISO,
       thoiGianMay: nowISO,
     };
 
-    const updated = [record, ...records];
+    const baseRecords = latestStateRef.current.records || [];
+    const updated = [record, ...baseRecords];
+    latestStateRef.current.records = updated;
     setRecords(updated);
     localStorage.setItem('app_records_10a5', JSON.stringify(updated));
     saveServerState(buildFullStateSnapshot({ records: updated, updatedAt: nowISO }), true);
-  }, [records, buildFullStateSnapshot]);
+  }, [buildFullStateSnapshot]);
 
   // Undo / Void record handler
   const handleUndoRecord = useCallback((recordId: string) => {
-    const updated = records.map(r => {
+    const baseRecords = latestStateRef.current.records || [];
+    const updated = baseRecords.map(r => {
       if (r.maGhiNhan === recordId) {
         return {
           ...r,
@@ -829,14 +852,16 @@ export default function App() {
       }
       return r;
     });
+    latestStateRef.current.records = updated;
     setRecords(updated);
     localStorage.setItem('app_records_10a5', JSON.stringify(updated));
     saveServerState(buildFullStateSnapshot({ records: updated }), true);
-  }, [records, buildFullStateSnapshot]);
+  }, [buildFullStateSnapshot]);
 
   // Manual void by cadre or teacher
   const handleVoidRecord = useCallback((recordId: string, reason: string) => {
-    const updated = records.map(r => {
+    const baseRecords = latestStateRef.current.records || [];
+    const updated = baseRecords.map(r => {
       if (r.maGhiNhan === recordId) {
         return {
           ...r,
@@ -847,14 +872,16 @@ export default function App() {
       }
       return r;
     });
+    latestStateRef.current.records = updated;
     setRecords(updated);
     localStorage.setItem('app_records_10a5', JSON.stringify(updated));
     saveServerState(buildFullStateSnapshot({ records: updated }), true);
-  }, [records, buildFullStateSnapshot]);
+  }, [buildFullStateSnapshot]);
 
   // Edit record data within allowed time limit by teacher, cadre, or recorder
   const handleUpdateRecord = useCallback((recordId: string, updates: Partial<DisciplineRecord>) => {
-    const updated = records.map(r => {
+    const baseRecords = latestStateRef.current.records || [];
+    const updated = baseRecords.map(r => {
       if (r.maGhiNhan === recordId) {
         return {
           ...r,
@@ -863,6 +890,7 @@ export default function App() {
       }
       return r;
     });
+    latestStateRef.current.records = updated;
     setRecords(updated);
     localStorage.setItem('app_records_10a5', JSON.stringify(updated));
     saveServerState(buildFullStateSnapshot({ records: updated }), true);
@@ -871,11 +899,12 @@ export default function App() {
       id: `upd-${Date.now()}`,
       message: 'Đã cập nhật dữ liệu ghi nhận và đồng bộ lên Firebase.',
     });
-  }, [records, buildFullStateSnapshot]);
+  }, [buildFullStateSnapshot]);
 
   // Explanation submit by student
   const handleSubmitExplanation = useCallback((recordId: string, explanation: string) => {
-    const updated = records.map(r => {
+    const baseRecords = latestStateRef.current.records || [];
+    const updated = baseRecords.map(r => {
       if (r.maGhiNhan === recordId) {
         return {
           ...r,
@@ -886,6 +915,7 @@ export default function App() {
       }
       return r;
     });
+    latestStateRef.current.records = updated;
     setRecords(updated);
     localStorage.setItem('app_records_10a5', JSON.stringify(updated));
     saveServerState(buildFullStateSnapshot({ records: updated }), true);
@@ -894,7 +924,7 @@ export default function App() {
       id: `exp-${Date.now()}`,
       message: 'Đã gửi giải trình lên đám mây. Vui lòng chờ Giáo viên xem xét.',
     });
-  }, [records, buildFullStateSnapshot]);
+  }, [buildFullStateSnapshot]);
 
   // Teacher or delegated Cadre resolve explanation
   const handleResolveExplanation = useCallback((recordId: string, result: 'ChapNhan' | 'TuChoi', reason: string) => {
@@ -903,7 +933,8 @@ export default function App() {
       : currentUser && 'hoTen' in currentUser
         ? `${currentUser.hoTen} (BCS được ủy quyền)`
         : `${teacherProfile.hoTen} (GVCN)`;
-    const updated = records.map(r => {
+    const baseRecords = latestStateRef.current.records || [];
+    const updated = baseRecords.map(r => {
       if (r.maGhiNhan === recordId) {
         return {
           ...r,
@@ -915,6 +946,7 @@ export default function App() {
       }
       return r;
     });
+    latestStateRef.current.records = updated;
     setRecords(updated);
     localStorage.setItem('app_records_10a5', JSON.stringify(updated));
     saveServerState(buildFullStateSnapshot({ records: updated }), true);
@@ -923,7 +955,7 @@ export default function App() {
       id: `res-${Date.now()}`,
       message: result === 'ChapNhan' ? 'Đã chấp nhận giải trình (Hủy trừ điểm).' : 'Đã từ chối giải trình.',
     });
-  }, [records, currentRole, currentUser, teacherProfile.hoTen, buildFullStateSnapshot]);
+  }, [currentRole, currentUser, teacherProfile.hoTen, buildFullStateSnapshot]);
 
   // Toggle rule pin
   const handleToggleRulePin = useCallback((ruleId: string) => {
@@ -978,7 +1010,7 @@ export default function App() {
 
   // Student login from modal
   const handleLoginStudent = (student: Student, role: RoleCode, remember = true) => {
-    const freshStudent = students.find(s => s.maHS === student.maHS) || student;
+    const freshStudent = findStudentInSeatingMaster(students, student.maHS, student.hoTen) || student;
     saveAuthSession(freshStudent, role, remember);
     setCurrentUser(freshStudent);
     setCurrentRole(role);
@@ -1116,10 +1148,11 @@ export default function App() {
     saveServerState(buildFullStateSnapshot({ students: updated }), true);
   }, [students, studentSummaries, buildFullStateSnapshot]);
 
-  // Active logged-in student synced with live students array
+  // Active logged-in student synced with live students array (ưu tiên khớp theo Họ tên chuẩn)
   const activeLoggedInStudent = useMemo(() => {
     if (currentUser && 'maHS' in currentUser) {
-      return students.find(s => s.maHS === (currentUser as Student).maHS) || (currentUser as Student);
+      const stu = currentUser as Student;
+      return findStudentInSeatingMaster(students, stu.maHS, stu.hoTen) || stu;
     }
     return null;
   }, [currentUser, students]);

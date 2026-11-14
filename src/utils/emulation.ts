@@ -365,17 +365,22 @@ export function isRecordMatchingStudent(
   maHS: string,
   hoTen?: string
 ): boolean {
-  if (!rec) return false;
+  if (!rec || rec.doiTuong === 'To') return false;
+
+  const normStudent = hoTen ? normalizeStudentName(hoTen) : '';
+  const normRec = rec.hoTen ? normalizeStudentName(rec.hoTen) : '';
+
+  // Nếu cả bản ghi và học sinh đều có Họ tên thực: BẮT BUỘC phải khớp Họ tên chuẩn hóa.
+  // Điều này ngăn chặn 100% việc 1 bản ghi bị tính cho 2 học sinh hoặc bị gán nhầm sang học sinh khác
+  // khi mã thứ tự HSxx bị đánh số lại theo sơ đồ chỗ ngồi.
+  if (normStudent && normRec) {
+    return normStudent === normRec;
+  }
+
   if (rec.maHS && maHS && String(rec.maHS).trim().toLowerCase() === String(maHS).trim().toLowerCase()) {
     return true;
   }
-  if (hoTen && rec.hoTen) {
-    const normStudent = normalizeStudentName(hoTen);
-    const normRec = normalizeStudentName(rec.hoTen);
-    if (normStudent && normRec && normStudent === normRec) {
-      return true;
-    }
-  }
+
   return false;
 }
 
@@ -657,7 +662,8 @@ export function checkDuplicateRecord(
   maHS: string,
   ngayHoc: string,
   buoi: 'Sang' | 'Chieu',
-  maNoiQuy: string
+  maNoiQuy: string,
+  hoTen?: string
 ): {
   isDuplicate: boolean;
   isIdentical: boolean;
@@ -665,7 +671,7 @@ export function checkDuplicateRecord(
   lanThu: number;
 } {
   const existing = records.filter(
-    r => r.maHS === maHS &&
+    r => isRecordMatchingStudent(r, maHS, hoTen) &&
          r.ngayHoc === ngayHoc &&
          r.buoi === buoi &&
          r.trangThai !== 'DaHuy'

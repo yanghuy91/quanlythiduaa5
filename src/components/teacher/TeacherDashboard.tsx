@@ -405,6 +405,13 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   } | null>(null);
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
 
+  React.useEffect(() => {
+    if (activeTab !== 'record' && !isBottomSheetOpen) {
+      setIsMultiSelect(false);
+      setSelectedStudentIds([]);
+    }
+  }, [activeTab, isBottomSheetOpen]);
+
   // Explanation review state
   const [rejectingRecordId, setRejectingRecordId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState<string>('');
@@ -616,7 +623,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     let hasDuplicate = false;
 
     payload.students.forEach(st => {
-      const dupCheck = checkDuplicateRecord(records, st.maHS, payload.date, payload.session, payload.rule.maNoiQuy);
+      const dupCheck = checkDuplicateRecord(records, st.maHS, payload.date, payload.session, payload.rule.maNoiQuy, st.hoTen);
       if (dupCheck.isDuplicate) {
         hasDuplicate = true;
         existingMap[st.maHS] = dupCheck.existingRecords;
@@ -649,7 +656,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     note?: string
   ) => {
     targetStudents.forEach(st => {
-      const dupCheck = checkDuplicateRecord(records, st.maHS, date, session, rule.maNoiQuy);
+      const dupCheck = checkDuplicateRecord(records, st.maHS, date, session, rule.maNoiQuy, st.hoTen);
 
       onAddRecord({
         namHoc: CURRENT_SCHOOL_YEAR,
@@ -3398,6 +3405,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           <CallingGamesHub
             students={students}
             onQuickRecord={(st, type) => {
+              setIsMultiSelect(false);
               setSelectedStudentIds([st.maHS]);
               setIsBottomSheetOpen(true);
             }}
@@ -3498,7 +3506,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                 st.maHS,
                 pendingRecordPayload.date,
                 pendingRecordPayload.session,
-                pendingRecordPayload.rule.maNoiQuy
+                pendingRecordPayload.rule.maNoiQuy,
+                st.hoTen
               );
               acc[st.maHS] = res.existingRecords;
               return acc;
@@ -3575,6 +3584,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         settings={settings}
         viewerRole="GV"
         onAddRecordForStudent={(st) => {
+          setIsMultiSelect(false);
           setSelectedStudentIds([st.maHS]);
           setIsBottomSheetOpen(true);
         }}
