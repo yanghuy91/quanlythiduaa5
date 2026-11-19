@@ -73,6 +73,7 @@ import {
 import { ClassroomLayoutEditor } from './ClassroomLayoutEditor';
 import { CadreHonorsModal } from '../common/CadreHonorsModal';
 import { PeriodHierarchyFilter as PeriodFilterComponent } from '../common/PeriodHierarchyFilter';
+import { ClassroomTimeSelectorBar } from '../common/ClassroomTimeSelectorBar';
 import { filterRecordsByHierarchy, calculateStudentPeriodSummary, getSemesterFromWeek, CURRENT_SCHOOL_YEAR } from '../../utils/hierarchy';
 import { getVietnamMondayDateStr } from '../../utils/realtimeWeek';
 import { HierarchyPeriodFilter } from '../../types';
@@ -808,27 +809,22 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               </div>
             </div>
 
-            {/* Bottom-Right: Week Selector on top + Tải app button directly underneath */}
-            <div className="flex flex-col items-end gap-1 shrink-0">
-              <div className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-amber-400 hover:bg-amber-300 border border-white text-slate-950 font-black text-[10px] sm:text-[10.5px] shadow-sm transition-all shrink-0 leading-tight">
-                <Calendar className="w-3 h-3 text-slate-950 shrink-0" />
-                {onChangeCurrentWeek ? (
-                  <select
-                    value={currentWeek}
-                    onChange={e => onChangeCurrentWeek(Number(e.target.value))}
-                    className="bg-transparent text-slate-950 font-black cursor-pointer focus:outline-none pr-0.5 text-[10px] sm:text-[10.5px]"
-                    title="Chạm để chuyển tuần học"
-                  >
-                    {Array.from({ length: 38 }, (_, i) => i + 1).map(w => (
-                      <option key={w} value={w} className="bg-white text-slate-900 font-bold">
-                        Tuần {w} {w <= 19 ? '(HK1)' : '(HK2)'}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <span className="whitespace-nowrap">Tuần {currentWeek} {currentWeek <= 19 ? '(HK1)' : '(HK2)'}</span>
-                )}
-              </div>
+            {/* Bottom-Right: Cụm hiển thị thời gian 4 cấp (HK - Tuần - Thứ - Buổi) & Thời gian thực + Nút tải app */}
+            <div className="flex flex-col items-end gap-1 shrink-0 max-w-full sm:max-w-md">
+              <ClassroomTimeSelectorBar
+                currentWeek={currentWeek}
+                selectedWeek={typeof periodFilter.tuanHoc === 'number' ? periodFilter.tuanHoc : currentWeek}
+                selectedHocKi={typeof periodFilter.hocKi === 'number' ? periodFilter.hocKi : (currentWeek <= 19 ? 1 : 2)}
+                onTimeChange={(time) => {
+                  setPeriodFilter(prev => ({
+                    ...prev,
+                    hocKi: time.hocKi,
+                    tuanHoc: time.tuanHoc,
+                  }));
+                }}
+                onChangeCurrentWeek={onChangeCurrentWeek}
+                isTeacher={true}
+              />
               <PWAInstallButton variant="banner" />
             </div>
           </div>
@@ -3647,6 +3643,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         fastSaveMode={fastSaveEnabled}
         initialWeek={typeof periodFilter.tuanHoc === 'number' ? periodFilter.tuanHoc : currentWeek}
         initialSemester={typeof periodFilter.hocKi === 'number' ? periodFilter.hocKi : 1}
+        currentRealtimeWeek={currentWeek}
         onSave={handleRequestSave}
         currentUserRole="GV"
         existingRecords={records}

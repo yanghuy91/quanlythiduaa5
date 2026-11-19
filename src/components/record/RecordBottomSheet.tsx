@@ -20,9 +20,19 @@ import { getCurrentSession, classifySeverityByPoints, STANDARD_RULE_CATEGORIES, 
 import { removeVietnameseAccents } from '../../utils/vietnamese';
 import { RecorderBadge } from '../common/RecorderBadge';
 import { 
+  SEMESTER_1_WEEKS,
+  SEMESTER_2_WEEKS,
   ALL_SCHOOL_WEEKS,
   getSemesterFromWeek,
 } from '../../utils/hierarchy';
+import {
+  VIETNAM_WEEKDAYS,
+  getVietnamDateInfo,
+  getVietnamCurrentSession,
+  getDateFromWeekAndDayIndex,
+  getDayIndexFromDate,
+  isTimeInFuture,
+} from '../../utils/realtimeWeek';
 
 export interface RecordSavePayload {
   students: Student[];
@@ -43,8 +53,9 @@ interface RecordBottomSheetProps {
   fastSaveMode?: boolean; // 1-touch fast save
   initialWeek?: number;
   initialSemester?: 1 | 2;
+  currentRealtimeWeek?: number; // Tuần chuẩn thực tế hiện tại
   onSave: (payload: RecordSavePayload) => void;
-  currentUserRole: RoleCode;
+  currentUserRole?: RoleCode;
   existingRecords?: DisciplineRecord[];
 }
 
@@ -57,6 +68,7 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
   fastSaveMode = false,
   initialWeek = 3,
   initialSemester,
+  currentRealtimeWeek,
   onSave,
   currentUserRole,
   existingRecords = [],
@@ -64,8 +76,14 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
   const [selectedRuleId, setSelectedRuleId] = useState<string>('');
   const [activeCategory, setActiveCategory] = useState<string>('frequent');
   const [ruleSearch, setRuleSearch] = useState<string>('');
-  const [showTimeCustomizer, setShowTimeCustomizer] = useState<boolean>(false);
   const [showHistoryAccordion, setShowHistoryAccordion] = useState<boolean>(false);
+
+  // Phân quyền: Giáo viên hay Ban cán sự
+  const isTeacher = currentUserRole === 'GV';
+  const crw = currentRealtimeWeek ?? initialWeek ?? 3;
+  const realtimeTodayInfo = useMemo(() => getVietnamDateInfo(), []);
+  const todayDayIndex = realtimeTodayInfo.dayOfWeek === 0 ? 6 : realtimeTodayInfo.dayOfWeek - 1;
+  const realtimeCurrentSession = useMemo(() => getVietnamCurrentSession(), []);
 
   // Entry mode: 'preset' (Chọn lỗi có sẵn) | 'custom' (Ban cán sự/GV tự ghi lỗi vào)
   const [entryMode, setEntryMode] = useState<'preset' | 'custom'>('preset');
@@ -81,34 +99,113 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
     return 'border-[1.5px] border-slate-900 dark:border-slate-300';
   };
   
-  // Time Hierarchy State: Năm học -> Học kì -> Tuần -> Buổi (Bỏ qua tháng)
+  // Cấu trúc 4 cấp độ thời gian: Học kì (1/2) - Tuần - Thứ (Thứ 2..CN) - Buổi (Sáng/Chiều)
   const [hocKi, setHocKi] = useState<1 | 2>(() => {
     if (initialSemester) return initialSemester;
-    return getSemesterFromWeek(initialWeek);
+    return getSemesterFromWeek(initialWeek || crw);
   });
-  const [tuanHoc, setTuanHoc] = useState<number>(initialWeek);
-  const [session, setSession] = useState<'Sang' | 'Chieu'>(getCurrentSession);
-  const [date, setDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const [tuanHoc, setTuanHoc] = useState<number>(initialWeek || crw);
+  const [dayIndex, setDayIndex] = useState<number>(todayDayIndex);
+  const [session, setSession] = useState<'Sang' | 'Chieu'>(realtimeCurrentSession);
   const [note, setNote] = useState<string>('');
 
   const studentKey = useMemo(() => students.map(s => `${s.maHS}:${s.hoTen}`).join('|'), [students]);
 
   React.useEffect(() => {
     if (isOpen) {
-      setTuanHoc(initialWeek);
-      setHocKi(initialSemester ?? getSemesterFromWeek(initialWeek));
+      setTuanHoc(initialWeek || crw);
+      setHocKi(initialSemester ?? getSemesterFromWeek(initialWeek || crw));
+      setDayIndex(todayDayIndex);
+      setSession(realtimeCurrentSession);
       setSelectedRuleId('');
       setRuleSearch('');
       setNote('');
       setCustomRuleName('');
       setShowHistoryAccordion(false);
     }
-  }, [isOpen, initialWeek, initialSemester, studentKey]);
+  }, [isOpen, initialWeek, initialSemester, crw, todayDayIndex, realtimeCurrentSession, studentKey]);
 
-  // Handle changing week directly (automatically syncs hocKi)
-  const handleChangeWeek = (newWeek: number) => {
+  // Ngày vi phạm được tính toán tự động chính xác từ Tuần + Thứ dựa theo tuần mốc chuẩn
+  const dateInfo = useMemo(() => {
+    return getDateFromWeekAndDayIndex(tuanHoc, dayIndex, crw);
+  }, [tuanHoc, dayIndex, crw]);
+
+  const date = dateInfo.dateStr;
+
+  // Danh sách tuần theo học kì đã chọn
+  const availableWeeks = useMemo(() => {
+    return hocKi === 1 ? SEMESTER_1_WEEKS : SEMESTER_2_WEEKS;
+  }, [hocKi]);
+
+  // Kiểm tra xem thời điểm đang chọn có phải là đánh dấu vi phạm bổ sung cho quá khứ không
+  const isBackdatingRecord = useMemo(() => {
+    if (tuanHoc < crw) return true;
+    if (tuanHoc === crw && dayIndex < todayDayIndex) return true;
+    return false;
+  }, [tuanHoc, dayIndex, crw, todayDayIndex]);
+
+  // Xử lý đổi Học kì
+  const handleChangeSemester = (newHocKi: 1 | 2) => {
+    if (!isTeacher && newHocKi === 2 && crw <= 19) {
+      alert('Học kì 2 chưa tới. Ban cán sự chỉ có thể ghi nhận hoặc bổ sung cho Học kì 1!');
+      return;
+    }
+    setHocKi(newHocKi);
+    if (newHocKi === 1) {
+      if (tuanHoc < 1 || tuanHoc > 19) {
+        setTuanHoc(Math.min(19, Math.max(1, crw <= 19 ? crw : 1)));
+      }
+    } else {
+      if (tuanHoc < 20 || tuanHoc > 38) {
+        setTuanHoc(Math.min(38, Math.max(20, crw >= 20 ? crw : 20)));
+      }
+    }
+  };
+
+  // Xử lý đổi Tuần học (Ban cán sự được chọn tuần đã qua để ghi bổ sung, không được chọn tuần tương lai)
+  const handleSelectWeek = (newWeek: number) => {
+    if (!isTeacher && newWeek > crw) {
+      alert(`Tuần ${newWeek} chưa tới! Ban cán sự không thể chọn thời gian trong tương lai.`);
+      return;
+    }
     setTuanHoc(newWeek);
-    setHocKi(getSemesterFromWeek(newWeek));
+    const sem = getSemesterFromWeek(newWeek);
+    setHocKi(sem);
+    // Nếu chuyển về tuần hiện tại mà dayIndex lớn hơn hôm nay thì reset về todayDayIndex
+    if (!isTeacher && newWeek === crw && dayIndex > todayDayIndex) {
+      setDayIndex(todayDayIndex);
+    }
+  };
+
+  // Xử lý đổi Thứ (trong tuần hiện tại không được chọn thứ chưa tới)
+  const handleSelectDay = (newDayIdx: number) => {
+    if (!isTeacher && tuanHoc === crw && newDayIdx > todayDayIndex) {
+      alert('Thứ này chưa tới trong tuần hiện tại! Ban cán sự không thể chọn thời gian tương lai.');
+      return;
+    }
+    setDayIndex(newDayIdx);
+    // Nếu hôm nay là buổi Sáng mà đang chọn buổi Chiều thì chuyển về Sáng
+    if (!isTeacher && tuanHoc === crw && newDayIdx === todayDayIndex && realtimeCurrentSession === 'Sang' && session === 'Chieu') {
+      setSession('Sang');
+    }
+  };
+
+  // Xử lý đổi Buổi học (trong ngày hôm nay nếu mới buổi sáng thì không được chọn buổi chiều)
+  const handleSelectSession = (newSession: 'Sang' | 'Chieu') => {
+    if (!isTeacher && tuanHoc === crw && dayIndex === todayDayIndex && realtimeCurrentSession === 'Sang' && newSession === 'Chieu') {
+      alert('Hiện tại mới đang là buổi Sáng! Buổi Chiều chưa diễn ra nên không thể ghi nhận vi phạm.');
+      return;
+    }
+    setSession(newSession);
+  };
+
+  // Kiểm tra bảo vệ nghiêm ngặt: Tuyệt đối không cho Ban cán sự lưu thời gian trong tương lai
+  const validateSaveAllowed = (): boolean => {
+    if (!isTeacher && isTimeInFuture(tuanHoc, dayIndex, session, crw)) {
+      alert('Không thể chọn thời gian chưa tới! Ban cán sự chỉ có thể ghi nhận cho thời gian hiện tại hoặc các tuần đã qua.');
+      return false;
+    }
+    return true;
   };
 
   // Pinned "Hay dùng" rules (nếu chưa ghim mục nào thì lấy 8 mục đầu tiên)
@@ -190,6 +287,7 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
 
     // Fast save 1-touch mode for proficient cadres
     if (fastSaveMode) {
+      if (!validateSaveAllowed()) return;
       onSave({
         students,
         rule,
@@ -205,6 +303,7 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
 
   const handleManualSave = () => {
     if (!selectedRule) return;
+    if (!validateSaveAllowed()) return;
 
     onSave({
       students,
@@ -220,6 +319,7 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
 
   const handleCustomSave = () => {
     if (!customRuleName.trim()) return;
+    if (!validateSaveAllowed()) return;
     const effectivePoints = Math.max(1, customPoints);
     const derivedSeverity = classifySeverityByPoints(effectivePoints, customPointType === 'Cong');
 
@@ -324,73 +424,133 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
           </div>
         )}
 
-        {/* Compact Week & Session Selector Bar (Chỉ hiện Tuần & Buổi gọn gàng, không hiện HK hay Năm học) */}
-        <div className="px-3.5 py-1.5 bg-surface-2 border-b border-token flex items-center justify-between gap-2 flex-wrap shrink-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <Calendar className="w-3.5 h-3.5 text-accent shrink-0" />
-            <select
-              value={tuanHoc}
-              onChange={e => handleChangeWeek(Number(e.target.value))}
-              className="px-2 py-0.5 bg-surface border border-token rounded-lg text-[11px] font-extrabold text-main cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent/40"
-              aria-label="Chọn tuần ghi nhận"
-            >
-              {ALL_SCHOOL_WEEKS.map(w => (
-                <option key={w} value={w}>
-                  Tuần {w}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={session}
-              onChange={e => setSession(e.target.value as 'Sang' | 'Chieu')}
-              className="px-2 py-0.5 bg-surface border border-token rounded-lg text-[11px] font-bold text-main cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent/40"
-              aria-label="Chọn buổi ghi nhận"
-            >
-              <option value="Sang">Buổi Sáng</option>
-              <option value="Chieu">Buổi Chiều</option>
-            </select>
+        {/* Time Hierarchy Selector Bar: 4 List chọn Học kì - Tuần - Thứ - Buổi */}
+        <div className="px-3.5 py-2 bg-surface-2 border-b border-token shrink-0">
+          <div className="flex items-center justify-between gap-2 mb-1.5">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Layers className="w-3.5 h-3.5 text-accent shrink-0" />
+              <span className="text-[11px] font-bold text-main truncate">
+                Thời gian ghi nhận vi phạm:
+              </span>
+            </div>
+            {isBackdatingRecord ? (
+              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 shrink-0">
+                📝 Bổ sung tuần đã qua
+              </span>
+            ) : (
+              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 shrink-0">
+                ⚡ Thời gian thực
+              </span>
+            )}
           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowTimeCustomizer(!showTimeCustomizer)}
-            className="text-[10.5px] font-bold text-accent hover:underline flex items-center gap-1 cursor-pointer shrink-0"
-          >
-            <span>{showTimeCustomizer ? 'Thu gọn' : '+ Ghi chú / Ngày'}</span>
-            <ChevronDown className={`w-3 h-3 transition-transform ${showTimeCustomizer ? 'rotate-180' : ''}`} />
-          </button>
-        </div>
-
-        {/* Optional Note & Date Panel */}
-        {showTimeCustomizer && (
-          <div className="px-3.5 py-2 bg-accent/5 border-b border-token grid grid-cols-1 sm:grid-cols-3 gap-2 animate-fadeIn text-xs shrink-0">
+          {/* 4 List chọn theo cấu trúc: Học kì (1/2) - Tuần - Thứ (Thứ 2..CN) - Buổi (Sáng/Chiều) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {/* 1. Học kì */}
             <div>
               <label className="block text-[10px] font-bold text-muted mb-0.5 uppercase tracking-wide">
-                Ngày ghi nhận
+                Học kì
               </label>
-              <input
-                type="date"
-                value={date}
-                onChange={e => setDate(e.target.value)}
-                className="w-full px-2 py-1 bg-surface border border-token rounded-lg text-[11px] font-semibold text-main"
-              />
+              <select
+                value={hocKi}
+                onChange={e => handleChangeSemester(Number(e.target.value) as 1 | 2)}
+                className="w-full px-2 py-1 bg-surface border border-token rounded-lg text-xs font-bold text-main cursor-pointer"
+              >
+                <option value={1}>Học kì 1</option>
+                <option value={2} disabled={!isTeacher && crw <= 19}>
+                  Học kì 2 {!isTeacher && crw <= 19 ? '(Chưa tới)' : ''}
+                </option>
+              </select>
             </div>
 
-            <div className="sm:col-span-2">
+            {/* 2. Tuần */}
+            <div>
               <label className="block text-[10px] font-bold text-muted mb-0.5 uppercase tracking-wide">
-                Ghi chú thêm (tùy chọn)
+                Tuần ({hocKi === 1 ? '1-19' : '20-38'})
               </label>
-              <input
-                type="text"
-                value={note}
-                onChange={e => setNote(e.target.value)}
-                placeholder="VD: Tiết 3, đã nhắc nhở lần 1..."
-                className="w-full px-2.5 py-1 bg-surface border border-token rounded-lg text-[11px] text-main placeholder:text-muted"
-              />
+              <select
+                value={tuanHoc}
+                onChange={e => handleSelectWeek(Number(e.target.value))}
+                className="w-full px-2 py-1 bg-surface border border-token rounded-lg text-xs font-bold text-main cursor-pointer"
+              >
+                {availableWeeks.map(w => {
+                  const isFutureWeek = !isTeacher && w > crw;
+                  return (
+                    <option key={w} value={w} disabled={isFutureWeek}>
+                      Tuần {w} {isFutureWeek ? '(Chưa tới)' : ''}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* 3. Thứ */}
+            <div>
+              <label className="block text-[10px] font-bold text-muted mb-0.5 uppercase tracking-wide">
+                Thứ trong tuần
+              </label>
+              <select
+                value={dayIndex}
+                onChange={e => handleSelectDay(Number(e.target.value))}
+                className="w-full px-2 py-1 bg-surface border border-token rounded-lg text-xs font-bold text-main cursor-pointer"
+              >
+                {VIETNAM_WEEKDAYS.map(d => {
+                  const isFutureDay = !isTeacher && tuanHoc === crw && d.dayIndex > todayDayIndex;
+                  return (
+                    <option key={d.dayIndex} value={d.dayIndex} disabled={isFutureDay}>
+                      {d.label} {isFutureDay ? '(Chưa tới)' : ''}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* 4. Buổi */}
+            <div>
+              <label className="block text-[10px] font-bold text-muted mb-0.5 uppercase tracking-wide">
+                Buổi học
+              </label>
+              <select
+                value={session}
+                onChange={e => handleSelectSession(e.target.value as 'Sang' | 'Chieu')}
+                className="w-full px-2 py-1 bg-surface border border-token rounded-lg text-xs font-bold text-main cursor-pointer"
+              >
+                <option value="Sang">Buổi Sáng</option>
+                <option
+                  value="Chieu"
+                  disabled={!isTeacher && tuanHoc === crw && dayIndex === todayDayIndex && realtimeCurrentSession === 'Sang'}
+                >
+                  Buổi Chiều {!isTeacher && tuanHoc === crw && dayIndex === todayDayIndex && realtimeCurrentSession === 'Sang' ? '(Chưa tới)' : ''}
+                </option>
+              </select>
             </div>
           </div>
-        )}
+
+          {/* Dòng bên dưới ghi thời gian tương ứng & thời gian thực (ngày/tháng/năm) */}
+          <div className="mt-1.5 pt-1 border-t border-token flex items-center justify-between gap-2 flex-wrap text-[10.5px]">
+            <div className="flex items-center gap-1.5 text-main font-semibold">
+              <Calendar className="w-3 h-3 text-accent shrink-0" />
+              <span>
+                Ngày vi phạm: <strong className="text-accent font-black">{dateInfo.weekdayLabel}, ngày {dateInfo.displayDateStr}</strong> ({session === 'Sang' ? 'Buổi Sáng' : 'Buổi Chiều'})
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 text-muted text-[10px]">
+              <Clock className="w-3 h-3 text-emerald-500 shrink-0" />
+              <span>Thời gian thực: {realtimeTodayInfo.weekdayLabel}, ngày {realtimeTodayInfo.displayDateStr}</span>
+            </div>
+          </div>
+
+          {/* Note input */}
+          <div className="mt-1.5">
+            <input
+              type="text"
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              placeholder="Ghi chú thêm (VD: Tiết 3, đã nhắc nhở lần 1...)"
+              className="w-full px-2.5 py-1 bg-surface border border-token rounded-lg text-[11px] text-main placeholder:text-muted"
+            />
+          </div>
+        </div>
 
         {/* Entry Mode Switcher: Preset Rules vs Custom Infraction */}
         <div className="p-0.5 mx-3.5 mt-2 bg-surface-2 rounded-xl border border-token flex items-center shadow-2xs text-[11px] font-bold shrink-0">
