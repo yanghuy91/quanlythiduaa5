@@ -31,6 +31,7 @@ interface StudentPickerProps {
   onInspectStudent?: (student: Student) => void;
   fastSaveEnabled?: boolean;
   onToggleFastSave?: () => void;
+  hideSeatingGrid?: boolean;
 }
 
 export const StudentPicker: React.FC<StudentPickerProps> = ({
@@ -48,8 +49,9 @@ export const StudentPicker: React.FC<StudentPickerProps> = ({
   onInspectStudent,
   fastSaveEnabled = false,
   onToggleFastSave,
+  hideSeatingGrid = false,
 }) => {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(hideSeatingGrid ? 'list' : 'grid');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter students if viewer is Tổ trưởng (hard scope filtering)
@@ -69,33 +71,40 @@ export const StudentPicker: React.FC<StudentPickerProps> = ({
     <div className="w-full flex flex-col gap-2.5">
       {/* Top Controls: Mode Switcher & Neat Action Buttons */}
       <div className="flex items-center justify-between gap-2">
-        {/* Toggle Grid vs List */}
-        <div className="flex items-center p-0.5 bg-surface-2 rounded-xl border border-token">
-          <button
-            type="button"
-            onClick={() => setViewMode('grid')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              viewMode === 'grid' 
-                ? 'bg-surface text-main shadow-xs font-bold' 
-                : 'text-muted hover:text-main'
-            }`}
-          >
-            <LayoutGrid className="w-3.5 h-3.5 text-accent" />
-            <span>Sơ đồ</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('list')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              viewMode === 'list' 
-                ? 'bg-surface text-main shadow-xs font-bold' 
-                : 'text-muted hover:text-main'
-            }`}
-          >
+        {/* Toggle Grid vs List (Ẩn hoàn toàn khi hideSeatingGrid bật) */}
+        {hideSeatingGrid ? (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-2 rounded-xl border border-token text-xs font-bold text-main">
             <ListFilter className="w-3.5 h-3.5 text-accent" />
-            <span>DS ({visibleStudents.length})</span>
-          </button>
-        </div>
+            <span>Danh sách ({visibleStudents.length})</span>
+          </div>
+        ) : (
+          <div className="flex items-center p-0.5 bg-surface-2 rounded-xl border border-token">
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                viewMode === 'grid' 
+                  ? 'bg-surface text-main shadow-xs font-bold' 
+                  : 'text-muted hover:text-main'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5 text-accent" />
+              <span>Sơ đồ</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                viewMode === 'list' 
+                  ? 'bg-surface text-main shadow-xs font-bold' 
+                  : 'text-muted hover:text-main'
+              }`}
+            >
+              <ListFilter className="w-3.5 h-3.5 text-accent" />
+              <span>DS ({visibleStudents.length})</span>
+            </button>
+          </div>
+        )}
 
         {/* Neat Action Buttons: Fast Save & Multi-Select */}
         <div className="flex items-center gap-1.5">
@@ -134,7 +143,7 @@ export const StudentPicker: React.FC<StudentPickerProps> = ({
       </div>
 
       {/* Clean Full-width Search Input (Chỉ hiện ở chế độ Danh sách, ẩn ở chế độ Sơ đồ) */}
-      {viewMode === 'list' && (
+      {(hideSeatingGrid || viewMode === 'list') && (
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
           <input
@@ -157,7 +166,7 @@ export const StudentPicker: React.FC<StudentPickerProps> = ({
       )}
 
       {/* Main View Area */}
-      {viewMode === 'grid' ? (
+      {!hideSeatingGrid && viewMode === 'grid' ? (
         <div className="bg-surface p-3 rounded-xl border border-token">
           <SeatGrid
             layout={layout}

@@ -210,38 +210,15 @@ export const PeriodHierarchyFilter: React.FC<PeriodHierarchyFilterProps> = ({
 
   return (
     <div className="w-full bg-surface rounded-2xl border border-token p-2.5 sm:p-3 space-y-2.5 shadow-xs text-xs">
-      {/* Tiêu đề & Thông báo trạng thái */}
-      <div className="flex flex-wrap items-center justify-between gap-1.5 pb-2 border-b border-token">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-7 h-7 rounded-xl bg-accent/15 text-accent flex items-center justify-center shrink-0">
-            <Layers className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <h4 className="font-extrabold text-main text-xs sm:text-sm truncate leading-tight">
-              Thời gian xem dữ liệu &amp; Thi đua lớp
-            </h4>
-            <p className="text-[10px] text-muted truncate">
-              Cấu trúc: Học kì - Tuần - Thứ - Buổi (tự động theo thời gian thực)
-            </p>
-          </div>
+      {/* Thông báo trạng thái đặc biệt nếu có */}
+      {isSelectedWeekNoData && (
+        <div className="flex items-center gap-1.5 pb-2 border-b border-token">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/35 text-[10.5px] font-extrabold">
+            <Ban className="w-3 h-3" />
+            Tuần {selectedWeekNumber}: Không tính điểm (Nghỉ/Lễ)
+          </span>
         </div>
-
-        {/* Badges trạng thái tuần */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {isSelectedWeekFuture && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 text-[10px] font-extrabold">
-              <Clock className="w-3 h-3" />
-              Chưa học (Tuần tương lai)
-            </span>
-          )}
-          {!isSelectedWeekFuture && isSelectedWeekNoData && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/35 text-[10px] font-extrabold">
-              <Ban className="w-3 h-3" />
-              Không tính điểm (Nghỉ/Lễ)
-            </span>
-          )}
-        </div>
-      </div>
+      )}
 
       {/* Hàng 1: 4 Cột / 4 List chọn theo cấu trúc: Học kì (1/2) - Tuần - Thứ (Thứ 2..CN) - Buổi (Sáng/Chiều) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">

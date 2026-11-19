@@ -53,6 +53,8 @@ interface RecordBottomSheetProps {
   fastSaveMode?: boolean; // 1-touch fast save
   initialWeek?: number;
   initialSemester?: 1 | 2;
+  initialDayIndex?: number;
+  initialSession?: 'Sang' | 'Chieu';
   currentRealtimeWeek?: number; // Tuần chuẩn thực tế hiện tại
   onSave: (payload: RecordSavePayload) => void;
   currentUserRole?: RoleCode;
@@ -68,6 +70,8 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
   fastSaveMode = false,
   initialWeek = 3,
   initialSemester,
+  initialDayIndex,
+  initialSession,
   currentRealtimeWeek,
   onSave,
   currentUserRole,
@@ -105,8 +109,8 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
     return getSemesterFromWeek(initialWeek || crw);
   });
   const [tuanHoc, setTuanHoc] = useState<number>(initialWeek || crw);
-  const [dayIndex, setDayIndex] = useState<number>(todayDayIndex);
-  const [session, setSession] = useState<'Sang' | 'Chieu'>(realtimeCurrentSession);
+  const [dayIndex, setDayIndex] = useState<number>(() => initialDayIndex ?? todayDayIndex);
+  const [session, setSession] = useState<'Sang' | 'Chieu'>(() => initialSession ?? realtimeCurrentSession);
   const [note, setNote] = useState<string>('');
 
   const studentKey = useMemo(() => students.map(s => `${s.maHS}:${s.hoTen}`).join('|'), [students]);
@@ -115,15 +119,15 @@ export const RecordBottomSheet: React.FC<RecordBottomSheetProps> = ({
     if (isOpen) {
       setTuanHoc(initialWeek || crw);
       setHocKi(initialSemester ?? getSemesterFromWeek(initialWeek || crw));
-      setDayIndex(todayDayIndex);
-      setSession(realtimeCurrentSession);
+      setDayIndex(initialDayIndex ?? todayDayIndex);
+      setSession(initialSession ?? realtimeCurrentSession);
       setSelectedRuleId('');
       setRuleSearch('');
       setNote('');
       setCustomRuleName('');
       setShowHistoryAccordion(false);
     }
-  }, [isOpen, initialWeek, initialSemester, crw, todayDayIndex, realtimeCurrentSession, studentKey]);
+  }, [isOpen, initialWeek, initialSemester, initialDayIndex, initialSession, crw, todayDayIndex, realtimeCurrentSession, studentKey]);
 
   // Ngày vi phạm được tính toán tự động chính xác từ Tuần + Thứ dựa theo tuần mốc chuẩn
   const dateInfo = useMemo(() => {
