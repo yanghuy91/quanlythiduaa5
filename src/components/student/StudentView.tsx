@@ -64,7 +64,6 @@ import { StudentPicker } from '../student-picker/StudentPicker';
 import { RecordBottomSheet } from '../record/RecordBottomSheet';
 import { DuplicateWarningModal } from '../record/DuplicateWarningModal';
 import { PeriodHierarchyFilter as PeriodFilterComponent } from '../common/PeriodHierarchyFilter';
-import { ClassroomTimeSelectorBar } from '../common/ClassroomTimeSelectorBar';
 import { getDayIndexFromDate, isTimeInFuture } from '../../utils/realtimeWeek';
 import { 
   checkDuplicateRecord, 
@@ -972,21 +971,15 @@ export const StudentView: React.FC<StudentViewProps> = ({
               </div>
             </div>
 
-            {/* Bottom-Right: Cụm hiển thị thời gian 4 cấp (HK - Tuần - Thứ - Buổi) & Thời gian thực + Nút tải app */}
-            <div className="flex flex-col items-end gap-1 shrink-0 max-w-full sm:max-w-md">
-              <ClassroomTimeSelectorBar
-                currentWeek={currentWeek}
-                selectedWeek={typeof periodFilter.tuanHoc === 'number' ? periodFilter.tuanHoc : currentWeek}
-                selectedHocKi={typeof periodFilter.hocKi === 'number' ? periodFilter.hocKi : (currentWeek <= 19 ? 1 : 2)}
-                onTimeChange={(time) => {
-                  setPeriodFilter(prev => ({
-                    ...prev,
-                    hocKi: time.hocKi,
-                    tuanHoc: time.tuanHoc,
-                  }));
-                }}
-                isTeacher={false}
-              />
+            {/* Bottom-Right: Week Badge on top + Tải app button directly underneath */}
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              <div
+                className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-amber-400 text-slate-950 border border-white font-black text-[10px] sm:text-[10.5px] shadow-sm shrink-0 leading-tight"
+                title="Tuần học hiện tại (Tự động chuyển sang tuần tiếp theo vào mỗi Thứ 2 đầu tuần)"
+              >
+                <Calendar className="w-3 h-3 text-slate-950 shrink-0" />
+                <span className="whitespace-nowrap">Tuần {currentWeek} {currentWeek <= 19 ? '(HK1)' : '(HK2)'}</span>
+              </div>
               <PWAInstallButton variant="banner" />
             </div>
           </div>
